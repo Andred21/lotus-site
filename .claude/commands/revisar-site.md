@@ -10,6 +10,8 @@ disable-model-invocation: true
 
 Leia `state.md` primeiro. Aceite somente `ready_for_review` ou `reviewing` e o mesmo work item.
 
+Em `blocked` com `resume_state` igual a `ready_for_review` ou `reviewing` e `blocker` resolvido por João, restaure `workflow_state` para `resume_state`, limpe `blocker` e `resume_state`, e prossiga.
+
 Ao iniciar, transicione para `reviewing`.
 
 - executor Codex / reviewer Claude: Claude revisa diff, spec, plano, packet e rules.

@@ -10,6 +10,8 @@ disable-model-invocation: true
 
 Leia `state.md` primeiro. Exija `workflow_state: ready_for_closure` e correspondência exata do work item.
 
+Em `blocked` com `resume_state: ready_for_closure` e `blocker` resolvido por João, restaure `workflow_state` para `resume_state`, limpe `blocker` e `resume_state`, e prossiga.
+
 ## Gate 0 — aceite específico
 
 Execute a prova específica descrita no plano/Notion/spec. Ferramenta verde genérica não substitui esse critério.

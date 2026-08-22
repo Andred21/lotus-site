@@ -10,6 +10,8 @@ Read `AGENTS.md`, `CLAUDE.md`, `state.md`, packet and only matching rules.
 Require `workflow_state: executing` or caller-declared transition from `ready_for_execution`.
 Require `executor: codex`.
 
+On unmet precondition, or a needed path outside `authorized_paths`, return the Output template below with the reason stated under `## Deviations and limitations` and `RECOMMENDED_TRANSITION: blocked`.
+
 Execution source depends on `work_class`:
 - `architectural`: require `plan_path` and follow the approved plan;
 - `bounded`: require the short approved `bounded_design`; `active_plan` must remain null. Do not invent a plan document.
@@ -18,7 +20,6 @@ Rules:
 - follow the architectural plan task by task, or the bounded approved design when `work_class: bounded`;
 - do not replan or redesign;
 - modify only `paths_autorizados`;
-- needed path outside authorization => BLOCKED;
 - preserve WIP;
 - run only verification commands required by plan/CLAUDE;
 - do not alter `state.md` or external systems;

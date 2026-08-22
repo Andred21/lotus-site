@@ -16,3 +16,4 @@ paths:
 - Durante `evolution`, mudança visual relevante exige design aprovado antes da implementação.
 - Responsividade e acessibilidade fazem parte do critério de aceite da UI, não são polish opcional.
 - Não espalhar strings institucionais repetidas por componentes quando uma fonte de conteúdo já existir.
+- Cor ou fonte nova vira token no bloco `:root` de `src/index.css` (`--text`, `--bg`, `--accent`, `--sans`, …); não fixar valor direto em componente.

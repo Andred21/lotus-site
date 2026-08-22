@@ -29,4 +29,4 @@ impact: ...
 ## Verification observed
 ## Limitations
 END SITE REVIEW REPORT
-RECOMMENDED_TRANSITION: ready_for_closure|blocked
+RECOMMENDED_TRANSITION: ready_for_closure|reviewing|blocked

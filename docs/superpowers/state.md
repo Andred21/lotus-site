@@ -49,6 +49,7 @@ updated_at: null
 - `architectural` exige `active_spec` e `active_plan` antes de `ready_for_execution`.
 - `bounded` mantém `active_spec` e `active_plan` nulos e persiste apenas `bounded_design` curto + `authorized_paths`.
 - `executor` e `reviewer` devem ser diferentes a partir de `ready_for_execution`.
+- `context_packet` é obrigatório quando o trabalho depende de fonte externa.
 - Work item, Context Packet, spec e plano devem apontar para o mesmo escopo.
 - Claude é o único escritor deste arquivo pelo contrato do harness.
 - Nenhum agente seleciona automaticamente o próximo item.

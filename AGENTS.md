@@ -6,6 +6,8 @@
 
 Codex é agente auxiliar de leitura, Context Packet, execução mecânica explicitamente delegada e revisão independente.
 
+Contratos de delegação vivem em `.agents/skills/<nome>/SKILL.md`.
+
 ## Bootstrap
 
 Leia nesta ordem:
@@ -22,6 +24,7 @@ Use IDs estáveis; nome de exibição não basta como proveniência.
 ## Limites
 
 - Não altere `docs/superpowers/state.md`.
+- Não modifique `CLAUDE.md`, `AGENTS.md`, `.claude/**` nem `.agents/**`; mudança no harness é executada por Claude.
 - Não replaneje nem aumente escopo recebido.
 - Não escreva em Notion, Drive ou Figma.
 - Não execute push, PR, merge, rebase destrutivo ou exclusão de branch.

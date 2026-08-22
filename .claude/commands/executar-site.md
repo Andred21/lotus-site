@@ -10,6 +10,8 @@ disable-model-invocation: true
 
 Leia `state.md` primeiro. Aceite somente `ready_for_execution` ou `executing`, para o mesmo `active_work_item`.
 
+Em `blocked` com `resume_state` igual a `ready_for_execution` ou `executing` e `blocker` resolvido por João, restaure `workflow_state` para `resume_state`, limpe `blocker` e `resume_state`, e prossiga.
+
 Antes de tocar código, exija coerência entre `work_class`, contexto e árvore Git, além de executor/reviewer diferentes.
 
 - `architectural`: exija `active_spec` e `active_plan`;
@@ -17,15 +19,17 @@ Antes de tocar código, exija coerência entre `work_class`, contexto e árvore 
 
 Divergência => `blocked`.
 
-Ao iniciar, mova para `executing` com `next_owner: claude` e `next_action: continue_active_plan` no primeiro artefato durável da execução.
+Ao iniciar, mova para `executing` com `next_owner: claude` e `next_action: continue_active_plan` (`continue_active_work_item` em `bounded`) no primeiro artefato durável da execução.
 
-Use a técnica Superpowers indicada pelo plano.
+Use a técnica Superpowers indicada pelo plano; em `bounded`, a indicada pelo `bounded_design` aprovado.
+
+Carregue antes de editar as rules de `.claude/rules/` cujos `paths` casam com os arquivos tocados.
 
 - `executor: claude` => Claude executa o plano.
 - `executor: codex` => delegue `site-execute-task` com work item, base commit e `authorized_paths`; inclua `plan_path` em architectural ou `bounded_design` em bounded.
 
 Depois de delegação Codex, Claude deve executar `git status --short` e revisar o `git diff` real contra plano e paths. Relatório não substitui diff.
 
-Rode as verificações do plano. Se tasks e critérios previstos estiverem provados, atualize para `ready_for_review`, `next_owner` igual ao reviewer e `next_action: review_active_work_item`.
+Rode as verificações exigidas pelo plano/`CLAUDE.md`; em `bounded`, as exigidas pelo `bounded_design` aprovado mais os gates de `.claude/rules/testing.md`. Se tasks e critérios previstos estiverem provados, atualize para `ready_for_review`, `next_owner` igual ao reviewer e `next_action: review_active_work_item`.
 
 Não inicie review automaticamente.
