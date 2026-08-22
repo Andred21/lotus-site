@@ -5,8 +5,12 @@ description: Independently review a lotus-site work item executed by Claude agai
 
 # Site Review Task
 
-Input: work item, base commit, head commit, spec path, plan path, context packet when present.
-Require the active plan to name `reviewer: codex`.
+Input: work item, base commit, head commit, context packet when present.
+Require `docs/superpowers/state.md`'s `reviewer: codex`.
+
+Review source depends on `work_class`:
+- `architectural`: spec path and plan path;
+- `bounded`: approved `bounded_design` and `authorized_paths`; `active_spec` and `active_plan` remain null.
 
 Review only the work item diff and direct impact. Do not edit files.
 Check acceptance criteria, plan compliance, regressions, unnecessary complexity, React/TypeScript/rules, missing verification and unauthorized scope.

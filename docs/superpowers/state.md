@@ -53,3 +53,4 @@ updated_at: null
 - Claude é o único escritor deste arquivo pelo contrato do harness.
 - Nenhum agente seleciona automaticamente o próximo item.
 - Divergência operacional leva a `blocked`; não reconstrua a fase por heurística.
+- Toda escrita neste arquivo carimba `updated_at` e `state_basis_commit`.

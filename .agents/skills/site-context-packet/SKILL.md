@@ -7,7 +7,7 @@ description: Create a compact source-attributed Context Packet for one lotus-sit
 
 ## Preconditions
 
-Read `AGENTS.md`, `CLAUDE.md` and `docs/superpowers/state.md`. Require one identified work item and `workflow_state: context_required`. Mismatch returns `BLOCKED`.
+Read `AGENTS.md`, `CLAUDE.md` and `docs/superpowers/state.md`. Require one identified work item and `workflow_state: context_required`. On mismatch, return the Output template below with `status: blocked` in the packet frontmatter, the reason stated inside the packet, and `RECOMMENDED_TRANSITION: blocked`.
 
 ## Retrieval
 
@@ -35,4 +35,4 @@ BEGIN SITE CONTEXT PACKET
 END SITE CONTEXT PACKET
 RECOMMENDED_TRANSITION: ready_for_planning|blocked
 
-No text outside the markers.
+Nothing precedes `SUGGESTED_PATH:` and nothing follows the `RECOMMENDED_TRANSITION:` line; no prose or commentary between the template's lines.
