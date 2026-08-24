@@ -68,3 +68,5 @@ Modo inicial: `supervised`. `/desenvolver-site` não existe até decisão arquit
 - Compilador roda com `noUnusedLocals`, `noUnusedParameters` e `erasableSyntaxOnly` ativos (import/variável não usada ou sintaxe com semântica de runtime como `enum` quebram `pnpm build`) e com `verbatimModuleSyntax` (import/export somente-tipo precisam da palavra `type`).
 - Lint usa ESLint flat config.
 - `src/assets/` guarda assets importados por componente (Vite fingerprinta o arquivo); `public/` é copiado verbatim e referenciado por URL absoluta.
+- Runtime fixado: Node **24.19.0** (`.nvmrc`) e pnpm **11.x**, declarados em `engines` no `package.json`.
+- `engineStrict: true` no `pnpm-workspace.yaml` transforma runtime incompatível em erro (`ERR_PNPM_UNSUPPORTED_ENGINE`), não em aviso.
