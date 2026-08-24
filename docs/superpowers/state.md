@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: architectural
 active_work_item: 1.1.6
 active_notion_eap: 1.1.6
@@ -9,7 +9,7 @@ active_title: "Endurecer workflow agentic e criar backlog operacional"
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_plan
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-08-24-1.1.6-agentic-workflow-hardening-design.md
@@ -19,8 +19,8 @@ reviewer: codex
 blocker: null
 supervised_cycles_completed: 1
 last_completed_work_item: 1.1.4
-state_basis_commit: 74b5ec2830d7d9323183442855a9273abd3c66f3
-updated_at: 2026-08-24T18:05:00Z
+state_basis_commit: 4ca6c4a
+updated_at: 2026-08-24T19:00:00Z
 ---
 
 # Estado operacional — Lotus Site
@@ -45,7 +45,7 @@ updated_at: 2026-08-24T18:05:00Z
 ## Invariantes
 
 - Existe no máximo um `active_work_item`.
-- `work_class` é `bounded` ou `architectural` enquanto houver item ativo.
+- `work_class` é `bounded` ou `architectural` a partir de `ready_for_execution`; em `planning` ainda pode ser `null`.
 - `architectural` exige `active_spec` e `active_plan` antes de `ready_for_execution`.
 - `bounded` mantém `active_spec` e `active_plan` nulos e persiste apenas `bounded_design` curto + `authorized_paths`.
 - `executor` e `reviewer` devem ser diferentes a partir de `ready_for_execution`.
