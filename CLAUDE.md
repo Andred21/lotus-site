@@ -60,12 +60,12 @@ Modo inicial: `supervised`. `/desenvolver-site` não existe até decisão arquit
 - Pacote recusado por publicação recente demais libera exceção em `minimumReleaseAgeExclude`, no `pnpm-workspace.yaml`.
 - `pnpm dev` — servidor de desenvolvimento com HMR.
 - `pnpm build` (`tsc -b && vite build`) — typecheck seguido de build de produção.
-- `pnpm exec tsc -b` — typecheck isolado, sem build.
+- `pnpm typecheck` (`tsc -b`) — typecheck isolado, sem build; mesmo comando exigido pelo aceite da EAP 1.2.3.
 - `pnpm lint` — ESLint via flat config (`eslint.config.js`).
 - `pnpm preview` — serve o `dist/` já gerado.
 - Não há test runner configurado hoje; nenhum script `test` nem dependência de testes instalada.
 - `tsconfig.json` é um solution file que referencia dois projetos buildados juntos por `tsc -b`: `tsconfig.app.json` (código de aplicação em `src/`) e `tsconfig.node.json` (código de build, ex. `vite.config.ts`). Script de build novo (ex. `vitest.config.ts`, plugin Vite) precisa entrar no `include` de `tsconfig.node.json` ou `tsc -b` nunca o typecheca.
-- Compilador roda com `noUnusedLocals`, `noUnusedParameters` e `erasableSyntaxOnly` ativos (import/variável não usada ou sintaxe com semântica de runtime como `enum` quebram `pnpm build`) e com `verbatimModuleSyntax` (import/export somente-tipo precisam da palavra `type`).
+- Compilador roda com `strict`, `noUncheckedIndexedAccess`, `noUnusedLocals`, `noUnusedParameters` e `erasableSyntaxOnly` ativos (import/variável não usada ou sintaxe com semântica de runtime como `enum` quebram `pnpm build`) e com `verbatimModuleSyntax` (import/export somente-tipo precisam da palavra `type`).
 - Lint usa ESLint flat config.
 - `src/assets/` guarda assets importados por componente (Vite fingerprinta o arquivo); `public/` é copiado verbatim e referenciado por URL absoluta.
 - Runtime fixado: Node **24.19.0** (`.nvmrc`) e pnpm **11.x**, declarados em `engines` no `package.json`.
