@@ -38,14 +38,6 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/components/ui/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': ['error', { patterns: [
-        { group: ['**/components/sections/**'], message: 'ui é primitiva; seção compõe ui, não o contrário.' },
-      ] }],
-    },
-  },
-  {
     files: ['src/components/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [
@@ -55,6 +47,21 @@ export default defineConfig([
         { name: 'fetch', message: 'fetch não vive em componente; use src/integrations/.' },
         { name: 'XMLHttpRequest', message: 'requisição não vive em componente; use src/integrations/.' },
       ],
+      'no-restricted-syntax': ['error',
+        {
+          selector: "MemberExpression[object.name=/^(window|globalThis|self)$/][property.name=/^(fetch|XMLHttpRequest)$/]",
+          message: 'requisição não vive em componente; use src/integrations/.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [
+        { group: ['**/sections/**', '**/components/sections/**'], message: 'ui é primitiva; seção compõe ui, não o contrário.' },
+        { group: ['**/integrations/**'], message: 'integração entra por prop/callback a partir da composição.' },
+      ] }],
     },
   },
 ])

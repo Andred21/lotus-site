@@ -83,8 +83,12 @@ const checkState = () => {
   }
 
   const current = front.workflow_state
+  const effective =
+    current === 'blocked' && ORDERED_STATES.includes(front.resume_state)
+      ? front.resume_state
+      : current
   const fromExecution =
-    ORDERED_STATES.indexOf(current) >= ORDERED_STATES.indexOf('ready_for_execution')
+    ORDERED_STATES.indexOf(effective) >= ORDERED_STATES.indexOf('ready_for_execution')
 
   if (current === 'idle') {
     if (!isNull(front.active_work_item)) errors.push('state: idle exige active_work_item null')
@@ -101,10 +105,10 @@ const checkState = () => {
 
   if (fromExecution) {
     if (!['bounded', 'architectural'].includes(front.work_class)) {
-      errors.push(`state: ${current} exige work_class bounded ou architectural`)
+      errors.push(`state: ${current} (fase ${effective}) exige work_class bounded ou architectural`)
     }
     if (isNull(front.executor) || isNull(front.reviewer)) {
-      errors.push(`state: ${current} exige executor e reviewer preenchidos`)
+      errors.push(`state: ${current} (fase ${effective}) exige executor e reviewer preenchidos`)
     } else if (front.executor === front.reviewer) {
       errors.push('state: executor e reviewer devem ser diferentes')
     }
@@ -120,10 +124,10 @@ const checkState = () => {
   if (front.work_class === 'architectural') {
     if (!isNull(front.bounded_design)) errors.push('state: architectural exige bounded_design null')
     if (fromExecution && isNull(front.active_spec)) {
-      errors.push(`state: ${current} architectural exige active_spec`)
+      errors.push(`state: ${current} (fase ${effective}) architectural exige active_spec`)
     }
     if (fromExecution && isNull(front.active_plan)) {
-      errors.push(`state: ${current} architectural exige active_plan`)
+      errors.push(`state: ${current} (fase ${effective}) architectural exige active_plan`)
     }
   }
 }
