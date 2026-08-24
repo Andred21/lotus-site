@@ -34,10 +34,21 @@ automaticamente, não promove item do backlog e não altera o Notion por causa d
 
 Superpowers conduz a técnica; os comandos do site apenas impõem gates.
 
-- `/planejar-site <work-item>` — contexto → brainstorming/spec/plano; não implementa.
-- `/executar-site <work-item>` — executa somente plano aprovado.
-- `/revisar-site <work-item>` — revisão independente pelo agente diferente do executor.
-- `/fechar-site <work-item>` — prova aceite, gates, histórico e volta a `idle`.
+- `/planejar-site <work-item>` — cria a branch do bloco, contexto → brainstorming/spec/plano; não implementa.
+- `/executar-site <work-item>` — executa somente plano aprovado e commita cada task provada.
+- `/revisar-site <work-item>` — revisão independente pelo agente diferente do executor, sobre os commits da branch.
+- `/fechar-site <work-item>` — prova aceite, gates, histórico, publica a branch, abre o PR e volta a `idle`.
+
+Um bloco é uma branch e vira um PR. Um work item pode reunir várias EAP quando João autorizar o
+bloco explicitamente; nesse caso o bloco continua sendo um único `active_work_item`, com um commit
+por EAP. `main` não recebe commit direto.
+
+```text
+/planejar-site  branch nova a partir de main, gravada em active_branch
+/executar-site  commit por EAP, sem push
+/revisar-site   review sobre main..HEAD; correção vira commit próprio
+/fechar-site    finishing-a-development-branch, push da branch, PR aberto, estado volta a idle
+```
 
 Delegação ao Codex usa o contrato em `.agents/skills/<nome>/SKILL.md`; Claude repassa esse conteúdo ao Codex na íntegra, sem paráfrase.
 
@@ -50,13 +61,17 @@ Modo inicial: `supervised`. `/desenvolver-site` não existe até decisão arquit
 3. Work item nunca é selecionado automaticamente.
 4. Codex delegado não replaneja nem sai de `paths_autorizados`.
 5. Relatório de agente não substitui diff/teste executado.
-6. Sem escrita em Notion/Drive/Figma, push, PR ou merge sem autorização explícita.
+6. Escrita em Notion/Drive/Figma e merge exigem autorização explícita a cada vez. Push da branch do
+   bloco e abertura de PR são autorizados só dentro de `/fechar-site` (decisão de João em 2026-08-24).
 7. Não adicionar dependência sem necessidade do work item.
 8. Não afirmar teste/build/lint aprovado sem execução real.
+9. Bloco roda em branch própria; commit direto em `main` é violação, não atalho.
 
 ## 6. Comandos técnicos atuais
 
 - Gerenciador de pacotes é **pnpm** (não usar npm nem yarn).
+- Runtime fixado: Node **24.19.0** (`.nvmrc`) e pnpm **11.x**, declarados em `engines` no `package.json`.
+- `engineStrict: true` no `pnpm-workspace.yaml` transforma runtime incompatível em erro (`ERR_PNPM_UNSUPPORTED_ENGINE`), não em aviso.
 - Pacote recusado por publicação recente demais libera exceção em `minimumReleaseAgeExclude`, no `pnpm-workspace.yaml`.
 - `pnpm dev` — servidor de desenvolvimento com HMR.
 - `pnpm build` (`tsc -b && vite build`) — typecheck seguido de build de produção.
@@ -67,6 +82,7 @@ Modo inicial: `supervised`. `/desenvolver-site` não existe até decisão arquit
 - `tsconfig.json` é um solution file que referencia dois projetos buildados juntos por `tsc -b`: `tsconfig.app.json` (código de aplicação em `src/`) e `tsconfig.node.json` (código de build, ex. `vite.config.ts`). Script de build novo (ex. `vitest.config.ts`, plugin Vite) precisa entrar no `include` de `tsconfig.node.json` ou `tsc -b` nunca o typecheca.
 - Compilador roda com `strict`, `noUncheckedIndexedAccess`, `noUnusedLocals`, `noUnusedParameters` e `erasableSyntaxOnly` ativos (import/variável não usada ou sintaxe com semântica de runtime como `enum` quebram `pnpm build`) e com `verbatimModuleSyntax` (import/export somente-tipo precisam da palavra `type`).
 - Lint usa ESLint flat config.
+- Commit segue Conventional Commits com a EAP no escopo: `feat(1.2.2): fixar Node 24.19.0 e engines`.
+- Branch do bloco: `<tipo>/<item>-<slug>`, com `+` e `.` do work item virando `-`.
+- PR sai por `gh` no fechamento, base `main`; merge não é do agente.
 - `src/assets/` guarda assets importados por componente (Vite fingerprinta o arquivo); `public/` é copiado verbatim e referenciado por URL absoluta.
-- Runtime fixado: Node **24.19.0** (`.nvmrc`) e pnpm **11.x**, declarados em `engines` no `package.json`.
-- `engineStrict: true` no `pnpm-workspace.yaml` transforma runtime incompatível em erro (`ERR_PNPM_UNSUPPORTED_ENGINE`), não em aviso.

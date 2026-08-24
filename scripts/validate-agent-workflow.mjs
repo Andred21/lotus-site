@@ -92,8 +92,17 @@ const checkState = () => {
 
   if (current === 'idle') {
     if (!isNull(front.active_work_item)) errors.push('state: idle exige active_work_item null')
-  } else if (isNull(front.active_work_item)) {
-    errors.push(`state: ${current} exige active_work_item preenchido`)
+    if (!isNull(front.active_branch)) errors.push('state: idle exige active_branch null')
+  } else {
+    if (isNull(front.active_work_item)) {
+      errors.push(`state: ${current} exige active_work_item preenchido`)
+    }
+    if (isNull(front.active_branch)) {
+      errors.push(`state: ${current} exige active_branch preenchido`)
+    }
+    if (front.active_branch === 'main') {
+      errors.push('state: bloco não roda em main; active_branch precisa ser branch própria')
+    }
   }
 
   if (current === 'blocked') {
@@ -254,7 +263,11 @@ const checkHarnessLimits = () => {
   if (exists('.claude/commands/desenvolver-site.md')) {
     errors.push('autonomous command must not exist during supervised bootstrap')
   }
+  // Entrega autorizada por João em 2026-08-24: o fechamento publica a branch do bloco e abre PR.
+  // A autorização vale só para o comando de fechamento; Codex e os demais comandos seguem proibidos.
+  const DELIVERY_COMMAND = '.claude/commands/fechar-site.md'
   for (const file of [...walk('.claude'), ...walk('.agents')]) {
+    if (file.replace(/\\/g, '/').endsWith(DELIVERY_COMMAND)) continue
     const content = readFileSync(file, 'utf8')
     for (const forbidden of ['git push', 'gh pr create']) {
       if (content.includes(forbidden) && !content.includes(`não execute ${forbidden}`)) {
