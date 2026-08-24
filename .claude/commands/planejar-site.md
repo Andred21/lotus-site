@@ -22,6 +22,24 @@ Leia `state.md` primeiro.
 
 Se o argumento tiver forma EAP (`N.N.N`), consulte exatamente essa EAP no data source Notion `collection://2f0e72ec-ef53-4e08-a466-312de7eea7d2`. Registre título, EAP, critério de aceite e dependências. Dependência não comprovadamente satisfeita bloqueia o fluxo; não marque nada no Notion.
 
+## Branch do bloco
+
+Ao sair de `idle`, antes de qualquer artefato durável, crie a branch do bloco a partir de `main` atualizada:
+
+```bash
+git switch main
+git pull --ff-only
+git switch -c <tipo>/<item>-<slug-curto>
+```
+
+`<tipo>` segue Conventional Commits (`feat`, `fix`, `chore`, `docs`, `refactor`). Substitua `+` e `.` do
+work item por `-` no slug. Grave o nome em `active_branch`.
+
+Um bloco é uma branch e vira um PR. Nunca planeje, execute ou commite em `main`. Árvore suja com
+mudança que não pertence ao bloco para o fluxo em `blocked`; não misture trabalho alheio na branch.
+
+Retomada de bloco já iniciado reaproveita `active_branch`; não crie branch nova.
+
 ## Contexto
 
 Se o trabalho depender de Notion, Drive, site de referência, Figma ou outra fonte externa, transicione para `context_required`, defina `next_owner: codex` e delegue a skill `site-context-packet`. Valide markers, escopo e divergências. Salve o packet e avance para `ready_for_planning` somente quando a recomendação permitir.
@@ -52,4 +70,4 @@ Ao concluir, atualize `state.md` para `ready_for_execution`.
 - bounded: `active_spec: null`, `active_plan: null`, `bounded_design` e `authorized_paths` preenchidos;
 - architectural: `active_spec` e `active_plan` preenchidos, `bounded_design: null`.
 
-Em ambos: preencher `active_notion_eap`, `active_title`, `context_packet` (path do packet salvo, ou `null` quando nenhuma fonte externa foi necessária), `executor`, `reviewer`, `next_owner: claude`, `next_action: execute_active_work_item`.
+Em ambos: preencher `active_notion_eap`, `active_title`, `active_branch`, `context_packet` (path do packet salvo, ou `null` quando nenhuma fonte externa foi necessária), `executor`, `reviewer`, `next_owner: claude`, `next_action: execute_active_work_item`.

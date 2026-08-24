@@ -19,6 +19,10 @@ Ao iniciar, transicione para `reviewing`.
 
 Review não é auditoria do repositório. Não inclua refactor adjacente.
 
+A base da review é a branch do bloco: `git log --oneline main..HEAD` e `git diff main...HEAD`.
+Confirme um commit por EAP, mensagem no padrão Conventional Commits e ausência de commit em `main`.
+Commit faltando para uma EAP entregue é achado `blocking`.
+
 Classifique achados como `blocking`, `important` ou `suggestion`.
 - blocking: deve ser corrigido no mesmo work item;
 - important que exige decisão: `blocked`, `resume_state: reviewing`, `next_owner: joao`;

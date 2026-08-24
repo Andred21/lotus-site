@@ -27,7 +27,8 @@ Use IDs estáveis; nome de exibição não basta como proveniência.
 - Não modifique `CLAUDE.md`, `AGENTS.md`, `.claude/**` nem `.agents/**`; mudança no harness é executada por Claude.
 - Não replaneje nem aumente escopo recebido.
 - Não escreva em Notion, Drive ou Figma.
-- Não execute push, PR, merge, rebase destrutivo ou exclusão de branch.
+- Não execute commit, push, PR, merge, rebase destrutivo ou exclusão de branch; o histórico é escrito por Claude.
+- Não crie nem troque de branch; trabalhe na branch que Claude já deixou ativa.
 - Execução delegada toca somente `paths_autorizados`.
 - Preserve WIP.
 - Nunca declare comando/teste como executado sem saída real.

@@ -21,18 +21,8 @@ closure → progress.md
 
 # AGORA
 
-## 1.2.2 · Fixar versões de runtime e package manager
-**Frente:** Setup · **Contexto:** não · **Fonte:** Notion `1.2.2` (depende de `1.2.1`, Concluída)
-**Objetivo:** adicionar `.nvmrc`, `engines` e `packageManager` para evitar deriva entre máquinas e CI.
-**Escopo:** `.nvmrc` com o Node do projeto; `engines` no `package.json`; `packageManager` já fixado
-por `1.1.4` permanece.
-**DoD:** versões esperadas documentadas e o gerenciador alerta runtime incompatível.
-
-## 1.2.3 · Endurecer configuração TypeScript
-**Frente:** Setup · **Contexto:** não · **Fonte:** Notion `1.2.3` (depende de `1.2.1`, Concluída)
-**Objetivo:** manter `strict` e habilitar `noUncheckedIndexedAccess`, sem `any` para contornar erro.
-**Escopo:** `tsconfig.app.json` e `tsconfig.node.json`; corrigir o que a flag acusar.
-**DoD:** typecheck passa com `strict` e `noUncheckedIndexedAccess` habilitados.
+Vazio. `1.2.2` e `1.2.3` fecharam em 2026-08-24 e saíram daqui; o rastro está em
+`docs/superpowers/historico/progress.md`. Próximo item entra só por seleção explícita do João.
 
 ---
 
@@ -71,6 +61,14 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 - **D-04 · Limite numérico de tamanho/complexidade adiado** — sem amostra do clone não há como
   calibrar `max-lines`, `max-lines-per-function` ou `complexity`; hoje a regra é textual.
   **Gatilho:** após Sprint 2.
+- **D-06 · `scripts/*.mjs` fora de qualquer projeto TypeScript** — `tsconfig.node.json` tem
+  `"include": ["vite.config.ts"]`, então `scripts/validate-agent-workflow.mjs` não é typechecked por
+  `tsc -b` nem coberto pelo `strict` ligado em `1.2.3`. Levantado na review de `1.2.2+1.2.3` como
+  suggestion e deixado fora do escopo.
+  **Gatilho:** ao planejar `1.3.6` (scripts de qualidade) ou `1.3.7` (CI).
+- **D-07 · `engineStrict` exige Node 24 no CI** — com `engineStrict: true`, qualquer script pnpm
+  morre com `ERR_PNPM_UNSUPPORTED_ENGINE` fora da faixa de `engines`. O runner precisa ler `.nvmrc`.
+  **Gatilho:** ao planejar `1.3.7`.
 - **D-05 · Cobertura de gate incompleta** — `agent:check` não roda em CI até `1.3.7`; review visual
   não tem Playwright até `1.3.3`. A limitação é registrada no relatório de review, nunca simulada.
   **Gatilho:** ao fechar `1.3.3` e `1.3.7`.

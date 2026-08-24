@@ -6,6 +6,7 @@ work_class: null
 active_work_item: null
 active_notion_eap: null
 active_title: null
+active_branch: null
 bounded_design: null
 authorized_paths: null
 next_owner: joao
@@ -17,10 +18,10 @@ active_plan: null
 executor: null
 reviewer: null
 blocker: null
-supervised_cycles_completed: 2
-last_completed_work_item: 1.1.6
-state_basis_commit: c58f7d4
-updated_at: 2026-08-24T21:05:00Z
+supervised_cycles_completed: 3
+last_completed_work_item: 1.2.2+1.2.3
+state_basis_commit: 6cd94ca
+updated_at: 2026-08-24T23:30:00Z
 ---
 
 # Estado operacional — Lotus Site
@@ -45,6 +46,8 @@ updated_at: 2026-08-24T21:05:00Z
 ## Invariantes
 
 - Existe no máximo um `active_work_item`.
+- Todo estado diferente de `idle` tem `active_branch` preenchida e diferente de `main`;
+  a branch nasce em `/planejar-site` e morre no PR aberto por `/fechar-site`.
 - `work_class` é `bounded` ou `architectural` a partir de `ready_for_execution`; em `planning` ainda pode ser `null`.
 - `architectural` exige `active_spec` e `active_plan` antes de `ready_for_execution`.
 - `bounded` mantém `active_spec` e `active_plan` nulos e persiste apenas `bounded_design` curto + `authorized_paths`.
