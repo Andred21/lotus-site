@@ -17,10 +17,10 @@ active_plan: null
 executor: null
 reviewer: null
 blocker: null
-supervised_cycles_completed: 1
-last_completed_work_item: 1.1.4
-state_basis_commit: 8e4de9a7a725450d66bb9efc6cac95cf51f975e2
-updated_at: 2026-08-24T16:34:34Z
+supervised_cycles_completed: 2
+last_completed_work_item: 1.1.6
+state_basis_commit: c58f7d4
+updated_at: 2026-08-24T21:05:00Z
 ---
 
 # Estado operacional — Lotus Site
@@ -45,7 +45,7 @@ updated_at: 2026-08-24T16:34:34Z
 ## Invariantes
 
 - Existe no máximo um `active_work_item`.
-- `work_class` é `bounded` ou `architectural` enquanto houver item ativo.
+- `work_class` é `bounded` ou `architectural` a partir de `ready_for_execution`; em `planning` ainda pode ser `null`.
 - `architectural` exige `active_spec` e `active_plan` antes de `ready_for_execution`.
 - `bounded` mantém `active_spec` e `active_plan` nulos e persiste apenas `bounded_design` curto + `authorized_paths`.
 - `executor` e `reviewer` devem ser diferentes a partir de `ready_for_execution`.

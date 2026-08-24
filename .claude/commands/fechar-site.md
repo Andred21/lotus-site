@@ -21,10 +21,13 @@ Execute a prova específica descrita no plano/Notion/spec. Ferramenta verde gen�
 Execute somente comandos realmente configurados:
 
 ```bash
+pnpm agent:check
 pnpm lint
 pnpm exec tsc -b
 pnpm build
 ```
+
+`pnpm agent:check` valida o contrato do harness (estado, backlog, rules, skills), não o produto.
 
 Quando Vitest/Playwright forem adicionados por tasks futuras, o próprio `CLAUDE.md`/plano passa a incluí-los. Não invoque runner inexistente.
 
