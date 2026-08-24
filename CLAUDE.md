@@ -18,6 +18,18 @@ O site público é referência visual/conteúdo do clone, não autoridade arquit
 
 Leia sempre `docs/superpowers/state.md` primeiro. Histórico vive em `docs/superpowers/historico/progress.md` e nunca define fase. Leia packet/spec/plano apontados pelo estado antes de buscar contexto novamente. Antes de editar, carregue as rules de `.claude/rules/` cujos `paths` casam com os arquivos tocados.
 
+Quatro fontes, papéis distintos:
+
+```text
+docs/superpowers/state.md               = fase e item ativo
+docs/superpowers/backlog.md             = fila operacional local
+Notion collection://2f0e72ec-…          = roadmap externo
+docs/superpowers/historico/progress.md  = histórico fechado
+```
+
+Com `workflow_state: idle`, Claude pode exibir o backlog quando pedido. Claude não seleciona item
+automaticamente, não promove item do backlog e não altera o Notion por causa do backlog.
+
 ## 4. Workflow
 
 Superpowers conduz a técnica; os comandos do site apenas impõem gates.
