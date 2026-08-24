@@ -1,26 +1,26 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_closure
-work_class: architectural
-active_work_item: 1.1.6
-active_notion_eap: 1.1.6
-active_title: "Endurecer workflow agentic e criar backlog operacional"
+workflow_state: idle
+work_class: null
+active_work_item: null
+active_notion_eap: null
+active_title: null
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: close_active_work_item
+next_owner: joao
+next_action: select_work_item
 resume_state: null
 context_packet: null
-active_spec: docs/superpowers/specs/2026-08-24-1.1.6-agentic-workflow-hardening-design.md
-active_plan: docs/superpowers/plans/2026-08-24-1.1.6-agentic-workflow-hardening.md
-executor: claude
-reviewer: codex
+active_spec: null
+active_plan: null
+executor: null
+reviewer: null
 blocker: null
-supervised_cycles_completed: 1
-last_completed_work_item: 1.1.4
+supervised_cycles_completed: 2
+last_completed_work_item: 1.1.6
 state_basis_commit: c58f7d4
-updated_at: 2026-08-24T20:40:00Z
+updated_at: 2026-08-24T21:05:00Z
 ---
 
 # Estado operacional — Lotus Site

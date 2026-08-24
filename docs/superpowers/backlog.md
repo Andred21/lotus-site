@@ -21,16 +21,6 @@ closure → progress.md
 
 # AGORA
 
-## 1.1.6 · Endurecer workflow agentic e criar backlog operacional
-**Frente:** Harness · **Contexto:** não · **Fonte:** Notion `1.1.6`; `docs/1.1.6-agentic-workflow-hardening.md`
-**Objetivo:** fortalecer o harness agentic antes de avançar a fundação funcional, para conduzir o
-trabalho de ponta a ponta na IDE com o mínimo de transferência manual para chats externos.
-**Escopo:** backlog operacional; rules de arquitetura/frontend objetivas; catracas de fronteira no
-ESLint; contratos Codex com preconditions, limites, evidência e checklist; `agent:check` ampliado.
-**DoD:** backlog existe e o `CLAUDE.md` o consulta sem tratá-lo como estado; catracas cobrem o que é
-viável; `agent:check`, lint, typecheck e build verdes; nenhum fluxo autônomo, sync de Notion ou UI
-review dependente de Playwright criado prematuramente.
-
 ## 1.2.2 · Fixar versões de runtime e package manager
 **Frente:** Setup · **Contexto:** não · **Fonte:** Notion `1.2.2` (depende de `1.2.1`, Concluída)
 **Objetivo:** adicionar `.nvmrc`, `engines` e `packageManager` para evitar deriva entre máquinas e CI.
