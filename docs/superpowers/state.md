@@ -1,26 +1,26 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
+workflow_state: ready_for_closure
 work_class: architectural
 active_work_item: 1.1.6
 active_notion_eap: 1.1.6
 active_title: "Endurecer workflow agentic e criar backlog operacional"
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: decidir_escopo_r4
-resume_state: reviewing
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-08-24-1.1.6-agentic-workflow-hardening-design.md
 active_plan: docs/superpowers/plans/2026-08-24-1.1.6-agentic-workflow-hardening.md
 executor: claude
 reviewer: codex
-blocker: "R-4 review: .claude/commands/fechar-site.md nao roda pnpm agent:check, agora declarado gate em .claude/rules/testing.md; corrigir exige tocar path fora do plano aprovado de 1.1.6"
+blocker: null
 supervised_cycles_completed: 1
 last_completed_work_item: 1.1.4
-state_basis_commit: f943204
-updated_at: 2026-08-24T20:10:00Z
+state_basis_commit: c58f7d4
+updated_at: 2026-08-24T20:40:00Z
 ---
 
 # Estado operacional — Lotus Site
