@@ -1,58 +1,58 @@
-# CLAUDE.md
+# CLAUDE.md — Lotus Site
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 1. Produto
 
-## Current state
+`lotus-site` reconstrói o site institucional público da Lotus OTEC. Primeiro marco: clone funcional e visualmente fiel de `https://lotusotec.cl/`; redesign e evolução somente após baseline de paridade aprovada.
 
-`lotus-site` is still the unmodified Vite + React + TypeScript starter scaffold — `src/App.tsx` is the generated welcome page and `README.md` is the stock template README (its content describes the template, not this project). There is no routing, state management, styling framework, or backend yet. Treat almost any real task here as greenfield work rather than a change to existing app logic.
+## 2. Fontes de verdade
 
-## Commands
+1. instrução atual e explícita do João Victor;
+2. Google Drive canônico quando houver planejamento para o assunto;
+3. referência Git solicitada ou a branch padrão atual;
+4. Notion `collection://2f0e72ec-ef53-4e08-a466-312de7eea7d2` para organização das tasks;
+5. memória somente como pista.
 
-Package manager is **pnpm** (`pnpm-lock.yaml` + `pnpm-workspace.yaml`); do not use npm or yarn.
+O site público é referência visual/conteúdo do clone, não autoridade arquitetural. Divergência material entre fontes bloqueia; não escolha silenciosamente.
 
-| Task | Command |
-| --- | --- |
-| Dev server (HMR) | `pnpm dev` |
-| Typecheck + production build | `pnpm build` (= `tsc -b && vite build`) |
-| Typecheck only | `pnpm exec tsc -b` |
-| Lint | `pnpm lint` |
-| Serve the built `dist/` | `pnpm preview` |
+## 3. Estado e contexto
 
-No test runner is configured — there is no `test` script and no testing dependency installed. If tests are needed, one has to be set up first (Vitest is the natural fit for a Vite project); don't claim tests pass until a runner actually exists.
+Leia sempre `docs/superpowers/state.md` primeiro. Histórico vive em `docs/superpowers/historico/progress.md` e nunca define fase. Leia packet/spec/plano apontados pelo estado antes de buscar contexto novamente. Antes de editar, carregue as rules de `.claude/rules/` cujos `paths` casam com os arquivos tocados.
 
-`pnpm-workspace.yaml` only carries `minimumReleaseAgeExclude` entries pinning two `@rolldown/binding-*` packages past pnpm's minimum-release-age gate. If a new dependency install is blocked as "too recently published", that list is where an exception goes — this is not a multi-package workspace.
+## 4. Workflow
 
-## TypeScript project layout
+Superpowers conduz a técnica; os comandos do site apenas impõem gates.
 
-`tsconfig.json` is a solution file with no sources of its own; it references two projects that `tsc -b` builds together:
+- `/planejar-site <work-item>` — contexto → brainstorming/spec/plano; não implementa.
+- `/executar-site <work-item>` — executa somente plano aprovado.
+- `/revisar-site <work-item>` — revisão independente pelo agente diferente do executor.
+- `/fechar-site <work-item>` — prova aceite, gates, histórico e volta a `idle`.
 
-- **`tsconfig.app.json`** — includes `src`, DOM lib, `vite/client` types. Application code.
-- **`tsconfig.node.json`** — includes only `vite.config.ts`, Node types, `module: nodenext`. Build-time code.
+Delegação ao Codex usa o contrato em `.agents/skills/<nome>/SKILL.md`; Claude repassa esse conteúdo ao Codex na íntegra, sem paráfrase.
 
-A new build-time script (a Vite plugin, a codegen step, `vitest.config.ts`) must be added to `tsconfig.node.json`'s `include`, or `tsc -b` silently never typechecks it.
+Modo inicial: `supervised`. `/desenvolver-site` não existe até decisão arquitetural posterior.
 
-Compiler settings that reject code the build would otherwise accept:
+## 5. Leis do site
 
-- `noUnusedLocals` / `noUnusedParameters` — an unused import or variable **fails `pnpm build`**, not just lint. Common trap when commenting code out mid-edit.
-- `erasableSyntaxOnly` — TS syntax with runtime semantics is banned: no `enum`, no constructor parameter properties, no `namespace`. Use union string literals or `const` objects instead of enums.
-- `verbatimModuleSyntax` — type-only imports must be written `import type { Foo } from …`, and type-only exports `export type`.
-- `allowImportingTsExtensions` — imports carry the source extension (`import App from './App.tsx'`), matching the existing files.
+1. Clone antes de redesign.
+2. Claude é o único escritor de `state.md` no harness.
+3. Work item nunca é selecionado automaticamente.
+4. Codex delegado não replaneja nem sai de `paths_autorizados`.
+5. Relatório de agente não substitui diff/teste executado.
+6. Sem escrita em Notion/Drive/Figma, push, PR ou merge sem autorização explícita.
+7. Não adicionar dependência sem necessidade do work item.
+8. Não afirmar teste/build/lint aprovado sem execução real.
 
-## Lint
+## 6. Comandos técnicos atuais
 
-Flat config in `eslint.config.js`: `js.configs.recommended`, `typescript-eslint` recommended (untyped — no `parserOptions.project`, so type-aware rules are off), `react-hooks` recommended, and `react-refresh` in Vite mode. The last one means **a file that exports a component should export only components** — adding a helper `export const` next to a component breaks HMR and trips `react-refresh/only-export-components`. Put shared helpers, constants, and hooks in their own modules.
-
-The template README documents how to upgrade to type-aware lint rules (`recommendedTypeChecked` / `strictTypeChecked` plus `parserOptions.project`); that has not been done here.
-
-## Assets and styling
-
-Two asset paths with different semantics — pick deliberately:
-
-- **`src/assets/`** — imported in TS (`import heroImg from './assets/hero.png'`), so Vite fingerprints and bundles them. Use for anything referenced from components.
-- **`public/`** — copied verbatim, referenced by absolute URL. `public/icons.svg` is an SVG sprite consumed as `<svg><use href="/icons.svg#github-icon" /></svg>`. New icons go into that sprite as a new `<symbol id>`, not as separate imported files.
-
-Styling is plain hand-written CSS — no Tailwind, no CSS modules, no preprocessor. `src/index.css` defines the design tokens (`--text`, `--bg`, `--accent`, `--sans`, shadows) on `:root` with `color-scheme: light dark`; `src/App.css` holds component styles. New colors and fonts belong in the `:root` token block rather than inline in component CSS.
-
-## Repo notes
-
-`.claude/rules/testing.md` and `.claude/rules/architecture.md` exist but are empty files — no guidance to follow there yet.
+- Gerenciador de pacotes é **pnpm** (não usar npm nem yarn).
+- Pacote recusado por publicação recente demais libera exceção em `minimumReleaseAgeExclude`, no `pnpm-workspace.yaml`.
+- `pnpm dev` — servidor de desenvolvimento com HMR.
+- `pnpm build` (`tsc -b && vite build`) — typecheck seguido de build de produção.
+- `pnpm exec tsc -b` — typecheck isolado, sem build.
+- `pnpm lint` — ESLint via flat config (`eslint.config.js`).
+- `pnpm preview` — serve o `dist/` já gerado.
+- Não há test runner configurado hoje; nenhum script `test` nem dependência de testes instalada.
+- `tsconfig.json` é um solution file que referencia dois projetos buildados juntos por `tsc -b`: `tsconfig.app.json` (código de aplicação em `src/`) e `tsconfig.node.json` (código de build, ex. `vite.config.ts`). Script de build novo (ex. `vitest.config.ts`, plugin Vite) precisa entrar no `include` de `tsconfig.node.json` ou `tsc -b` nunca o typecheca.
+- Compilador roda com `noUnusedLocals`, `noUnusedParameters` e `erasableSyntaxOnly` ativos (import/variável não usada ou sintaxe com semântica de runtime como `enum` quebram `pnpm build`) e com `verbatimModuleSyntax` (import/export somente-tipo precisam da palavra `type`).
+- Lint usa ESLint flat config.
+- `src/assets/` guarda assets importados por componente (Vite fingerprinta o arquivo); `public/` é copiado verbatim e referenciado por URL absoluta.
