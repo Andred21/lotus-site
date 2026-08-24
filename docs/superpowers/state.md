@@ -1,15 +1,15 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: executing
+workflow_state: ready_for_review
 work_class: architectural
 active_work_item: 1.1.6
 active_notion_eap: 1.1.6
 active_title: "Endurecer workflow agentic e criar backlog operacional"
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: continue_active_plan
+next_owner: codex
+next_action: review_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-08-24-1.1.6-agentic-workflow-hardening-design.md
@@ -19,8 +19,8 @@ reviewer: codex
 blocker: null
 supervised_cycles_completed: 1
 last_completed_work_item: 1.1.4
-state_basis_commit: 4ca6c4a
-updated_at: 2026-08-24T19:00:00Z
+state_basis_commit: 2eb3447
+updated_at: 2026-08-24T19:40:00Z
 ---
 
 # Estado operacional — Lotus Site
