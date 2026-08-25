@@ -11,6 +11,7 @@ Contratos de delegação vivem em `.agents/skills/<nome>/SKILL.md`.
 ## Bootstrap
 
 Leia nesta ordem:
+
 1. `CLAUDE.md`;
 2. `docs/superpowers/state.md`;
 3. packet/spec/plano apontados pelo estado, ignorando `null`;

@@ -30,7 +30,7 @@ Vazio. `1.2.2` e `1.2.3` fecharam em 2026-08-24 e saíram daqui; o rastro está 
 
 Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 
-- **Tooling e qualidade** — Sprint 0 restante (`1.2.4`–`1.3.9`, 12 tasks): gitignore/editorconfig/env,
+- **Tooling e qualidade** — Sprint 0 restante (`1.2.4`–`1.3.9`, 11 tasks): gitignore/editorconfig/env,
   dependências mínimas de runtime, Prettier + ordenação Tailwind, Vitest, Playwright, axe,
   arquitetura de pastas (`1.3.5`), scripts de qualidade, CI inicial, ADR-SITE-001, baseline técnico.
 - **Inventário do site** — Sprint 1 (10): páginas, conteúdo e assets de `lotusotec.cl`.
@@ -66,9 +66,29 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   `tsc -b` nem coberto pelo `strict` ligado em `1.2.3`. Levantado na review de `1.2.2+1.2.3` como
   suggestion e deixado fora do escopo.
   **Gatilho:** ao planejar `1.3.6` (scripts de qualidade) ou `1.3.7` (CI).
+  **Fechado por este bloco** (`1.2.4`–`1.3.9`) em 2026-08-24.
 - **D-07 · `engineStrict` exige Node 24 no CI** — com `engineStrict: true`, qualquer script pnpm
   morre com `ERR_PNPM_UNSUPPORTED_ENGINE` fora da faixa de `engines`. O runner precisa ler `.nvmrc`.
   **Gatilho:** ao planejar `1.3.7`.
+  **Fechado por este bloco** (`1.2.4`–`1.3.9`) em 2026-08-24.
 - **D-05 · Cobertura de gate incompleta** — `agent:check` não roda em CI até `1.3.7`; review visual
   não tem Playwright até `1.3.3`. A limitação é registrada no relatório de review, nunca simulada.
   **Gatilho:** ao fechar `1.3.3` e `1.3.7`.
+  **Parcialmente fechado por este bloco** (`1.2.4`–`1.3.9`) em 2026-08-24 — `agent:check` passou a
+  rodar em CI e o Playwright passou a existir.
+- **D-08 · Tailwind entrou sem EAP própria** — nenhuma task do roadmap instala `tailwindcss`,
+  mas `1.2.5` pede `tailwind-merge` e `1.3.1` pede `prettier-plugin-tailwindcss`. Tailwind foi
+  absorvido por `1.2.5` por decisão de João em 2026-08-24. Reconciliar com o Notion quando
+  houver autorização de escrita.
+  **Gatilho:** junto de `D-01`, antes de planejar o Sprint 3.
+- **D-09 · Estrutura de `1.3.5` divergiu do Notion** — a EAP pedia `features/contact`, `config`,
+  `tests` e `docs`; `.claude/rules/architecture.md` venceu e esses diretórios não nasceram, por
+  decisão de João em 2026-08-24. `components/`, `app/` e `integrations/` nascem com consumidor
+  real.
+  **Gatilho:** ao planejar o Sprint 3.
+- **D-10 · Playwright cobre só Chromium** — WebKit e Firefox ficaram de fora do baseline por
+  não haver clone a comparar. Paridade visual em outro motor não é verificada hoje.
+  **Gatilho:** ao planejar o Sprint 5.
+- **D-11 · axe reporta mas não reprova** — a auditoria de `1.3.4` executa e anexa
+  `axe-home.json`, sem transformar violação em falha, porque o alvo é a home do scaffold Vite.
+  **Gatilho:** ao planejar o Sprint 4.

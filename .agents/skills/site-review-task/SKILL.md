@@ -57,15 +57,22 @@ touch `docs/superpowers/state.md`, `.claude/**` or `.agents/**`.
 Return exactly:
 
 BEGIN SITE REVIEW REPORT
+
 ## Verdict
+
 PASS|FINDINGS|BLOCKED
+
 ## Findings
+
 [R-N] <path:line> — <title>
 severity: blocking|important|suggestion
 found: ...
 expected: ...
 impact: ...
+
 ## Verification observed
+
 ## Limitations
+
 END SITE REVIEW REPORT
 RECOMMENDED_TRANSITION: ready_for_closure|reviewing|blocked

@@ -24,6 +24,7 @@ Confirme um commit por EAP, mensagem no padrão Conventional Commits e ausência
 Commit faltando para uma EAP entregue é achado `blocking`.
 
 Classifique achados como `blocking`, `important` ou `suggestion`.
+
 - blocking: deve ser corrigido no mesmo work item;
 - important que exige decisão: `blocked`, `resume_state: reviewing`, `next_owner: joao`;
 - suggestion: não entra automaticamente no escopo.

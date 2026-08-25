@@ -18,10 +18,10 @@ active_plan: null
 executor: null
 reviewer: null
 blocker: null
-supervised_cycles_completed: 3
-last_completed_work_item: 1.2.2+1.2.3
-state_basis_commit: 6cd94ca
-updated_at: 2026-08-24T23:30:00Z
+supervised_cycles_completed: 4
+last_completed_work_item: 1.2.4-1.3.9
+state_basis_commit: 6ed7795
+updated_at: 2026-08-25T02:45:28Z
 ---
 
 # Estado operacional — Lotus Site
@@ -30,18 +30,18 @@ updated_at: 2026-08-24T23:30:00Z
 
 ## Estados válidos
 
-| Estado | Próxima ação permitida |
-|---|---|
-| `idle` | selecionar explicitamente um work item |
-| `context_required` | gerar/atualizar Context Packet |
-| `ready_for_planning` | iniciar planejamento |
-| `planning` | continuar brainstorming/spec/plano |
-| `ready_for_execution` | iniciar execução do plano |
-| `executing` | continuar somente o plano ativo |
-| `ready_for_review` | iniciar revisão independente |
-| `reviewing` | continuar review/correções aprovadas |
-| `ready_for_closure` | executar fechamento |
-| `blocked` | resolver `blocker` e retornar a `resume_state` |
+| Estado                | Próxima ação permitida                         |
+| --------------------- | ---------------------------------------------- |
+| `idle`                | selecionar explicitamente um work item         |
+| `context_required`    | gerar/atualizar Context Packet                 |
+| `ready_for_planning`  | iniciar planejamento                           |
+| `planning`            | continuar brainstorming/spec/plano             |
+| `ready_for_execution` | iniciar execução do plano                      |
+| `executing`           | continuar somente o plano ativo                |
+| `ready_for_review`    | iniciar revisão independente                   |
+| `reviewing`           | continuar review/correções aprovadas           |
+| `ready_for_closure`   | executar fechamento                            |
+| `blocked`             | resolver `blocker` e retornar a `resume_state` |
 
 ## Invariantes
 

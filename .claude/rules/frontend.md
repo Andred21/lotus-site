@@ -1,8 +1,8 @@
 ---
 paths:
-  - "src/**/*.ts"
-  - "src/**/*.tsx"
-  - "src/**/*.css"
+  - 'src/**/*.ts'
+  - 'src/**/*.tsx'
+  - 'src/**/*.css'
 ---
 
 # Frontend — Lotus Site

@@ -29,34 +29,36 @@
 
 ## File map
 
-| Path | Responsabilidade |
-|---|---|
-| `CLAUDE.md` | mapa curto da sessão: produto, fontes, estado, workflow, comandos e fatos técnicos reais |
-| `AGENTS.md` | entrada do Codex e limites de autoridade |
-| `.claude/rules/architecture.md` | fronteiras e decisões arquiteturais do site |
-| `.claude/rules/frontend.md` | convenções React/TypeScript/CSS/componentização |
-| `.claude/rules/testing.md` | prova, gates e distinção análise/execução/CI |
-| `.claude/commands/planejar-site.md` | gate contexto → brainstorming/spec/plano |
-| `.claude/commands/executar-site.md` | gate plano → execução Claude/Codex |
-| `.claude/commands/revisar-site.md` | review por agente diferente do executor |
-| `.claude/commands/fechar-site.md` | aceite + gates + histórico + reset de estado |
-| `.agents/skills/site-context-packet/SKILL.md` | coleta read-only e compactação de contexto pelo Codex |
-| `.agents/skills/site-execute-task/SKILL.md` | execução Codex limitada a plano/paths |
-| `.agents/skills/site-review-task/SKILL.md` | revisão independente read-only de trabalho do Claude |
-| `docs/superpowers/state.md` | única fonte da fase operacional atual |
-| `docs/superpowers/historico/progress.md` | histórico curto; nunca escolhe fase |
-| `scripts/validate-agent-workflow.mjs` | catraca estrutural sem dependência externa |
-| `package.json` | expõe `agent:check` |
+| Path                                          | Responsabilidade                                                                         |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `CLAUDE.md`                                   | mapa curto da sessão: produto, fontes, estado, workflow, comandos e fatos técnicos reais |
+| `AGENTS.md`                                   | entrada do Codex e limites de autoridade                                                 |
+| `.claude/rules/architecture.md`               | fronteiras e decisões arquiteturais do site                                              |
+| `.claude/rules/frontend.md`                   | convenções React/TypeScript/CSS/componentização                                          |
+| `.claude/rules/testing.md`                    | prova, gates e distinção análise/execução/CI                                             |
+| `.claude/commands/planejar-site.md`           | gate contexto → brainstorming/spec/plano                                                 |
+| `.claude/commands/executar-site.md`           | gate plano → execução Claude/Codex                                                       |
+| `.claude/commands/revisar-site.md`            | review por agente diferente do executor                                                  |
+| `.claude/commands/fechar-site.md`             | aceite + gates + histórico + reset de estado                                             |
+| `.agents/skills/site-context-packet/SKILL.md` | coleta read-only e compactação de contexto pelo Codex                                    |
+| `.agents/skills/site-execute-task/SKILL.md`   | execução Codex limitada a plano/paths                                                    |
+| `.agents/skills/site-review-task/SKILL.md`    | revisão independente read-only de trabalho do Claude                                     |
+| `docs/superpowers/state.md`                   | única fonte da fase operacional atual                                                    |
+| `docs/superpowers/historico/progress.md`      | histórico curto; nunca escolhe fase                                                      |
+| `scripts/validate-agent-workflow.mjs`         | catraca estrutural sem dependência externa                                               |
+| `package.json`                                | expõe `agent:check`                                                                      |
 
 ---
 
 ### Task 1: Criar estado operacional e contrato de histórico
 
 **Files:**
+
 - Create: `docs/superpowers/state.md`
 - Create: `docs/superpowers/historico/progress.md`
 
 **Interfaces:**
+
 - Consumes: nenhuma; é a raiz do workflow.
 - Produces: contrato operacional consumido por todos os commands/skills seguintes.
 
@@ -106,18 +108,18 @@ updated_at: null
 
 ## Estados válidos
 
-| Estado | Próxima ação permitida |
-|---|---|
-| `idle` | selecionar explicitamente um work item |
-| `context_required` | gerar/atualizar Context Packet |
-| `ready_for_planning` | iniciar planejamento |
-| `planning` | continuar brainstorming/spec/plano |
-| `ready_for_execution` | iniciar execução do plano |
-| `executing` | continuar somente o plano ativo |
-| `ready_for_review` | iniciar revisão independente |
-| `reviewing` | continuar review/correções aprovadas |
-| `ready_for_closure` | executar fechamento |
-| `blocked` | resolver `blocker` e retornar a `resume_state` |
+| Estado                | Próxima ação permitida                         |
+| --------------------- | ---------------------------------------------- |
+| `idle`                | selecionar explicitamente um work item         |
+| `context_required`    | gerar/atualizar Context Packet                 |
+| `ready_for_planning`  | iniciar planejamento                           |
+| `planning`            | continuar brainstorming/spec/plano             |
+| `ready_for_execution` | iniciar execução do plano                      |
+| `executing`           | continuar somente o plano ativo                |
+| `ready_for_review`    | iniciar revisão independente                   |
+| `reviewing`           | continuar review/correções aprovadas           |
+| `ready_for_closure`   | executar fechamento                            |
+| `blocked`             | resolver `blocker` e retornar a `resume_state` |
 
 ## Invariantes
 
@@ -141,7 +143,7 @@ updated_at: null
 > Estado atual: `docs/superpowers/state.md`.
 
 | Data | Work item | Executor | Reviewer | Resultado | Referências |
-|---|---|---|---|---|---|
+| ---- | --------- | -------- | -------- | --------- | ----------- |
 ```
 
 - [ ] **Step 4: validar os dois contratos**
@@ -167,12 +169,14 @@ git commit -m "docs: add site workflow state contract"
 ### Task 2: Consolidar `CLAUDE.md` e rules do site
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 - Modify: `.claude/rules/architecture.md`
 - Create: `.claude/rules/frontend.md`
 - Modify: `.claude/rules/testing.md`
 
 **Interfaces:**
+
 - Consumes: `docs/superpowers/state.md`.
 - Produces: mapa da sessão e rules seletivas usadas por commands/skills posteriores.
 
@@ -249,8 +253,8 @@ Não copiar a mecânica detalhada das rules para `CLAUDE.md`.
 ```markdown
 ---
 paths:
-  - "src/**"
-  - "vite.config.ts"
+  - 'src/**'
+  - 'vite.config.ts'
 ---
 
 # Architecture — Lotus Site
@@ -270,9 +274,9 @@ paths:
 ```markdown
 ---
 paths:
-  - "src/**/*.ts"
-  - "src/**/*.tsx"
-  - "src/**/*.css"
+  - 'src/**/*.ts'
+  - 'src/**/*.tsx'
+  - 'src/**/*.css'
 ---
 
 # Frontend — Lotus Site
@@ -330,10 +334,12 @@ git commit -m "docs: define site agent and frontend rules"
 ### Task 3: Criar `AGENTS.md` e Context Packet do Codex
 
 **Files:**
+
 - Create: `AGENTS.md`
 - Create: `.agents/skills/site-context-packet/SKILL.md`
 
 **Interfaces:**
+
 - Consumes: `CLAUDE.md`, `state.md`, fonte Notion por ID.
 - Produces: Context Packet entre markers; nunca escreve estado.
 
@@ -351,6 +357,7 @@ Codex é agente auxiliar de leitura, Context Packet, execução mecânica explic
 ## Bootstrap
 
 Leia nesta ordem:
+
 1. `CLAUDE.md`;
 2. `docs/superpowers/state.md`;
 3. packet/spec/plano apontados pelo estado, ignorando `null`;
@@ -440,9 +447,11 @@ git commit -m "docs: add codex context handoff"
 ### Task 4: Implementar `/planejar-site`
 
 **Files:**
+
 - Create: `.claude/commands/planejar-site.md`
 
 **Interfaces:**
+
 - Consumes: `state.md`, Context Packet quando necessário, Superpowers `brainstorming` e `writing-plans`.
 - Produces: caminho Superpowers correto: bounded sem spec/plano; architectural com spec/plano; em ambos os casos handoff e `ready_for_execution`.
 
@@ -487,9 +496,11 @@ Use `using-superpowers` e siga exatamente a classificação da skill `brainstorm
 Todo plano arquitetural executável termina com:
 
 ## Handoff de execução
+
 executor: claude|codex
 reviewer: codex|claude
 paths_autorizados:
+
 - <paths fechados quando executor=codex>
 
 Executor e reviewer devem ser diferentes.
@@ -524,10 +535,12 @@ git commit -m "docs: add site planning command"
 ### Task 5: Implementar execução delegada e `/executar-site`
 
 **Files:**
+
 - Create: `.agents/skills/site-execute-task/SKILL.md`
 - Create: `.claude/commands/executar-site.md`
 
 **Interfaces:**
+
 - Consumes: plano ativo com `Handoff de execução`.
 - Produces: implementação conforme plano e estado `ready_for_review` ou `blocked`.
 
@@ -547,10 +560,12 @@ Require `workflow_state: executing` or caller-declared transition from `ready_fo
 Require `executor: codex`.
 
 Execution source depends on `work_class`:
+
 - `architectural`: require `plan_path` and follow the approved plan;
 - `bounded`: require the short approved `bounded_design`; `active_plan` must remain null. Do not invent a plan document.
 
 Rules:
+
 - follow the architectural plan task by task, or the bounded approved design when `work_class: bounded`;
 - do not replan or redesign;
 - modify only `paths_autorizados`;
@@ -563,12 +578,19 @@ Rules:
 Return exactly:
 
 BEGIN SITE EXECUTION REPORT
+
 ## Work item
+
 ## Tasks
+
 ## Files touched
+
 ## Commands run
+
 ## Acceptance evidence
+
 ## Deviations and limitations
+
 END SITE EXECUTION REPORT
 RECOMMENDED_TRANSITION: ready_for_review|blocked
 ```
@@ -632,10 +654,12 @@ git commit -m "docs: add delegated site execution workflow"
 ### Task 6: Implementar revisão independente
 
 **Files:**
+
 - Create: `.agents/skills/site-review-task/SKILL.md`
 - Create: `.claude/commands/revisar-site.md`
 
 **Interfaces:**
+
 - Consumes: work item executado, base/head, spec/plano/packet e rules.
 - Produces: review limpo → `ready_for_closure`; achado decisório → `blocked` com retomada em `reviewing`.
 
@@ -658,16 +682,23 @@ Check acceptance criteria, plan compliance, regressions, unnecessary complexity,
 Return exactly:
 
 BEGIN SITE REVIEW REPORT
+
 ## Verdict
+
 PASS|FINDINGS|BLOCKED
+
 ## Findings
+
 [R-N] <path:line> — <title>
 severity: blocking|important|suggestion
 found: ...
 expected: ...
 impact: ...
+
 ## Verification observed
+
 ## Limitations
+
 END SITE REVIEW REPORT
 RECOMMENDED_TRANSITION: ready_for_closure|blocked
 ```
@@ -695,6 +726,7 @@ Ao iniciar, transicione para `reviewing`.
 Review não é auditoria do repositório. Não inclua refactor adjacente.
 
 Classifique achados como `blocking`, `important` ou `suggestion`.
+
 - blocking: deve ser corrigido no mesmo work item;
 - important que exige decisão: `blocked`, `resume_state: reviewing`, `next_owner: joao`;
 - suggestion: não entra automaticamente no escopo.
@@ -727,9 +759,11 @@ git commit -m "docs: add independent site review workflow"
 ### Task 7: Implementar fechamento e histórico
 
 **Files:**
+
 - Create: `.claude/commands/fechar-site.md`
 
 **Interfaces:**
+
 - Consumes: `ready_for_closure`, plano/spec/packet e evidências.
 - Produces: linha em `progress.md`, estado `idle`, contador supervisionado incrementado.
 
@@ -805,10 +839,12 @@ git commit -m "docs: add site closure gate"
 ### Task 8: Criar catraca estrutural `pnpm agent:check`
 
 **Files:**
+
 - Create: `scripts/validate-agent-workflow.mjs`
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Consumes: arquivos criados nas Tasks 1–7.
 - Produces: exit 0 quando o contrato estrutural mínimo existe; exit 1 com mensagens específicas quando deriva.
 
@@ -875,18 +911,45 @@ if (errors.length === 0) {
   }
 
   const notionId = 'collection://2f0e72ec-ef53-4e08-a466-312de7eea7d2'
-  if (!claude.includes(notionId)) errors.push('CLAUDE.md: canonical Notion data source missing')
-  if (!agents.includes(notionId)) errors.push('AGENTS.md: canonical Notion data source missing')
+  if (!claude.includes(notionId))
+    errors.push('CLAUDE.md: canonical Notion data source missing')
+  if (!agents.includes(notionId))
+    errors.push('AGENTS.md: canonical Notion data source missing')
 
   const contracts = [
-    ['context', contextSkill, ['BEGIN SITE CONTEXT PACKET', 'END SITE CONTEXT PACKET', 'RECOMMENDED_TRANSITION']],
-    ['execute', executeSkill, ['BEGIN SITE EXECUTION REPORT', 'END SITE EXECUTION REPORT', 'RECOMMENDED_TRANSITION']],
-    ['review', reviewSkill, ['BEGIN SITE REVIEW REPORT', 'END SITE REVIEW REPORT', 'RECOMMENDED_TRANSITION']],
+    [
+      'context',
+      contextSkill,
+      [
+        'BEGIN SITE CONTEXT PACKET',
+        'END SITE CONTEXT PACKET',
+        'RECOMMENDED_TRANSITION',
+      ],
+    ],
+    [
+      'execute',
+      executeSkill,
+      [
+        'BEGIN SITE EXECUTION REPORT',
+        'END SITE EXECUTION REPORT',
+        'RECOMMENDED_TRANSITION',
+      ],
+    ],
+    [
+      'review',
+      reviewSkill,
+      [
+        'BEGIN SITE REVIEW REPORT',
+        'END SITE REVIEW REPORT',
+        'RECOMMENDED_TRANSITION',
+      ],
+    ],
   ]
 
   for (const [name, content, markers] of contracts) {
     for (const marker of markers) {
-      if (!content.includes(marker)) errors.push(`${name}: missing marker ${marker}`)
+      if (!content.includes(marker))
+        errors.push(`${name}: missing marker ${marker}`)
     }
   }
 
@@ -967,9 +1030,11 @@ git commit -m "chore: validate site agent workflow contract"
 ### Task 9: Autorrevisar o harness contra a spec e iniciar o primeiro ciclo supervisionado
 
 **Files:**
+
 - Modify if required: somente paths criados/modificados pelas Tasks 1–8.
 
 **Interfaces:**
+
 - Consumes: toda a implementação do harness.
 - Produces: baseline supervisionada coerente e um smoke real de `/planejar-site`.
 
@@ -1093,6 +1158,7 @@ executor: claude
 reviewer: codex
 
 paths_autorizados:
+
 - `CLAUDE.md`
 - `AGENTS.md`
 - `.claude/**`

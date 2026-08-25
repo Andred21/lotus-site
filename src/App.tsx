@@ -3,6 +3,8 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
+import { cn } from './lib/cn'
+import { site } from './content/site'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -16,7 +18,9 @@ function App() {
           <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
         <div>
-          <h1>Get started</h1>
+          <h1 className={cn('text-balance', count > 0 && 'underline')}>
+            {site.name}
+          </h1>
           <p>
             Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
           </p>
