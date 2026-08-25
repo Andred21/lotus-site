@@ -25,6 +25,14 @@ const inventory = await page.evaluate(() => {
         content: tag.getAttribute('content'),
       }),
     ),
+    // `twitter:` usa `name`, não `property` como Open Graph: sem consultar o
+    // seletor próprio, a ausência dessas tags não fica provada pela evidência.
+    twitter: [...document.querySelectorAll('meta[name^="twitter:" i]')].map(
+      (tag) => ({
+        name: tag.getAttribute('name'),
+        content: tag.getAttribute('content'),
+      }),
+    ),
     generators: [...document.querySelectorAll('meta[name="generator"]')].map(
       (tag) => tag.getAttribute('content'),
     ),
