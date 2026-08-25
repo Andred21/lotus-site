@@ -1,21 +1,61 @@
 # 03 — Assets visuais
 
-> Evidência: `docs/inventario/assets/manifest.json`, capturado em `2026-08-25T19:08:32.914Z` via `pnpm inventario:assets` (consome `docs/inventario/dom.json`). Commit-base: `66b2999`. Determinismo provado: rodar `pnpm inventario:assets` duas vezes seguidas produz o mesmo `sha256` para cada `url`.
+> Evidência: `docs/inventario/assets/manifest.json` (`sha256` `56064b6300aa501c…`), capturado em `2026-08-25T20:50:54.896Z` via `pnpm inventario:assets`, sobre `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`, capturado em `2026-08-25T20:50:39.480Z`). Determinismo: `capturedAt` muda a cada execução por ser metadado de corrida; o que o aceite compara é `assets[]` — ordenado por URL, com `bytes` e `sha256` do conteúdo remoto.
+
+## Cobertura
+
+São **20 URLs de imagem únicas**, **811 910 B** (~0,79 MB), baixadas para `docs/inventario/assets/`. O catálogo não vem só de `<img>`: `extract-dom.mjs` percorre quatro origens, porque o Divi publica boa parte do visual fora do markup de imagem.
+
+| origem (`kinds`)   | o que cobre                                               | quantos |
+| ------------------ | --------------------------------------------------------- | ------- |
+| `img`              | atributo `src` e `currentSrc` de cada `<img>`             | 8       |
+| `srcset`           | variantes de tamanho publicadas pelo WordPress            | 8       |
+| `background-image` | `getComputedStyle().backgroundImage` de qualquer elemento | 2       |
+| `icon`             | `link[rel*=icon]` e `meta[name=msapplication-TileImage]`  | 4       |
+| `css`              | `url()` das folhas de estilo do próprio site (`cssRules`) | 2       |
+
+A soma passa de 20 porque a mesma URL aparece em mais de uma origem (por exemplo `home-office-12.jpg` é `img` e `srcset`; `background-texture.jpg` é `background-image` e `css`).
 
 ## Manifesto
 
-| arquivo                                     | origem                                                         | host                               | bytes | sha256 (8) | usado em                                                           | candidato local |
-| ------------------------------------------- | -------------------------------------------------------------- | ---------------------------------- | ----- | ---------- | ------------------------------------------------------------------ | --------------- |
-| `staging-LOTUS_TRANSP_Fondo-Negro-REC2.png` | `wp-content/uploads/2022/08/LOTUS_TRANSP_Fondo-Negro-REC2.png` | `lotusotec-cl.us.stackstaging.com` | 4228  | `c17ea81f` | logo do header (`main-header`)                                     | `src/assets/`   |
-| `LOTUS-G2_TRANSP_Fondo-Blanco.png`          | `wp-content/uploads/2022/08/LOTUS-G2_TRANSP_Fondo-Blanco.png`  | `lotusotec.cl`                     | 6363  | `b796843c` | imagem da seção `Somos`                                            | `src/assets/`   |
-| `home-office-12.jpg`                        | `wp-content/uploads/2022/08/home-office-12.jpg`                | `lotusotec.cl`                     | 13252 | `f1f25036` | card 1 de `Cursos` (Especialistas Líneas Vivas en Media Tensión)   | `src/assets/`   |
-| `LLVV_00-v1-BN2.jpeg`                       | `wp-content/uploads/2022/08/LLVV_00-v1-BN2.jpeg`               | `lotusotec.cl`                     | 30521 | `02aa388c` | card 2 de `Cursos` (Especialistas en Líneas Vivas en Alta Tensión) | `src/assets/`   |
-| `LLVV_Mantas02-BN2.jpeg`                    | `wp-content/uploads/2022/08/LLVV_Mantas02-BN2.jpeg`            | `lotusotec.cl`                     | 31900 | `ff937685` | card 3 de `Cursos` (Supervisor de Trabajos de Líneas Vivas)        | `src/assets/`   |
+`insecure` marca o asset cujo markup publica a URL em `http://` — o Chromium resolve o mesmo arquivo em `https://`, e a chave do manifesto é sempre a versão com TLS.
 
-`usedIn` na tabela acima simplifica a cadeia de wrappers do manifesto (`page-container` → `et-main-area` → `main-content` → `post-47805` → seção de conteúdo) para a seção de conteúdo real; a lista completa por asset está em `assets/manifest.json`.
+| arquivo local                                           | caminho de origem                                                       | host         | kinds                | insecure | bytes  | sha256 (8) | usado em     |
+| ------------------------------------------------------- | ----------------------------------------------------------------------- | ------------ | -------------------- | -------- | ------ | ---------- | ------------ |
+| `staging-background-texture.jpg`                        | `…/2022/08/background-texture.jpg`                                      | staging      | background-image+css | sim      | 12961  | `2c7137db` | `Intrucción` |
+| `staging-home-office-12.jpg`                            | `…/2022/08/home-office-12.jpg`                                          | staging      | img                  | sim      | 13252  | `f1f25036` | `Cursos`     |
+| `staging-LLVV_00-v1-BN2.jpeg`                           | `…/2022/08/LLVV_00-v1-BN2.jpeg`                                         | staging      | img                  | sim      | 30521  | `02aa388c` | `Cursos`     |
+| `staging-LLVV_Mantas02-BN2.jpeg`                        | `…/2022/08/LLVV_Mantas02-BN2.jpeg`                                      | staging      | img                  | sim      | 31900  | `ff937685` | `Cursos`     |
+| `staging-LOTUS_TRANSP_Fondo-Negro-REC2.png`             | `…/2022/08/LOTUS_TRANSP_Fondo-Negro-REC2.png`                           | staging      | img                  | sim      | 4228   | `c17ea81f` | `logo`       |
+| `staging-LOTUS-G2_TRANSP_Fondo-Blanco.png`              | `…/2022/08/LOTUS-G2_TRANSP_Fondo-Blanco.png`                            | staging      | img                  | sim      | 6363   | `b796843c` | `Somos`      |
+| `staging-shutterstock_1444636373-1-scaled.jpg`          | `…/2022/08/shutterstock_1444636373-1-scaled.jpg`                        | staging      | background-image     | sim      | 564274 | `d1fd7974` | `Intrucción` |
+| `preloader.gif`                                         | `wp-content/themes/Divi-3/includes/builder/styles/images/preloader.gif` | lotusotec.cl | css                  | não      | 9427   | `27422f83` | folha Divi   |
+| `cropped-Logo-LOTUS-_Fondo-Negro_Recortado-32x32.png`   | `…/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-32x32.png`         | lotusotec.cl | icon                 | não      | 819    | `147744fc` | `<head>`     |
+| `cropped-Logo-LOTUS-_Fondo-Negro_Recortado-180x180.png` | `…/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-180x180.png`       | lotusotec.cl | icon                 | não      | 5668   | `2c1d6a42` | `<head>`     |
+| `cropped-Logo-LOTUS-_Fondo-Negro_Recortado-192x192.png` | `…/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-192x192.png`       | lotusotec.cl | icon                 | não      | 6098   | `1a3ab286` | `<head>`     |
+| `cropped-Logo-LOTUS-_Fondo-Negro_Recortado-270x270.png` | `…/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-270x270.png`       | lotusotec.cl | icon                 | não      | 8905   | `15dddadf` | `<head>`     |
+| `LOTUS-G2_TRANSP_Fondo-Blanco.png`                      | `…/2022/08/LOTUS-G2_TRANSP_Fondo-Blanco.png`                            | lotusotec.cl | img+srcset           | não      | 6363   | `b796843c` | `Somos`      |
+| `LOTUS-G2_TRANSP_Fondo-Blanco-480x480.png`              | `…/2022/08/LOTUS-G2_TRANSP_Fondo-Blanco-480x480.png`                    | lotusotec.cl | srcset               | não      | 6584   | `9e559a67` | `Somos`      |
+| `home-office-12.jpg`                                    | `…/2022/08/home-office-12.jpg`                                          | lotusotec.cl | img+srcset           | não      | 13252  | `f1f25036` | `Cursos`     |
+| `home-office-12-300x225.jpg`                            | `…/2022/08/home-office-12-300x225.jpg`                                  | lotusotec.cl | srcset               | não      | 8621   | `9ee95d2b` | `Cursos`     |
+| `LLVV_00-v1-BN2.jpeg`                                   | `…/2022/08/LLVV_00-v1-BN2.jpeg`                                         | lotusotec.cl | img+srcset           | não      | 30521  | `02aa388c` | `Cursos`     |
+| `LLVV_00-v1-BN2-150x150.jpeg`                           | `…/2022/08/LLVV_00-v1-BN2-150x150.jpeg`                                 | lotusotec.cl | srcset               | não      | 13089  | `72c617b3` | `Cursos`     |
+| `LLVV_Mantas02-BN2.jpeg`                                | `…/2022/08/LLVV_Mantas02-BN2.jpeg`                                      | lotusotec.cl | img+srcset           | não      | 31900  | `ff937685` | `Cursos`     |
+| `LLVV_Mantas02-BN2-150x150.jpeg`                        | `…/2022/08/LLVV_Mantas02-BN2-150x150.jpeg`                              | lotusotec.cl | srcset               | não      | 7164   | `4099579c` | `Cursos`     |
 
-Todos os cinco assets são candidatos a `src/assets/`: cada um é usado por exatamente um componente visual (logo do header, imagem institucional, três imagens de curso), nenhum precisa de URL estável fora do bundle. Nenhum favicon ou imagem de Open Graph foi encontrado no `<head>` capturado (ver `08-seo.md`) — se a Sprint 2 criar esses arquivos, eles vão para `public/`, não para este manifesto.
+`usedIn` na tabela cita a seção de conteúdo; o manifesto guarda o `id` do ancestral mais próximo de cada uso, que é o que `extract-dom.mjs` observa.
 
-## Host de staging
+## O mesmo arquivo em dois hosts
 
-O logo do header (`staging-LOTUS_TRANSP_Fondo-Negro-REC2.png`) é servido hoje por `lotusotec-cl.us.stackstaging.com`, um host de staging externo ao domínio de produção. O clone baixa esse arquivo uma vez (prefixo `staging-` no manifesto evita colisão de nome com assets de `lotusotec.cl`) e o serve como asset próprio — `lotusotec-cl.us.stackstaging.com` deixa de ser dependência de runtime do clone.
+Sete assets aparecem duplicados: o WordPress publica o arquivo em `lotusotec.cl` e o markup dos cards e do logo aponta para `lotusotec-cl.us.stackstaging.com`, em `http://`. Os pares `staging-*` e o arquivo homônimo de `lotusotec.cl` têm `sha256` idêntico (`f1f25036`, `02aa388c`, `ff937685`, `b796843c`) — é o mesmo binário servido por dois hosts. A exceção são `background-texture.jpg` e `shutterstock_1444636373-1-scaled.jpg`: existem **só** no host de staging, e o segundo é a foto de fundo do hero, o maior asset da home (564 kB, 70% do peso total).
+
+Consequência para o clone: baixar os dois hosts uma vez elimina o hotlink e o conteúdo misto (`http://` dentro de página `https://`). A escolha entre manter as duas cópias ou deduplicar por `sha256` fica para a Sprint 2 — aqui as duas são registradas porque as duas são requisição real da home.
+
+## Candidato local
+
+- `src/assets/` — logo do header, imagem de `Somos`, as três imagens de curso, a foto do hero e a textura de fundo: cada um é usado por um componente e pode ser fingerprintado pelo Vite.
+- `public/` — os quatro ícones de `<head>` (`favicon` 32×32 e 192×192, `apple-touch-icon` 180×180, `msapplication-TileImage` 270×270): precisam de URL estável, referenciada por `<link>` no HTML.
+- **Nenhum** — `preloader.gif` é do próprio Divi, não do conteúdo; o clone estático não tem preloader. Entra na matriz de `README.md` como divergência intencional.
+- As variantes de `srcset` (`-150x150`, `-300x225`, `-480x480`) só fazem sentido se a Sprint 2 reproduzir imagem responsiva; sem isso, o clone usa o arquivo cheio.
+
+O site **tem** favicon (quatro arquivos, todos recortes do logo em fundo preto) e **não tem** imagem de Open Graph — `openGraph` está vazio em `dom.json` e nenhum `og:image` foi publicado. Ver `08-seo.md`.

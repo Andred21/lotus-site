@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-08-25T19:27:45.304Z",
+  "capturedAt": "2026-08-25T20:50:39.480Z",
   "url": "https://lotusotec.cl/",
   "head": {
     "title": "LOTUS | OTEC",
@@ -11,6 +11,28 @@
       "Divi v.4.17.4",
       "WordPress 7.1",
       "Elementor 3.30.3; features: e_font_icon_svg, additional_custom_breakpoints, e_element_cache; settings: css_print_method-external, google_font-enabled, font_display-swap"
+    ],
+    "icons": [
+      {
+        "rel": "icon",
+        "href": "https://lotusotec.cl/wp-content/uploads/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-32x32.png",
+        "sizes": "32x32"
+      },
+      {
+        "rel": "icon",
+        "href": "https://lotusotec.cl/wp-content/uploads/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-192x192.png",
+        "sizes": "192x192"
+      },
+      {
+        "rel": "apple-touch-icon",
+        "href": "https://lotusotec.cl/wp-content/uploads/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-180x180.png",
+        "sizes": null
+      },
+      {
+        "rel": "msapplication-TileImage",
+        "href": "https://lotusotec.cl/wp-content/uploads/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-270x270.png",
+        "sizes": null
+      }
     ]
   },
   "nav": [
@@ -1001,6 +1023,128 @@
         }
       ],
       "submitLabel": "Enviar"
+    }
+  ],
+  "assets": [
+    {
+      "url": "https://lotusotec-cl.us.stackstaging.com/wp-content/uploads/2022/08/background-texture.jpg",
+      "kinds": ["background-image", "css"],
+      "usedIn": ["Intrucción", "stylesheet"],
+      "insecure": true
+    },
+    {
+      "url": "https://lotusotec-cl.us.stackstaging.com/wp-content/uploads/2022/08/home-office-12.jpg",
+      "kinds": ["img"],
+      "usedIn": ["Cursos"],
+      "insecure": true
+    },
+    {
+      "url": "https://lotusotec-cl.us.stackstaging.com/wp-content/uploads/2022/08/LLVV_00-v1-BN2.jpeg",
+      "kinds": ["img"],
+      "usedIn": ["Cursos"],
+      "insecure": true
+    },
+    {
+      "url": "https://lotusotec-cl.us.stackstaging.com/wp-content/uploads/2022/08/LLVV_Mantas02-BN2.jpeg",
+      "kinds": ["img"],
+      "usedIn": ["Cursos"],
+      "insecure": true
+    },
+    {
+      "url": "https://lotusotec-cl.us.stackstaging.com/wp-content/uploads/2022/08/LOTUS_TRANSP_Fondo-Negro-REC2.png",
+      "kinds": ["img"],
+      "usedIn": ["logo"],
+      "insecure": true
+    },
+    {
+      "url": "https://lotusotec-cl.us.stackstaging.com/wp-content/uploads/2022/08/LOTUS-G2_TRANSP_Fondo-Blanco.png",
+      "kinds": ["img"],
+      "usedIn": ["Somos"],
+      "insecure": true
+    },
+    {
+      "url": "https://lotusotec-cl.us.stackstaging.com/wp-content/uploads/2022/08/shutterstock_1444636373-1-scaled.jpg",
+      "kinds": ["background-image"],
+      "usedIn": ["Intrucción"],
+      "insecure": true
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/themes/Divi-3/includes/builder/styles/images/preloader.gif",
+      "kinds": ["css"],
+      "usedIn": ["stylesheet"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-180x180.png",
+      "kinds": ["icon"],
+      "usedIn": ["head"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-192x192.png",
+      "kinds": ["icon"],
+      "usedIn": ["head"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-270x270.png",
+      "kinds": ["icon"],
+      "usedIn": ["head"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/cropped-Logo-LOTUS-_Fondo-Negro_Recortado-32x32.png",
+      "kinds": ["icon"],
+      "usedIn": ["head"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/home-office-12-300x225.jpg",
+      "kinds": ["srcset"],
+      "usedIn": ["Cursos"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/home-office-12.jpg",
+      "kinds": ["img", "srcset"],
+      "usedIn": ["Cursos"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LLVV_00-v1-BN2-150x150.jpeg",
+      "kinds": ["srcset"],
+      "usedIn": ["Cursos"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LLVV_00-v1-BN2.jpeg",
+      "kinds": ["img", "srcset"],
+      "usedIn": ["Cursos"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LLVV_Mantas02-BN2-150x150.jpeg",
+      "kinds": ["srcset"],
+      "usedIn": ["Cursos"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LLVV_Mantas02-BN2.jpeg",
+      "kinds": ["img", "srcset"],
+      "usedIn": ["Cursos"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LOTUS-G2_TRANSP_Fondo-Blanco-480x480.png",
+      "kinds": ["srcset"],
+      "usedIn": ["Somos"],
+      "insecure": false
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LOTUS-G2_TRANSP_Fondo-Blanco.png",
+      "kinds": ["img", "srcset"],
+      "usedIn": ["Somos"],
+      "insecure": false
     }
   ]
 }
