@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assetFileName, normalizeText, rgbToHex } from './site.mjs'
+import { assetFileName, rgbToHex } from './site.mjs'
 
 describe('assetFileName', () => {
   it('mantém o basename de um asset do domínio principal', () => {
@@ -21,10 +21,10 @@ describe('assetFileName', () => {
   })
 })
 
-describe('normalizeText', () => {
-  it('colapsa espaços e quebras de linha do DOM', () => {
-    expect(normalizeText('  Formación\n   de   excelencia  ')).toBe(
-      'Formación de excelencia',
+describe('assetFileName — fallback', () => {
+  it('não devolve nome vazio para URL terminada em barra', () => {
+    expect(assetFileName('https://lotusotec.cl/wp-content/uploads/')).toBe(
+      'asset',
     )
   })
 })

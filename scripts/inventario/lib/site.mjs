@@ -34,16 +34,10 @@ export function desktopViewport() {
 export function assetFileName(url) {
   const parsed = new URL(url)
   const segments = parsed.pathname.split('/')
-  const base = decodeURIComponent(segments[segments.length - 1] ?? 'asset')
+  // Último segmento vazio (URL terminada em '/') resolveria para nome vazio e
+  // faria writeFileSync escrever sobre o próprio diretório: cai no fallback.
+  const base = decodeURIComponent(segments[segments.length - 1] || 'asset')
   return parsed.hostname.includes('stackstaging') ? `staging-${base}` : base
-}
-
-/**
- * @param {string} text
- * @returns {string}
- */
-export function normalizeText(text) {
-  return text.replace(/\s+/g, ' ').trim()
 }
 
 /**
