@@ -1,6 +1,6 @@
 # 09 — Dados institucionais e links externos
 
-> Evidência: `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`), capturado em `2026-08-25T20:50:39.480Z` (`sections[].links`, `sections[].texts`). `status` restrito a `verificado` (o próprio site é a origem e o destino responde) ou `pendente João` (número, certificação, credencial ou email cuja validade só a Lotus confirma).
+> Evidência: `docs/inventario/dom.json` (`sha256` `0d8a8d45a434de23…`), capturado em `2026-08-25T21:21:22.608Z` (`sections[].links`, `sections[].texts`). `status` restrito a `verificado` (o próprio site é a origem e o destino responde) ou `pendente João` (número, certificação, credencial ou email cuja validade só a Lotus confirma).
 
 ## Links externos
 
@@ -17,7 +17,7 @@ Não há links externos com código HTTP a reportar — a lista está vazia, e i
 
 | dado                                | valor publicado                                                                                                                                                     | onde aparece                                  | status                                                                                             |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Email de contato                    | `contacto@lotusotec.cl`                                                                                                                                             | seção `Contacto` (texto + `mailto:`)          | `verificado`                                                                                       |
+| Email de contato                    | `contacto@lotusotec.cl`                                                                                                                                             | seção `Contacto` (texto + `mailto:`)          | `pendente João` (`mailto:` não tem código de status; só a Lotus confirma que a caixa recebe)       |
 | Telefone                            | nenhum publicado na home                                                                                                                                            | —                                             | `verificado` (ausência confirmada, não é omissão da extração)                                      |
 | Redes sociais / WhatsApp            | nenhum link publicado na home                                                                                                                                       | —                                             | `verificado` (mesmo caso acima)                                                                    |
 | Norma de certificação               | `NCH 2728:2015`, certificado `N° CA-751`, registro `INN: A-10981`                                                                                                   | seção `Somos`, destaque `CERTIFICACIÓN`       | `pendente João` (validade/atualidade só a Lotus confirma)                                          |
