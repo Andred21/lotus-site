@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "agent:check": "node scripts/validate-agent-workflow.mjs"
+    "agent:check": "node scripts/validate-agent-workflow.mjs",
+    "check": "pnpm agent:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
     "clsx": "^2.1.1",

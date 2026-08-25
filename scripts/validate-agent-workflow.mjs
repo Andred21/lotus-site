@@ -2,16 +2,21 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const flagIndex = process.argv.indexOf('--root')
-if (flagIndex !== -1 && !process.argv[flagIndex + 1]) {
+const rootArg = flagIndex === -1 ? '.' : process.argv[flagIndex + 1]
+if (rootArg === undefined) {
   console.error('--root requires a directory')
   process.exit(2)
 }
-const root = flagIndex === -1 ? '.' : process.argv[flagIndex + 1]
+const root = rootArg
 
+/** @param {string} rel */
 const resolve = (rel) => join(root, rel)
+/** @param {string} rel */
 const exists = (rel) => existsSync(resolve(rel))
+/** @param {string} rel */
 const read = (rel) => readFileSync(resolve(rel), 'utf8')
 
+/** @type {string[]} */
 const errors = []
 
 const required = [
@@ -49,17 +54,29 @@ const ORDERED_STATES = [
 ]
 const VALID_STATES = [...ORDERED_STATES, 'blocked']
 
+/**
+ * @param {string} text
+ * @returns {Record<string, string> | null}
+ */
 const parseFrontmatter = (text) => {
   const match = text.match(/^---\n([\s\S]*?)\n---/)
-  if (!match) return null
+  const block = match?.[1]
+  if (block === undefined) return null
+  /** @type {Record<string, string>} */
   const values = {}
-  for (const line of match[1].split('\n')) {
+  for (const line of block.split('\n')) {
     const pair = line.match(/^([a-z_]+):\s*(.*)$/)
-    if (pair) values[pair[1]] = pair[2].trim()
+    const key = pair?.[1]
+    const value = pair?.[2]
+    if (key !== undefined && value !== undefined) values[key] = value.trim()
   }
   return values
 }
 
+/**
+ * @param {string | undefined} value
+ * @returns {boolean}
+ */
 const isNull = (value) =>
   value === undefined || value === '' || value === 'null'
 
@@ -70,11 +87,16 @@ const checkState = () => {
     errors.push('state: frontmatter ausente')
     return
   }
+  const current = front.workflow_state
+  if (current === undefined) {
+    errors.push('state: workflow_state ausente')
+    return
+  }
   if (front.workflow_mode !== 'supervised') {
     errors.push('state: workflow_mode deve ser supervised')
   }
-  if (!VALID_STATES.includes(front.workflow_state)) {
-    errors.push(`state: workflow_state inválido: ${front.workflow_state}`)
+  if (!VALID_STATES.includes(current)) {
+    errors.push(`state: workflow_state inválido: ${current}`)
     return
   }
   for (const value of VALID_STATES) {
@@ -83,10 +105,12 @@ const checkState = () => {
     }
   }
 
-  const current = front.workflow_state
+  const resume = front.resume_state
   const effective =
-    current === 'blocked' && ORDERED_STATES.includes(front.resume_state)
-      ? front.resume_state
+    current === 'blocked' &&
+    resume !== undefined &&
+    ORDERED_STATES.includes(resume)
+      ? resume
       : current
   const fromExecution =
     ORDERED_STATES.indexOf(effective) >=
@@ -114,15 +138,17 @@ const checkState = () => {
   if (current === 'blocked') {
     if (isNull(front.blocker))
       errors.push('state: blocked exige blocker preenchido')
-    if (!ORDERED_STATES.includes(front.resume_state)) {
-      errors.push(
-        `state: blocked exige resume_state válido, veio ${front.resume_state}`,
-      )
+    if (resume === undefined || !ORDERED_STATES.includes(resume)) {
+      errors.push(`state: blocked exige resume_state válido, veio ${resume}`)
     }
   }
 
   if (fromExecution) {
-    if (!['bounded', 'architectural'].includes(front.work_class)) {
+    const workClass = front.work_class
+    if (
+      workClass === undefined ||
+      !['bounded', 'architectural'].includes(workClass)
+    ) {
       errors.push(
         `state: ${current} (fase ${effective}) exige work_class bounded ou architectural`,
       )
@@ -284,21 +310,24 @@ const checkRules = () => {
     const path = `.claude/rules/${rule}.md`
     const content = read(path)
     const front = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
-    if (!front) {
+    const head = front?.[1]
+    const body = front?.[2]
+    if (head === undefined || body === undefined) {
       errors.push(`rules: ${path} sem frontmatter`)
       continue
     }
-    if (!front[1].includes('paths:')) errors.push(`rules: ${path} sem paths:`)
-    if (front[2].trim().length === 0) errors.push(`rules: ${path} sem corpo`)
+    if (!head.includes('paths:')) errors.push(`rules: ${path} sem paths:`)
+    if (body.trim().length === 0) errors.push(`rules: ${path} sem corpo`)
   }
 }
 
+/** @param {string} rel */
 const walk = (rel) => {
   const dir = resolve(rel)
   if (!existsSync(dir)) return []
   return readdirSync(dir, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile())
-    .map((entry) => join(entry.parentPath ?? entry.path, entry.name))
+    .map((entry) => join(entry.parentPath, entry.name))
 }
 
 const checkHarnessLimits = () => {
