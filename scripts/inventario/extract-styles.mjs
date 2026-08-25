@@ -35,8 +35,11 @@ for (const viewport of VIEWPORTS) {
         boxShadow: style.boxShadow,
         width: Math.round(box.width),
         height: Math.round(box.height),
+        maxWidth: style.maxWidth,
         paddingTop: style.paddingTop,
         paddingBottom: style.paddingBottom,
+        paddingLeft: style.paddingLeft,
+        paddingRight: style.paddingRight,
         marginBottom: style.marginBottom,
         gap: style.gap,
       }
@@ -56,6 +59,7 @@ for (const viewport of VIEWPORTS) {
         'a',
         'button',
         'img',
+        '.et_pb_row',
       ]) {
         const child = section.querySelector(selector)
         if (child) out.push(read(child, id, `#${id} ${selector}`))
