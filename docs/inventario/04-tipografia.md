@@ -1,6 +1,6 @@
 # 04 — Tipografia, cores e tokens
 
-> Evidência: `docs/inventario/styles.json` (`sha256` `cb3e5bfb6e5400e9…`), capturado em `2026-08-25T20:51:25.721Z` via `pnpm inventario:styles` (4 viewports: 375/768/1440/1920), sobre `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`). Valores abaixo são do viewport `1440` salvo indicação contrária; cada linha cita o `selector` de `styles.json` para conferência.
+> Evidência: `docs/inventario/styles.json` (`sha256` `cb3e5bfb6e5400e9…`), capturado em `2026-08-25T20:51:25.721Z` via `pnpm inventario:styles` (4 viewports: 375/768/1440/1920), sobre `docs/inventario/dom.json` (`sha256` `0d8a8d45a434de23…`). Valores abaixo são do viewport `1440` salvo indicação contrária; cada linha cita o `selector` de `styles.json` para conferência.
 
 ## Famílias
 
@@ -45,7 +45,10 @@ O Elementor também carrega CSS próprio para `Roboto` e `Roboto Slab` (`wp-cont
 | `#2ea3f2` | links de conteúdo (`a` fora do menu) e ícones                              | cor de destaque — link             |
 | `#24a2e0` | links do menu (`top-menu a`)                                               | cor de destaque — menu             |
 | `#222222` | fundo de `#main-footer`                                                    | cor de fundo — rodapé              |
-| `#ffffff` | fundo de `#main-header`                                                    | cor de fundo — cabeçalho           |
+| `#000000` | fundo de `#main-header` em 1440/1920                                       | cor de fundo — cabeçalho desktop   |
+| `#ffffff` | fundo de `#main-header` em 375/768                                         | cor de fundo — cabeçalho mobile    |
+
+O cabeçalho é o único elemento medido que troca de cor de fundo entre viewports: `#main-header.backgroundColor` mede `#000000` em `1440` e `1920` e `#ffffff` em `375` e `768` (`styles.json`, seletor `#main-header`). São dois tokens distintos, não um valor com ressalva — a Sprint 2 precisa reproduzir a troca, não escolher um dos dois.
 
 O par `#2ea3f2` (links de conteúdo) e `#24a2e0` (links de menu) são dois azuis próximos, não o mesmo token — mantidos separados porque a medição não encontrou um só valor usado nos dois lugares.
 
