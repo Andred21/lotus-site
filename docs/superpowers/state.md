@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: executing
+workflow_state: ready_for_review
 work_class: architectural
 active_work_item: 1.2.4-1.3.9
 active_notion_eap: '1.2.4, 1.2.5, 1.3.1, 1.3.2, 1.3.3, 1.3.4, 1.3.5, 1.3.6, 1.3.7, 1.3.8, 1.3.9'
@@ -9,8 +9,8 @@ active_title: 'Tooling e qualidade — Sprint 0 restante'
 active_branch: chore/1-2-4-1-3-9-tooling-qualidade
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: continue_active_plan
+next_owner: codex
+next_action: review_active_work_item
 resume_state: null
 context_packet: docs/superpowers/context-packets/1.2.4-1.3.9.md
 active_spec: docs/superpowers/specs/2026-08-24-1.2.4-1.3.9-tooling-qualidade-design.md
@@ -20,8 +20,8 @@ reviewer: codex
 blocker: null
 supervised_cycles_completed: 3
 last_completed_work_item: 1.2.2+1.2.3
-state_basis_commit: 632f499
-updated_at: 2026-08-24T00:10:00Z
+state_basis_commit: cb2ad259a9447c5ab0cc37cc583d8f0e7c6100c6
+updated_at: 2026-08-25T01:42:50Z
 ---
 
 # Estado operacional — Lotus Site
