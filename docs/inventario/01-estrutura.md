@@ -1,37 +1,37 @@
 # 01 — Estrutura e navegação
 
-> Evidência: `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`), capturado em `2026-08-25T20:50:39.480Z` via `pnpm inventario:dom`.
+> Evidência: `docs/inventario/dom.json` (`sha256` `0d8a8d45a434de23…`), capturado em `2026-08-25T21:21:22.608Z` via `pnpm inventario:dom`.
 
 ## Seções da home, em ordem de DOM
 
 `page-container` é o elemento raiz; os `id` abaixo aparecem nessa ordem ao percorrer o documento. Âncora só existe quando algum link do menu ou do próprio corpo referencia o `id` com `#id`.
 
-| id                        | tag        | âncora usada?                                      | headings | textos | links | imagens | papel                                              |
-| ------------------------- | ---------- | -------------------------------------------------- | -------- | ------ | ----- | ------- | -------------------------------------------------- |
-| `page-container`          | `div`      | não                                                | 7        | 35     | 15    | 5       | wrapper de página inteira (Divi)                   |
-| `main-header`             | `header`   | não                                                | 0        | 8      | 9     | 1       | cabeçalho fixo: logo + menu                        |
-| `logo`                    | `img`      | não                                                | 0        | 0      | 0     | 0       | a própria `<img>` do logo no header                |
-| `et-top-navigation`       | `div`      | não                                                | 0        | 8      | 8     | 0       | barra de navegação (desktop + toggle mobile)       |
-| `top-menu-nav`            | `nav`      | não                                                | 0        | 4      | 4     | 0       | `<nav>` do menu principal                          |
-| `top-menu`                | `ul`       | não                                                | 0        | 4      | 4     | 0       | lista `Inicio / Quienes Somos / Cursos / Contacto` |
-| `menu-item-47811`         | `li`       | não                                                | 0        | 0      | 1     | 0       | item de menu `Inicio`                              |
-| `menu-item-47885`         | `li`       | não                                                | 0        | 0      | 1     | 0       | item de menu `Quienes Somos`                       |
-| `menu-item-47886`         | `li`       | não                                                | 0        | 0      | 1     | 0       | item de menu `Cursos`                              |
-| `menu-item-47887`         | `li`       | não                                                | 0        | 0      | 1     | 0       | item de menu `Contacto`                            |
-| `et-main-area`            | `div`      | não                                                | 7        | 27     | 6     | 4       | wrapper do conteúdo principal                      |
-| `main-content`            | `div`      | não                                                | 7        | 26     | 6     | 4       | container do post da home                          |
-| `post-47805`              | `article`  | não                                                | 7        | 26     | 6     | 4       | o post/página em si (Divi builder)                 |
-| `Intrucción`              | `div`      | sim (implícita: 1ª seção visível, sem link direto) | 2        | 5      | 1     | 0       | hero: título + subtítulo + CTA "Learn More"        |
-| `Somos`                   | `div`      | sim (`#Somos`)                                     | 3        | 5      | 0     | 1       | "Quienes Somos" — institucional                    |
-| `Cursos`                  | `div`      | sim (`#Cursos`)                                    | 1        | 9      | 4     | 3       | grade de cursos em destaque                        |
-| `Contacto`                | `div`      | sim (`#Contacto`)                                  | 1        | 7      | 1     | 0       | formulário de contato + email                      |
-| `et_pb_contact_form_0`    | `div`      | não                                                | 0        | 4      | 0     | 0       | wrapper do módulo de contato Divi                  |
-| `et_pb_contact_name_0`    | `input`    | não                                                | 0        | 0      | 0     | 0       | campo "Nombre Completo"                            |
-| `et_pb_contact_email_0`   | `input`    | não                                                | 0        | 0      | 0     | 0       | campo "Correo Electrónico"                         |
-| `et_pb_contact_company_0` | `input`    | não                                                | 0        | 0      | 0     | 0       | campo "Empresa"                                    |
-| `et_pb_contact_message_0` | `textarea` | não                                                | 0        | 0      | 0     | 0       | campo "Mensaje" (textarea)                         |
-| `main-footer`             | `footer`   | não                                                | 0        | 1      | 0     | 0       | rodapé — contém `footer-bottom`                    |
-| `footer-bottom`           | `div`      | não                                                | 0        | 1      | 0     | 0       | faixa inferior: `#footer-info` com o copyright     |
+| id                        | tag        | âncora usada?                              | headings | textos | links | imagens | papel                                              |
+| ------------------------- | ---------- | ------------------------------------------ | -------- | ------ | ----- | ------- | -------------------------------------------------- |
+| `page-container`          | `div`      | não                                        | 7        | 35     | 15    | 5       | wrapper de página inteira (Divi)                   |
+| `main-header`             | `header`   | não                                        | 0        | 8      | 9     | 1       | cabeçalho fixo: logo + menu                        |
+| `logo`                    | `img`      | não                                        | 0        | 0      | 0     | 0       | a própria `<img>` do logo no header                |
+| `et-top-navigation`       | `div`      | não                                        | 0        | 8      | 8     | 0       | barra de navegação (desktop + toggle mobile)       |
+| `top-menu-nav`            | `nav`      | não                                        | 0        | 4      | 4     | 0       | `<nav>` do menu principal                          |
+| `top-menu`                | `ul`       | não                                        | 0        | 4      | 4     | 0       | lista `Inicio / Quienes Somos / Cursos / Contacto` |
+| `menu-item-47811`         | `li`       | não                                        | 0        | 0      | 1     | 0       | item de menu `Inicio`                              |
+| `menu-item-47885`         | `li`       | não                                        | 0        | 0      | 1     | 0       | item de menu `Quienes Somos`                       |
+| `menu-item-47886`         | `li`       | não                                        | 0        | 0      | 1     | 0       | item de menu `Cursos`                              |
+| `menu-item-47887`         | `li`       | não                                        | 0        | 0      | 1     | 0       | item de menu `Contacto`                            |
+| `et-main-area`            | `div`      | não                                        | 7        | 27     | 6     | 4       | wrapper do conteúdo principal                      |
+| `main-content`            | `div`      | não                                        | 7        | 26     | 6     | 4       | container do post da home                          |
+| `post-47805`              | `article`  | não                                        | 7        | 26     | 6     | 4       | o post/página em si (Divi builder)                 |
+| `Intrucción`              | `div`      | não (nenhum link referencia `#Intrucción`) | 2        | 5      | 1     | 0       | hero: título + subtítulo + CTA "Learn More"        |
+| `Somos`                   | `div`      | sim (`#Somos`)                             | 3        | 5      | 0     | 1       | "Quienes Somos" — institucional                    |
+| `Cursos`                  | `div`      | sim (`#Cursos`)                            | 1        | 9      | 4     | 3       | grade de cursos em destaque                        |
+| `Contacto`                | `div`      | sim (`#Contacto`)                          | 1        | 7      | 1     | 0       | formulário de contato + email                      |
+| `et_pb_contact_form_0`    | `div`      | não                                        | 0        | 4      | 0     | 0       | wrapper do módulo de contato Divi                  |
+| `et_pb_contact_name_0`    | `input`    | não                                        | 0        | 0      | 0     | 0       | campo "Nombre Completo"                            |
+| `et_pb_contact_email_0`   | `input`    | não                                        | 0        | 0      | 0     | 0       | campo "Correo Electrónico"                         |
+| `et_pb_contact_company_0` | `input`    | não                                        | 0        | 0      | 0     | 0       | campo "Empresa"                                    |
+| `et_pb_contact_message_0` | `textarea` | não                                        | 0        | 0      | 0     | 0       | campo "Mensaje" (textarea)                         |
+| `main-footer`             | `footer`   | não                                        | 0        | 1      | 0     | 0       | rodapé — contém `footer-bottom`                    |
+| `footer-bottom`           | `div`      | não                                        | 0        | 1      | 0     | 0       | faixa inferior: `#footer-info` com o copyright     |
 
 Conteúdo visualmente relevante para o clone: `Intrucción` (hero), `Somos`, `Cursos`, `Contacto`. Os demais `id` são wrappers estruturais do Divi/Elementor sem texto próprio.
 
