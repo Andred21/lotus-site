@@ -1,18 +1,18 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
+workflow_state: planning
 work_class: null
-active_work_item: null
-active_notion_eap: null
-active_title: null
-active_branch: null
+active_work_item: 3.1.1-3.2.11
+active_notion_eap: '3.1.1, 3.1.2, 3.1.3, 3.1.4, 3.2.1, 3.2.2, 3.2.3, 3.2.4, 3.2.5, 3.2.6, 3.2.7, 3.2.8, 3.2.9, 3.2.10, 3.2.11'
+active_title: 'Clone estático — Sprint 2: paridade visual e de conteúdo'
+active_branch: feat/3-1-1-3-2-11-clone-estatico
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/3.1.1-3.2.11.md
 active_spec: null
 active_plan: null
 executor: null
@@ -20,8 +20,8 @@ reviewer: null
 blocker: null
 supervised_cycles_completed: 5
 last_completed_work_item: 2.1.1-2.1.10
-state_basis_commit: d5eb8d7
-updated_at: 2026-08-25T23:20:00Z
+state_basis_commit: cca37d4
+updated_at: 2026-08-25T22:10:00Z
 ---
 
 # Estado operacional — Lotus Site
