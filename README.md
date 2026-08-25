@@ -16,6 +16,8 @@ evolução só depois de uma baseline de paridade aprovada.
 ## Começar
 
 ```bash
+git clone git@github.com:Andred21/lotus-site.git
+cd lotus-site
 nvm use
 corepack enable
 pnpm install --frozen-lockfile
@@ -23,6 +25,13 @@ pnpm dev
 ```
 
 A aplicação sobe em `http://localhost:5173`.
+
+Antes de abrir PR, rode o gate e o E2E:
+
+```bash
+pnpm check
+pnpm e2e
+```
 
 ## Comandos
 
