@@ -1,0 +1,69 @@
+{
+  "capturedAt": "2026-08-25T19:08:32.914Z",
+  "assets": [
+    {
+      "url": "https://lotusotec-cl.us.stackstaging.com/wp-content/uploads/2022/08/LOTUS_TRANSP_Fondo-Negro-REC2.png",
+      "host": "lotusotec-cl.us.stackstaging.com",
+      "file": "staging-LOTUS_TRANSP_Fondo-Negro-REC2.png",
+      "bytes": 4228,
+      "sha256": "c17ea81f23d525e905193a20ba7427464be13fcd64f6308296564001c859ad2a",
+      "usedIn": ["page-container", "main-header"]
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LLVV_00-v1-BN2.jpeg",
+      "host": "lotusotec.cl",
+      "file": "LLVV_00-v1-BN2.jpeg",
+      "bytes": 30521,
+      "sha256": "02aa388cbd4b1eea69a1e92122e2a64ef1d140995416f3afe13fe3d69405e5db",
+      "usedIn": [
+        "page-container",
+        "et-main-area",
+        "main-content",
+        "post-47805",
+        "Cursos"
+      ]
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LLVV_Mantas02-BN2.jpeg",
+      "host": "lotusotec.cl",
+      "file": "LLVV_Mantas02-BN2.jpeg",
+      "bytes": 31900,
+      "sha256": "ff9376852246b0a33bdea34e01947f3fcf152a789771d9d4fb594b8ee7b97f87",
+      "usedIn": [
+        "page-container",
+        "et-main-area",
+        "main-content",
+        "post-47805",
+        "Cursos"
+      ]
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/LOTUS-G2_TRANSP_Fondo-Blanco.png",
+      "host": "lotusotec.cl",
+      "file": "LOTUS-G2_TRANSP_Fondo-Blanco.png",
+      "bytes": 6363,
+      "sha256": "b796843c77dd9b393d9ec78669573d8243cb804e97da88f65a50449e98f946c9",
+      "usedIn": [
+        "page-container",
+        "et-main-area",
+        "main-content",
+        "post-47805",
+        "Somos"
+      ]
+    },
+    {
+      "url": "https://lotusotec.cl/wp-content/uploads/2022/08/home-office-12.jpg",
+      "host": "lotusotec.cl",
+      "file": "home-office-12.jpg",
+      "bytes": 13252,
+      "sha256": "f1f25036cc0910cf7cd3709b84a60e5abc5292a87e0d9f520aefb4919d080ab6",
+      "usedIn": [
+        "page-container",
+        "et-main-area",
+        "main-content",
+        "post-47805",
+        "Cursos"
+      ]
+    }
+  ]
+}
