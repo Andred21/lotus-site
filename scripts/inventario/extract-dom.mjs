@@ -45,7 +45,7 @@ const inventory = await page.evaluate(() => {
       ),
       texts: [
         ...element.querySelectorAll(
-          'p, li, span.elementor-button-text, .et_pb_text_inner',
+          'p, li, span.elementor-button-text, .et_pb_text_inner, #footer-info',
         ),
       ]
         .map((node) => clean(node.textContent ?? ''))

@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-08-25T18:59:45.122Z",
+  "capturedAt": "2026-08-25T19:04:12.421Z",
   "url": "https://lotusotec.cl/",
   "head": {
     "title": "LOTUS | OTEC",
@@ -123,7 +123,8 @@
         "Nombre Completo",
         "Correo Electrónico",
         "Empresa",
-        "Mensaje"
+        "Mensaje",
+        "Diseñado por Lotus OTEC | Copyright © 2022. OTEC Lotus."
       ],
       "links": [
         {
@@ -488,7 +489,8 @@
         "Nombre Completo",
         "Correo Electrónico",
         "Empresa",
-        "Mensaje"
+        "Mensaje",
+        "Diseñado por Lotus OTEC | Copyright © 2022. OTEC Lotus."
       ],
       "links": [
         {
@@ -930,7 +932,7 @@
       "id": "main-footer",
       "tag": "footer",
       "headings": [],
-      "texts": [],
+      "texts": ["Diseñado por Lotus OTEC | Copyright © 2022. OTEC Lotus."],
       "links": [],
       "images": []
     },
@@ -938,7 +940,7 @@
       "id": "footer-bottom",
       "tag": "div",
       "headings": [],
-      "texts": [],
+      "texts": ["Diseñado por Lotus OTEC | Copyright © 2022. OTEC Lotus."],
       "links": [],
       "images": []
     }
