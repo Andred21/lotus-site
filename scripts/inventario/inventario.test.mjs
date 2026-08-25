@@ -33,3 +33,36 @@ describe('manifesto de assets', () => {
     }
   })
 })
+
+describe('inventário como artefato', () => {
+  const docs = [
+    '01-estrutura.md',
+    '02-conteudo.md',
+    '03-assets.md',
+    '04-tipografia.md',
+    '05-layout.md',
+    '06-baseline.md',
+    '07-formulario.md',
+    '08-seo.md',
+    '09-dados.md',
+    'README.md',
+  ]
+
+  it('não deixa placeholder em nenhum documento', () => {
+    // TBD/TODO sem /i: case-insensitive colide com "todo/toda" (palavra comum
+    // em português), não com o marcador de placeholder.
+    for (const doc of docs) {
+      const text = readFileSync(join(OUT, doc), 'utf8')
+      expect(text).not.toMatch(/\bTBD\b|\bTODO\b/)
+      expect(text).not.toMatch(/\bpreencher\b/i)
+    }
+  })
+
+  it('cobre na matriz toda seção mapeada no DOM', () => {
+    const dom = JSON.parse(readFileSync(join(OUT, 'dom.json'), 'utf8'))
+    const matrix = readFileSync(join(OUT, 'README.md'), 'utf8')
+    for (const section of dom.sections) {
+      expect(matrix).toContain(section.id)
+    }
+  })
+})
