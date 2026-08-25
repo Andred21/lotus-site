@@ -51,10 +51,13 @@ export function normalizeText(text) {
  * @returns {string}
  */
 export function rgbToHex(value) {
-  const match = value.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+  const match = value.match(
+    /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/,
+  )
   if (!match) return value
-  const [, r, g, b] = match
+  const [, r, g, b, a] = match
   if (r === undefined || g === undefined || b === undefined) return value
+  if (a !== undefined && Number(a) === 0) return 'transparent'
   const hex = [r, g, b]
     .map((channel) => Number(channel).toString(16).padStart(2, '0'))
     .join('')

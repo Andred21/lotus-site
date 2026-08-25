@@ -37,4 +37,12 @@ describe('rgbToHex', () => {
   it('preserva o valor original quando não é rgb', () => {
     expect(rgbToHex('transparent')).toBe('transparent')
   })
+
+  it('reporta rgba totalmente transparente como transparent, não como preto', () => {
+    expect(rgbToHex('rgba(0, 0, 0, 0)')).toBe('transparent')
+  })
+
+  it('converte rgba com alpha > 0 ignorando o canal alpha', () => {
+    expect(rgbToHex('rgba(15, 23, 42, 0.5)')).toBe('#0f172a')
+  })
 })
