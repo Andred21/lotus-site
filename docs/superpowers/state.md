@@ -9,8 +9,8 @@ active_title: 'Inventário do site — Sprint 1'
 active_branch: docs/2-1-1-2-1-10-inventario-site
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: fix_review_findings
+next_owner: codex+claude
+next_action: review_fix_commits
 resume_state: null
 context_packet: docs/superpowers/context-packets/2.1.1-2.1.10.md
 active_spec: docs/superpowers/specs/2026-08-25-2.1.1-2.1.10-inventario-site-design.md
@@ -20,8 +20,8 @@ reviewer: codex+claude
 blocker: null
 supervised_cycles_completed: 4
 last_completed_work_item: 1.2.4-1.3.9
-state_basis_commit: fdba731
-updated_at: 2026-08-25T22:05:00Z
+state_basis_commit: f1be362
+updated_at: 2026-08-25T22:40:00Z
 ---
 
 # Estado operacional — Lotus Site
