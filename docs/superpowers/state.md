@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: executing
+workflow_state: ready_for_review
 work_class: architectural
 active_work_item: 2.1.1-2.1.10
 active_notion_eap: '2.1.1, 2.1.2, 2.1.3, 2.1.4, 2.1.5, 2.1.6, 2.1.7, 2.1.8, 2.1.9, 2.1.10'
@@ -9,8 +9,8 @@ active_title: 'Inventário do site — Sprint 1'
 active_branch: docs/2-1-1-2-1-10-inventario-site
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: continue_active_plan
+next_owner: codex+claude
+next_action: review_active_work_item
 resume_state: null
 context_packet: docs/superpowers/context-packets/2.1.1-2.1.10.md
 active_spec: docs/superpowers/specs/2026-08-25-2.1.1-2.1.10-inventario-site-design.md
@@ -21,7 +21,7 @@ blocker: null
 supervised_cycles_completed: 4
 last_completed_work_item: 1.2.4-1.3.9
 state_basis_commit: 26df514
-updated_at: 2026-08-25T19:05:00Z
+updated_at: 2026-08-25T19:30:00Z
 ---
 
 # Estado operacional — Lotus Site
