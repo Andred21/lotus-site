@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = 5173
+// Porta própria do E2E: 5173 é a do `pnpm dev` e pode estar ocupada por
+// outro projeto. `--strictPort` faz a colisão falhar alto em vez de o
+// Playwright reaproveitar silenciosamente um servidor alheio. E2E_PORT é a
+// saída quando a porta padrão já está tomada na máquina.
+const PORT = Number(process.env.E2E_PORT ?? 5183)
 const baseURL = `http://localhost:${PORT}`
 
 export default defineConfig({
@@ -20,9 +24,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev --port ' + PORT,
+    command: `pnpm dev --port ${PORT} --strictPort`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 })

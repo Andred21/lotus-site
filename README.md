@@ -50,6 +50,9 @@ Antes do primeiro `pnpm e2e`, instale o navegador:
 pnpm exec playwright install --with-deps chromium
 ```
 
+O E2E sobe o próprio servidor na porta `5183`, com `--strictPort`: porta ocupada
+falha em vez de testar contra um servidor alheio. Use `E2E_PORT` para trocar.
+
 ## Estrutura
 
 ```text
