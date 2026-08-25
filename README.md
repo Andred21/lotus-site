@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# lotus-site
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Site institucional público da Lotus OTEC.
 
-Currently, two official plugins are available:
+Primeiro marco: clone funcional e visualmente fiel de `https://lotusotec.cl/`. Redesign e
+evolução só depois de uma baseline de paridade aprovada.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Requisitos
 
-## React Compiler
+- Node `24.19.0` — a versão está em `.nvmrc`; use `nvm use`
+- pnpm 11, habilitado por Corepack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+`engineStrict` está ligado: runtime fora da faixa declarada em `engines` falha com
+`ERR_PNPM_UNSUPPORTED_ENGINE` em qualquer comando pnpm. Isso é proposital.
 
-## Expanding the ESLint configuration
+## Começar
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+nvm use
+corepack enable
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+A aplicação sobe em `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Comandos
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Comando             | O que faz                                                   |
+| ------------------- | ----------------------------------------------------------- |
+| `pnpm dev`          | servidor de desenvolvimento com HMR                         |
+| `pnpm build`        | `tsc -b` seguido do build de produção                       |
+| `pnpm preview`      | serve o `dist/` já gerado                                   |
+| `pnpm typecheck`    | typecheck isolado dos três projetos TypeScript              |
+| `pnpm lint`         | ESLint via flat config                                      |
+| `pnpm format`       | aplica Prettier                                             |
+| `pnpm format:check` | verifica formatação sem escrever                            |
+| `pnpm test`         | testes unitários, uma passada                               |
+| `pnpm test:watch`   | testes unitários em watch                                   |
+| `pnpm e2e`          | testes de ponta a ponta no Chromium                         |
+| `pnpm check`        | `agent:check` + lint + typecheck + testes unitários + build |
+| `pnpm agent:check`  | valida o contrato do harness de agentes                     |
+
+`pnpm check` é o gate. `pnpm e2e` fica fora dele porque precisa subir servidor, e roda
+separado no CI.
+
+Antes do primeiro `pnpm e2e`, instale o navegador:
+
+```bash
+pnpm exec playwright install --with-deps chromium
 ```
+
+## Estrutura
+
+```text
+src/
+├── lib/        helpers puros, sem React
+├── content/    conteúdo institucional e dados estáticos
+└── assets/     assets importados por componente
+e2e/            testes de ponta a ponta
+scripts/        ferramental do harness de agentes
+docs/           ADR, specs, planos e estado do workflow
+```
+
+Diretório só nasce quando há consumidor real. `components/`, `app/` e `integrations/` chegam
+com o clone. A árvore alvo e a direção de dependências estão em
+`.claude/rules/architecture.md` — violação delas é erro de lint, não de revisão.
+
+`src/assets/` guarda o que é importado por componente e ganha fingerprint do Vite; `public/`
+é copiado verbatim e referenciado por URL absoluta.
+
+## Decisões
+
+`docs/adr/ADR-SITE-001.md` registra stack, princípios e o que foi deliberadamente adiado.
+
+## Fluxo de trabalho
+
+Cada bloco de trabalho roda em branch própria e vira um PR; `main` não recebe commit direto.
+O estado corrente do fluxo vive em `docs/superpowers/state.md`, e as regras completas em
+`CLAUDE.md`. Este README não as duplica.
