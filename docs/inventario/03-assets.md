@@ -1,6 +1,6 @@
 # 03 — Assets visuais
 
-> Evidência: `docs/inventario/assets/manifest.json` (`sha256` `56064b6300aa501c…`), capturado em `2026-08-25T20:50:54.896Z` via `pnpm inventario:assets`, sobre `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`, capturado em `2026-08-25T20:50:39.480Z`). Determinismo: `capturedAt` muda a cada execução por ser metadado de corrida; o que o aceite compara é `assets[]` — ordenado por URL, com `bytes` e `sha256` do conteúdo remoto.
+> Evidência: `docs/inventario/assets/manifest.json` (`sha256` `3065570bf6e1502f…`), capturado em `2026-08-25T20:57:14.015Z` via `pnpm inventario:assets`, sobre `docs/inventario/dom.json` (`sha256` `0d8a8d45a434de23…`, capturado em `2026-08-25T21:21:22.608Z`). Determinismo: `capturedAt` muda a cada execução por ser metadado de corrida; o que o aceite compara é `assets[]` — ordenado por URL, com `bytes` e `sha256` do conteúdo remoto.
 
 ## Cobertura
 
@@ -8,7 +8,7 @@ São **20 URLs de imagem únicas**, **811 910 B** (~0,79 MB), baixadas para `doc
 
 | origem (`kinds`)   | o que cobre                                               | quantos |
 | ------------------ | --------------------------------------------------------- | ------- |
-| `img`              | atributo `src` e `currentSrc` de cada `<img>`             | 8       |
+| `img`              | atributo `src` e `currentSrc` de cada `<img>`             | 9       |
 | `srcset`           | variantes de tamanho publicadas pelo WordPress            | 8       |
 | `background-image` | `getComputedStyle().backgroundImage` de qualquer elemento | 2       |
 | `icon`             | `link[rel*=icon]` e `meta[name=msapplication-TileImage]`  | 4       |
@@ -47,7 +47,17 @@ A soma passa de 20 porque a mesma URL aparece em mais de uma origem (por exemplo
 
 ## O mesmo arquivo em dois hosts
 
-Sete assets aparecem duplicados: o WordPress publica o arquivo em `lotusotec.cl` e o markup dos cards e do logo aponta para `lotusotec-cl.us.stackstaging.com`, em `http://`. Os pares `staging-*` e o arquivo homônimo de `lotusotec.cl` têm `sha256` idêntico (`f1f25036`, `02aa388c`, `ff937685`, `b796843c`) — é o mesmo binário servido por dois hosts. A exceção são `background-texture.jpg` e `shutterstock_1444636373-1-scaled.jpg`: existem **só** no host de staging, e o segundo é a foto de fundo do hero, o maior asset da home (564 kB, 70% do peso total).
+Sete assets vêm do host de staging `lotusotec-cl.us.stackstaging.com`, sempre em `http://`, porque é para lá que o markup dos cards e do logo aponta. Desses sete, **quatro** têm cópia idêntica em `lotusotec.cl`: `home-office-12.jpg` (`f1f25036`), `LLVV_00-v1-BN2.jpeg` (`02aa388c`), `LLVV_Mantas02-BN2.jpeg` (`ff937685`) e `LOTUS-G2_TRANSP_Fondo-Blanco.png` (`b796843c`) — `sha256` igual, mesmo binário servido por dois hosts.
+
+Os outros **três existem só no staging**, sem nenhuma cópia catalogada no host principal:
+
+| arquivo                                        | bytes   | origem                     | usado em                      |
+| ---------------------------------------------- | ------- | -------------------------- | ----------------------------- |
+| `staging-shutterstock_1444636373-1-scaled.jpg` | 564 274 | `background-image`         | `Intrucción`                  |
+| `staging-background-texture.jpg`               | 12 961  | `background-image` / `css` | `Intrucción`, folha de estilo |
+| `staging-LOTUS_TRANSP_Fondo-Negro-REC2.png`    | 4 228   | `img`                      | `logo`                        |
+
+A foto do hero é o maior asset da home (564 kB, 70% do peso total). O terceiro caso é o mais sensível para o clone: **o logo do cabeçalho** só existe no staging, então tirar o host do ar derruba a marca no topo da página, não só uma imagem de fundo.
 
 Consequência para o clone: baixar os dois hosts uma vez elimina o hotlink e o conteúdo misto (`http://` dentro de página `https://`). A escolha entre manter as duas cópias ou deduplicar por `sha256` fica para a Sprint 2 — aqui as duas são registradas porque as duas são requisição real da home.
 
