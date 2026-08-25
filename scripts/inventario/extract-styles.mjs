@@ -41,7 +41,12 @@ for (const viewport of VIEWPORTS) {
         paddingLeft: style.paddingLeft,
         paddingRight: style.paddingRight,
         marginBottom: style.marginBottom,
+        marginLeft: style.marginLeft,
+        marginRight: style.marginRight,
         gap: style.gap,
+        borderWidth: style.borderWidth,
+        borderColor: style.borderColor,
+        borderStyle: style.borderStyle,
       }
     }
 
@@ -59,10 +64,18 @@ for (const viewport of VIEWPORTS) {
         'a',
         'button',
         'img',
-        '.et_pb_row',
       ]) {
         const child = section.querySelector(selector)
         if (child) out.push(read(child, id, `#${id} ${selector}`))
+      }
+      // Linhas e colunas do Divi são medidas uma a uma: a seção institucional
+      // tem mais de uma `.et_pb_row`, e a largura de coluna só existe medida —
+      // o Divi a declara em percentual, não em pixel.
+      for (const selector of ['.et_pb_row', '.et_pb_column']) {
+        const nodes = [...section.querySelectorAll(selector)]
+        nodes.forEach((node, index) => {
+          out.push(read(node, id, `#${id} ${selector}[${index}]`))
+        })
       }
     }
     return out

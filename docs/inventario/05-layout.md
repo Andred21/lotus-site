@@ -1,6 +1,6 @@
 # 05 — Containers, grid, espaçamento e breakpoints
 
-> Evidência: `docs/inventario/styles.json`, capturado em `2026-08-25T19:17:16.591Z` via `pnpm inventario:styles` (4 viewports: 375/768/1440/1920). Commit-base: `c99c400`. `extract-styles.mjs` foi estendido nesta task para medir `maxWidth`, `paddingLeft` e `paddingRight`, além de incluir o seletor `.et_pb_row` (container de conteúdo do Divi) — campos que as tasks anteriores não precisavam e por isso não existiam em `styles.json`.
+> Evidência: `docs/inventario/styles.json` (`sha256` `cb3e5bfb6e5400e9…`), capturado em `2026-08-25T20:51:25.721Z` via `pnpm inventario:styles` (4 viewports: 375/768/1440/1920), sobre `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`). `extract-styles.mjs` mede cada `.et_pb_row` e cada `.et_pb_column` da seção individualmente (`#<seção> .et_pb_row[i]`, `#<seção> .et_pb_column[i]`), além de `maxWidth`, `padding`, `margin` e borda.
 
 ## Container
 
@@ -16,7 +16,7 @@ O container real é `.et_pb_row` (linha do Divi) dentro de cada seção, com `ma
 
 Abaixo de 1080px de viewport disponível, a linha ocupa o espaço todo (`width` = largura do viewport, já descontada a calha do body); a partir de ~1080px de conteúdo disponível, ela trava em `1080px` e fica centralizada. `Intrucción` (hero) é exceção: seu `.et_pb_row` mede `max-width: 100%` — o hero é full-bleed, sem o teto de `1080px` das demais seções.
 
-Padding lateral (`paddingLeft`/`paddingRight`) do próprio `.et_pb_row` é `0px` em todos os viewports e seções — a calha visual entre o card e a borda da tela (perceptível no baseline visual, `06-baseline.md`) vem de um nível mais interno (`.et_pb_column`), não medido nesta passagem.
+Padding lateral (`paddingLeft`/`paddingRight`) do próprio `.et_pb_row` é `0px` em todos os viewports e seções, e o das colunas também: `#Somos .et_pb_column[*]` e `#Cursos .et_pb_column[*]` medem `padding-left: 0px` nos quatro viewports. A calha lateral vem da própria largura da linha (`max-width: 1080px` centralizada) e, no mobile, da margem do body — não de padding de coluna. A exceção é o hero: `#Intrucción .et_pb_column[0]` tem `padding-left` proporcional ao viewport (`30px` em 375, `61.4px` em 768, `115.2px` em 1440, `153.6px` em 1920).
 
 ## Altura por seção
 
@@ -42,9 +42,22 @@ Os três valores são idênticos nos quatro viewports — o espaçamento vertica
 
 ## Grid interno
 
-`Somos`: `.et_pb_row` tem 2 colunas Divi (`et_pb_column_1_3` e `et_pb_column_2_3`), medidas em 1440px como `320px` + `700px`, com `59px` de vão entre elas. As 3 estatísticas (`ENERGIZADAS`/`ALUMNOS`/`CERTIFICACIÓN`, ver `04-tipografia.md`) e o texto institucional ficam distribuídos entre essas duas colunas — qual conteúdo cai em qual coluna não foi remedido nesta task; conferir contra o baseline visual.
+Cada linha e cada coluna do Divi foi medida individualmente. Larguras em px, por viewport:
 
-`Cursos`: os 3 cards de curso **não** são 3 colunas Divi — o `.et_pb_row` tem uma única coluna (`et_pb_column_4_4`) full-width contendo os três cards. O grid de cards é produzido por um módulo interno (galeria/blurb) um nível abaixo da coluna, não resolvido nesta medição — `gap`/número de colunas do grid de cards fica como pendência para a Sprint 2 ler direto do baseline visual ou inspecionar a página ao vivo.
+| seção        | linha | colunas (375)   | colunas (768)   | colunas (1440)  | colunas (1920)  | conteúdo                            |
+| ------------ | ----- | --------------- | --------------- | --------------- | --------------- | ----------------------------------- |
+| `Intrucción` | `[0]` | 375 / 0         | 768 / 0         | 720 / 720       | 960 / 960       | hero: texto + CTA (2ª coluna vazia) |
+| `Somos`      | `[0]` | 300 / 300       | 614 / 614       | 320 / 700       | 320 / 700       | logo institucional + texto          |
+| `Somos`      | `[1]` | 300 / 300 / 300 | 614 / 614 / 614 | 320 / 320 / 320 | 320 / 320 / 320 | os 3 destaques                      |
+| `Cursos`     | `[0]` | 300             | 614             | 1080            | 1080            | título + intro                      |
+| `Cursos`     | `[1]` | 300 / 300 / 300 | 614 / 614 / 614 | 320 / 320 / 320 | 320 / 320 / 320 | os 3 cards de curso                 |
+| `Cursos`     | `[2]` | 300             | 614             | 1080            | 1080            | CTA `See More`                      |
+| `Contacto`   | `[0]` | 300             | 614             | 1080            | 1080            | título + texto                      |
+| `Contacto`   | `[1]` | 300             | 614             | 1080            | 1080            | formulário                          |
+
+Vão entre colunas: o Divi não usa `gap` (`gap: normal` em toda linha medida). O vão vem de `margin-right` da coluna — `59.3906px` em `1440` e `1920` para as colunas que não são a última da linha, e `0px` em `375` e `768`, onde as colunas empilham em largura cheia.
+
+Isso corrige duas leituras anteriores: os 3 destaques de `Somos` ficam em **linha própria** (`[1]`), abaixo da linha logo+texto, não distribuídos nas duas colunas de `[0]`; e os 3 cards de `Cursos` **são** 3 colunas Divi de `320px` na linha `[1]`, não um módulo interno dentro de uma coluna full-width.
 
 ## Breakpoints
 

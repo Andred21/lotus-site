@@ -1,6 +1,6 @@
 # 04 — Tipografia, cores e tokens
 
-> Evidência: `docs/inventario/styles.json`, capturado em `2026-08-25T19:13:10.575Z` via `pnpm inventario:styles` (4 viewports: 375/768/1440/1920). Commit-base: `4715ddf`. Valores abaixo são do viewport `1440` salvo indicação contrária; cada linha cita o `selector` de `styles.json` para conferência.
+> Evidência: `docs/inventario/styles.json` (`sha256` `cb3e5bfb6e5400e9…`), capturado em `2026-08-25T20:51:25.721Z` via `pnpm inventario:styles` (4 viewports: 375/768/1440/1920), sobre `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`). Valores abaixo são do viewport `1440` salvo indicação contrária; cada linha cita o `selector` de `styles.json` para conferência.
 
 ## Famílias
 
@@ -45,11 +45,13 @@ O Elementor também carrega CSS próprio para `Roboto` e `Roboto Slab` (`wp-cont
 | `#2ea3f2` | links de conteúdo (`a` fora do menu) e ícones                              | cor de destaque — link             |
 | `#24a2e0` | links do menu (`top-menu a`)                                               | cor de destaque — menu             |
 | `#222222` | fundo de `#main-footer`                                                    | cor de fundo — rodapé              |
-| `#ffffff` | fundo dos campos de formulário                                             | cor de fundo — input               |
+| `#ffffff` | fundo de `#main-header`                                                    | cor de fundo — cabeçalho           |
 
 O par `#2ea3f2` (links de conteúdo) e `#24a2e0` (links de menu) são dois azuis próximos, não o mesmo token — mantidos separados porque a medição não encontrou um só valor usado nos dois lugares.
 
-O CTA `Learn More` (`#Intrucción a`) mediu `color`, `background-color` e `border-color` idênticos — `rgb(0, 0, 0)` os três, com borda de `4px`. Sobre o fundo igualmente preto de `#Intrucción`, isso é um botão sem contraste nos valores computados; se ele aparece visível no baseline (`06-baseline.md`) é por outro efeito (hover, ícone, sombra) não capturado por `getComputedStyle` em repouso — registrado como achado, decisão de tratamento fica para a Sprint 2.
+Os campos do formulário **não têm fundo próprio**: `#et_pb_contact_name_0`, `_email_0`, `_company_0` e `_message_0` medem `background-color: transparent` nos quatro viewports (o CSS publicado usa `rgba(255,255,255,0)`, branco com alpha zero). O que se vê atrás do campo é o `#f0f0f0` do painel `#et_pb_contact_form_0`. Um clone que pinte o input de branco quebra paridade — o token de fundo do formulário é `#f0f0f0`, no painel, não no campo.
+
+O CTA `Learn More` (`#Intrucción a`) mediu `color`, `background-color` e `border-color` idênticos — `#000000` os três, com `border-width: 4px` e `border-style: solid` (`#Intrucción a` em `styles.json`). Sobre o fundo igualmente preto de `#Intrucción`, isso é um botão sem contraste nos valores computados; se ele aparece visível no baseline (`06-baseline.md`) é por outro efeito (hover, ícone, sombra) não capturado por `getComputedStyle` em repouso — registrado como achado, decisão de tratamento fica para a Sprint 2.
 
 ## Borda e sombra
 
@@ -59,5 +61,7 @@ O CTA `Learn More` (`#Intrucción a`) mediu `color`, `background-color` e `borde
 | cabeçalho (`#main-header`) | `0px`            | `rgba(0, 0, 0, 0.1) 0px 1px 0px 0px` (linha inferior sutil)           |
 | campos de formulário       | `0px`            | `rgba(0, 0, 0, 0.18) 0px -1px 0px 0px inset` (linha inferior interna) |
 | demais elementos medidos   | `0px`            | `none`                                                                |
+
+Larguras de borda medidas (`borderWidth`/`borderColor`/`borderStyle` em `styles.json`): CTA de conteúdo (`#Intrucción a`) `4px solid #000000`; botão `Enviar` (`#et_pb_contact_form_0 button`) `5px solid rgb(84, 84, 84)`; links de menu e demais `a` medem `0px` com `border-style: none`.
 
 Nenhum elemento medido usa `border-radius` intermediário — é `0px` (retangular) ou `100px` (pílula/círculo), sem meio-termo.
