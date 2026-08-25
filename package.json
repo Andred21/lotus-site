@@ -19,6 +19,10 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "agent:check": "node scripts/validate-agent-workflow.mjs",
+    "inventario:dom": "node scripts/inventario/extract-dom.mjs",
+    "inventario:assets": "node scripts/inventario/fetch-assets.mjs",
+    "inventario:styles": "node scripts/inventario/extract-styles.mjs",
+    "inventario:baseline": "node scripts/inventario/capture-baseline.mjs",
     "check": "pnpm agent:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
