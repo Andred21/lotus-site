@@ -26,20 +26,20 @@ A aplicação sobe em `http://localhost:5173`.
 
 ## Comandos
 
-| Comando             | O que faz                                                   |
-| ------------------- | ----------------------------------------------------------- |
-| `pnpm dev`          | servidor de desenvolvimento com HMR                         |
-| `pnpm build`        | `tsc -b` seguido do build de produção                       |
-| `pnpm preview`      | serve o `dist/` já gerado                                   |
-| `pnpm typecheck`    | typecheck isolado dos três projetos TypeScript              |
-| `pnpm lint`         | ESLint via flat config                                      |
-| `pnpm format`       | aplica Prettier                                             |
-| `pnpm format:check` | verifica formatação sem escrever                            |
-| `pnpm test`         | testes unitários, uma passada                               |
-| `pnpm test:watch`   | testes unitários em watch                                   |
-| `pnpm e2e`          | testes de ponta a ponta no Chromium                         |
-| `pnpm check`        | `agent:check` + lint + typecheck + testes unitários + build |
-| `pnpm agent:check`  | valida o contrato do harness de agentes                     |
+| Comando             | O que faz                                                                    |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `pnpm dev`          | servidor de desenvolvimento com HMR                                          |
+| `pnpm build`        | `tsc -b` seguido do build de produção                                        |
+| `pnpm preview`      | serve o `dist/` já gerado                                                    |
+| `pnpm typecheck`    | typecheck isolado dos três projetos TypeScript                               |
+| `pnpm lint`         | ESLint via flat config                                                       |
+| `pnpm format`       | aplica Prettier                                                              |
+| `pnpm format:check` | verifica formatação sem escrever                                             |
+| `pnpm test`         | testes unitários, uma passada                                                |
+| `pnpm test:watch`   | testes unitários em watch                                                    |
+| `pnpm e2e`          | testes de ponta a ponta no Chromium                                          |
+| `pnpm check`        | `agent:check` + `format:check` + lint + typecheck + testes unitários + build |
+| `pnpm agent:check`  | valida o contrato do harness de agentes                                      |
 
 `pnpm check` é o gate. `pnpm e2e` fica fora dele porque precisa subir servidor, e roda
 separado no CI.

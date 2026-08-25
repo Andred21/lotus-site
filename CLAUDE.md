@@ -81,7 +81,7 @@ Modo inicial: `supervised`. `/desenvolver-site` não existe até decisão arquit
 - `pnpm preview` — serve o `dist/` já gerado.
 - `pnpm test` / `pnpm test:watch` — Vitest com Testing Library, ambiente jsdom; testes ficam ao lado do código em `src/**/*.test.ts`.
 - `pnpm e2e` — Playwright (só Chromium); specs em `e2e/`, fora de `src/`. Requer `pnpm exec playwright install --with-deps chromium` na primeira vez.
-- `pnpm check` — `agent:check && lint && typecheck && test && build`; é o gate de qualidade. `e2e` fica fora porque precisa subir servidor.
+- `pnpm check` — `agent:check && format:check && lint && typecheck && test && build`; é o gate de qualidade. `e2e` fica fora porque precisa subir servidor.
 - `pnpm agent:check` — valida o contrato do harness (estado, backlog, rules, skills), não o produto.
 - `tsconfig.json` é um solution file que referencia três projetos buildados juntos por `tsc -b`: `tsconfig.app.json` (código de aplicação em `src/`), `tsconfig.node.json` (código de build e scripts, ex. `vite.config.ts`, `scripts/**/*.mjs`) e `tsconfig.e2e.json` (`e2e/`). Script de build novo (ex. `vitest.config.ts`, plugin Vite) precisa entrar no `include` de `tsconfig.node.json` ou `tsc -b` nunca o typecheca.
 - Compilador roda com `strict`, `noUncheckedIndexedAccess`, `noUnusedLocals`, `noUnusedParameters` e `erasableSyntaxOnly` ativos (import/variável não usada ou sintaxe com semântica de runtime como `enum` quebram `pnpm build`) e com `verbatimModuleSyntax` (import/export somente-tipo precisam da palavra `type`).
