@@ -1,6 +1,6 @@
 # 05 — Containers, grid, espaçamento e breakpoints
 
-> Evidência: `docs/inventario/styles.json` (`sha256` `cb3e5bfb6e5400e9…`), capturado em `2026-08-25T20:51:25.721Z` via `pnpm inventario:styles` (4 viewports: 375/768/1440/1920), sobre `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`). `extract-styles.mjs` mede cada `.et_pb_row` e cada `.et_pb_column` da seção individualmente (`#<seção> .et_pb_row[i]`, `#<seção> .et_pb_column[i]`), além de `maxWidth`, `padding`, `margin` e borda.
+> Evidência: `docs/inventario/styles.json` (`sha256` `cb3e5bfb6e5400e9…`), capturado em `2026-08-25T20:51:25.721Z` via `pnpm inventario:styles` (4 viewports: 375/768/1440/1920), sobre `docs/inventario/dom.json` (`sha256` `0d8a8d45a434de23…`). `extract-styles.mjs` mede cada `.et_pb_row` e cada `.et_pb_column` da seção individualmente (`#<seção> .et_pb_row[i]`, `#<seção> .et_pb_column[i]`), além de `maxWidth`, `padding`, `margin` e borda.
 
 ## Container
 
@@ -14,9 +14,9 @@ O container real é `.et_pb_row` (linha do Divi) dentro de cada seção, com `ma
 | `Cursos`   | 300px | 614px | 1080px | 1080px |
 | `Contacto` | 300px | 614px | 1080px | 1080px |
 
-Abaixo de 1080px de viewport disponível, a linha ocupa o espaço todo (`width` = largura do viewport, já descontada a calha do body); a partir de ~1080px de conteúdo disponível, ela trava em `1080px` e fica centralizada. `Intrucción` (hero) é exceção: seu `.et_pb_row` mede `max-width: 100%` — o hero é full-bleed, sem o teto de `1080px` das demais seções.
+A linha mede **80% do viewport** enquanto esse valor fica abaixo do teto: `300/375` e `614/768` são 80% exatos, e as margens laterais medidas (`37.5px` em 375, `76.8px` em 768) são os 20% restantes divididos em dois. Em `1440` e `1920` a linha trava em `1080px` e a margem absorve a sobra (`180px` e `420px` de cada lado). Os quatro viewports medidos situam a virada entre `768` e `1440`; se a regra dos 80% valer no intervalo, o teto engata em `1080 / 0,8 = 1350px` de viewport — valor derivado, não observado. `Intrucción` (hero) é exceção: seu `.et_pb_row` mede `max-width: 100%` — o hero é full-bleed, sem o teto de `1080px` das demais seções.
 
-Padding lateral (`paddingLeft`/`paddingRight`) do próprio `.et_pb_row` é `0px` em todos os viewports e seções, e o das colunas também: `#Somos .et_pb_column[*]` e `#Cursos .et_pb_column[*]` medem `padding-left: 0px` nos quatro viewports. A calha lateral vem da própria largura da linha (`max-width: 1080px` centralizada) e, no mobile, da margem do body — não de padding de coluna. A exceção é o hero: `#Intrucción .et_pb_column[0]` tem `padding-left` proporcional ao viewport (`30px` em 375, `61.4px` em 768, `115.2px` em 1440, `153.6px` em 1920).
+Padding lateral (`paddingLeft`/`paddingRight`) do próprio `.et_pb_row` é `0px` em todos os viewports e seções, e o das colunas também: `#Somos .et_pb_column[*]` e `#Cursos .et_pb_column[*]` medem `padding-left: 0px` nos quatro viewports. A calha lateral vem da própria linha — `width: 80%` com `max-width: 1080px` e margem lateral automática — em todos os viewports, inclusive no mobile: `#Somos .et_pb_row[0]` mede `margin-left: 37.5px` em 375 e `76.7969px` em 768. Não vem de padding de coluna nem de margem do `body`, que não é medido por `extract-styles.mjs`. A exceção é o hero: `#Intrucción .et_pb_column[0]` tem `padding-left` proporcional ao viewport (`30px` em 375, `61.4px` em 768, `115.2px` em 1440, `153.6px` em 1920).
 
 ## Altura por seção
 
@@ -64,6 +64,6 @@ Isso corrige duas leituras anteriores: os 3 destaques de `Somos` ficam em **linh
 Os únicos breakpoints observáveis com os quatro viewports medidos:
 
 - **Menu desktop → menu mobile**: `top-menu`/`top-menu-nav` medem `0×0` (ocultos) em `375` e `768`, e aparecem com largura real em `1440` (`394px`) e `1920`. O breakpoint está em algum ponto entre `768px` e `1440px` — os quatro viewports do inventário não permitem apontar o valor exato.
-- **Container `1080px`**: `Somos`/`Cursos`/`Contacto` atingem o teto de `1080px` em `1440` e `1920`, e ficam abaixo dele (acompanhando o viewport) em `375` e `768`. O breakpoint de container fica, por definição, em `1080px` de viewport disponível — não é um valor observado por tentativa, é o próprio `max-width` do Divi.
+- **Container `1080px`**: `Somos`/`Cursos`/`Contacto` atingem o teto de `1080px` em `1440` e `1920`, e ficam em 80% do viewport em `375` e `768`. Os quatro viewports do inventário só provam que a virada está entre `768` e `1440`; `1350px` (`1080 / 0,8`) é a derivação da regra dos 80%, não uma largura medida. Medir viewports intermediários é o que fecha o valor.
 
 Ambos são breakpoints observados por amostragem em quatro larguras, não valores declarados lidos de CSS — se a Sprint 2 precisar do breakpoint exato do menu, a medição precisa rodar em viewports intermediários (ex. `900px`, `1000px`, `1100px`).
