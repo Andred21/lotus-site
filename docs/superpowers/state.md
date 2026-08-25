@@ -4,8 +4,8 @@ workflow_mode: supervised
 workflow_state: executing
 work_class: architectural
 active_work_item: 1.2.4-1.3.9
-active_notion_eap: "1.2.4, 1.2.5, 1.3.1, 1.3.2, 1.3.3, 1.3.4, 1.3.5, 1.3.6, 1.3.7, 1.3.8, 1.3.9"
-active_title: "Tooling e qualidade — Sprint 0 restante"
+active_notion_eap: '1.2.4, 1.2.5, 1.3.1, 1.3.2, 1.3.3, 1.3.4, 1.3.5, 1.3.6, 1.3.7, 1.3.8, 1.3.9'
+active_title: 'Tooling e qualidade — Sprint 0 restante'
 active_branch: chore/1-2-4-1-3-9-tooling-qualidade
 bounded_design: null
 authorized_paths: null
@@ -30,18 +30,18 @@ updated_at: 2026-08-24T00:10:00Z
 
 ## Estados válidos
 
-| Estado | Próxima ação permitida |
-|---|---|
-| `idle` | selecionar explicitamente um work item |
-| `context_required` | gerar/atualizar Context Packet |
-| `ready_for_planning` | iniciar planejamento |
-| `planning` | continuar brainstorming/spec/plano |
-| `ready_for_execution` | iniciar execução do plano |
-| `executing` | continuar somente o plano ativo |
-| `ready_for_review` | iniciar revisão independente |
-| `reviewing` | continuar review/correções aprovadas |
-| `ready_for_closure` | executar fechamento |
-| `blocked` | resolver `blocker` e retornar a `resume_state` |
+| Estado                | Próxima ação permitida                         |
+| --------------------- | ---------------------------------------------- |
+| `idle`                | selecionar explicitamente um work item         |
+| `context_required`    | gerar/atualizar Context Packet                 |
+| `ready_for_planning`  | iniciar planejamento                           |
+| `planning`            | continuar brainstorming/spec/plano             |
+| `ready_for_execution` | iniciar execução do plano                      |
+| `executing`           | continuar somente o plano ativo                |
+| `ready_for_review`    | iniciar revisão independente                   |
+| `reviewing`           | continuar review/correções aprovadas           |
+| `ready_for_closure`   | executar fechamento                            |
+| `blocked`             | resolver `blocker` e retornar a `resume_state` |
 
 ## Invariantes
 

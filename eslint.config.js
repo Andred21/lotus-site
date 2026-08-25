@@ -22,34 +22,75 @@ export default defineConfig([
   {
     files: ['src/content/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [
-        { group: ['react', 'react-dom', 'react/*', 'react-dom/*'], message: 'content é dado institucional; não importa React.' },
-        { group: ['**/components/**', '**/integrations/**'], message: 'content não depende de UI nem de integração.' },
-      ] }],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['react', 'react-dom', 'react/*', 'react-dom/*'],
+              message: 'content é dado institucional; não importa React.',
+            },
+            {
+              group: ['**/components/**', '**/integrations/**'],
+              message: 'content não depende de UI nem de integração.',
+            },
+          ],
+        },
+      ],
     },
   },
   {
     files: ['src/lib/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [
-        { group: ['react', 'react-dom', 'react/*', 'react-dom/*'], message: 'lib é helper puro; hook React vive junto do consumidor.' },
-        { group: ['**/components/**'], message: 'lib não importa componente.' },
-      ] }],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['react', 'react-dom', 'react/*', 'react-dom/*'],
+              message:
+                'lib é helper puro; hook React vive junto do consumidor.',
+            },
+            {
+              group: ['**/components/**'],
+              message: 'lib não importa componente.',
+            },
+          ],
+        },
+      ],
     },
   },
   {
     files: ['src/components/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [
-        { group: ['**/integrations/**'], message: 'integração entra por prop/callback a partir da composição.' },
-      ] }],
-      'no-restricted-globals': ['error',
-        { name: 'fetch', message: 'fetch não vive em componente; use src/integrations/.' },
-        { name: 'XMLHttpRequest', message: 'requisição não vive em componente; use src/integrations/.' },
-      ],
-      'no-restricted-syntax': ['error',
+      'no-restricted-imports': [
+        'error',
         {
-          selector: "MemberExpression[object.name=/^(window|globalThis|self)$/][property.name=/^(fetch|XMLHttpRequest)$/]",
+          patterns: [
+            {
+              group: ['**/integrations/**'],
+              message:
+                'integração entra por prop/callback a partir da composição.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'fetch',
+          message: 'fetch não vive em componente; use src/integrations/.',
+        },
+        {
+          name: 'XMLHttpRequest',
+          message: 'requisição não vive em componente; use src/integrations/.',
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'MemberExpression[object.name=/^(window|globalThis|self)$/][property.name=/^(fetch|XMLHttpRequest)$/]',
           message: 'requisição não vive em componente; use src/integrations/.',
         },
       ],
@@ -58,10 +99,22 @@ export default defineConfig([
   {
     files: ['src/components/ui/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [
-        { group: ['**/sections/**', '**/components/sections/**'], message: 'ui é primitiva; seção compõe ui, não o contrário.' },
-        { group: ['**/integrations/**'], message: 'integração entra por prop/callback a partir da composição.' },
-      ] }],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/sections/**', '**/components/sections/**'],
+              message: 'ui é primitiva; seção compõe ui, não o contrário.',
+            },
+            {
+              group: ['**/integrations/**'],
+              message:
+                'integração entra por prop/callback a partir da composição.',
+            },
+          ],
+        },
+      ],
     },
   },
 ])

@@ -1,6 +1,6 @@
 ---
 paths:
-  - "**"
+  - '**'
 ---
 
 # Testing and verification — Lotus Site

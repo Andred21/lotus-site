@@ -1,7 +1,7 @@
 ---
 paths:
-  - "src/**"
-  - "vite.config.ts"
+  - 'src/**'
+  - 'vite.config.ts'
 ---
 
 # Architecture — Lotus Site

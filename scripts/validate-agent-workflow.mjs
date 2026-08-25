@@ -60,7 +60,8 @@ const parseFrontmatter = (text) => {
   return values
 }
 
-const isNull = (value) => value === undefined || value === '' || value === 'null'
+const isNull = (value) =>
+  value === undefined || value === '' || value === 'null'
 
 const checkState = () => {
   const state = read('docs/superpowers/state.md')
@@ -88,11 +89,14 @@ const checkState = () => {
       ? front.resume_state
       : current
   const fromExecution =
-    ORDERED_STATES.indexOf(effective) >= ORDERED_STATES.indexOf('ready_for_execution')
+    ORDERED_STATES.indexOf(effective) >=
+    ORDERED_STATES.indexOf('ready_for_execution')
 
   if (current === 'idle') {
-    if (!isNull(front.active_work_item)) errors.push('state: idle exige active_work_item null')
-    if (!isNull(front.active_branch)) errors.push('state: idle exige active_branch null')
+    if (!isNull(front.active_work_item))
+      errors.push('state: idle exige active_work_item null')
+    if (!isNull(front.active_branch))
+      errors.push('state: idle exige active_branch null')
   } else {
     if (isNull(front.active_work_item)) {
       errors.push(`state: ${current} exige active_work_item preenchido`)
@@ -101,42 +105,60 @@ const checkState = () => {
       errors.push(`state: ${current} exige active_branch preenchido`)
     }
     if (front.active_branch === 'main') {
-      errors.push('state: bloco não roda em main; active_branch precisa ser branch própria')
+      errors.push(
+        'state: bloco não roda em main; active_branch precisa ser branch própria',
+      )
     }
   }
 
   if (current === 'blocked') {
-    if (isNull(front.blocker)) errors.push('state: blocked exige blocker preenchido')
+    if (isNull(front.blocker))
+      errors.push('state: blocked exige blocker preenchido')
     if (!ORDERED_STATES.includes(front.resume_state)) {
-      errors.push(`state: blocked exige resume_state válido, veio ${front.resume_state}`)
+      errors.push(
+        `state: blocked exige resume_state válido, veio ${front.resume_state}`,
+      )
     }
   }
 
   if (fromExecution) {
     if (!['bounded', 'architectural'].includes(front.work_class)) {
-      errors.push(`state: ${current} (fase ${effective}) exige work_class bounded ou architectural`)
+      errors.push(
+        `state: ${current} (fase ${effective}) exige work_class bounded ou architectural`,
+      )
     }
     if (isNull(front.executor) || isNull(front.reviewer)) {
-      errors.push(`state: ${current} (fase ${effective}) exige executor e reviewer preenchidos`)
+      errors.push(
+        `state: ${current} (fase ${effective}) exige executor e reviewer preenchidos`,
+      )
     } else if (front.executor === front.reviewer) {
       errors.push('state: executor e reviewer devem ser diferentes')
     }
   }
 
   if (front.work_class === 'bounded') {
-    if (!isNull(front.active_spec)) errors.push('state: bounded exige active_spec null')
-    if (!isNull(front.active_plan)) errors.push('state: bounded exige active_plan null')
-    if (isNull(front.bounded_design)) errors.push('state: bounded exige bounded_design preenchido')
-    if (isNull(front.authorized_paths)) errors.push('state: bounded exige authorized_paths preenchido')
+    if (!isNull(front.active_spec))
+      errors.push('state: bounded exige active_spec null')
+    if (!isNull(front.active_plan))
+      errors.push('state: bounded exige active_plan null')
+    if (isNull(front.bounded_design))
+      errors.push('state: bounded exige bounded_design preenchido')
+    if (isNull(front.authorized_paths))
+      errors.push('state: bounded exige authorized_paths preenchido')
   }
 
   if (front.work_class === 'architectural') {
-    if (!isNull(front.bounded_design)) errors.push('state: architectural exige bounded_design null')
+    if (!isNull(front.bounded_design))
+      errors.push('state: architectural exige bounded_design null')
     if (fromExecution && isNull(front.active_spec)) {
-      errors.push(`state: ${current} (fase ${effective}) architectural exige active_spec`)
+      errors.push(
+        `state: ${current} (fase ${effective}) architectural exige active_spec`,
+      )
     }
     if (fromExecution && isNull(front.active_plan)) {
-      errors.push(`state: ${current} (fase ${effective}) architectural exige active_plan`)
+      errors.push(
+        `state: ${current} (fase ${effective}) architectural exige active_plan`,
+      )
     }
   }
 }
@@ -144,7 +166,8 @@ const checkState = () => {
 const checkBacklog = () => {
   const backlog = read('docs/superpowers/backlog.md')
   for (const heading of ['# AGORA', '# DEPOIS', '# DÉBITOS']) {
-    if (!backlog.includes(heading)) errors.push(`backlog: seção ausente ${heading}`)
+    if (!backlog.includes(heading))
+      errors.push(`backlog: seção ausente ${heading}`)
   }
   if (backlog.includes('workflow_state')) {
     errors.push('backlog: fila não define fase; remova workflow_state')
@@ -155,14 +178,17 @@ const checkClaudeMd = () => {
   const claude = read('CLAUDE.md')
   const agents = read('AGENTS.md')
   const notionId = 'collection://2f0e72ec-ef53-4e08-a466-312de7eea7d2'
-  if (!claude.includes(notionId)) errors.push('CLAUDE.md: canonical Notion data source missing')
-  if (!agents.includes(notionId)) errors.push('AGENTS.md: canonical Notion data source missing')
+  if (!claude.includes(notionId))
+    errors.push('CLAUDE.md: canonical Notion data source missing')
+  if (!agents.includes(notionId))
+    errors.push('AGENTS.md: canonical Notion data source missing')
   for (const reference of [
     'docs/superpowers/state.md',
     'docs/superpowers/backlog.md',
     'progress.md',
   ]) {
-    if (!claude.includes(reference)) errors.push(`CLAUDE.md: referência ausente ${reference}`)
+    if (!claude.includes(reference))
+      errors.push(`CLAUDE.md: referência ausente ${reference}`)
   }
 }
 
@@ -170,7 +196,11 @@ const SKILL_CONTRACTS = [
   {
     name: 'context',
     path: '.agents/skills/site-context-packet/SKILL.md',
-    markers: ['BEGIN SITE CONTEXT PACKET', 'END SITE CONTEXT PACKET', 'RECOMMENDED_TRANSITION'],
+    markers: [
+      'BEGIN SITE CONTEXT PACKET',
+      'END SITE CONTEXT PACKET',
+      'RECOMMENDED_TRANSITION',
+    ],
     sections: [
       '## Objective',
       '## Non-goals',
@@ -194,7 +224,11 @@ const SKILL_CONTRACTS = [
   {
     name: 'execute',
     path: '.agents/skills/site-execute-task/SKILL.md',
-    markers: ['BEGIN SITE EXECUTION REPORT', 'END SITE EXECUTION REPORT', 'RECOMMENDED_TRANSITION'],
+    markers: [
+      'BEGIN SITE EXECUTION REPORT',
+      'END SITE EXECUTION REPORT',
+      'RECOMMENDED_TRANSITION',
+    ],
     sections: [
       '## Preconditions',
       '## Preflight',
@@ -209,7 +243,11 @@ const SKILL_CONTRACTS = [
   {
     name: 'review',
     path: '.agents/skills/site-review-task/SKILL.md',
-    markers: ['BEGIN SITE REVIEW REPORT', 'END SITE REVIEW REPORT', 'RECOMMENDED_TRANSITION'],
+    markers: [
+      'BEGIN SITE REVIEW REPORT',
+      'END SITE REVIEW REPORT',
+      'RECOMMENDED_TRANSITION',
+    ],
     sections: [
       '## Review dimensions',
       '## Severity',
@@ -224,14 +262,18 @@ const checkSkills = () => {
   for (const contract of SKILL_CONTRACTS) {
     const content = read(contract.path)
     for (const marker of contract.markers) {
-      if (!content.includes(marker)) errors.push(`${contract.name}: missing marker ${marker}`)
+      if (!content.includes(marker))
+        errors.push(`${contract.name}: missing marker ${marker}`)
     }
     for (const section of contract.sections) {
-      if (!content.includes(section)) errors.push(`${contract.name}: seção ausente ${section}`)
+      if (!content.includes(section))
+        errors.push(`${contract.name}: seção ausente ${section}`)
     }
     for (const forbidden of ['.claude/**', '.agents/**']) {
       if (!content.includes(forbidden)) {
-        errors.push(`${contract.name}: falta declarar ${forbidden} fora do alcance do Codex`)
+        errors.push(
+          `${contract.name}: falta declarar ${forbidden} fora do alcance do Codex`,
+        )
       }
     }
   }
@@ -270,7 +312,10 @@ const checkHarnessLimits = () => {
     if (file.replace(/\\/g, '/').endsWith(DELIVERY_COMMAND)) continue
     const content = readFileSync(file, 'utf8')
     for (const forbidden of ['git push', 'gh pr create']) {
-      if (content.includes(forbidden) && !content.includes(`não execute ${forbidden}`)) {
+      if (
+        content.includes(forbidden) &&
+        !content.includes(`não execute ${forbidden}`)
+      ) {
         errors.push(`harness: ${file} contém "${forbidden}"`)
       }
     }

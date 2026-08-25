@@ -76,12 +76,19 @@ of the file. A claim without output is not evidence.
 Return exactly:
 
 BEGIN SITE EXECUTION REPORT
+
 ## Work item
+
 ## Tasks
+
 ## Files touched
+
 ## Commands run
+
 ## Acceptance evidence
+
 ## Deviations and limitations
+
 END SITE EXECUTION REPORT
 RECOMMENDED_TRANSITION: ready_for_review|blocked
 

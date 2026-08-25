@@ -58,9 +58,11 @@ Use `using-superpowers` e siga exatamente a classificação da skill `brainstorm
 Todo plano arquitetural executável termina com:
 
 ## Handoff de execução
+
 executor: claude|codex
 reviewer: codex|claude
 paths_autorizados:
+
 - <paths fechados quando executor=codex>
 
 Executor e reviewer devem ser diferentes.

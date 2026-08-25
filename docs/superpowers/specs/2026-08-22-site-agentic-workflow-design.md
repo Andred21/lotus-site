@@ -217,18 +217,18 @@ updated_at: null
 
 ### 8.1 Estados válidos
 
-| Estado | Próxima ação permitida |
-|---|---|
-| `idle` | selecionar explicitamente um work item |
-| `context_required` | gerar/atualizar Context Packet |
-| `ready_for_planning` | iniciar planejamento |
-| `planning` | continuar brainstorming/spec/plano |
-| `ready_for_execution` | iniciar execução do plano |
-| `executing` | continuar somente o plano ativo |
-| `ready_for_review` | iniciar revisão independente |
-| `reviewing` | continuar review/correções aprovadas |
-| `ready_for_closure` | executar fechamento |
-| `blocked` | resolver `blocker` e retornar a `resume_state` |
+| Estado                | Próxima ação permitida                         |
+| --------------------- | ---------------------------------------------- |
+| `idle`                | selecionar explicitamente um work item         |
+| `context_required`    | gerar/atualizar Context Packet                 |
+| `ready_for_planning`  | iniciar planejamento                           |
+| `planning`            | continuar brainstorming/spec/plano             |
+| `ready_for_execution` | iniciar execução do plano                      |
+| `executing`           | continuar somente o plano ativo                |
+| `ready_for_review`    | iniciar revisão independente                   |
+| `reviewing`           | continuar review/correções aprovadas           |
+| `ready_for_closure`   | executar fechamento                            |
+| `blocked`             | resolver `blocker` e retornar a `resume_state` |
 
 ### 8.2 Invariantes
 
@@ -289,12 +289,19 @@ generated_at: <iso-date>
 # Context Packet — <title>
 
 ## Scope
+
 ## Source registry
+
 ## Key facts
+
 ## Resolved divergences
+
 ## Constraints
+
 ## Acceptance signals
+
 ## Open questions
+
 ## Staleness triggers
 ```
 
@@ -313,6 +320,7 @@ executor: codex
 reviewer: claude
 
 paths_autorizados:
+
 - package.json
 - .nvmrc
 ```
