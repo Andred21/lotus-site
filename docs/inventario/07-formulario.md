@@ -1,6 +1,6 @@
 # 07 — Contrato do formulário de contato
 
-> Evidência: `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`), capturado em `2026-08-25T20:50:39.480Z` (`forms[0]`). **O formulário nunca foi submetido** — decisão D5 da spec. Tudo abaixo vem de ler atributos do DOM estático, sem clicar em "Enviar".
+> Evidência: `docs/inventario/dom.json` (`sha256` `0d8a8d45a434de23…`), capturado em `2026-08-25T21:21:22.608Z` (`forms[0]`). **O formulário nunca foi submetido** — decisão D5 da spec. Tudo abaixo vem de ler atributos do DOM estático, sem clicar em "Enviar".
 
 ## Observado
 

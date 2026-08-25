@@ -1,6 +1,6 @@
 # Inventário do site — `lotusotec.cl`
 
-> Sprint 1 do clone (EAP `2.1.1`–`2.1.10`). Toda evidência bruta fica em `dom.json`, `styles.json`, `assets/manifest.json` e `baseline/*.png`; os documentos abaixo são redigidos sobre essa evidência, capturada em `2026-08-25`: `dom.json` `sha256` `5f4d41cf10641ce2…`, `styles.json` `cb3e5bfb6e5400e9…`, `assets/manifest.json` `56064b6300aa501c…`.
+> Sprint 1 do clone (EAP `2.1.1`–`2.1.10`). Toda evidência bruta fica em `dom.json`, `styles.json`, `assets/manifest.json` e `baseline/*.png`; os documentos abaixo são redigidos sobre essa evidência, capturada em `2026-08-25`: `dom.json` `sha256` `0d8a8d45a434de23…`, `styles.json` `cb3e5bfb6e5400e9…`, `assets/manifest.json` `3065570bf6e1502f…`.
 
 ## Índice
 
@@ -27,7 +27,7 @@ pnpm inventario:baseline  # grava baseline/*.png (screenshots full-page)
 
 `dom.json` precisa vir primeiro: `fetch-assets.mjs` lê `assets[]` e `extract-styles.mjs` lê `sections[]`. `capture-baseline.mjs` é independente, mas mantém a ordem para reprodutibilidade.
 
-Depois de regerar, rode `pnpm format`: os scripts gravam com `JSON.stringify(…, null, 2)` e o Prettier reindenta arrays curtos, então sem esse passo `pnpm format:check` fica vermelho. O que o aceite compara entre execuções é o conteúdo de `assets[]` (URL, `bytes`, `sha256`, ordenado por URL), não os bytes do arquivo formatado — `capturedAt` muda a cada corrida por ser metadado de execução.
+Depois de regerar, rode `pnpm format`: os scripts gravam com `JSON.stringify(…, null, 2)` e o Prettier reindenta arrays curtos, então sem esse passo `pnpm format:check` fica vermelho. Os `sha256` citados no cabeçalho de cada documento são do arquivo **depois** do `pnpm format` — carimbar antes produz hash que não identifica os bytes versionados. `inventario.test.mjs` falha quando um documento cita hash que não pertence a nenhuma evidência versionada. O que o aceite compara entre execuções é o conteúdo de `assets[]` (URL, `bytes`, `sha256`, ordenado por URL), não os bytes do arquivo formatado — `capturedAt` muda a cada corrida por ser metadado de execução.
 
 ## Matriz de paridade
 
@@ -57,7 +57,7 @@ Depois de regerar, rode `pnpm format`: os scripts gravam com `JSON.stringify(…
 ## Divergências intencionais propostas
 
 1. **Google Fonts**: hoje carregado remoto de `fonts.googleapis.com` (`Open Sans`, `Montserrat`, `display=swap`); proposta é self-host no clone para não depender de rede externa em runtime (`04-tipografia.md`).
-2. **Host de assets**: os 7 assets servidos por `lotusotec-cl.us.stackstaging.com` (staging de terceiro, em `http://`) passam a ser servidos pelo próprio clone. Dois deles — a foto de fundo do hero e a textura de seção — existem **só** nesse host (`03-assets.md`).
+2. **Host de assets**: os 7 assets servidos por `lotusotec-cl.us.stackstaging.com` (staging de terceiro, em `http://`) passam a ser servidos pelo próprio clone. Três deles — a foto de fundo do hero, a textura de seção e o **logo do cabeçalho** — existem **só** nesse host, sem cópia catalogada em `lotusotec.cl` (`03-assets.md`).
 3. **Endpoints WordPress** (`/wp-json/`, `/xmlrpc.php`, `/feed/`, `/comments/feed/`): não existem no clone estático — não há CMS por trás (`01-estrutura.md`).
 4. **Página residual** `/http-18-230-15-185/`: sem link de entrada hoje; decisão de recriar, redirecionar ou deixar de fora é de João (`01-estrutura.md`).
 5. **`meta description` e tags `og:`**: ausentes hoje; propostas para criação no clone, já que SEO básico se beneficia delas (`08-seo.md`).

@@ -79,6 +79,35 @@ describe('inventário como artefato', () => {
     }
   })
 
+  it('só cita sha256 que pertence a uma evidência versionada', () => {
+    // Hash carimbado antes do `pnpm format` (ou antes da última corrida do
+    // script) identifica bytes que não estão versionados: a proveniência do
+    // documento vira ficção. Aqui todo prefixo citado precisa bater com o
+    // sha256 real de alguma evidência.
+    const evidence = [
+      join(OUT, 'dom.json'),
+      join(OUT, 'styles.json'),
+      join(OUT, 'assets', 'manifest.json'),
+      ...readdirSync(join(OUT, 'baseline')).map((file) =>
+        join(OUT, 'baseline', file),
+      ),
+    ]
+    const hashes = evidence.map((file) =>
+      createHash('sha256').update(readFileSync(file)).digest('hex'),
+    )
+    for (const doc of docs) {
+      const text = readFileSync(join(OUT, doc), 'utf8')
+      for (const match of text.matchAll(/`([0-9a-f]{16,64})…?`/g)) {
+        const cited = match[1]
+        if (!cited) continue
+        expect(
+          hashes.some((hash) => hash.startsWith(cited)),
+          `${doc} cita ${cited}, que não é sha256 de nenhuma evidência`,
+        ).toBe(true)
+      }
+    }
+  })
+
   it('cobre na matriz toda seção mapeada no DOM', () => {
     const dom = JSON.parse(readFileSync(join(OUT, 'dom.json'), 'utf8'))
     const matrix = readFileSync(join(OUT, 'README.md'), 'utf8')
