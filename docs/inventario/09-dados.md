@@ -1,6 +1,6 @@
 # 09 — Dados institucionais e links externos
 
-> Evidência: `docs/inventario/dom.json` (`sections[].links`, `sections[].texts`). Commit-base: `a8fa8c1`. `status` restrito a `verificado` (o próprio site é a origem e o destino responde) ou `pendente João` (número, certificação, credencial ou email cuja validade só a Lotus confirma).
+> Evidência: `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`), capturado em `2026-08-25T20:50:39.480Z` (`sections[].links`, `sections[].texts`). `status` restrito a `verificado` (o próprio site é a origem e o destino responde) ou `pendente João` (número, certificação, credencial ou email cuja validade só a Lotus confirma).
 
 ## Links externos
 

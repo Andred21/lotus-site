@@ -1,6 +1,6 @@
 # 02 — Conteúdo e textos
 
-> Evidência: `docs/inventario/dom.json`, capturado em `2026-08-25T19:04:12.421Z` via `pnpm inventario:dom`. Commit-base: `54128ee`. Todo texto abaixo é transcrito verbatim do DOM, em espanhol, sem tradução e sem correção ortográfica — inclusive maiúsculas/minúsculas inconsistentes do original (`NUESTRos cursos`).
+> Evidência: `docs/inventario/dom.json` (`sha256` `5f4d41cf10641ce2…`), capturado em `2026-08-25T20:50:39.480Z` via `pnpm inventario:dom`. Todo texto abaixo é transcrito verbatim do DOM, em espanhol, sem tradução e sem correção ortográfica — inclusive maiúsculas/minúsculas inconsistentes do original (`NUESTRos cursos`).
 
 ## Menu (`top-menu`)
 
