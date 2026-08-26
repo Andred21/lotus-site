@@ -18,6 +18,8 @@ A linha mede **80% do viewport** enquanto esse valor fica abaixo do teto: `300/3
 
 Padding lateral (`paddingLeft`/`paddingRight`) do próprio `.et_pb_row` é `0px` em todos os viewports e seções, e o das colunas também: `#Somos .et_pb_column[*]` e `#Cursos .et_pb_column[*]` medem `padding-left: 0px` nos quatro viewports. A calha lateral vem da própria linha — `width: 80%` com `max-width: 1080px` e margem lateral automática — em todos os viewports, inclusive no mobile: `#Somos .et_pb_row[0]` mede `margin-left: 37.5px` em 375 e `76.7969px` em 768. Não vem de padding de coluna nem de margem do `body`, que não é medido por `extract-styles.mjs`. A exceção é o hero: `#Intrucción .et_pb_column[0]` tem `padding-left` proporcional ao viewport (`30px` em 375, `61.4px` em 768, `115.2px` em 1440, `153.6px` em 1920).
 
+Dentro dessa coluna, o título e o subtítulo do hero **não** ocupam a largura inteira do conteúdo: `#Intrucción h1` e `#Intrucción h3` medem `212px` em 375, `542px` em 768, `387px` em 1440 e `550px` em 1920, contra um conteúdo de coluna de `315px`, `645.12px`, `489.62px` e `652.81px`. A diferença é constante — `103px` nos quatro viewports, dentro de `0,5px` — e é ela que faz `LOTUS OTEC` quebrar em duas linhas em 375 e 1440 (`h1` de `166px` de altura = 2 × `78px` + `10px`) e caber em uma em 768 e 1920 (`88px`). O clone reproduz a reserva pelo token `--spacing-hero-inset`; sem ela o título cabe numa linha só nos quatro tamanhos.
+
 ## Altura por seção
 
 | seção         | 375    | 768    | 1440  | 1920  |
@@ -61,9 +63,18 @@ Isso corrige duas leituras anteriores: os 3 destaques de `Somos` ficam em **linh
 
 ## Breakpoints
 
-Os únicos breakpoints observáveis com os quatro viewports medidos:
+Medição em seis larguras intermediárias (`node scripts/inventario/measure-breakpoints.mjs`, 2026-08-26):
 
-- **Menu desktop → menu mobile**: `top-menu`/`top-menu-nav` medem `0×0` (ocultos) em `375` e `768`, e aparecem com largura real em `1440` (`394px`) e `1920`. O breakpoint está em algum ponto entre `768px` e `1440px` — os quatro viewports do inventário não permitem apontar o valor exato.
-- **Container `1080px`**: `Somos`/`Cursos`/`Contacto` atingem o teto de `1080px` em `1440` e `1920`, e ficam em 80% do viewport em `375` e `768`. Os quatro viewports do inventário só provam que a virada está entre `768` e `1440`; `1350px` (`1080 / 0,8`) é a derivação da regra dos 80%, não uma largura medida. Medir viewports intermediários é o que fecha o valor.
+| viewport | menu    | `.et_pb_row` |
+| -------- | ------- | ------------ |
+| 900px    | mobile  | 720px        |
+| 1000px   | desktop | 800px        |
+| 1100px   | desktop | 880px        |
+| 1200px   | desktop | 960px        |
+| 1300px   | desktop | 1040px       |
+| 1400px   | desktop | 1080px       |
 
-Ambos são breakpoints observados por amostragem em quatro larguras, não valores declarados lidos de CSS — se a Sprint 2 precisar do breakpoint exato do menu, a medição precisa rodar em viewports intermediários (ex. `900px`, `1000px`, `1100px`).
+- **Menu desktop → menu mobile**: vira entre 900px e 1000px.
+- **Container `1080px`**: trava entre 1300px e 1400px.
+
+`1350px` (`1080 / 0,8`) continua sendo derivação da regra dos 80%; a tabela acima é medição. O clone usa o valor medido.

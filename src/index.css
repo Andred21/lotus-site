@@ -1,113 +1,150 @@
 @import 'tailwindcss';
 
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@theme {
+  /* Cor — docs/inventario/04-tipografia.md, corrigida por sample-baseline.mjs.
+     #2ea3f2 (link de conteúdo) e #24a2e0 (marca) ficam separados: a medição
+     encontrou dois azuis distintos, e juntá-los seria escolha estética. */
+  --color-ink: #000000;
+  --color-surface: #f0f0f0;
+  --color-header: #f8f8f8;
+  --color-header-mobile: #ffffff;
+  --color-brand: #24a2e0;
+  --color-link: #2ea3f2;
+  --color-title-light: #333333;
+  --color-accent-ink: #353740;
+  --color-body-ink: #545454;
+  --color-muted-ink: #747d88;
+  --color-neutral-ink: #666666;
+  --color-divider: #f7f7f7;
+  --color-footer: #323232;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Família — stacks de fallback como medidas, não como preferência. */
+  --font-sans: 'Open Sans', Arial, sans-serif;
+  --font-display: Montserrat, Helvetica, Arial, Lucida, sans-serif;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Escala tipográfica */
+  --text-hero: 60px;
+  --text-hero--line-height: 78px;
+  --text-section: 42px;
+  --text-section--line-height: 54.6px;
+  --text-subtitle: 22px;
+  --text-subtitle--line-height: 22px;
+  --text-highlight: 22px;
+  --text-highlight--line-height: 30.8px;
+  --text-lead: 19px;
+  --text-lead--line-height: 34.2px;
+  --text-menu: 18px;
+  --text-menu--line-height: 14px;
+  --text-body: 16px;
+  --text-body--line-height: 28.8px;
+  --text-kicker: 16px;
+  --text-kicker--line-height: 23.8px;
+  --text-kicker--letter-spacing: 3px;
+  --text-button: 20px;
+  --text-button--line-height: 34px;
+  --text-button--letter-spacing: 2px;
+  --text-field: 16px;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Caixa — docs/inventario/05-layout.md */
+  --container-row: 1080px;
+  --container-lead: 700px;
+  --container-form: 800px;
+  --spacing-gutter: 59.39px;
+  --spacing-header: 80px;
+  --spacing-header-desktop: 94px;
+  --spacing-header-offset: 79px;
+  /* O título e o subtítulo do hero não ocupam a coluna inteira: `styles.json`
+     mede `#Intrucción h1` e `h3` 103px mais estreitos que o conteúdo da
+     coluna nos quatro viewports (315/212, 645.12/542, 489.62/387,
+     652.81/550). É essa reserva que quebra `LOTUS OTEC` em duas linhas em
+     375 e 1440, como mostram os baselines. */
+  --spacing-hero-inset: 103px;
+  --spacing-button-x: 20px;
+  --spacing-button-y: 6px;
+  /* Menor largura medida em que o menu já é desktop (900px ainda é mobile),
+     conforme a tabela de breakpoints em 05-layout.md. */
+  --breakpoint-desktop: 1000px;
+
+  /* Borda e sombra */
+  --radius-pill: 100px;
+  --shadow-header: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  --shadow-field: inset 0 -1px 0 0 rgba(0, 0, 0, 0.18);
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-neutral-ink);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* O Divi publica `word-wrap: break-word`: em 375 o `h2` de 42px é mais
+     largo que a linha e a palavra quebra em vez de estourar o viewport. */
+  h1,
+  h2,
+  h3,
+  h4,
+  p {
+    overflow-wrap: break-word;
+  }
+
+  /* O cabeçalho é fixo: sem esta margem a âncora para atrás dele. */
+  [id] {
+    scroll-margin-top: var(--spacing-header);
+  }
+
+  @media (width >= theme(--breakpoint-desktop)) {
+    [id] {
+      scroll-margin-top: var(--spacing-header-desktop);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
   font-weight: 500;
-  color: var(--text-h);
+  font-display: swap;
+  src: url('./assets/fonts/open-sans-500.woff2') format('woff2');
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/open-sans-600.woff2') format('woff2');
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/montserrat-400.woff2') format('woff2');
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/montserrat-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/montserrat-700.woff2') format('woff2');
 }

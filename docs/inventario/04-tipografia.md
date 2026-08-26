@@ -15,21 +15,25 @@ O Elementor também carrega CSS próprio para `Roboto` e `Roboto Slab` (`wp-cont
 
 ## Escala
 
-| papel                           | seletor                             | font-size | font-weight | line-height | letter-spacing |
-| ------------------------------- | ----------------------------------- | --------- | ----------- | ----------- | -------------- |
-| h1 hero                         | `#Intrucción h1`                    | 60px      | 700         | 78px        | normal         |
-| h2 seção                        | `#Cursos h2` / `#Contacto h2`       | 42px      | 700         | 54.6px      | normal         |
-| h3 subtítulo (hero)             | `#Intrucción h3`                    | 22px      | 500         | 22px        | normal         |
-| h4 destaque (`Somos`)           | `#Somos h4`                         | 22px      | 700         | 30.8px      | normal         |
-| corpo — hero                    | `#Intrucción p`                     | 16px      | 500         | 23.8px      | 3px            |
-| corpo — institucional (`Somos`) | `#Somos p`                          | 19px      | 500         | 34.2px      | normal         |
-| corpo — destaque (`Somos`)      | `#Somos p` (por `h4`, mesma classe) | 19px      | 500         | 34.2px      | normal         |
-| corpo — cursos                  | `#Cursos p`                         | 16px      | 500         | 28.8px      | normal         |
-| botão                           | `#page-container button`            | 20px      | 700         | 34px        | 2px            |
-| menu (label)                    | `#top-menu a`                       | 18px      | 600         | 14px        | normal         |
-| campo de formulário             | `#et_pb_contact_name_0`             | 16px      | 400         | normal      | normal         |
+| papel                           | seletor                             | font-size  | font-weight | line-height | letter-spacing | cor       |
+| ------------------------------- | ----------------------------------- | ---------- | ----------- | ----------- | -------------- | --------- |
+| h1 hero                         | `#Intrucción h1`                    | 60px       | 700         | 78px        | normal         | `#24a2e0` |
+| h2 seção — cursos               | `#Cursos h2`                        | 42px       | 700         | 54.6px      | normal         | `#24a2e0` |
+| h2 seção — contacto             | `#Contacto h2`                      | 42px       | 700         | 54.6px      | normal         | `#333333` |
+| h3 subtítulo (hero)             | `#Intrucción h3`                    | 22px       | 500         | 22px        | normal         | `#f0f0f0` |
+| h4 destaque (`Somos`)           | `#Somos h4`                         | 22px       | 700         | 30.8px      | normal         | `#353740` |
+| corpo — hero                    | `#Intrucción p`                     | 16px       | 500         | 23.8px      | 3px            | `#f0f0f0` |
+| corpo — institucional (`Somos`) | `#Somos p`                          | 19px       | 500         | 34.2px      | normal         | `#545454` |
+| corpo — destaque (`Somos`)      | `#Somos p` (por `h4`, mesma classe) | 19px       | 500         | 34.2px      | normal         | `#747d88` |
+| corpo — cursos                  | `#Cursos p`                         | 16px       | 500         | 28.8px      | normal         | `#f0f0f0` |
+| corpo — contacto                | `#Contacto p`                       | não medido | não medido  | não medido  | não medido     | `#353740` |
+| botão                           | `#page-container button`            | 20px       | 700         | 34px        | 2px            | `#545454` |
+| menu (label)                    | `#top-menu a`                       | 18px       | 600         | 14px        | normal         | `#24a2e0` |
+| campo de formulário             | `#et_pb_contact_name_0`             | 16px       | 400         | normal      | normal         | `#353740` |
 
-`Contacto p` mediu `42px 700 54.6px` — idêntico ao `h2` da mesma seção — porque o primeiro `<p>` que o script encontra dentro de `#Contacto` fica visualmente próximo do título; a régua de conteúdo (`contacto.body` em `02-conteudo.md`) descreve o texto certo, mas o valor tipográfico real do corpo do formulário precisa ser conferido contra o baseline visual (`06-baseline.md`) antes de virar token — registrado aqui como pendência de conferência, não como fato.
+Três medições desta página descreviam o nó-eco escondido que o Divi duplica (`hero.title_subtitle_echo`, `02-conteudo.md`), não o elemento pintado: `#Intrucción h1`, `#Intrucción h3` e `#Cursos h2` foram medidos com a cor default do tema (`#f7f7f7`/`#333333`), enquanto a página pinta `#24a2e0`, `#f0f0f0` e `#24a2e0`. `#Contacto p` alcança um parágrafo vazio de altura `0px`, cujo estilo computado é o do `h2` vizinho; o corpo real de `#Contacto` é `#353740`. As quatro correções vêm de `node scripts/inventario/sample-baseline.mjs`, que amostra os PNG de `baseline/` — evidência congelada, com `sha256` citado em `06-baseline.md`.
+
+`extract-styles.mjs` nunca capturou `text-transform`: a propriedade não está em `styles.json`. Os PNG de `baseline/` mostram `h2` de seção e o botão `Enviar` pintados em caixa alta (`NUESTROS CURSOS`, `ENVIAR`) enquanto o DOM publica `NUESTRos cursos` e `Enviar` — o tema aplica `text-transform: uppercase`. O clone reproduz a caixa visual pelo utilitário `uppercase` e mantém a string do conteúdo verbatim. Fechar a lacuna no extrator é débito de inventário.
 
 ## Paleta
 
@@ -37,18 +41,21 @@ O Elementor também carrega CSS próprio para `Roboto` e `Roboto Slab` (`wp-cont
 | --------- | -------------------------------------------------------------------------- | ---------------------------------- |
 | `#000000` | fundo de `#Intrucción`, `#Cursos`, `#Contacto` (seções escuras)            | cor de fundo — seção escura        |
 | `#f0f0f0` | fundo de `#Somos`; fundo/cor de texto do botão (`#545454` sobre `#f0f0f0`) | cor de fundo — seção clara / botão |
-| `#f7f7f7` | texto do `h1` sobre fundo escuro                                           | texto — título sobre escuro        |
+| `#f7f7f7` | divisória entre itens do menu mobile (amostrada em `home-375-menu.png`)    | linha — separador de menu          |
 | `#333333` | texto de `h2`/`h3` sobre fundo claro                                       | texto — título sobre claro         |
 | `#666666` | texto de corpo default (`body`, wrappers)                                  | texto — corpo neutro               |
 | `#545454` | texto de corpo institucional (`Somos p`) e texto do botão                  | texto — corpo secundário / botão   |
 | `#353740` | texto de `h4` (`Somos`) e dos campos de formulário                         | texto — destaque / formulário      |
 | `#2ea3f2` | links de conteúdo (`a` fora do menu) e ícones                              | cor de destaque — link             |
 | `#24a2e0` | links do menu (`top-menu a`)                                               | cor de destaque — menu             |
-| `#222222` | fundo de `#main-footer`                                                    | cor de fundo — rodapé              |
-| `#000000` | fundo de `#main-header` em 1440/1920                                       | cor de fundo — cabeçalho desktop   |
+| `#f8f8f8` | fundo de `#main-header` em 1440/1920                                       | cor de fundo — cabeçalho desktop   |
 | `#ffffff` | fundo de `#main-header` em 375/768                                         | cor de fundo — cabeçalho mobile    |
+| `#323232` | faixa visível de `#main-footer`/`#footer-bottom`                           | cor de fundo — rodapé              |
+| `#747d88` | corpo dos três destaques de `#Somos`                                       | texto — destaque secundário        |
 
-O cabeçalho é o único elemento medido que troca de cor de fundo entre viewports: `#main-header.backgroundColor` mede `#000000` em `1440` e `1920` e `#ffffff` em `375` e `768` (`styles.json`, seletor `#main-header`). São dois tokens distintos, não um valor com ressalva — a Sprint 2 precisa reproduzir a troca, não escolher um dos dois.
+O cabeçalho é o único elemento medido que troca de cor de fundo entre viewports: `#main-header` pinta `#f8f8f8` em `1440` e `1920` e `#ffffff` em `375` e `768` (amostragem do baseline). São dois tokens distintos, não um valor com ressalva — a Sprint 2 precisa reproduzir a troca, não escolher um dos dois.
+
+`getComputedStyle` devolve `rgba(0, 0, 0, 0.03)` para o fundo do cabeçalho e `rgbToHex` descartava o alpha, publicando `#000000` numa faixa que a tela pinta `#f8f8f8`. `cssColor` em `lib/site.mjs` preserva o alpha; a faixa do rodapé caía no mesmo erro (`#545454` na tabela, `#323232` na tela).
 
 O par `#2ea3f2` (links de conteúdo) e `#24a2e0` (links de menu) são dois azuis próximos, não o mesmo token — mantidos separados porque a medição não encontrou um só valor usado nos dois lugares.
 
