@@ -12,7 +12,7 @@ export function App() {
       <Header />
       <main className="pt-header-offset desktop:pt-header-desktop">
         <Hero />
-        <section id="Somos" className="bg-surface pt-[110px] pb-4">
+        <section id="Somos" className="bg-surface pt-27.5 pb-4">
           <QuienesSomos />
           <Destaques />
         </section>

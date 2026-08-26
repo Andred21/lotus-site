@@ -8,7 +8,7 @@ import { Row } from './Row'
  */
 export function Footer() {
   return (
-    <footer className="bg-footer pt-[15px] pb-[5px]">
+    <footer className="bg-footer pt-[15px] pb-1.25">
       <Row>
         <p className="font-sans text-body font-medium text-brand">
           {site.footer.copyright}

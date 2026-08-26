@@ -13,8 +13,8 @@ const FIELD_CLASS =
  */
 export function Contacto() {
   return (
-    <section id="Contacto" className="bg-ink pt-[57px] pb-[58px]">
-      <Row className="bg-surface px-6 py-[27px] text-center">
+    <section id="Contacto" className="bg-ink pt-14.25 pb-14.5">
+      <Row className="bg-surface px-6 py-6.75 text-center">
         <h2 className="font-display text-section font-bold text-title-light uppercase">
           {site.contacto.heading}
         </h2>
@@ -26,9 +26,9 @@ export function Contacto() {
         </p>
       </Row>
 
-      <div className="h-[9px]" />
+      <div className="h-2.25" />
 
-      <Row className="bg-surface px-6 py-[27px]">
+      <Row className="bg-surface px-6 py-6.75">
         <form
           className="mx-auto max-w-form"
           onSubmit={(event) => event.preventDefault()}
@@ -43,7 +43,7 @@ export function Contacto() {
                   id={field.name}
                   name={field.name}
                   placeholder={field.label}
-                  className={cn(FIELD_CLASS, 'h-[150px] resize-y')}
+                  className={cn(FIELD_CLASS, 'h-37.5 resize-y')}
                 />
               ) : (
                 <input

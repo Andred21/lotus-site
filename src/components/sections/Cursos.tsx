@@ -9,8 +9,8 @@ const IMAGES = [mediaTension, altaTension, supervisor]
 
 export function Cursos() {
   return (
-    <section id="Cursos" className="bg-ink pb-[110px]">
-      <Row className="py-[27px] text-center">
+    <section id="Cursos" className="bg-ink pb-27.5">
+      <Row className="py-6.75 text-center">
         <h2 className="font-display text-section font-bold text-brand uppercase">
           {site.cursos.heading}
         </h2>
@@ -19,7 +19,7 @@ export function Cursos() {
         </p>
       </Row>
 
-      <Row className="grid gap-gutter py-[27px] desktop:grid-cols-3">
+      <Row className="grid gap-gutter py-6.75 desktop:grid-cols-3">
         {site.cursos.items.map((curso, index) => (
           <article key={curso.nombre} className="text-center">
             <img
@@ -36,7 +36,7 @@ export function Cursos() {
         ))}
       </Row>
 
-      <Row className="py-[27px] text-center">
+      <Row className="py-6.75 text-center">
         <a
           href={site.cursos.cta.href}
           className="inline-block rounded-pill border-4 border-solid border-ink bg-ink px-button-x py-button-y font-display text-button font-bold text-ink"
