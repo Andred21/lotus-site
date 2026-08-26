@@ -1,4 +1,10 @@
-/** Shell da home. As seções entram uma por task, a partir da 3.2.1. */
+import { Header } from '../components/layout/Header'
+
 export function App() {
-  return <main />
+  return (
+    <>
+      <Header />
+      <main className="pt-header-offset desktop:pt-header-desktop" />
+    </>
+  )
 }
