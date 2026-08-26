@@ -1,5 +1,6 @@
 import { Header } from '../components/layout/Header'
 import { Hero } from '../components/sections/Hero'
+import { Cursos } from '../components/sections/Cursos'
 import { Destaques } from '../components/sections/Destaques'
 import { QuienesSomos } from '../components/sections/QuienesSomos'
 
@@ -13,6 +14,7 @@ export function App() {
           <QuienesSomos />
           <Destaques />
         </section>
+        <Cursos />
       </main>
     </>
   )
