@@ -70,6 +70,27 @@
     font-family: var(--font-sans);
     color: var(--color-neutral-ink);
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* O cabeçalho é fixo: sem esta margem a âncora para atrás dele. */
+  [id] {
+    scroll-margin-top: var(--spacing-header);
+  }
+
+  @media (width >= theme(--breakpoint-desktop)) {
+    [id] {
+      scroll-margin-top: var(--spacing-header-desktop);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
 }
 
 @font-face {
