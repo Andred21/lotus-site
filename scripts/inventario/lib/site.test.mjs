@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assetFileName, rgbToHex } from './site.mjs'
+import { assetFileName, cssColor, rgbToHex } from './site.mjs'
 
 describe('assetFileName', () => {
   it('mantém o basename de um asset do domínio principal', () => {
@@ -44,5 +44,25 @@ describe('rgbToHex', () => {
 
   it('converte rgba com alpha > 0 ignorando o canal alpha', () => {
     expect(rgbToHex('rgba(15, 23, 42, 0.5)')).toBe('#0f172a')
+  })
+})
+
+describe('cssColor', () => {
+  it('devolve hex quando a cor é opaca', () => {
+    expect(cssColor('rgb(36, 162, 224)')).toBe('#24a2e0')
+    expect(cssColor('rgba(0, 0, 0, 1)')).toBe('#000000')
+  })
+
+  it('preserva o alpha em vez de fingir opacidade', () => {
+    expect(cssColor('rgba(0, 0, 0, 0.03)')).toBe('rgba(0, 0, 0, 0.03)')
+    expect(cssColor('rgba(84, 84, 84, 0.32)')).toBe('rgba(84, 84, 84, 0.32)')
+  })
+
+  it('trata alpha zero como transparente', () => {
+    expect(cssColor('rgba(255, 255, 255, 0)')).toBe('transparent')
+  })
+
+  it('devolve o valor original quando não reconhece o formato', () => {
+    expect(cssColor('currentColor')).toBe('currentColor')
   })
 })

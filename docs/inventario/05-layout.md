@@ -61,9 +61,18 @@ Isso corrige duas leituras anteriores: os 3 destaques de `Somos` ficam em **linh
 
 ## Breakpoints
 
-Os únicos breakpoints observáveis com os quatro viewports medidos:
+Medição em seis larguras intermediárias (`node scripts/inventario/measure-breakpoints.mjs`, 2026-08-26):
 
-- **Menu desktop → menu mobile**: `top-menu`/`top-menu-nav` medem `0×0` (ocultos) em `375` e `768`, e aparecem com largura real em `1440` (`394px`) e `1920`. O breakpoint está em algum ponto entre `768px` e `1440px` — os quatro viewports do inventário não permitem apontar o valor exato.
-- **Container `1080px`**: `Somos`/`Cursos`/`Contacto` atingem o teto de `1080px` em `1440` e `1920`, e ficam em 80% do viewport em `375` e `768`. Os quatro viewports do inventário só provam que a virada está entre `768` e `1440`; `1350px` (`1080 / 0,8`) é a derivação da regra dos 80%, não uma largura medida. Medir viewports intermediários é o que fecha o valor.
+| viewport | menu    | `.et_pb_row` |
+| -------- | ------- | ------------ |
+| 900px    | mobile  | 720px        |
+| 1000px   | desktop | 800px        |
+| 1100px   | desktop | 880px        |
+| 1200px   | desktop | 960px        |
+| 1300px   | desktop | 1040px       |
+| 1400px   | desktop | 1080px       |
 
-Ambos são breakpoints observados por amostragem em quatro larguras, não valores declarados lidos de CSS — se a Sprint 2 precisar do breakpoint exato do menu, a medição precisa rodar em viewports intermediários (ex. `900px`, `1000px`, `1100px`).
+- **Menu desktop → menu mobile**: vira entre 900px e 1000px.
+- **Container `1080px`**: trava entre 1300px e 1400px.
+
+`1350px` (`1080 / 0,8`) continua sendo derivação da regra dos 80%; a tabela acima é medição. O clone usa o valor medido.

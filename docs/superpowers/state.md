@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: architectural
 active_work_item: 3.1.1-3.2.11
 active_notion_eap: '3.1.1, 3.1.2, 3.1.3, 3.1.4, 3.2.1, 3.2.2, 3.2.3, 3.2.4, 3.2.5, 3.2.6, 3.2.7, 3.2.8, 3.2.9, 3.2.10, 3.2.11'
@@ -10,7 +10,7 @@ active_branch: feat/3-1-1-3-2-11-clone-estatico
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_plan
 resume_state: null
 context_packet: docs/superpowers/context-packets/3.1.1-3.2.11.md
 active_spec: docs/superpowers/specs/2026-08-25-3.1.1-3.2.11-clone-estatico-design.md
@@ -20,8 +20,8 @@ reviewer: codex
 blocker: null
 supervised_cycles_completed: 5
 last_completed_work_item: 2.1.1-2.1.10
-state_basis_commit: 3a07b77
-updated_at: 2026-08-26T00:38:30Z
+state_basis_commit: 0901f7a
+updated_at: 2026-08-26T13:30:00Z
 ---
 
 # Estado operacional — Lotus Site
