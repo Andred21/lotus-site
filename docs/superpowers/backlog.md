@@ -21,9 +21,14 @@ closure → progress.md
 
 # AGORA
 
-- **Clone estático** — Sprint 2 (`3.1.1`–`3.2.11`, 15 tasks): paridade visual e de conteúdo da home.
-  Selecionado explicitamente por João em 2026-08-25 como bloco único; branch
-  `feat/3-1-1-3-2-11-clone-estatico`. Fase corrente vive em `docs/superpowers/state.md`.
+Nada ativo. `docs/superpowers/state.md` está em `idle`: o próximo item entra por seleção explícita
+do João, nunca por promoção automática deste arquivo.
+
+O bloco `3.1.1`–`3.2.11` (Clone estático — Sprint 2) fechou em 2026-08-26 no PR
+https://github.com/Andred21/lotus-site/pull/6; o rastro está em
+`docs/superpowers/historico/progress.md`. **Pendência aberta com João:** a conferência humana de
+paridade visual contra os cinco PNG de `docs/inventario/baseline/` é parte do aceite e não foi feita
+— nenhum gate a substitui.
 
 ---
 
@@ -31,10 +36,6 @@ closure → progress.md
 
 Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 
-- **Tooling e qualidade** — Sprint 0 restante (`1.2.4`–`1.3.9`, 11 tasks): gitignore/editorconfig/env,
-  dependências mínimas de runtime, Prettier + ordenação Tailwind, Vitest, Playwright, axe,
-  arquitetura de pastas (`1.3.5`), scripts de qualidade, CI inicial, ADR-SITE-001, baseline técnico.
-- **Inventário do site** — Sprint 1 (10): páginas, conteúdo e assets de `lotusotec.cl`.
 - **Formulário e integrações** — Sprint 3 (10).
 - **SEO e acessibilidade** — Sprint 4 (10).
 - **QA visual e performance** — Sprint 5 (8).
@@ -111,3 +112,16 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   então o bloco não fica bloqueado — mas o clone escolhe um breakpoint sem medição que o confirme.
   **Fechado por este bloco** (`3.1.1`–`3.2.11`) em 2026-08-26 — o commit `chore(3.1.2)` mediu
   `900`–`1400` e `05-layout.md:64-76` registra as duas viradas; o clone usa `1000px`, medido.
+- **D-15 · rule de ícones ficou órfã** — `.claude/rules/architecture.md:13` manda ícone novo entrar
+  como `<symbol id>` em `public/icons.svg`; o sprite era do scaffold Vite, morreu no commit
+  `feat(3.1.1)` junto do `App.tsx` que o consumia, e os ícones deste bloco vêm de `lucide-react`.
+  `public/` hoje só tem os quatro `cropped-Logo-*.png`. `.claude/rules/**` não está em
+  `paths_autorizados` do bloco, então a rule não foi corrigida aqui.
+  **Gatilho:** task própria de manutenção das rules, antes de planejar o Sprint 3.
+- **D-16 · `extract-styles.mjs` ainda mede o nó-eco escondido do Divi** — `extract-styles.mjs:68` usa
+  `section.querySelector(selector)`, que pega o primeiro nó do seletor na seção e alcança o eco
+  duplicado pelo Divi (`hero.title_subtitle_echo`). O commit `chore(3.1.2)` corrigiu a **cor**
+  (`cssColor` preserva o alpha) e documentou os quatro casos conhecidos em `04-tipografia.md`, mas
+  não corrigiu a seleção do nó: regerar `styles.json` sem tratar isso reintroduz o erro em qualquer
+  seção nova.
+  **Gatilho:** antes de qualquer regeração de `styles.json` ou de inventário de página nova.
