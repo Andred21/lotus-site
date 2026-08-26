@@ -1,5 +1,6 @@
 import logo from '../../assets/LOTUS_TRANSP_Fondo-Negro-REC2.png'
 import { site } from '../../content/site'
+import { MobileMenu } from './MobileMenu'
 import { Row } from './Row'
 
 /**
@@ -34,6 +35,7 @@ export function Header() {
             ))}
           </ul>
         </nav>
+        <MobileMenu />
       </Row>
     </header>
   )
