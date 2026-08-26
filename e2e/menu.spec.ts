@@ -32,3 +32,21 @@ test('menu mobile é operável só pelo teclado', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(page.getByRole('link', { name: 'Inicio' })).toBeFocused()
 })
+
+test('menu mobile fecha por clique — no botão e no link', async ({ page }) => {
+  await page.goto('/')
+
+  const nav = page.getByRole('navigation', { name: 'Mobile' })
+
+  // Fecha pelo próprio botão, que vira "Cerrar menú" enquanto está aberto.
+  await page.getByRole('button', { name: 'Abrir menú' }).click()
+  await expect(nav).toBeVisible()
+  await page.getByRole('button', { name: 'Cerrar menú' }).click()
+  await expect(nav).toBeHidden()
+
+  // Fecha ao navegar por um link do painel.
+  await page.getByRole('button', { name: 'Abrir menú' }).click()
+  await expect(nav).toBeVisible()
+  await nav.getByRole('link', { name: 'Cursos' }).click()
+  await expect(nav).toBeHidden()
+})
