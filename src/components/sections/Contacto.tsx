@@ -15,7 +15,7 @@ export function Contacto() {
   return (
     <section id="Contacto" className="bg-ink pt-[57px] pb-[58px]">
       <Row className="bg-surface px-6 py-[27px] text-center">
-        <h2 className="font-display text-section font-bold text-title-light">
+        <h2 className="font-display text-section font-bold text-title-light uppercase">
           {site.contacto.heading}
         </h2>
         <p className="mx-auto max-w-lead font-display text-body font-medium text-accent-ink">
@@ -59,7 +59,7 @@ export function Contacto() {
           <p className="text-right">
             <button
               type="submit"
-              className="rounded-pill border-[5px] border-solid border-body-ink px-button-x py-button-y font-display text-button font-bold text-body-ink"
+              className="rounded-pill border-[5px] border-solid border-body-ink px-button-x py-button-y font-display text-button font-bold text-body-ink uppercase"
             >
               {site.contacto.form.submit}
             </button>

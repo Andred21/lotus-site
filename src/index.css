@@ -75,6 +75,16 @@
     scroll-behavior: smooth;
   }
 
+  /* O Divi publica `word-wrap: break-word`: em 375 o `h2` de 42px é mais
+     largo que a linha e a palavra quebra em vez de estourar o viewport. */
+  h1,
+  h2,
+  h3,
+  h4,
+  p {
+    overflow-wrap: break-word;
+  }
+
   /* O cabeçalho é fixo: sem esta margem a âncora para atrás dele. */
   [id] {
     scroll-margin-top: var(--spacing-header);

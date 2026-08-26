@@ -11,7 +11,7 @@ export function Cursos() {
   return (
     <section id="Cursos" className="bg-ink pb-[110px]">
       <Row className="py-[27px] text-center">
-        <h2 className="font-display text-section font-bold text-brand">
+        <h2 className="font-display text-section font-bold text-brand uppercase">
           {site.cursos.heading}
         </h2>
         <p className="mx-auto max-w-lead font-display text-body font-medium text-surface">

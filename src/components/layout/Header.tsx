@@ -18,7 +18,7 @@ export function Header() {
             alt={site.logoAlt}
             width={63}
             height={80}
-            className="h-[43px] w-auto desktop:h-[80px]"
+            className="h-10.75 w-auto desktop:h-[80px]"
           />
         </a>
         <nav aria-label="Principal" className="hidden desktop:block">

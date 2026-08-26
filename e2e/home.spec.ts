@@ -42,3 +42,17 @@ test('os três links de âncora levam à seção certa, com o cabeçalho compens
     expect(await top()).toBeGreaterThanOrEqual(0)
   }
 })
+
+for (const width of [375, 768, 1440, 1920]) {
+  test(`não há rolagem horizontal em ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }))
+
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth)
+  })
+}

@@ -33,6 +33,8 @@ O Elementor também carrega CSS próprio para `Roboto` e `Roboto Slab` (`wp-cont
 
 Três medições desta página descreviam o nó-eco escondido que o Divi duplica (`hero.title_subtitle_echo`, `02-conteudo.md`), não o elemento pintado: `#Intrucción h1`, `#Intrucción h3` e `#Cursos h2` foram medidos com a cor default do tema (`#f7f7f7`/`#333333`), enquanto a página pinta `#24a2e0`, `#f0f0f0` e `#24a2e0`. `#Contacto p` alcança um parágrafo vazio de altura `0px`, cujo estilo computado é o do `h2` vizinho; o corpo real de `#Contacto` é `#353740`. As quatro correções vêm de `node scripts/inventario/sample-baseline.mjs`, que amostra os PNG de `baseline/` — evidência congelada, com `sha256` citado em `06-baseline.md`.
 
+`extract-styles.mjs` nunca capturou `text-transform`: a propriedade não está em `styles.json`. Os PNG de `baseline/` mostram `h2` de seção e o botão `Enviar` pintados em caixa alta (`NUESTROS CURSOS`, `ENVIAR`) enquanto o DOM publica `NUESTRos cursos` e `Enviar` — o tema aplica `text-transform: uppercase`. O clone reproduz a caixa visual pelo utilitário `uppercase` e mantém a string do conteúdo verbatim. Fechar a lacuna no extrator é débito de inventário.
+
 ## Paleta
 
 | hex       | onde aparece                                                               | papel                              |
