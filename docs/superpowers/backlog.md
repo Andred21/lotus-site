@@ -95,8 +95,10 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 - **D-12 · `3.1.4` manda os assets para `public/`, a rule manda para `src/assets/`** — o título da EAP
   é "Migrar assets para public", mas `.claude/rules/architecture.md:12` e `CLAUDE.md:92` reservam
   `public/` para arquivo que precisa de URL estável. João decidiu em 2026-08-25 que a regra do
-  repositório vence: as 7 imagens de conteúdo ficam em `src/assets/` (fingerprint do Vite) e só os 4
-  ícones de `<head>` vão para `public/`. O Notion fica stale até reconciliação autorizada.
+  repositório vence: as imagens de conteúdo ficam em `src/assets/` (fingerprint do Vite) e só os 4
+  ícones de `<head>` vão para `public/`. Foram 6 imagens, não 7: `background-texture.jpg` não
+  pinta pixel visível no baseline e ficou de fora como divergência intencional. O Notion fica
+  stale até reconciliação autorizada.
   **Gatilho:** junto de `D-01`, `D-08` e `D-09`, antes de planejar o Sprint 3.
 - **D-13 · `3.1.1` usa vocabulário de Next.js** — o critério de aceite diz "sem Client Component
   desnecessário"; o repositório é Vite + React, onde esse conceito não existe. Lido como "não
@@ -107,4 +109,5 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   desktop/mobile e a do container `1080px` ficam entre `768` e `1440`; `1350px` é derivação da regra
   dos 80%, não largura medida. A EAP `3.2.10` precisa dos quatro viewports-alvo, não do valor exato,
   então o bloco não fica bloqueado — mas o clone escolhe um breakpoint sem medição que o confirme.
-  **Gatilho:** ao planejar o Sprint 5 (QA visual), junto de `D-10`.
+  **Fechado por este bloco** (`3.1.1`–`3.2.11`) em 2026-08-26 — o commit `chore(3.1.2)` mediu
+  `900`–`1400` e `05-layout.md:64-76` registra as duas viradas; o clone usa `1000px`, medido.
