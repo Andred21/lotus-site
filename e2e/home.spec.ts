@@ -56,3 +56,25 @@ for (const width of [375, 768, 1440, 1920]) {
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth)
   })
 }
+
+test('nenhuma requisição sai para host do WordPress ou do Google', async ({
+  page,
+}) => {
+  const foreign: string[] = []
+  page.on('request', (request) => {
+    const url = request.url()
+    if (
+      url.includes('lotusotec.cl') ||
+      url.includes('stackstaging') ||
+      url.includes('fonts.googleapis.com') ||
+      url.includes('fonts.gstatic.com')
+    ) {
+      foreign.push(url)
+    }
+  })
+
+  await page.goto('/')
+  await page.waitForLoadState('networkidle')
+
+  expect(foreign).toEqual([])
+})
