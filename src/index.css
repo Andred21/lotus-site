@@ -1,5 +1,70 @@
 @import 'tailwindcss';
 
+@theme {
+  /* Cor — docs/inventario/04-tipografia.md, corrigida por sample-baseline.mjs.
+     #2ea3f2 (link de conteúdo) e #24a2e0 (marca) ficam separados: a medição
+     encontrou dois azuis distintos, e juntá-los seria escolha estética. */
+  --color-ink: #000000;
+  --color-surface: #f0f0f0;
+  --color-header: #f8f8f8;
+  --color-header-mobile: #ffffff;
+  --color-brand: #24a2e0;
+  --color-link: #2ea3f2;
+  --color-title-light: #333333;
+  --color-accent-ink: #353740;
+  --color-body-ink: #545454;
+  --color-muted-ink: #747d88;
+  --color-neutral-ink: #666666;
+  --color-divider: #f7f7f7;
+  --color-footer: #323232;
+
+  /* Família — stacks de fallback como medidas, não como preferência. */
+  --font-sans: 'Open Sans', Arial, sans-serif;
+  --font-display: Montserrat, Helvetica, Arial, Lucida, sans-serif;
+
+  /* Escala tipográfica */
+  --text-hero: 60px;
+  --text-hero--line-height: 78px;
+  --text-section: 42px;
+  --text-section--line-height: 54.6px;
+  --text-subtitle: 22px;
+  --text-subtitle--line-height: 22px;
+  --text-highlight: 22px;
+  --text-highlight--line-height: 30.8px;
+  --text-lead: 19px;
+  --text-lead--line-height: 34.2px;
+  --text-menu: 18px;
+  --text-menu--line-height: 14px;
+  --text-body: 16px;
+  --text-body--line-height: 28.8px;
+  --text-kicker: 16px;
+  --text-kicker--line-height: 23.8px;
+  --text-kicker--letter-spacing: 3px;
+  --text-button: 20px;
+  --text-button--line-height: 34px;
+  --text-button--letter-spacing: 2px;
+  --text-field: 16px;
+
+  /* Caixa — docs/inventario/05-layout.md */
+  --container-row: 1080px;
+  --container-lead: 700px;
+  --container-form: 800px;
+  --spacing-gutter: 59.39px;
+  --spacing-header: 80px;
+  --spacing-header-desktop: 94px;
+  --spacing-header-offset: 79px;
+  --spacing-button-x: 20px;
+  --spacing-button-y: 6px;
+  /* Menor largura medida em que o menu já é desktop (900px ainda é mobile),
+     conforme a tabela de breakpoints em 05-layout.md. */
+  --breakpoint-desktop: 1000px;
+
+  /* Borda e sombra */
+  --radius-pill: 100px;
+  --shadow-header: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  --shadow-field: inset 0 -1px 0 0 rgba(0, 0, 0, 0.18);
+}
+
 @font-face {
   font-family: 'Open Sans';
   font-style: normal;
