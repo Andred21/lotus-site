@@ -53,6 +53,12 @@
   --spacing-header: 80px;
   --spacing-header-desktop: 94px;
   --spacing-header-offset: 79px;
+  /* O título e o subtítulo do hero não ocupam a coluna inteira: `styles.json`
+     mede `#Intrucción h1` e `h3` 103px mais estreitos que o conteúdo da
+     coluna nos quatro viewports (315/212, 645.12/542, 489.62/387,
+     652.81/550). É essa reserva que quebra `LOTUS OTEC` em duas linhas em
+     375 e 1440, como mostram os baselines. */
+  --spacing-hero-inset: 103px;
   --spacing-button-x: 20px;
   --spacing-button-y: 6px;
   /* Menor largura medida em que o menu já é desktop (900px ainda é mobile),

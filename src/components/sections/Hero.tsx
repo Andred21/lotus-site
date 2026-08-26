@@ -14,12 +14,16 @@ export function Hero() {
         <p className="font-display text-kicker font-medium text-surface">
           {site.hero.kicker}
         </p>
-        <h1 className="font-display text-hero font-bold text-brand">
-          {site.hero.title}
-        </h1>
-        <h3 className="font-sans text-subtitle font-medium text-surface">
-          {site.hero.subtitle}
-        </h3>
+        {/* A reserva lateral é medida, não estética: sem ela o título cabe numa
+            linha só e o clone diverge do baseline em 375 e 1440. */}
+        <div className="pr-hero-inset">
+          <h1 className="font-display text-hero font-bold text-brand">
+            {site.hero.title}
+          </h1>
+          <h3 className="font-sans text-subtitle font-medium text-surface">
+            {site.hero.subtitle}
+          </h3>
+        </div>
         <p className="mt-8 font-display text-body font-medium text-brand">
           {site.hero.body}
         </p>
