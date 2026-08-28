@@ -65,7 +65,15 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
     setStatus('submitting')
     setFieldErrors({})
 
-    const result = await onSubmit(new FormData(form))
+    // Handler que rejeita não pode deixar o formulário preso em
+    // `submitting`: botão desabilitado e nenhuma saída além de recarregar.
+    let result: ContactSubmitOutcome
+    try {
+      result = await onSubmit(new FormData(form))
+    } catch {
+      setStatus('error')
+      return
+    }
 
     if (result.status === 'sent') {
       setStatus('success')
@@ -81,8 +89,13 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
 
   // Derivado do estado, nunca guardado: erro de campo e erro geral são a
   // mesma submissão vista de dois ângulos.
+  // Só erro de campo renderizado vira "revise los campos marcados": o
+  // honeypot não aparece na tela, então falha nele cai na mensagem geral e o
+  // bot não descobre qual campo o denunciou.
   const feedback = site.contacto.form.feedback
-  const hasFieldErrors = Object.keys(fieldErrors).length > 0
+  const hasFieldErrors = site.contacto.form.fields.some(
+    (field) => fieldErrors[field.name],
+  )
   const statusMessage =
     status === 'submitting'
       ? feedback.submitting
@@ -102,7 +115,11 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
         role="status"
         aria-live="polite"
         className={cn(
-          'mb-4 font-display text-body',
+          'font-display text-body',
+          // A região viva fica montada desde o início — `aria-live` só anuncia
+          // mudança dentro de nó já existente —, mas vazia não ocupa espaço:
+          // a margem entra junto com o texto e o baseline estático não muda.
+          statusMessage ? 'mb-4' : undefined,
           status === 'error' ? 'text-danger' : 'text-accent-ink',
         )}
       >

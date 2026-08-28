@@ -136,6 +136,36 @@ describe('ContactForm — estados de envio', () => {
     expect(screen.queryByText(/web3forms/i)).toBeNull()
   })
 
+  it('não reserva espaço antes da primeira interação', async () => {
+    render(<ContactForm onSubmit={handlerOf({ status: 'failed' })} />)
+
+    // R-1 da review: o bloco vazio empurrava o primeiro campo 16px para
+    // baixo em todos os viewports, antes de qualquer envio.
+    const status = screen.getByRole('status')
+    expect(status.className).not.toContain('mb-4')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    await waitFor(() => expect(status.className).toContain('mb-4'))
+  })
+
+  it('mostra erro genérico quando o handler rejeita e libera o botão', async () => {
+    const onSubmit = vi.fn<ContactSubmitHandler>(() =>
+      Promise.reject(new Error('boom')),
+    )
+    render(<ContactForm onSubmit={onSubmit} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    expect(
+      await screen.findByText(site.contacto.form.feedback.error),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Enviar' })).toHaveProperty(
+      'disabled',
+      false,
+    )
+  })
+
   it('desabilita o botão enquanto o envio está em curso', async () => {
     // Fila de resolvers em vez de `let resolve = ...`: parâmetro não usado
     // quebra o lint e variável atribuída dentro de callback quebra a análise
@@ -163,6 +193,23 @@ describe('ContactForm — estados de envio', () => {
 })
 
 describe('ContactForm — anti-spam', () => {
+  it('não fala em campos marcados quando só o honeypot falha', async () => {
+    const onSubmit = handlerOf({
+      status: 'invalid',
+      fieldErrors: { botcheck: 'No pudimos validar el envío.' },
+    })
+    render(<ContactForm onSubmit={onSubmit} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    // O campo da armadilha não é renderizado: apontar "campos marcados" sem
+    // marcar nenhum campo confunde humano e ensina o bot.
+    expect(
+      await screen.findByText(site.contacto.form.feedback.error),
+    ).toBeTruthy()
+    expect(screen.queryByText('No pudimos validar el envío.')).toBeNull()
+  })
+
   it('trava o tamanho de cada campo no limite do schema', () => {
     render(<ContactForm onSubmit={handlerOf({ status: 'failed' })} />)
 

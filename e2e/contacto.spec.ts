@@ -98,3 +98,26 @@ test('falha do provedor vira erro visível, sem vazar detalhe e sem perder o tex
     'Necesito información sobre el curso de alta tensión.',
   )
 })
+
+test('o bloco de status não desloca o formulário antes da interação', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  const status = page.getByRole('status')
+  const nombre = page.getByLabel('Nombre Completo')
+  await expect(status).toHaveText('')
+  await expect(status).toHaveCSS('margin-bottom', '0px')
+
+  // Posição absoluta no documento: o foco vai para o status depois do envio e
+  // rola a página, então coordenada de viewport compararia coisas diferentes.
+  const topoDoDocumento = () =>
+    nombre.evaluate((node) => node.getBoundingClientRect().top + window.scrollY)
+  const antes = await topoDoDocumento()
+
+  await page.getByRole('button', { name: 'Enviar' }).click()
+  await expect(status).toHaveText(INVALID)
+  await expect(status).toHaveCSS('margin-bottom', '16px')
+
+  expect(await topoDoDocumento()).toBeGreaterThan(antes)
+})
