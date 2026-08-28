@@ -72,7 +72,7 @@ test('Tab percorre a home inteira na ordem do DOM, com foco visível em cada par
 
   // Depois da última parada, o foco sai do documento (ou volta ao body).
   await page.keyboard.press('Tab')
-  expect((await activeStop(page)).key).not.toBe('button:Enviar')
+  expect((await activeStop(page)).key).toBe('body')
 })
 
 test('o formulário é enviado sem mouse e o foco vai ao bloco de status', async ({
