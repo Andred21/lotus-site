@@ -17,6 +17,9 @@
   --color-neutral-ink: #666666;
   --color-divider: #f7f7f7;
   --color-footer: #323232;
+  /* Cor de erro do formulário. Não vem do inventário: o original não tem
+     estado de erro medido. Escolhida por contraste AA sobre --color-surface. */
+  --color-danger: #b3261e;
 
   /* Família — stacks de fallback como medidas, não como preferência. */
   --font-sans: 'Open Sans', Arial, sans-serif;

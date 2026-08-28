@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { site } from '../../content/site'
 import { cn } from '../../lib/cn'
 import { CONTACT_REQUIRED_FIELDS } from '../../lib/contact-fields'
@@ -23,6 +23,8 @@ type ContactFormProps = {
   onSubmit: ContactSubmitHandler
 }
 
+type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error'
+
 const FIELD_CLASS =
   'text-field font-sans text-accent-ink shadow-field h-[51px] w-full bg-transparent p-4'
 
@@ -32,38 +34,111 @@ const FIELD_CLASS =
  * continua no HTML e é o que a tecnologia assistiva anuncia.
  */
 export function ContactForm({ onSubmit }: ContactFormProps) {
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [status, setStatus] = useState<SubmitStatus>('idle')
+  const [fieldErrors, setFieldErrors] = useState<ContactFieldErrors>({})
+  const statusRef = useRef<HTMLParagraphElement>(null)
+
+  // Sincroniza foco com o DOM já pintado: o resultado precisa estar escrito
+  // no bloco de status antes de o foco chegar nele.
+  useEffect(() => {
+    if (status === 'success' || status === 'error') {
+      statusRef.current?.focus()
+    }
+  }, [status])
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    void onSubmit(new FormData(event.currentTarget))
+    const form = event.currentTarget
+
+    setStatus('submitting')
+    setFieldErrors({})
+
+    const result = await onSubmit(new FormData(form))
+
+    if (result.status === 'sent') {
+      setStatus('success')
+      form.reset()
+      return
+    }
+
+    if (result.status === 'invalid') {
+      setFieldErrors(result.fieldErrors)
+    }
+    setStatus('error')
   }
+
+  // Derivado do estado, nunca guardado: erro de campo e erro geral são a
+  // mesma submissão vista de dois ângulos.
+  const feedback = site.contacto.form.feedback
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0
+  const statusMessage =
+    status === 'submitting'
+      ? feedback.submitting
+      : status === 'success'
+        ? feedback.success
+        : status === 'error'
+          ? hasFieldErrors
+            ? feedback.invalid
+            : feedback.error
+          : ''
 
   return (
     <form className="mx-auto max-w-form" noValidate onSubmit={handleSubmit}>
-      {site.contacto.form.fields.map((field) => (
-        <p key={field.name} className="mb-4">
-          <label htmlFor={field.name} className="sr-only">
-            {field.label}
-          </label>
-          {field.type === 'textarea' ? (
-            <textarea
-              id={field.name}
-              name={field.name}
-              placeholder={field.label}
-              required={CONTACT_REQUIRED_FIELDS.includes(field.name)}
-              className={cn(FIELD_CLASS, 'h-37.5 resize-y')}
-            />
-          ) : (
-            <input
-              id={field.name}
-              name={field.name}
-              type={field.name === 'email' ? 'email' : 'text'}
-              placeholder={field.label}
-              required={CONTACT_REQUIRED_FIELDS.includes(field.name)}
-              className={FIELD_CLASS}
-            />
-          )}
-        </p>
-      ))}
+      <p
+        ref={statusRef}
+        tabIndex={-1}
+        role="status"
+        aria-live="polite"
+        className={cn(
+          'mb-4 font-display text-body',
+          status === 'error' ? 'text-danger' : 'text-accent-ink',
+        )}
+      >
+        {statusMessage}
+      </p>
+
+      {site.contacto.form.fields.map((field) => {
+        const error = fieldErrors[field.name]
+        const describedBy = error ? `${field.name}-error` : undefined
+
+        return (
+          <p key={field.name} className="mb-4">
+            <label htmlFor={field.name} className="sr-only">
+              {field.label}
+            </label>
+            {field.type === 'textarea' ? (
+              <textarea
+                id={field.name}
+                name={field.name}
+                placeholder={field.label}
+                required={CONTACT_REQUIRED_FIELDS.includes(field.name)}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={describedBy}
+                className={cn(FIELD_CLASS, 'h-37.5 resize-y')}
+              />
+            ) : (
+              <input
+                id={field.name}
+                name={field.name}
+                type={field.name === 'email' ? 'email' : 'text'}
+                placeholder={field.label}
+                required={CONTACT_REQUIRED_FIELDS.includes(field.name)}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={describedBy}
+                className={FIELD_CLASS}
+              />
+            )}
+            {error ? (
+              <span
+                id={`${field.name}-error`}
+                className="mt-1 block font-sans text-field text-danger"
+              >
+                {error}
+              </span>
+            ) : null}
+          </p>
+        )
+      })}
 
       {/* Honeypot: humano não vê, bot trivial preenche. Fora da árvore de
           acessibilidade e fora da ordem de tabulação, sem pixel na tela. */}
@@ -80,7 +155,8 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
       <p className="text-right">
         <button
           type="submit"
-          className="rounded-pill border-[5px] border-solid border-body-ink px-button-x py-button-y font-display text-button font-bold text-body-ink uppercase"
+          disabled={status === 'submitting'}
+          className="rounded-pill border-[5px] border-solid border-body-ink px-button-x py-button-y font-display text-button font-bold text-body-ink uppercase disabled:opacity-60"
         >
           {site.contacto.form.submit}
         </button>

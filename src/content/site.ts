@@ -79,6 +79,17 @@ export const site = {
         { name: 'mensaje', label: 'Mensaje', type: 'textarea' },
       ],
       submit: 'Enviar',
+      /* Cópia dos estados de envio. Não vem do original: o formulário Divi
+         nunca foi submetido (decisão D5 da Sprint 1), então não existe
+         mensagem medida a reproduzir. Divergência intencional na matriz. */
+      feedback: {
+        submitting: 'Enviando su mensaje…',
+        success:
+          'Gracias. Recibimos su mensaje y le contactaremos a la brevedad.',
+        invalid: 'Revise los campos marcados y vuelva a enviar.',
+        error:
+          'No pudimos enviar su mensaje. Intente nuevamente o escríbanos al correo indicado más arriba.',
+      },
     },
   },
 

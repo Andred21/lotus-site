@@ -1,7 +1,17 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { site } from '../../content/site'
-import { ContactForm, type ContactSubmitHandler } from './ContactForm'
+import {
+  ContactForm,
+  type ContactSubmitHandler,
+  type ContactSubmitOutcome,
+} from './ContactForm'
 
 // vitest.config.ts não registra setup global e o bloco não pode tocá-lo.
 // `fireEvent` em vez de `@testing-library/user-event`: o pacote não está
@@ -60,5 +70,93 @@ describe('ContactForm', () => {
       'Necesito información sobre el curso.',
     )
     expect(formData?.get('botcheck')).toBe('')
+  })
+})
+
+describe('ContactForm — estados de envio', () => {
+  it('anuncia sucesso, limpa os campos e leva o foco ao status', async () => {
+    const onSubmit = handlerOf({ status: 'sent' })
+    render(<ContactForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByLabelText('Nombre Completo'), {
+      target: { value: 'Ana Pérez' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    expect(
+      await screen.findByText(site.contacto.form.feedback.success),
+    ).toBeTruthy()
+    expect(screen.getByLabelText('Nombre Completo')).toHaveProperty('value', '')
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('status')),
+    )
+  })
+
+  it('mostra o erro do campo, liga aria-invalid e preserva o que foi digitado', async () => {
+    const onSubmit = handlerOf({
+      status: 'invalid',
+      fieldErrors: { email: 'Ingrese un correo electrónico válido.' },
+    })
+    render(<ContactForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByLabelText('Correo Electrónico'), {
+      target: { value: 'no-es-un-correo' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    expect(
+      await screen.findByText('Ingrese un correo electrónico válido.'),
+    ).toBeTruthy()
+    const input = screen.getByLabelText('Correo Electrónico')
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    expect(input.getAttribute('aria-describedby')).toBe('email-error')
+    expect(input).toHaveProperty('value', 'no-es-un-correo')
+    expect(screen.getByRole('status').textContent).toBe(
+      site.contacto.form.feedback.invalid,
+    )
+  })
+
+  it('mostra erro genérico na falha do provedor e preserva os dados', async () => {
+    const onSubmit = handlerOf({ status: 'failed' })
+    render(<ContactForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByLabelText('Mensaje'), {
+      target: { value: 'Necesito información sobre el curso.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    expect(
+      await screen.findByText(site.contacto.form.feedback.error),
+    ).toBeTruthy()
+    expect(screen.getByLabelText('Mensaje')).toHaveProperty(
+      'value',
+      'Necesito información sobre el curso.',
+    )
+    expect(screen.queryByText(/web3forms/i)).toBeNull()
+  })
+
+  it('desabilita o botão enquanto o envio está em curso', async () => {
+    // Fila de resolvers em vez de `let resolve = ...`: parâmetro não usado
+    // quebra o lint e variável atribuída dentro de callback quebra a análise
+    // de atribuição definida do TypeScript.
+    const pending: Array<(outcome: ContactSubmitOutcome) => void> = []
+    const onSubmit = vi.fn<ContactSubmitHandler>(
+      () =>
+        new Promise<ContactSubmitOutcome>((resolve) => {
+          pending.push(resolve)
+        }),
+    )
+    render(<ContactForm onSubmit={onSubmit} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    const button = screen.getByRole('button', { name: 'Enviar' })
+    await waitFor(() => expect(button).toHaveProperty('disabled', true))
+    expect(screen.getByRole('status').textContent).toBe(
+      site.contacto.form.feedback.submitting,
+    )
+
+    pending[0]?.({ status: 'failed' })
+    await waitFor(() => expect(button).toHaveProperty('disabled', false))
   })
 })
