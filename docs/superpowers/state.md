@@ -1,27 +1,27 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_closure
-work_class: architectural
-active_work_item: 4.1.1-4.1.10
-active_notion_eap: '4.1.1, 4.1.2, 4.1.3, 4.1.4, 4.1.5, 4.1.6, 4.1.7, 4.1.8, 4.1.9, 4.1.10'
-active_title: 'Formulário e integrações — Sprint 3: contato do clone com envio real'
-active_branch: feat/4-1-1-4-1-10-formulario-integracoes
+workflow_state: idle
+work_class: null
+active_work_item: null
+active_notion_eap: null
+active_title: null
+active_branch: null
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: close_active_work_item
+next_owner: joao
+next_action: select_work_item
 resume_state: null
-context_packet: docs/superpowers/context-packets/4.1.1-4.1.10.md
-active_spec: docs/superpowers/specs/2026-08-27-4.1.1-4.1.10-formulario-integracoes-design.md
-active_plan: docs/superpowers/plans/2026-08-27-4.1.1-4.1.10-formulario-integracoes.md
-executor: claude
-reviewer: codex
+context_packet: null
+active_spec: null
+active_plan: null
+executor: null
+reviewer: null
 blocker: null
-supervised_cycles_completed: 6
-last_completed_work_item: 3.1.1-3.2.11
-state_basis_commit: c3bd070
-updated_at: 2026-08-28T18:00:24Z
+supervised_cycles_completed: 7
+last_completed_work_item: 4.1.1-4.1.10
+state_basis_commit: ee083f8
+updated_at: 2026-08-28T18:05:49Z
 ---
 
 # Estado operacional — Lotus Site

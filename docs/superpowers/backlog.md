@@ -24,11 +24,12 @@ closure → progress.md
 Nada ativo. `docs/superpowers/state.md` está em `idle`: o próximo item entra por seleção explícita
 do João, nunca por promoção automática deste arquivo.
 
-O bloco `3.1.1`–`3.2.11` (Clone estático — Sprint 2) fechou em 2026-08-26 no PR
-https://github.com/Andred21/lotus-site/pull/6; o rastro está em
-`docs/superpowers/historico/progress.md`. **Pendência aberta com João:** a conferência humana de
-paridade visual contra os cinco PNG de `docs/inventario/baseline/` é parte do aceite e não foi feita
-— nenhum gate a substitui.
+O bloco `4.1.1`–`4.1.10` (Formulário e integrações — Sprint 3) fechou em 2026-08-28 no PR
+https://github.com/Andred21/lotus-site/pull/7; o rastro está em
+`docs/superpowers/historico/progress.md`. **Pendências abertas com João:** a conferência humana de
+paridade visual contra os cinco PNG de `docs/inventario/baseline/`, herdada da Sprint 2 e nunca
+feita — nenhum gate a substitui —, e a conta do Web3Forms, sem a qual o envio real continua não
+provado (`D-17`).
 
 ---
 
@@ -36,7 +37,6 @@ paridade visual contra os cinco PNG de `docs/inventario/baseline/` é parte do a
 
 Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 
-- **Formulário e integrações** — Sprint 3 (10).
 - **SEO e acessibilidade** — Sprint 4 (10).
 - **QA visual e performance** — Sprint 5 (8).
 - **Deploy e go-live** — Sprint 6 (12).
