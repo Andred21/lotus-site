@@ -34,6 +34,8 @@ export function Cursos() {
               alt={curso.imageAlt}
               width={320}
               height={240}
+              loading="lazy"
+              decoding="async"
               className="aspect-[4/3] w-full object-cover"
             />
             <p className="mt-6 font-display text-body font-medium text-surface">
