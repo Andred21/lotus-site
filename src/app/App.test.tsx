@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { site } from '../content/site'
 import { App } from './App'
 
@@ -37,5 +37,39 @@ describe('App', () => {
     expect(screen.getByRole('banner')).toBeTruthy()
     expect(screen.getByRole('main')).toBeTruthy()
     expect(screen.getByRole('contentinfo')).toBeTruthy()
+  })
+})
+
+describe('App — fiação do contato', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('sem chave configurada, o envio falha e nenhuma requisição sai', async () => {
+    // D7 da spec: build sem `VITE_WEB3FORMS_ACCESS_KEY` recebe
+    // `unavailableContactSender`. O ambiente de teste não define a chave, e a
+    // asserção abaixo trava isso: chave presente faz o teste falhar alto em
+    // vez de exercitar silenciosamente o outro caminho.
+    expect(import.meta.env.VITE_WEB3FORMS_ACCESS_KEY).toBeFalsy()
+
+    const fetchSpy = vi.fn<typeof fetch>()
+    vi.stubGlobal('fetch', fetchSpy)
+    render(<App />)
+
+    fireEvent.change(screen.getByLabelText('Nombre Completo'), {
+      target: { value: 'Ana Pérez' },
+    })
+    fireEvent.change(screen.getByLabelText('Correo Electrónico'), {
+      target: { value: 'ana@lotusotec.cl' },
+    })
+    fireEvent.change(screen.getByLabelText('Mensaje'), {
+      target: { value: 'Necesito información sobre el curso.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    expect(
+      await screen.findByText(site.contacto.form.feedback.error),
+    ).toBeTruthy()
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 })

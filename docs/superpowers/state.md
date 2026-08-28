@@ -18,10 +18,10 @@ active_plan: null
 executor: null
 reviewer: null
 blocker: null
-supervised_cycles_completed: 6
-last_completed_work_item: 3.1.1-3.2.11
-state_basis_commit: 19f17f3
-updated_at: 2026-08-26T21:38:59Z
+supervised_cycles_completed: 7
+last_completed_work_item: 4.1.1-4.1.10
+state_basis_commit: ee083f8
+updated_at: 2026-08-28T18:05:49Z
 ---
 
 # Estado operacional — Lotus Site

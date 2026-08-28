@@ -28,5 +28,9 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: false,
     timeout: 120_000,
+    // Chave falsa: o E2E precisa do adapter Web3Forms montado para poder
+    // interceptar a rota. Nenhum envio real sai — todo teste que submete
+    // intercepta `api.web3forms.com` (D6 da spec: não há conta nesta rodada).
+    env: { VITE_WEB3FORMS_ACCESS_KEY: 'e2e-fake-access-key' },
   },
 })

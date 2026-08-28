@@ -44,4 +44,17 @@ describe('conteúdo institucional', () => {
       'mensaje',
     ])
   })
+
+  it('declara as quatro mensagens de estado do envio', () => {
+    const feedback = site.contacto.form.feedback
+    expect(Object.keys(feedback)).toEqual([
+      'submitting',
+      'success',
+      'invalid',
+      'error',
+    ])
+    for (const message of Object.values(feedback)) {
+      expect(message.length).toBeGreaterThan(0)
+    }
+  })
 })

@@ -5,6 +5,21 @@ import { Contacto } from '../components/sections/Contacto'
 import { Cursos } from '../components/sections/Cursos'
 import { Destaques } from '../components/sections/Destaques'
 import { QuienesSomos } from '../components/sections/QuienesSomos'
+import { unavailableContactSender } from '../integrations/contact/sender'
+import { createContactService } from '../integrations/contact/service'
+import { createContactFormSubmit } from '../integrations/contact/submit'
+import { createWeb3FormsSender } from '../integrations/contact/web3forms'
+
+// Única ligação entre componente e integração no repositório. Sem chave
+// configurada o envio falha de forma visível, sem simular sucesso (D7 da
+// spec); a seção já publica contacto@lotusotec.cl como saída alternativa.
+const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
+const contactSender = accessKey
+  ? createWeb3FormsSender(accessKey)
+  : unavailableContactSender
+const submitContact = createContactFormSubmit(
+  createContactService(contactSender),
+)
 
 export function App() {
   return (
@@ -17,7 +32,7 @@ export function App() {
           <Destaques />
         </section>
         <Cursos />
-        <Contacto />
+        <Contacto onSubmit={submitContact} />
       </main>
       <Footer />
     </>
