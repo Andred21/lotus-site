@@ -8,12 +8,17 @@ import { QuienesSomos } from '../components/sections/QuienesSomos'
 import { unavailableContactSender } from '../integrations/contact/sender'
 import { createContactService } from '../integrations/contact/service'
 import { createContactFormSubmit } from '../integrations/contact/submit'
+import { createWeb3FormsSender } from '../integrations/contact/web3forms'
 
-// Única ligação entre componente e integração no repositório. O sender real
-// entra na 4.1.7; até lá — e em qualquer build sem chave configurada — o envio
-// falha de forma visível, sem simular sucesso (D7 da spec).
+// Única ligação entre componente e integração no repositório. Sem chave
+// configurada o envio falha de forma visível, sem simular sucesso (D7 da
+// spec); a seção já publica contacto@lotusotec.cl como saída alternativa.
+const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
+const contactSender = accessKey
+  ? createWeb3FormsSender(accessKey)
+  : unavailableContactSender
 const submitContact = createContactFormSubmit(
-  createContactService(unavailableContactSender),
+  createContactService(contactSender),
 )
 
 export function App() {
