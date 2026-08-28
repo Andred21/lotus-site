@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: architectural
 active_work_item: 4.1.1-4.1.10
 active_notion_eap: '4.1.1, 4.1.2, 4.1.3, 4.1.4, 4.1.5, 4.1.6, 4.1.7, 4.1.8, 4.1.9, 4.1.10'
@@ -10,7 +10,7 @@ active_branch: feat/4-1-1-4-1-10-formulario-integracoes
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_plan
 resume_state: null
 context_packet: docs/superpowers/context-packets/4.1.1-4.1.10.md
 active_spec: docs/superpowers/specs/2026-08-27-4.1.1-4.1.10-formulario-integracoes-design.md
@@ -20,8 +20,8 @@ reviewer: codex
 blocker: null
 supervised_cycles_completed: 6
 last_completed_work_item: 3.1.1-3.2.11
-state_basis_commit: fc774bb
-updated_at: 2026-08-27T22:18:13Z
+state_basis_commit: e7e7f3b
+updated_at: 2026-08-28T15:56:15Z
 ---
 
 # Estado operacional — Lotus Site
