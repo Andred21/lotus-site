@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { site } from '../../content/site'
 import { cn } from '../../lib/cn'
-import { CONTACT_REQUIRED_FIELDS } from '../../lib/contact-fields'
+import {
+  CONTACT_LIMITS,
+  CONTACT_REQUIRED_FIELDS,
+} from '../../lib/contact-fields'
 import type { ContactFieldErrors } from '../../lib/contact-schema'
 
 /**
@@ -27,6 +30,15 @@ type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error'
 
 const FIELD_CLASS =
   'text-field font-sans text-accent-ink shadow-field h-[51px] w-full bg-transparent p-4'
+
+/* O mesmo limite que o schema aplica, aplicado antes na caixa de texto: o
+   browser corta o excesso e o payload excessivo não chega a virar requisição. */
+const MAX_LENGTH = {
+  nombre: CONTACT_LIMITS.nombre.max,
+  email: CONTACT_LIMITS.email.max,
+  empresa: CONTACT_LIMITS.empresa.max,
+  mensaje: CONTACT_LIMITS.mensaje.max,
+} as const
 
 /**
  * Formulário de contato. `noValidate` desliga a validação nativa do browser
@@ -112,6 +124,7 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
                 name={field.name}
                 placeholder={field.label}
                 required={CONTACT_REQUIRED_FIELDS.includes(field.name)}
+                maxLength={MAX_LENGTH[field.name]}
                 aria-invalid={error ? true : undefined}
                 aria-describedby={describedBy}
                 className={cn(FIELD_CLASS, 'h-37.5 resize-y')}
@@ -123,6 +136,7 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
                 type={field.name === 'email' ? 'email' : 'text'}
                 placeholder={field.label}
                 required={CONTACT_REQUIRED_FIELDS.includes(field.name)}
+                maxLength={MAX_LENGTH[field.name]}
                 aria-invalid={error ? true : undefined}
                 aria-describedby={describedBy}
                 className={FIELD_CLASS}

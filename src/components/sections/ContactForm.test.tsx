@@ -7,6 +7,7 @@ import {
 } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { site } from '../../content/site'
+import { CONTACT_LIMITS } from '../../lib/contact-fields'
 import {
   ContactForm,
   type ContactSubmitHandler,
@@ -158,5 +159,24 @@ describe('ContactForm — estados de envio', () => {
 
     pending[0]?.({ status: 'failed' })
     await waitFor(() => expect(button).toHaveProperty('disabled', false))
+  })
+})
+
+describe('ContactForm — anti-spam', () => {
+  it('trava o tamanho de cada campo no limite do schema', () => {
+    render(<ContactForm onSubmit={handlerOf({ status: 'failed' })} />)
+
+    expect(
+      screen.getByLabelText('Nombre Completo').getAttribute('maxlength'),
+    ).toBe(String(CONTACT_LIMITS.nombre.max))
+    expect(
+      screen.getByLabelText('Correo Electrónico').getAttribute('maxlength'),
+    ).toBe(String(CONTACT_LIMITS.email.max))
+    expect(screen.getByLabelText('Empresa').getAttribute('maxlength')).toBe(
+      String(CONTACT_LIMITS.empresa.max),
+    )
+    expect(screen.getByLabelText('Mensaje').getAttribute('maxlength')).toBe(
+      String(CONTACT_LIMITS.mensaje.max),
+    )
   })
 })

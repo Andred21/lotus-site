@@ -62,4 +62,34 @@ describe('createContactService', () => {
 
     expect(await service(VALID)).toEqual({ status: 'failed' })
   })
+
+  it('rejeita o bot antes da rede: a porta não é chamada', async () => {
+    const send = fakeSender()
+    const service = createContactService(send)
+
+    const result = await service({ ...VALID, botcheck: 'http://spam.example' })
+
+    if (result.status !== 'invalid') throw new Error('esperava invalid')
+    expect(result.fieldErrors.botcheck).toBe('No pudimos validar el envío.')
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('rejeita payload excessivo antes da rede: a porta não é chamada', async () => {
+    const send = fakeSender()
+    const service = createContactService(send)
+
+    const result = await service({ ...VALID, mensaje: 'a'.repeat(2001) })
+
+    expect(result.status).toBe('invalid')
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('não cobra nada do envio normal: um payload válido chama a porta uma vez', async () => {
+    const send = fakeSender()
+    const service = createContactService(send)
+
+    await service(VALID)
+
+    expect(send).toHaveBeenCalledTimes(1)
+  })
 })
