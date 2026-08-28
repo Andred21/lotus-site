@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 import html from '../../index.html?raw'
 import { site } from '../content/site'
 
@@ -70,5 +71,40 @@ describe('index.html — Open Graph e Twitter (5.1.3)', () => {
     expect(content('meta[name="twitter:title"]')).toBe(TITLE)
     expect(content('meta[name="twitter:description"]')).toBe(site.hero.body)
     expect(content('meta[name="twitter:image"]')).toBe(SOCIAL_IMAGE)
+  })
+})
+
+/**
+ * D5: só propriedades comprovadas. `strictObject` reprova chave extra —
+ * certificação, horas e cursos continuam pendentes com João e não entram.
+ */
+const organization = z.strictObject({
+  '@context': z.literal('https://schema.org'),
+  '@type': z.literal('Organization'),
+  name: z.literal(site.hero.title),
+  url: z.literal(CANONICAL),
+  logo: z.literal(SOCIAL_IMAGE),
+  email: z.literal(site.contacto.email),
+})
+
+function jsonLd(): Record<string, unknown> {
+  const raw = only('script[type="application/ld+json"]').textContent ?? ''
+  const parsed: unknown = JSON.parse(raw)
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('JSON-LD não é um objeto')
+  }
+  return parsed as Record<string, unknown>
+}
+
+describe('index.html — JSON-LD (5.1.4)', () => {
+  it('publica uma Organization com name, url, logo e email, e nada mais', () => {
+    const result = organization.safeParse(jsonLd())
+    expect(result.error?.issues ?? []).toEqual([])
+    expect(result.success).toBe(true)
+  })
+
+  it('reprovaria uma propriedade não aprovada', () => {
+    const extra = { ...jsonLd(), telephone: '+56' }
+    expect(organization.safeParse(extra).success).toBe(false)
   })
 })

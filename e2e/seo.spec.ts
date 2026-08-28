@@ -60,3 +60,18 @@ test('a página servida publica description e og:image, e a imagem resolve', asy
   expect(asset.status()).toBe(200)
   expect(asset.headers()['content-type']).toContain('image/png')
 })
+
+test('a página servida carrega o JSON-LD da Organization', async ({ page }) => {
+  await page.goto('/')
+
+  const raw = await page
+    .locator('script[type="application/ld+json"]')
+    .textContent()
+  const data: { '@type'?: string; url?: string; name?: string } = JSON.parse(
+    raw ?? '{}',
+  )
+
+  expect(data['@type']).toBe('Organization')
+  expect(data.url).toBe(CANONICAL)
+  expect(data.name).toBe('LOTUS OTEC')
+})
