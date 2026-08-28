@@ -23,7 +23,6 @@ describe('App', () => {
       screen.getByRole('heading', { level: 1, name: site.hero.title }),
     ).toBeTruthy()
     expect(screen.getByText(site.institucional.body)).toBeTruthy()
-    expect(screen.getAllByRole('heading', { level: 4 })).toHaveLength(3)
     for (const curso of site.cursos.items) {
       expect(screen.getByText(curso.nombre)).toBeTruthy()
     }
@@ -31,12 +30,44 @@ describe('App', () => {
     expect(screen.getByText(site.footer.copyright)).toBeTruthy()
   })
 
-  it('mantém as landmarks de cabeçalho, conteúdo e rodapé', () => {
+  it('publica um h1 seguido de cinco h2, na ordem do documento', () => {
+    // D2 do bloco 5.1.1-5.3.2: o subtítulo do hero deixa de ser h3 e os
+    // destaques sobem de h4 para h2. Nenhum texto novo entra.
+    render(<App />)
+
+    const headings = screen
+      .getAllByRole('heading')
+      .map((heading) => [heading.tagName, heading.textContent])
+
+    expect(headings).toEqual([
+      ['H1', site.hero.title],
+      ['H2', 'ENERGIZADAS'],
+      ['H2', 'ALUMNOS'],
+      ['H2', 'CERTIFICACIÓN'],
+      ['H2', site.cursos.heading],
+      ['H2', site.contacto.heading],
+    ])
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(5)
+  })
+
+  it('mantém as landmarks e nomeia as seções que têm heading', () => {
     render(<App />)
 
     expect(screen.getByRole('banner')).toBeTruthy()
     expect(screen.getByRole('main')).toBeTruthy()
     expect(screen.getByRole('contentinfo')).toBeTruthy()
+    expect(screen.getByRole('navigation', { name: 'Principal' })).toBeTruthy()
+
+    // `section` só vira `region` quando tem nome acessível. `#Somos` fica
+    // sem nome de propósito: não tem heading de seção e D2 veda texto novo.
+    expect(screen.getByRole('region', { name: site.hero.title })).toBeTruthy()
+    expect(
+      screen.getByRole('region', { name: site.cursos.heading }),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('region', { name: site.contacto.heading }),
+    ).toBeTruthy()
+    expect(screen.getAllByRole('region')).toHaveLength(3)
   })
 })
 

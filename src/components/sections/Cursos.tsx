@@ -9,9 +9,16 @@ const IMAGES = [mediaTension, altaTension, supervisor]
 
 export function Cursos() {
   return (
-    <section id="Cursos" className="bg-ink pb-27.5">
+    <section
+      id="Cursos"
+      aria-labelledby="cursos-heading"
+      className="bg-ink pb-27.5"
+    >
       <Row className="py-6.75 text-center">
-        <h2 className="font-display text-section font-bold text-brand uppercase">
+        <h2
+          id="cursos-heading"
+          className="font-display text-section font-bold text-brand uppercase"
+        >
           {site.cursos.heading}
         </h2>
         <p className="mx-auto max-w-lead font-display text-body font-medium text-surface">

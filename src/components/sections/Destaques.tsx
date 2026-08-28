@@ -18,9 +18,9 @@ export function Destaques() {
         return (
           <div key={destaque.label} className="text-center">
             <Icon aria-hidden size={48} className="mx-auto text-brand" />
-            <h4 className="mt-4 font-display text-highlight font-bold text-accent-ink">
+            <h2 className="mt-4 font-display text-highlight font-bold text-accent-ink">
               {destaque.label}
-            </h4>
+            </h2>
             <p className="font-sans text-lead font-medium text-muted-ink">
               {destaque.body}
             </p>
