@@ -125,3 +125,9 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   não corrigiu a seleção do nó: regerar `styles.json` sem tratar isso reintroduz o erro em qualquer
   seção nova.
   **Gatilho:** antes de qualquer regeração de `styles.json` ou de inventário de página nova.
+- **D-17 · envio real do formulário não provado** — não existe conta nem access key do Web3Forms
+  nesta rodada (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
+  `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
+  no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
+  chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
+  **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
