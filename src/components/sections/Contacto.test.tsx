@@ -1,16 +1,21 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { site } from '../../content/site'
 import { Contacto } from './Contacto'
+import type { ContactSubmitHandler } from './ContactForm'
 
 // vitest.config.ts não registra setup global e o bloco não pode tocá-lo.
-// `fireEvent` em vez de `@testing-library/user-event`: o pacote não está
-// instalado e o bloco não adiciona dependência.
 afterEach(cleanup)
+
+function handler() {
+  return vi.fn<ContactSubmitHandler>(() =>
+    Promise.resolve({ status: 'failed' }),
+  )
+}
 
 describe('Contacto', () => {
   it('renderiza título, corpo e o email como mailto', () => {
-    render(<Contacto />)
+    render(<Contacto onSubmit={handler()} />)
 
     expect(
       screen.getByRole('heading', { level: 2, name: 'CONTÁCTENOS' }),
@@ -22,29 +27,21 @@ describe('Contacto', () => {
     ).toBe(`mailto:${site.contacto.email}`)
   })
 
-  it('rotula os quatro campos sem mudar o rótulo visível', () => {
-    render(<Contacto />)
+  it('mantém os quatro campos rotulados sem mudar o rótulo visível', () => {
+    render(<Contacto onSubmit={handler()} />)
 
     for (const field of site.contacto.form.fields) {
       const input = screen.getByLabelText(field.label)
       expect(input.getAttribute('placeholder')).toBe(field.label)
-      expect(input.hasAttribute('required')).toBe(false)
     }
   })
 
-  it('não anuncia envio nenhum ao submeter', () => {
-    render(<Contacto />)
+  it('repassa o envio ao callback recebido, sem conhecer a integração', () => {
+    const onSubmit = handler()
+    render(<Contacto onSubmit={onSubmit} />)
 
-    fireEvent.change(screen.getByLabelText('Nombre Completo'), {
-      target: { value: 'Ana' },
-    })
     fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
 
-    expect(screen.queryByRole('status')).toBeNull()
-    expect(screen.queryByRole('alert')).toBeNull()
-    expect(screen.getByLabelText('Nombre Completo')).toHaveProperty(
-      'value',
-      'Ana',
-    )
+    expect(onSubmit).toHaveBeenCalledTimes(1)
   })
 })
