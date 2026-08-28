@@ -125,6 +125,21 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   não corrigiu a seleção do nó: regerar `styles.json` sem tratar isso reintroduz o erro em qualquer
   seção nova.
   **Gatilho:** antes de qualquer regeração de `styles.json` ou de inventário de página nova.
+- **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
+  `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
+  markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
+  review de 2026-08-28: o commit `2663763` levou junto o plano do bloco
+  (`docs/superpowers/plans/2026-08-27-4.1.1-4.1.10-formulario-integracoes.md:1463`), fora dos
+  `paths_autorizados`, sem replanejamento nenhum — só reordenação de classe num snippet. Reverter o
+  trecho sozinho deixa `pnpm format:check` vermelho; a correção é excluir plano e spec do Prettier
+  em `.prettierignore`, que é ferramenta do repositório e não estava autorizada neste bloco.
+  **Gatilho:** task própria de harness, junto de `D-15`.
+- **D-19 · transição de estado viaja junto de commit de código** — achado `L-7` da review de
+  2026-08-28: `fbb3e7e` (`feat(4.1.1)`) carrega `docs/superpowers/state.md` no mesmo commit do
+  schema, enquanto o fim do bloco usa `chore` próprio para a mesma coisa. Sem regra escrita, cada
+  bloco decide de novo. Não é corrigível aqui: reescrever histórico da branch em review custa mais
+  do que o defeito.
+  **Gatilho:** task própria de harness, junto de `D-15` e `D-18`.
 - **D-17 · envio real do formulário não provado** — não existe conta nem access key do Web3Forms
   nesta rodada (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
   `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
