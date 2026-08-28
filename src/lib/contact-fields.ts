@@ -16,8 +16,19 @@ export const CONTACT_LIMITS = {
  * como `required`; a divergência é decisão de João em 2026-08-27 (D4 da spec)
  * e está na matriz de paridade.
  */
-export const CONTACT_REQUIRED_FIELDS: readonly string[] = [
+export type ContactFieldName = keyof typeof CONTACT_LIMITS
+
+export const CONTACT_REQUIRED_FIELDS = [
   'nombre',
   'email',
   'mensaje',
-]
+] as const satisfies readonly ContactFieldName[]
+
+/**
+ * `includes` de tupla `as const` recusa qualquer nome fora dela e obrigaria a
+ * um cast; `some` compara uniões que se sobrepõem e mantém o tipo estreito.
+ * Com `readonly string[]` a checagem não existia: qualquer string passava.
+ */
+export function isRequiredContactField(name: ContactFieldName): boolean {
+  return CONTACT_REQUIRED_FIELDS.some((required) => required === name)
+}

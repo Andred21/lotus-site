@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { CONTACT_REQUIRED_FIELDS } from './contact-fields'
+import {
+  CONTACT_REQUIRED_FIELDS,
+  isRequiredContactField,
+} from './contact-fields'
 import {
   normalizeContactInput,
   parseContactMessage,
@@ -54,6 +57,10 @@ describe('parseContactMessage', () => {
 
   it('declara os mesmos obrigatórios que o formulário marca', () => {
     expect(CONTACT_REQUIRED_FIELDS).toEqual(['nombre', 'email', 'mensaje'])
+    expect(isRequiredContactField('nombre')).toBe(true)
+    expect(isRequiredContactField('email')).toBe(true)
+    expect(isRequiredContactField('mensaje')).toBe(true)
+    expect(isRequiredContactField('empresa')).toBe(false)
   })
 
   it('devolve erro estruturado por campo, em es-CL', () => {

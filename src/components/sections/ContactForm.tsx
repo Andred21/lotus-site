@@ -3,7 +3,7 @@ import { site } from '../../content/site'
 import { cn } from '../../lib/cn'
 import {
   CONTACT_LIMITS,
-  CONTACT_REQUIRED_FIELDS,
+  isRequiredContactField,
 } from '../../lib/contact-fields'
 import type { ContactFieldErrors } from '../../lib/contact-schema'
 
@@ -38,6 +38,15 @@ const MAX_LENGTH = {
   email: CONTACT_LIMITS.email.max,
   empresa: CONTACT_LIMITS.empresa.max,
   mensaje: CONTACT_LIMITS.mensaje.max,
+} as const
+
+/* WCAG 2.1 AA 1.3.5: o campo declara seu propósito para o preenchimento
+   automático do browser. Nenhum pixel muda. */
+const AUTOCOMPLETE = {
+  nombre: 'name',
+  email: 'email',
+  empresa: 'organization',
+  mensaje: 'off',
 } as const
 
 /**
@@ -140,8 +149,9 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
                 id={field.name}
                 name={field.name}
                 placeholder={field.label}
-                required={CONTACT_REQUIRED_FIELDS.includes(field.name)}
+                required={isRequiredContactField(field.name)}
                 maxLength={MAX_LENGTH[field.name]}
+                autoComplete={AUTOCOMPLETE[field.name]}
                 aria-invalid={error ? true : undefined}
                 aria-describedby={describedBy}
                 className={cn(FIELD_CLASS, 'h-37.5 resize-y')}
@@ -152,8 +162,9 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
                 name={field.name}
                 type={field.name === 'email' ? 'email' : 'text'}
                 placeholder={field.label}
-                required={CONTACT_REQUIRED_FIELDS.includes(field.name)}
+                required={isRequiredContactField(field.name)}
                 maxLength={MAX_LENGTH[field.name]}
+                autoComplete={AUTOCOMPLETE[field.name]}
                 aria-invalid={error ? true : undefined}
                 aria-describedby={describedBy}
                 className={FIELD_CLASS}

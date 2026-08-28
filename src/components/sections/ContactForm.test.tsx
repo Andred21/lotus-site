@@ -37,6 +37,22 @@ describe('ContactForm', () => {
     ).toBe('email')
   })
 
+  it('declara o propósito de cada campo para o preenchimento automático', () => {
+    render(<ContactForm onSubmit={handlerOf({ status: 'failed' })} />)
+
+    const proposito = {
+      'Nombre Completo': 'name',
+      'Correo Electrónico': 'email',
+      Empresa: 'organization',
+      Mensaje: 'off',
+    }
+    for (const [label, valor] of Object.entries(proposito)) {
+      expect(screen.getByLabelText(label).getAttribute('autocomplete')).toBe(
+        valor,
+      )
+    }
+  })
+
   it('esconde o honeypot da árvore de acessibilidade', () => {
     const { container } = render(
       <ContactForm onSubmit={handlerOf({ status: 'failed' })} />,
