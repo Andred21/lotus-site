@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ContactMessage } from '../../lib/contact-schema'
-import { createWeb3FormsSender } from './web3forms'
+import { CONTACT_SEND_TIMEOUT_MS, createWeb3FormsSender } from './web3forms'
 
 const MESSAGE: ContactMessage = {
   nombre: 'Ana Pérez',
@@ -30,6 +30,7 @@ function jsonResponse(body: unknown, status = 200) {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
 
 describe('createWeb3FormsSender', () => {
@@ -44,6 +45,7 @@ describe('createWeb3FormsSender', () => {
 
     const init = fetchSpy.mock.calls[0]?.[1]
     expect(init?.method).toBe('POST')
+    expect(init?.signal).toBeInstanceOf(AbortSignal)
     expect(JSON.parse(String(init?.body))).toEqual({
       access_key: 'chave-de-teste',
       subject: 'Nuevo mensaje desde el sitio de Lotus OTEC',
@@ -77,5 +79,30 @@ describe('createWeb3FormsSender', () => {
     await expect(
       createWeb3FormsSender('chave-de-teste')(MESSAGE),
     ).rejects.toThrow('Failed to fetch')
+  })
+})
+
+describe('createWeb3FormsSender — teto de espera', () => {
+  it('aborta o envio que passa do limite e propaga a rejeição', async () => {
+    vi.useFakeTimers()
+    const fetchSpy = vi.fn<typeof fetch>(
+      (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            reject(
+              new DOMException('The user aborted a request.', 'AbortError'),
+            )
+          })
+        }),
+    )
+    vi.stubGlobal('fetch', fetchSpy)
+
+    const pendente = createWeb3FormsSender('chave-de-teste')(MESSAGE)
+    const rejeicao = expect(pendente).rejects.toThrow(
+      'The user aborted a request.',
+    )
+
+    await vi.advanceTimersByTimeAsync(CONTACT_SEND_TIMEOUT_MS)
+    await rejeicao
   })
 })
