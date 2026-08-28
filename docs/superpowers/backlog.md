@@ -133,6 +133,8 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   `paths_autorizados`, sem replanejamento nenhum — só reordenação de classe num snippet. Reverter o
   trecho sozinho deixa `pnpm format:check` vermelho; a correção é excluir plano e spec do Prettier
   em `.prettierignore`, que é ferramenta do repositório e não estava autorizada neste bloco.
+  **Decisão de João em 2026-08-28:** a mutação do plano fica aceita e o bloco `4.1.1-4.1.10` fecha
+  com este débito aberto; a correção não entra na branch do bloco.
   **Gatilho:** task própria de harness, junto de `D-15`.
 - **D-19 · transição de estado viaja junto de commit de código** — achado `L-7` da review de
   2026-08-28: `fbb3e7e` (`feat(4.1.1)`) carrega `docs/superpowers/state.md` no mesmo commit do
