@@ -38,3 +38,25 @@ test('sitemap.xml é servido com a home como única URL (D7)', async ({
   expect(body).not.toContain('http-18-230-15-185')
   expect(body).not.toContain('<lastmod>')
 })
+
+test('a página servida publica description e og:image, e a imagem resolve', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/')
+
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /\S/,
+  )
+
+  const ogImage = await page
+    .locator('meta[property="og:image"]')
+    .getAttribute('content')
+  expect(ogImage?.startsWith(CANONICAL)).toBe(true)
+
+  // A URL é a de produção; o asset é provado no servidor local pelo path.
+  const asset = await request.get(new URL(ogImage ?? '').pathname)
+  expect(asset.status()).toBe(200)
+  expect(asset.headers()['content-type']).toContain('image/png')
+})
