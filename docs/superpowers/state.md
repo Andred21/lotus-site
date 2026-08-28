@@ -1,27 +1,27 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
-work_class: null
-active_work_item: null
-active_notion_eap: null
-active_title: null
-active_branch: null
+workflow_state: planning
+work_class: architectural
+active_work_item: 5.1.1-5.3.2
+active_notion_eap: '5.1.1, 5.1.2, 5.1.3, 5.1.4, 5.2.1, 5.2.2, 5.2.3, 5.2.4, 5.3.1, 5.3.2'
+active_title: SEO e acessibilidade — Sprint 4
+active_branch: feat/5-1-1-5-3-2-seo-acessibilidade
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
-context_packet: null
-active_spec: null
+context_packet: docs/superpowers/context-packets/5.1.1-5.3.2.md
+active_spec: docs/superpowers/specs/2026-08-28-5.1.1-5.3.2-seo-acessibilidade-design.md
 active_plan: null
 executor: null
 reviewer: null
 blocker: null
 supervised_cycles_completed: 7
 last_completed_work_item: 4.1.1-4.1.10
-state_basis_commit: ee083f8
-updated_at: 2026-08-28T18:05:49Z
+state_basis_commit: fd17f9d
+updated_at: 2026-08-28T21:07:48Z
 ---
 
 # Estado operacional — Lotus Site
