@@ -36,20 +36,14 @@ describe('preloadTags', () => {
     }
   })
 
-  it('preloada a foto do hero só acima do breakpoint desktop', () => {
-    const imagens = injetar({ bundle }).filter(
-      (tag) => tag.attrs.as === 'image',
-    )
-    // A foto é `desktop:block`: em 375 e 768 ela nunca pinta, e preloadar
-    // sem `media` gastaria banda de mobile por nada.
-    expect(imagens).toEqual([
-      expect.objectContaining({
-        attrs: expect.objectContaining({
-          href: '/assets/shutterstock_1444636373-1-scaled-0a1b2c.jpg',
-          media: '(min-width: 1000px)',
-        }),
-      }),
-    ])
+  it('não preloada a foto do hero: não é o elemento do LCP medido', () => {
+    // D10 da spec só conserva mudança dirigida pelo gargalo medido. O LCP
+    // medido é o `<h1 id="hero-heading">` (`lcp-breakdown-insight` de
+    // `docs/qa/performance/2026-08-29/`), não a foto — preloadar a imagem
+    // disputaria banda sem delta próprio.
+    expect(
+      injetar({ bundle }).filter((tag) => tag.attrs.as === 'image'),
+    ).toEqual([])
   })
 
   it('injeta as tags no head', () => {

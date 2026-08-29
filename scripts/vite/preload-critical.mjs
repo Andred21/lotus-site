@@ -25,11 +25,10 @@ const ALVOS = [
     padrao: /open-sans-500-[^/]*\.woff2$/,
     attrs: { as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
   },
-  {
-    padrao: /shutterstock_1444636373-1-scaled-[^/]*\.jpg$/,
-    // A foto do hero é `desktop:block`: abaixo de 1000px ela nunca pinta.
-    attrs: { as: 'image', media: '(min-width: 1000px)' },
-  },
+  // A foto do hero (`shutterstock_1444636373-1-scaled`) tinha preload aqui e
+  // saiu na review de 2026-08-29: o LCP medido é o `<h1 id="hero-heading">`,
+  // não a foto, e D10 da spec só conserva mudança dirigida pelo gargalo
+  // medido, com delta próprio. Volta se alguma medição apontar a foto.
 ]
 
 /**
