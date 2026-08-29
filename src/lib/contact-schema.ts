@@ -3,9 +3,10 @@ import { CONTACT_LIMITS } from './contact-fields'
 
 /**
  * Contrato de dados do contato. A regra de validação existe uma vez, aqui:
- * só `src/integrations/contact/service.ts` executa este schema, e nenhum
- * componente importa Zod (D3 da spec). O honeypot entra na entrada e some da
- * saída — quem envia nunca vê o campo de armadilha.
+ * só `src/integrations/contact/intake.ts` executa este schema, e nenhum
+ * componente importa Zod (D3 da spec, hoje catraca de `eslint.config.js`). O
+ * honeypot entra na entrada e some da saída — quem envia nunca vê o campo de
+ * armadilha.
  */
 export type ContactFormInput = {
   nombre: string

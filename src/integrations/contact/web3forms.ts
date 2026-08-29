@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { ContactMessage } from '../../lib/contact-schema'
-import type { ContactSender } from './sender'
+import type { ContactSender } from './intake'
 
 const ENDPOINT = 'https://api.web3forms.com/submit'
 
