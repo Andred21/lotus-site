@@ -10,7 +10,7 @@ export function Footer() {
   return (
     <footer className="bg-footer pt-[15px] pb-1.25">
       <Row>
-        <p className="font-sans text-caption font-medium text-neutral-ink">
+        <p className="font-sans text-caption font-medium text-brand">
           {site.footer.copyright}
         </p>
       </Row>

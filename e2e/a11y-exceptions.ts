@@ -45,18 +45,15 @@ export const A11Y_EXCEPTIONS: readonly A11yException[] = [
   contrast('.text-center:nth-child(3) > .text-muted-ink.text-body.font-medium'),
   // mailto da seção de contato: #2ea3f2 sobre #f0f0f0, 2.41:1.
   contrast('.text-link'),
-  // Rodapé: #666666 sobre #323232, 2.23:1. Corrigido na rodada de QA
-  // 2026-08-29: o rodapé usava `text-brand` (#24a2e0 azul, 4.46:1), mas essa
-  // cor nunca foi a medida do original — é bug do Sprint 1 que esta exceção
-  // acabou cristalizando. `docs/inventario/04-tipografia.md` já catalogava
-  // `#666666` como "texto de corpo default" desde 2026-08-25; a medição
-  // direta contra `https://lotusotec.cl/` em 2026-08-29 confirma
-  // `getComputedStyle(...).color` = `rgb(102, 102, 102)` no nó do copyright.
-  // Pior contraste que antes, mas mais fiel — ver
-  // `docs/qa/paridade/2026-08-29/classificacao.md`.
-  contrast('.text-neutral-ink'),
-  // Mesmo nó do rodapé, segundo seletor: com o menu mobile aberto o axe
-  // reordena as classes (a heurística escolhe a classe mais rara primeiro e o
-  // DOM aberto muda essa contagem). Continua sendo um nó só, nomeado exato.
-  contrast('.text-caption.text-neutral-ink.font-medium'),
+  // Rodapé: #24a2e0 sobre #323232, 4.46:1. Só o nome da classe de tamanho
+  // mudou na rodada de QA 2026-08-29 (`text-body` 16px -> `text-caption` 14px,
+  // valor medido); a cor continua a medida do original —
+  // `getComputedStyle(document.querySelector('#footer-info')).color` em
+  // `https://lotusotec.cl/` devolve `rgb(36, 162, 224)` (review do bloco,
+  // 2026-08-29). Ver `docs/qa/paridade/2026-08-29/classificacao.md`.
+  // Entrada única: com `text-caption` no lugar de `text-body`, o axe passa a
+  // reportar o mesmo nó por um seletor de classes só, igual nos cinco estados
+  // — as duas entradas anteriores descreviam esse mesmo nó sob as duas ordens
+  // de classe que a heurística do axe escolhia antes.
+  contrast('.text-caption.text-brand.font-medium'),
 ]
