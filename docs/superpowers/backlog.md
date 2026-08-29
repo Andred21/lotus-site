@@ -163,16 +163,20 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   **Gatilho:** redesign ou pedido explícito de João.
 - **D-21 · nove nós de `color-contrast` sob exceção nominal** — quatro links do menu desktop
   (`#24a2e0` sobre `#f8f8f8`, 2.7:1), três corpos dos destaques (`#747d88` sobre `#f0f0f0`,
-  3.66:1), o `mailto` (`#2ea3f2` sobre `#f0f0f0`, 2.41:1) e o rodapé (`#666666` sobre `#323232`,
-  2.23:1 — corrigido na rodada `2026-08-29`: o valor antigo, `#24a2e0`/4.46:1, nunca foi a cor
-  medida do original, era bug de implementação do Sprint 1 que a exceção cristalizou; ver
-  `docs/qa/paridade/2026-08-29/classificacao.md`) são cor medida do original, `fiel` na matriz, e
+  3.66:1), o `mailto` (`#2ea3f2` sobre `#f0f0f0`, 2.41:1) e o rodapé (`#24a2e0` sobre `#323232`,
+  4.46:1) são cor medida do original, `fiel` na matriz, e
   vivem em `e2e/a11y-exceptions.ts` com motivo, fonte e gatilho (D9 do bloco `5.1.1-5.3.2`).
   Corrigir viola a Lei 1. A mesma cor de nó pode aparecer duas vezes na lista sob seletores de
   classe diferentes: o axe reordena a lista de classes do elemento conforme o estado da página,
   então duas entradas com `target` distinto às vezes descrevem o mesmo nó, não uma segunda
   violação — quem for investigar uma falha de "exceção órfã" deve conferir o nó antes de presumir
   duplicidade.
+  Na rodada `2026-08-29` a entrada do rodapé chegou a ser reescrita para `#666666`/2.23:1; a review
+  do bloco `6.1.1-6.3.1` reverteu — `getComputedStyle` de `#footer-info` no site ao vivo devolve
+  `rgb(36, 162, 224)` e a captura versionada da própria rodada mostra o mesmo azul
+  (`docs/qa/paridade/2026-08-29/classificacao.md`). Só o nome da classe de tamanho mudou no
+  seletor (`text-body` -> `text-caption`), e as duas entradas do rodapé viraram uma: com a classe
+  nova o axe reporta o mesmo nó por um seletor só, igual nos cinco estados.
   **Gatilho:** redesign, quando a paleta deixar de ser paridade.
 - **D-22 · JSON-LD e tags sociais validados só localmente** — schema Zod `strict` e parse em
   `src/app/head.test.ts`, mais `og:image` resolvendo em `e2e/seo.spec.ts` (D5/D10 do bloco
@@ -182,8 +186,9 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 - **D-23 · fontes self-hosted de peso 500/700 (Montserrat) e 600 (Open Sans) são cópias do
   arquivo de outro peso** — `src/assets/fonts/montserrat-400.woff2`, `montserrat-500.woff2` e
   `montserrat-700.woff2` têm o mesmo `sha256`; `open-sans-500.woff2` e `open-sans-600.woff2`
-  também. Achado na rodada de QA `2026-08-29` (`docs/qa/paridade/2026-08-29/classificacao.md`,
-  `docs/qa/performance/2026-08-29/resumo-pos-otimizacao.md`) ao medir performance: o Vite dedupe
+  também. Achado na rodada de QA `2026-08-29` ao medir performance
+  (`docs/qa/performance/2026-08-29/resumo-pos-otimizacao.md`; a classificação de paridade da rodada
+  não trata de fonte self-hosted): o Vite dedupe
   por conteúdo, então as três declarações `@font-face` de Montserrat no build resolvem hoje para
   um único arquivo físico. Nenhum texto `font-bold`/`font-semibold` do site (h1 do hero, headings
   de seção, botões CTA, nav semibold) renderiza com glifo realmente mais pesado. Corrigir exige
@@ -191,3 +196,17 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   performance do bloco `6.1.1-6.3.1` (D10 da spec: só o gargalo medido é atacado, sem otimizador ou
   asset novo sem medição que justifique).
   **Gatilho:** próxima rodada que mexer em tipografia, ou pedido explícito de João.
+- **D-24 · o clone é mais curto que a referência em todas as larguras** — 375 `5467px` -> `4902px`
+  (-565), 768 `4913px` -> `4818px` (-95), 1440 `3441px` -> `3109px` (-332), 1920 `3409px` ->
+  `3105px` (-304). A rodada `2026-08-29` registrou isso como observação não classificável; a
+  review do bloco `6.1.1-6.3.1` mediu a causa elemento a elemento contra `https://lotusotec.cl/` e
+  classificou como `spacing`: `padding: 30px` nos cards de destaque e `padding-bottom: 10px` no
+  título deles, margens verticais do hero (`45/40/50px` na referência contra `mt-8`/`32px` no
+  clone), parágrafo institucional que a referência quebra em `<p>` com 19px entre eles, `padding`
+  e gap das linhas de cursos e de contato, e o container do copyright. Nenhum conteúdo falta e não
+  há defeito visual observável (sem corte, sem sobreposição, sem rolagem horizontal). Corrigir é
+  bloco de paridade próprio: mexe em cinco seções, nas quatro larguras, e obriga recaptura, nova
+  ratificação (D2) e novos snapshots de `toHaveScreenshot`. Enquanto isso, a linha "Altura
+  vertical das seções" fica `pendente decisão` na matriz — ver
+  `docs/qa/paridade/2026-08-29/classificacao.md`.
+  **Gatilho:** decisão de João de abrir o bloco de correção, ou próxima rodada de paridade.
