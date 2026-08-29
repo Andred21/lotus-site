@@ -51,6 +51,10 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   `5.2.2` e `7.1.1` citam Server Action, App Router, `next/image` ou sitemap via Next.js. A task
   `1.2.1` entregou Vite + React + TypeScript e está Concluída. Essas tasks são stale até
   reconciliação; não atualizar Notion sem autorização explícita do João.
+  Quinta instância em 2026-08-28 (D1 da spec do bloco `5.1.1-5.3.2`): `5.1.1`, `5.1.2` e `5.2.2`
+  descrevem Metadata API, `app/robots`, `app/sitemap` e `next/image`; entregues como `<head>`
+  estático em `index.html`, `public/robots.txt` + `public/sitemap.xml` e `<img>` com
+  `width`/`height`, `loading="lazy"` e `decoding="async"`, sem otimizador.
   **Gatilho:** antes de planejar Sprint 3.
 - **D-02 · 1.1.6 e 1.3.5 tocam a mesma fronteira** — `1.1.6` escreve as regras de camada e a catraca
   de import; `1.3.5` cria as pastas com consumidor real. Nenhum diretório nasce em `1.1.6`.
@@ -90,9 +94,10 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 - **D-10 · Playwright cobre só Chromium** — WebKit e Firefox ficaram de fora do baseline por
   não haver clone a comparar. Paridade visual em outro motor não é verificada hoje.
   **Gatilho:** ao planejar o Sprint 5.
-- **D-11 · axe reporta mas não reprova** — a auditoria de `1.3.4` executa e anexa
-  `axe-home.json`, sem transformar violação em falha, porque o alvo é a home do scaffold Vite.
-  **Gatilho:** ao planejar o Sprint 4.
+- **D-11 · axe reporta mas não reprova** — **fechado em 2026-08-28** pelo bloco `5.1.1-5.3.2`
+  (`5.2.4`): `e2e/a11y.spec.ts` audita cinco estados e reprova violação `critical`/`serious` sem
+  exceção nominal em `e2e/a11y-exceptions.ts`; exceção órfã também reprova. As nove exceções
+  iniciais viraram `D-21`.
 - **D-12 · `3.1.4` manda os assets para `public/`, a rule manda para `src/assets/`** — o título da EAP
   é "Migrar assets para public", mas `.claude/rules/architecture.md:12` e `CLAUDE.md:92` reservam
   `public/` para arquivo que precisa de URL estável. João decidiu em 2026-08-25 que a regra do
@@ -148,3 +153,22 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
   chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
   **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
+- **D-20 · imagem social é o logo 500×500** — `og:image`/`twitter:image` usam
+  `public/LOTUS-G2_TRANSP_Fondo-Blanco.png` com `twitter:card summary` (D4 do bloco `5.1.1-5.3.2`).
+  Card grande (1200×630) exige arte nova, fora do clone.
+  **Gatilho:** redesign ou pedido explícito de João.
+- **D-21 · nove nós de `color-contrast` sob exceção nominal** — quatro links do menu desktop
+  (`#24a2e0` sobre `#f8f8f8`, 2.7:1), três corpos dos destaques (`#747d88` sobre `#f0f0f0`,
+  3.66:1), o `mailto` (`#2ea3f2` sobre `#f0f0f0`, 2.41:1) e o rodapé (`#24a2e0` sobre `#323232`,
+  4.46:1) são cor medida do original, `fiel` na matriz, e vivem em `e2e/a11y-exceptions.ts` com
+  motivo, fonte e gatilho (D9 do bloco `5.1.1-5.3.2`). Corrigir viola a Lei 1. A mesma cor de nó
+  pode aparecer duas vezes na lista sob seletores de classe diferentes: o axe reordena a lista de
+  classes do elemento conforme o estado da página, então duas entradas com `target` distinto às
+  vezes descrevem o mesmo nó, não uma segunda violação — quem for investigar uma falha de
+  "exceção órfã" deve conferir o nó antes de presumir duplicidade.
+  **Gatilho:** redesign, quando a paleta deixar de ser paridade.
+- **D-22 · JSON-LD e tags sociais validados só localmente** — schema Zod `strict` e parse em
+  `src/app/head.test.ts`, mais `og:image` resolvendo em `e2e/seo.spec.ts` (D5/D10 do bloco
+  `5.1.1-5.3.2`). Rich Results Test e depuradores sociais (Facebook, LinkedIn, X) exigem URL
+  pública.
+  **Gatilho:** primeiro deploy, antes do go-live.
