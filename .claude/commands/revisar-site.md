@@ -16,6 +16,7 @@ Ao iniciar, transicione para `reviewing`.
 
 - executor Codex / reviewer Claude: Claude revisa diff, spec, plano, packet e rules.
 - executor Claude / reviewer Codex: delegue `site-review-task`; depois Claude verifica cada achado material no código antes de aceitá-lo.
+- mesmo agente nos dois papéis: só com `reviewer_exception` declarada no estado, autorizada por João, e débito correspondente no backlog. A review acontece, mas não vale como lente independente; o débito registra isso.
 
 Review não é auditoria do repositório. Não inclua refactor adjacente.
 

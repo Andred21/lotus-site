@@ -8,11 +8,8 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { site } from '../../content/site'
 import { CONTACT_LIMITS } from '../../lib/contact-fields'
-import {
-  ContactForm,
-  type ContactSubmitHandler,
-  type ContactSubmitOutcome,
-} from './ContactForm'
+import type { ContactSubmitResult } from '../../lib/contact-schema'
+import { ContactForm, type ContactSubmitHandler } from './ContactForm'
 
 // vitest.config.ts não registra setup global e o bloco não pode tocá-lo.
 // `fireEvent` em vez de `@testing-library/user-event`: o pacote não está
@@ -186,10 +183,10 @@ describe('ContactForm — estados de envio', () => {
     // Fila de resolvers em vez de `let resolve = ...`: parâmetro não usado
     // quebra o lint e variável atribuída dentro de callback quebra a análise
     // de atribuição definida do TypeScript.
-    const pending: Array<(outcome: ContactSubmitOutcome) => void> = []
+    const pending: Array<(outcome: ContactSubmitResult) => void> = []
     const onSubmit = vi.fn<ContactSubmitHandler>(
       () =>
-        new Promise<ContactSubmitOutcome>((resolve) => {
+        new Promise<ContactSubmitResult>((resolve) => {
           pending.push(resolve)
         }),
     )

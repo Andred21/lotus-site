@@ -66,6 +66,6 @@ Acrescente uma linha a `docs/superpowers/historico/progress.md` com data, work i
 
 ## Estado final
 
-Incremente `supervised_cycles_completed` em 1. Redefina para `null`: `work_class`, `active_work_item`, `active_notion_eap`, `active_title`, `active_branch`, `bounded_design`, `authorized_paths`, `resume_state`, `context_packet`, `active_spec`, `active_plan`, `executor`, `reviewer`, `blocker`. Defina `workflow_state: idle`, `next_owner: joao`, `next_action: select_work_item`, `last_completed_work_item: <item fechado>`.
+Incremente `supervised_cycles_completed` em 1. Redefina para `null`: `work_class`, `active_work_item`, `active_notion_eap`, `active_title`, `active_branch`, `bounded_design`, `authorized_paths`, `resume_state`, `context_packet`, `active_spec`, `active_plan`, `executor`, `reviewer`, `reviewer_exception`, `blocker`. Defina `workflow_state: idle`, `next_owner: joao`, `next_action: select_work_item`, `last_completed_work_item: <item fechado>`.
 
 Não promova o próximo item automaticamente. `workflow_mode` permanece `supervised` independentemente do contador.

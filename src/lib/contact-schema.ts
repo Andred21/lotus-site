@@ -3,9 +3,10 @@ import { CONTACT_LIMITS } from './contact-fields'
 
 /**
  * Contrato de dados do contato. A regra de validação existe uma vez, aqui:
- * só `src/integrations/contact/service.ts` executa este schema, e nenhum
- * componente importa Zod (D3 da spec). O honeypot entra na entrada e some da
- * saída — quem envia nunca vê o campo de armadilha.
+ * só `src/integrations/contact/intake.ts` executa este schema, e nenhum
+ * componente importa Zod (D3 da spec, hoje catraca de `eslint.config.js`). O
+ * honeypot entra na entrada e some da saída — quem envia nunca vê o campo de
+ * armadilha.
  */
 export type ContactFormInput = {
   nombre: string
@@ -27,6 +28,19 @@ export type ContactFieldErrors = Partial<Record<keyof ContactFormInput, string>>
 export type ContactParseResult =
   | { ok: true; value: ContactMessage }
   | { ok: false; fieldErrors: ContactFieldErrors }
+
+/**
+ * Resultado que a UI enxerga. `failed` é genérico de propósito: o motivo da
+ * falha do provedor não vira texto de tela (aceite da 4.1.9). Vive aqui, e
+ * não em `src/integrations/`, porque componente e integração precisam do
+ * mesmo contrato e `eslint.config.js` proíbe o componente de importar
+ * integração — inclusive tipo. `ContactFieldErrors`, o payload do caso
+ * `invalid`, já morava neste módulo.
+ */
+export type ContactSubmitResult =
+  | { status: 'sent' }
+  | { status: 'invalid'; fieldErrors: ContactFieldErrors }
+  | { status: 'failed' }
 
 /** Mensagens em es-CL, o idioma publicado do site. */
 const MESSAGES = {

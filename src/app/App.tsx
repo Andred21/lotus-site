@@ -5,9 +5,10 @@ import { Contacto } from '../components/sections/Contacto'
 import { Cursos } from '../components/sections/Cursos'
 import { Destaques } from '../components/sections/Destaques'
 import { QuienesSomos } from '../components/sections/QuienesSomos'
-import { unavailableContactSender } from '../integrations/contact/sender'
-import { createContactService } from '../integrations/contact/service'
-import { createContactFormSubmit } from '../integrations/contact/submit'
+import {
+  createContactIntake,
+  unavailableContactSender,
+} from '../integrations/contact/intake'
 import { createWeb3FormsSender } from '../integrations/contact/web3forms'
 
 // Única ligação entre componente e integração no repositório. Sem chave
@@ -17,9 +18,7 @@ const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
 const contactSender = accessKey
   ? createWeb3FormsSender(accessKey)
   : unavailableContactSender
-const submitContact = createContactFormSubmit(
-  createContactService(contactSender),
-)
+const submitContact = createContactIntake(contactSender)
 
 export function App() {
   return (

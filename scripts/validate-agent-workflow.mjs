@@ -158,7 +158,18 @@ const checkState = () => {
         `state: ${current} (fase ${effective}) exige executor e reviewer preenchidos`,
       )
     } else if (front.executor === front.reviewer) {
-      errors.push('state: executor e reviewer devem ser diferentes')
+      // Segunda lente é a regra; agente indisponível é a exceção. Ela passa só
+      // declarada: `reviewer_exception` carrega motivo, data e quem autorizou,
+      // e o débito correspondente fica no backlog.
+      if (isNull(front.reviewer_exception)) {
+        errors.push(
+          'state: executor e reviewer devem ser diferentes; desvio exige reviewer_exception declarada',
+        )
+      }
+    } else if (!isNull(front.reviewer_exception)) {
+      errors.push(
+        'state: reviewer_exception só vale com executor e reviewer iguais; limpe o campo',
+      )
     }
   }
 

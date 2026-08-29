@@ -72,6 +72,11 @@ export default defineConfig([
               message:
                 'integração entra por prop/callback a partir da composição.',
             },
+            {
+              group: ['zod', 'zod/*'],
+              message:
+                'componente não importa Zod; a validação vive em src/lib/ e o componente vê só o resultado.',
+            },
           ],
         },
       ],
@@ -111,6 +116,11 @@ export default defineConfig([
               group: ['**/integrations/**'],
               message:
                 'integração entra por prop/callback a partir da composição.',
+            },
+            {
+              group: ['zod', 'zod/*'],
+              message:
+                'componente não importa Zod; a validação vive em src/lib/ e o componente vê só o resultado.',
             },
           ],
         },

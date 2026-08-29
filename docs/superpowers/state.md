@@ -17,11 +17,12 @@ active_spec: null
 active_plan: null
 executor: null
 reviewer: null
+reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 9
-last_completed_work_item: 6.1.1-6.3.1
-state_basis_commit: 5ab9d99
-updated_at: 2026-08-29T12:05:00Z
+supervised_cycles_completed: 10
+last_completed_work_item: refactor-contato-intake
+state_basis_commit: 9a7130b
+updated_at: 2026-08-29T13:35:00Z
 ---
 
 # Estado operacional — Lotus Site
@@ -51,7 +52,10 @@ updated_at: 2026-08-29T12:05:00Z
 - `work_class` é `bounded` ou `architectural` a partir de `ready_for_execution`; em `planning` ainda pode ser `null`.
 - `architectural` exige `active_spec` e `active_plan` antes de `ready_for_execution`.
 - `bounded` mantém `active_spec` e `active_plan` nulos e persiste apenas `bounded_design` curto + `authorized_paths`.
-- `executor` e `reviewer` devem ser diferentes a partir de `ready_for_execution`.
+- `executor` e `reviewer` devem ser diferentes a partir de `ready_for_execution`. Agente
+  indisponível é exceção declarada, não silenciosa: `reviewer_exception` carrega motivo, data e
+  quem autorizou, e o desvio vira débito no backlog. Sem ela, agente igual nos dois papéis é erro
+  de `pnpm agent:check`; com executor e reviewer diferentes, o campo precisa estar limpo.
 - `context_packet` é obrigatório quando o trabalho depende de fonte externa.
 - Work item, Context Packet, spec e plano devem apontar para o mesmo escopo.
 - Claude é o único escritor deste arquivo pelo contrato do harness.
