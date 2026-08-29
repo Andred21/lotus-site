@@ -229,3 +229,13 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   limitação de cota). Registrado por decisão de João em 2026-08-29: a linha na matriz entra quando
   o achado for confirmado, junto com a correção de `D-23` ou na próxima rodada de paridade.
   **Gatilho:** confirmação do reviewer, correção de `D-23`, ou nova rodada de paridade.
+- **D-27 · a review do bloco `refactor-contato-intake` não teve segunda lente** — o invariante do
+  harness exige `executor` e `reviewer` diferentes, e `scripts/validate-agent-workflow.mjs:160`
+  transforma isso em erro de `pnpm agent:check`. A cota da conta Codex estava esgotada, e João
+  autorizou explicitamente em 2026-08-29 que Claude fosse executor e reviewer do bloco, com o
+  desvio declarado. A review existiu — diff de `main..HEAD` lido linha a linha, referências
+  pendentes e afirmações do `CONTEXT.md` e do `ADR-SITE-003` conferidas contra o repositório — mas
+  quem revisou escreveu o código, então ela não vale como lente independente. Consequência
+  mecânica: com `reviewer: claude` no estado, `pnpm agent:check` reprova e `pnpm check` junto.
+  **Gatilho:** cota do Codex de volta para uma segunda passada sobre estes dois commits, ou decisão
+  de João sobre representar o desvio no validador em task própria do harness.

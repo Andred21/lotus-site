@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 work_class: bounded
 active_work_item: refactor-contato-intake
 active_notion_eap: null
@@ -9,19 +9,20 @@ active_title: 'Consolidar o intake do contato e unificar o contrato em lib'
 active_branch: refactor/contato-intake
 bounded_design: 'Refactor sem mudança de comportamento em dois commits: unificar a união de resultado do contato como ContactSubmitResult em src/lib/contact-schema.ts com catraca de lint contra zod em componente, e consolidar submit.ts, service.ts e sender.ts em src/integrations/contact/intake.ts (createContactIntake), com CONTEXT.md e ADR-SITE-003; desenho completo em docs/superpowers/bounded-designs/refactor-contato-intake.md; prova é pnpm check mais pnpm e2e completo.'
 authorized_paths: 'src/integrations/contact/**, src/lib/contact-schema.ts, src/components/sections/ContactForm.tsx, src/components/sections/ContactForm.test.tsx, src/app/App.tsx, eslint.config.js, CONTEXT.md, docs/adr/ADR-SITE-003.md, docs/superpowers/bounded-designs/refactor-contato-intake.md'
-next_owner: codex
-next_action: review_active_work_item
+next_owner: claude
+next_action: close_active_work_item
 resume_state: null
 context_packet: null
 active_spec: null
 active_plan: null
 executor: claude
-reviewer: codex
+reviewer: claude
+reviewer_exception: 'Autorizado por João em 2026-08-29: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-27.'
 blocker: null
 supervised_cycles_completed: 9
 last_completed_work_item: 6.1.1-6.3.1
-state_basis_commit: 82bc812
-updated_at: 2026-08-29T12:41:45Z
+state_basis_commit: dc0408d
+updated_at: 2026-08-29T12:55:28Z
 ---
 
 # Estado operacional — Lotus Site
@@ -51,7 +52,10 @@ updated_at: 2026-08-29T12:41:45Z
 - `work_class` é `bounded` ou `architectural` a partir de `ready_for_execution`; em `planning` ainda pode ser `null`.
 - `architectural` exige `active_spec` e `active_plan` antes de `ready_for_execution`.
 - `bounded` mantém `active_spec` e `active_plan` nulos e persiste apenas `bounded_design` curto + `authorized_paths`.
-- `executor` e `reviewer` devem ser diferentes a partir de `ready_for_execution`.
+- `executor` e `reviewer` devem ser diferentes a partir de `ready_for_execution`. Agente
+  indisponível é exceção declarada, não silenciosa: `reviewer_exception` carrega motivo, data e
+  quem autorizou, e o desvio vira débito no backlog. Sem ela, agente igual nos dois papéis é erro
+  de `pnpm agent:check`; com executor e reviewer diferentes, o campo precisa estar limpo.
 - `context_packet` é obrigatório quando o trabalho depende de fonte externa.
 - Work item, Context Packet, spec e plano devem apontar para o mesmo escopo.
 - Claude é o único escritor deste arquivo pelo contrato do harness.
