@@ -91,9 +91,11 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   decisão de João em 2026-08-24. `components/`, `app/` e `integrations/` nascem com consumidor
   real.
   **Gatilho:** ao planejar o Sprint 3.
-- **D-10 · Playwright cobre só Chromium** — WebKit e Firefox ficaram de fora do baseline por
-  não haver clone a comparar. Paridade visual em outro motor não é verificada hoje.
-  **Gatilho:** ao planejar o Sprint 5.
+- **D-10 · Playwright cobre só Chromium** — **fechado em 2026-08-29** pelo bloco `6.1.1-6.3.1`
+  (`6.1.4`): `playwright.config.ts` declara `chromium`, `firefox`, `webkit` e `mobile-webkit`; o
+  fluxo principal (`home`, `menu`, `contacto`) roda nos quatro, e o CI instala os três motores.
+  `a11y.spec.ts` e `seo.spec.ts` seguem só em Chromium — ver débito novo na homologação
+  `docs/qa/homologacao-2026-08-29.md`.
 - **D-11 · axe reporta mas não reprova** — **fechado em 2026-08-28** pelo bloco `5.1.1-5.3.2`
   (`5.2.4`): `e2e/a11y.spec.ts` audita cinco estados e reprova violação `critical`/`serious` sem
   exceção nominal em `e2e/a11y-exceptions.ts`; exceção órfã também reprova. As nove exceções
@@ -152,6 +154,8 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
   no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
   chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
+  **Reafirmado em 2026-08-29** (D5 da spec do bloco `6.1.1-6.3.1`): a homologação `6.3.1` também
+  fecha com o formulário como parcial declarado.
   **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
 - **D-20 · imagem social é o logo 500×500** — `og:image`/`twitter:image` usam
   `public/LOTUS-G2_TRANSP_Fondo-Blanco.png` com `twitter:card summary` (D4 do bloco `5.1.1-5.3.2`).
