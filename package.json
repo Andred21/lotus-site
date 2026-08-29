@@ -23,6 +23,10 @@
     "inventario:assets": "node scripts/inventario/fetch-assets.mjs",
     "inventario:styles": "node scripts/inventario/extract-styles.mjs",
     "inventario:baseline": "node scripts/inventario/capture-baseline.mjs",
+    "qa:referencia": "node scripts/qa/capture-referencia.mjs",
+    "qa:clone": "node scripts/qa/capture-clone.mjs",
+    "qa:contact-sheet": "node scripts/qa/contact-sheet.mjs",
+    "qa:perf": "node scripts/qa/perf.mjs",
     "check": "pnpm agent:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
@@ -50,6 +54,7 @@
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
     "jsdom": "^30.0.1",
+    "lighthouse": "^13.4.1",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4.3.3",

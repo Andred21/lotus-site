@@ -19,4 +19,20 @@ describe('Footer', () => {
     render(<Footer />)
     expect(screen.getByRole('contentinfo')).toBeTruthy()
   })
+
+  it('usa a tipografia e cor medidas na referência (Open Sans 14px/23.8px, text-brand)', () => {
+    // Medição direta em `https://lotusotec.cl/` (375, 2026-08-29, review do
+    // bloco): `#footer-info` tem `font-size: 14px`, `line-height: 23.8px` e
+    // `color: rgb(36, 162, 224)` — o tamanho corrigido nesta rodada é o
+    // medido, a cor continua sendo `--color-brand`. A troca para
+    // `text-neutral-ink` foi revertida: contradizia a própria referência.
+    render(<Footer />)
+    const paragraph = screen.getByText(
+      'Diseñado por Lotus OTEC | Copyright © 2022. OTEC Lotus.',
+    )
+    expect(paragraph.className).toContain('text-caption')
+    expect(paragraph.className).toContain('text-brand')
+    expect(paragraph.className).not.toContain('text-body')
+    expect(paragraph.className).not.toContain('text-neutral-ink')
+  })
 })

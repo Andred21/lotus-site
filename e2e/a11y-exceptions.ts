@@ -36,16 +36,24 @@ export const A11Y_EXCEPTIONS: readonly A11yException[] = [
   contrast('a[href$="#Somos"]'),
   contrast('a[href$="#Cursos"]'),
   contrast('a[href$="#Contacto"]'),
-  // Corpo dos três destaques: #747d88 sobre #f0f0f0, 3.66:1.
-  contrast('.text-center:nth-child(1) > .text-muted-ink.text-lead.font-medium'),
-  contrast('.text-center:nth-child(2) > .text-muted-ink.text-lead.font-medium'),
-  contrast('.text-center:nth-child(3) > .text-muted-ink.text-lead.font-medium'),
+  // Corpo dos três destaques: #747d88 sobre #f0f0f0, 3.66:1. Seletor
+  // atualizado na rodada de QA 2026-08-29: a classe de tamanho corrigiu de
+  // `text-lead` (19px, errada) para `text-body` (16px, valor medido) —
+  // mesma cor, mesmo nó, mesma razão de contraste; só o nome da classe mudou.
+  contrast('.text-center:nth-child(1) > .text-muted-ink.text-body.font-medium'),
+  contrast('.text-center:nth-child(2) > .text-muted-ink.text-body.font-medium'),
+  contrast('.text-center:nth-child(3) > .text-muted-ink.text-body.font-medium'),
   // mailto da seção de contato: #2ea3f2 sobre #f0f0f0, 2.41:1.
   contrast('.text-link'),
-  // Rodapé: #24a2e0 sobre #323232, 4.46:1.
-  contrast('.w-4\\/5.max-w-row.mx-auto > .text-body.text-brand.font-medium'),
-  // Mesmo nó do rodapé, segundo seletor: com o menu mobile aberto o axe
-  // reordena as classes (a heurística escolhe a classe mais rara primeiro e o
-  // DOM aberto muda essa contagem). Continua sendo um nó só, nomeado exato.
-  contrast('.max-w-row.w-4\\/5.mx-auto > .text-body.text-brand.font-medium'),
+  // Rodapé: #24a2e0 sobre #323232, 4.46:1. Só o nome da classe de tamanho
+  // mudou na rodada de QA 2026-08-29 (`text-body` 16px -> `text-caption` 14px,
+  // valor medido); a cor continua a medida do original —
+  // `getComputedStyle(document.querySelector('#footer-info')).color` em
+  // `https://lotusotec.cl/` devolve `rgb(36, 162, 224)` (review do bloco,
+  // 2026-08-29). Ver `docs/qa/paridade/2026-08-29/classificacao.md`.
+  // Entrada única: com `text-caption` no lugar de `text-body`, o axe passa a
+  // reportar o mesmo nó por um seletor de classes só, igual nos cinco estados
+  // — as duas entradas anteriores descreviam esse mesmo nó sob as duas ordens
+  // de classe que a heurística do axe escolhia antes.
+  contrast('.text-caption.text-brand.font-medium'),
 ]
