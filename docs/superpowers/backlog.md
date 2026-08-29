@@ -210,3 +210,22 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   vertical das seções" fica `pendente decisão` na matriz — ver
   `docs/qa/paridade/2026-08-29/classificacao.md`.
   **Gatilho:** decisão de João de abrir o bloco de correção, ou próxima rodada de paridade.
+- **D-25 · o guarda de regressão visual aponta para o dev server, não para o build** —
+  `e2e/regressao-visual.spec.ts` roda no projeto `chromium` de `playwright.config.ts`, que serve o
+  `pnpm dev` na porta 5183; a mudança que ele existe para guardar (`<link rel="preload">` injetado
+  por `scripts/vite/preload-critical.mjs`) só é produzida pelo build, servido pelo projeto
+  `producao` na 5184. O guarda prova que o dev server não mudou de pixel, o que é verdadeiro e
+  insuficiente. Mover o spec para o projeto `producao` implica regerar os snapshots sob o nome do
+  projeto novo. Achado da segunda lente (Claude) na review do bloco `6.1.1-6.3.1`, **sem a
+  confirmação do Codex que D7 da spec exige**: a segunda passada do reviewer não rodou por limite
+  de uso da conta Codex. Registrado como débito por decisão de João em 2026-08-29, não corrigido.
+  **Gatilho:** próxima mudança que só exista no build de produção, ou quando a cota do reviewer
+  permitir a confirmação.
+- **D-26 · peso real das fontes não tem linha na matriz de paridade** — `D-23` prova que nenhum
+  texto `font-bold`/`font-semibold` do site renderiza com glifo mais pesado, o que é divergência
+  visual contra o original; a matriz de `docs/inventario/README.md` não tem linha para isso, e a
+  homologação `6.3.1` aprova a matriz "com ressalva" citando o débito. Achado da segunda lente
+  (Claude) na review do bloco `6.1.1-6.3.1`, **sem a confirmação do Codex que D7 exige** (mesma
+  limitação de cota). Registrado por decisão de João em 2026-08-29: a linha na matriz entra quando
+  o achado for confirmado, junto com a correção de `D-23` ou na próxima rodada de paridade.
+  **Gatilho:** confirmação do reviewer, correção de `D-23`, ou nova rodada de paridade.

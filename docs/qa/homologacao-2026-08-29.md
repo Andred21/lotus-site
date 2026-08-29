@@ -76,6 +76,14 @@ causa foi medida na review e classificada como `spacing`; corrigir é bloco de p
   `font-semibold` do site renderiza com glifo realmente mais pesado. Corrigir exige fontes reais de
   cada peso — aquisição de asset, não código. **Gatilho:** próxima rodada de tipografia, ou pedido
   explícito de João.
+- `D-25` — `e2e/regressao-visual.spec.ts` roda no projeto `chromium` (dev server), enquanto o
+  `preload` que ele guarda só existe no build de produção. Achado da segunda lente sem a
+  confirmação do Codex exigida por D7 (a segunda passada do reviewer não rodou por limite de uso da
+  conta); registrado por decisão de João em 2026-08-29. **Gatilho:** próxima mudança que só exista
+  no build, ou confirmação do reviewer.
+- `D-26` — a matriz de paridade não tem linha para o peso real das fontes (`D-23`). Mesmo estatuto:
+  achado da segunda lente, sem confirmação, registrado por decisão de João em 2026-08-29.
+  **Gatilho:** confirmação do reviewer, correção de `D-23`, ou nova rodada de paridade.
 - Débito novo — `a11y.spec.ts` e `seo.spec.ts` rodam só em Chromium (D4 da spec deste bloco).
   **Gatilho:** quando houver relato de falha de acessibilidade fora do Chromium.
 - Débito novo — cada rodada de paridade versiona ~3,5 MB de PNG por lado (referência + clone) em
@@ -94,6 +102,12 @@ causa foi medida na review e classificada como `spacing`; corrigir é bloco de p
 A matriz não cobre peso de fonte: `D-23` prova que nenhum `font-bold`/`font-semibold` do site
 renderiza com glifo realmente mais pesado, e isso é divergência visual não intencional contra o
 original — declarada como débito, não classificada na matriz de paridade.
+
+A review deste bloco teve uma passada só do reviewer independente: a segunda, sobre os commits de
+correção, não rodou por limite de uso da conta Codex. As correções dos achados R-1 a R-7 foram
+verificadas por Claude com medição e gates reexecutados (`pnpm check` 135 testes, `pnpm e2e` 67
+testes, exit 0 nos dois), não por segunda leitura independente. Os dois achados da lente de Claude
+que dependiam dessa confirmação ficaram como `D-25` e `D-26`, por decisão de João em 2026-08-29.
 
 Paridade medida em Chromium, Firefox e WebKit sobre a home. Não há segunda página. A performance é
 laboratório local (uma máquina, `vite preview`), não campo. Nenhuma mensagem de formulário chegou a
