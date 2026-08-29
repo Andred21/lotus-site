@@ -7,6 +7,15 @@ import { defineConfig, devices } from '@playwright/test'
 const PORT = Number(process.env.E2E_PORT ?? 5183)
 const baseURL = `http://localhost:${PORT}`
 
+// Fluxo principal do site. a11y e seo ficam fora: as exceções nominais de
+// `e2e/a11y-exceptions.ts` foram medidas em Chromium (D-21), e replicá-las em
+// três motores multiplicaria exceção sem ganho de sinal.
+const FLUXO_PRINCIPAL = [
+  '**/home.spec.ts',
+  '**/menu.spec.ts',
+  '**/contacto.spec.ts',
+]
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -21,6 +30,21 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: FLUXO_PRINCIPAL,
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: FLUXO_PRINCIPAL,
+    },
+    {
+      name: 'mobile-webkit',
+      use: { ...devices['iPhone 13'] },
+      testMatch: FLUXO_PRINCIPAL,
     },
   ],
   webServer: {
