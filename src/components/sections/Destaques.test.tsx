@@ -24,4 +24,18 @@ describe('Destaques', () => {
     expect(screen.getByText(/N° CA-751/)).toBeTruthy()
     expect(screen.getByText(/INN: A-10981/)).toBeTruthy()
   })
+
+  it('usa a tipografia medida na referência para o corpo do destaque (Montserrat 16px/28.8px)', () => {
+    // Rodada de paridade 2026-08-29 (`docs/qa/paridade/2026-08-29/classificacao.md`):
+    // a referência renderiza este parágrafo em `font-display`/`text-body`, não em
+    // `font-sans`/`text-lead` (que é a tipografia do parágrafo institucional acima).
+    render(<Destaques />)
+    for (const destaque of site.destaques) {
+      const paragraph = screen.getByText(destaque.body)
+      expect(paragraph.className).toContain('font-display')
+      expect(paragraph.className).toContain('text-body')
+      expect(paragraph.className).not.toContain('font-sans')
+      expect(paragraph.className).not.toContain('text-lead')
+    }
+  })
 })

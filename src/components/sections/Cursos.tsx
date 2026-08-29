@@ -38,7 +38,7 @@ export function Cursos() {
               decoding="async"
               className="aspect-[4/3] w-full object-cover"
             />
-            <p className="mt-6 font-display text-body font-medium text-surface">
+            <p className="mt-6 font-sans text-caption font-medium text-surface">
               {curso.nombre}
             </p>
           </article>

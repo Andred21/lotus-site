@@ -1,17 +1,17 @@
 {
   "target": "clone",
   "url": "http://localhost:5184/",
-  "capturedAt": "2026-08-29T08:25:19.352Z",
+  "capturedAt": "2026-08-29T08:43:23.435Z",
   "files": [
     {
       "name": "home-1440.png",
-      "bytes": 1241998,
-      "sha256": "aec215873ad7f023dbb71dfe97957a40cbd5ef485a3f8404661356b6ed0f66eb"
+      "bytes": 1234767,
+      "sha256": "8c532c2b16467f5e66c4f563130209bffb91f1eeef1a9f69aa638ac1440a501c"
     },
     {
       "name": "home-1920.png",
-      "bytes": 1415255,
-      "sha256": "bb0cf629f46639da8182c3f4480608565a3744f81d6338a88a7b5679f7ee1521"
+      "bytes": 1407275,
+      "sha256": "a818c7399c51e4f1c53bcd190bfdb1a6ff1208f3515a4d5bb390879c8603e316"
     },
     {
       "name": "home-375-menu.png",
@@ -20,13 +20,13 @@
     },
     {
       "name": "home-375.png",
-      "bytes": 415331,
-      "sha256": "d070fd104ef93333b9dbc2befe460215733921ea1fa9ef424b10a9bcca88c108"
+      "bytes": 398702,
+      "sha256": "84442ac1276f27444fa9534b0f7e20d0d561dd9258ab921d6bb6a14b865e8e59"
     },
     {
       "name": "home-768.png",
-      "bytes": 859141,
-      "sha256": "53e7cdf74de26bcf706aedf10babdbb561892d882aefc65b988b959fb135a22a"
+      "bytes": 854144,
+      "sha256": "e5eba12db4c0601aa580287c404ea1b44a08239b69a01973f503dba31a3103b5"
     }
   ]
 }

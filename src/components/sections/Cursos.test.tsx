@@ -29,4 +29,17 @@ describe('Cursos', () => {
       screen.getByRole('link', { name: 'See More' }).getAttribute('href'),
     ).toBe('#')
   })
+
+  it('usa a tipografia medida na referência para a legenda do curso (Open Sans 14px/23.8px)', () => {
+    // Rodada de paridade 2026-08-29: a legenda é Open Sans, não Montserrat —
+    // igual ao rodapé, os dois usam o mesmo `text-caption` medido no original.
+    render(<Cursos />)
+    for (const curso of site.cursos.items) {
+      const caption = screen.getByText(curso.nombre)
+      expect(caption.className).toContain('font-sans')
+      expect(caption.className).toContain('text-caption')
+      expect(caption.className).not.toContain('font-display')
+      expect(caption.className).not.toContain('text-body')
+    }
+  })
 })

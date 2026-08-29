@@ -19,4 +19,17 @@ describe('Footer', () => {
     render(<Footer />)
     expect(screen.getByRole('contentinfo')).toBeTruthy()
   })
+
+  it('usa a tipografia e cor medidas na referência (Open Sans 14px/23.8px, neutral-ink)', () => {
+    // Rodada de paridade 2026-08-29: a referência é 14px/23.8px em
+    // rgb(102, 102, 102) (`--color-neutral-ink`), não `text-body`/`text-brand`.
+    render(<Footer />)
+    const paragraph = screen.getByText(
+      'Diseñado por Lotus OTEC | Copyright © 2022. OTEC Lotus.',
+    )
+    expect(paragraph.className).toContain('text-caption')
+    expect(paragraph.className).toContain('text-neutral-ink')
+    expect(paragraph.className).not.toContain('text-body')
+    expect(paragraph.className).not.toContain('text-brand')
+  })
 })

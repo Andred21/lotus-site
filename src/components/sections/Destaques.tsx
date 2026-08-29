@@ -21,7 +21,7 @@ export function Destaques() {
             <h2 className="mt-4 font-display text-highlight font-bold text-accent-ink">
               {destaque.label}
             </h2>
-            <p className="font-sans text-lead font-medium text-muted-ink">
+            <p className="font-display text-body font-medium text-muted-ink">
               {destaque.body}
             </p>
           </div>
