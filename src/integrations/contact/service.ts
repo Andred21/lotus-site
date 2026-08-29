@@ -1,18 +1,11 @@
 import {
   parseContactMessage,
-  type ContactFieldErrors,
   type ContactFormInput,
+  type ContactSubmitResult,
 } from '../../lib/contact-schema'
 import type { ContactSender } from './sender'
 
-/**
- * Resultado que a UI enxerga. `failed` é genérico de propósito: o motivo da
- * falha do provedor não vira texto de tela (aceite da 4.1.9).
- */
-export type ContactSubmitResult =
-  | { status: 'sent' }
-  | { status: 'invalid'; fieldErrors: ContactFieldErrors }
-  | { status: 'failed' }
+export type { ContactSubmitResult }
 
 export type ContactService = (
   input: ContactFormInput,

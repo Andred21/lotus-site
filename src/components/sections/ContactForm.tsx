@@ -5,22 +5,21 @@ import {
   CONTACT_LIMITS,
   isRequiredContactField,
 } from '../../lib/contact-fields'
-import type { ContactFieldErrors } from '../../lib/contact-schema'
+import type {
+  ContactFieldErrors,
+  ContactSubmitResult,
+} from '../../lib/contact-schema'
 
 /**
- * Resultado que o formulário entende. É declarado aqui, e não importado de
- * `src/integrations/`, porque `eslint.config.js:63-77` proíbe o componente de
- * importar integração — inclusive tipo. A ligação é estrutural e acontece em
- * `src/app/App.tsx`, o único lugar autorizado a conhecer os dois lados.
+ * A união do resultado vem de `src/lib/`, não de `src/integrations/`:
+ * `eslint.config.js:63-77` proíbe o componente de importar integração,
+ * inclusive tipo, e `lib` é o módulo que os dois lados podem ver. A ligação
+ * entre formulário e intake acontece em `src/app/App.tsx`, o único lugar
+ * autorizado a conhecer os dois lados.
  */
-export type ContactSubmitOutcome =
-  | { status: 'sent' }
-  | { status: 'invalid'; fieldErrors: ContactFieldErrors }
-  | { status: 'failed' }
-
 export type ContactSubmitHandler = (
   formData: FormData,
-) => Promise<ContactSubmitOutcome>
+) => Promise<ContactSubmitResult>
 
 type ContactFormProps = {
   onSubmit: ContactSubmitHandler
@@ -76,7 +75,7 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
 
     // Handler que rejeita não pode deixar o formulário preso em
     // `submitting`: botão desabilitado e nenhuma saída além de recarregar.
-    let result: ContactSubmitOutcome
+    let result: ContactSubmitResult
     try {
       result = await onSubmit(new FormData(form))
     } catch {

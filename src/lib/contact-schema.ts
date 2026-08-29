@@ -28,6 +28,19 @@ export type ContactParseResult =
   | { ok: true; value: ContactMessage }
   | { ok: false; fieldErrors: ContactFieldErrors }
 
+/**
+ * Resultado que a UI enxerga. `failed` é genérico de propósito: o motivo da
+ * falha do provedor não vira texto de tela (aceite da 4.1.9). Vive aqui, e
+ * não em `src/integrations/`, porque componente e integração precisam do
+ * mesmo contrato e `eslint.config.js` proíbe o componente de importar
+ * integração — inclusive tipo. `ContactFieldErrors`, o payload do caso
+ * `invalid`, já morava neste módulo.
+ */
+export type ContactSubmitResult =
+  | { status: 'sent' }
+  | { status: 'invalid'; fieldErrors: ContactFieldErrors }
+  | { status: 'failed' }
+
 /** Mensagens em es-CL, o idioma publicado do site. */
 const MESSAGES = {
   nombreCorto: 'Ingrese su nombre completo.',

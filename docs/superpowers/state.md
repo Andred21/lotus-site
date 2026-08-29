@@ -1,27 +1,27 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
-work_class: null
-active_work_item: null
+workflow_state: executing
+work_class: bounded
+active_work_item: refactor-contato-intake
 active_notion_eap: null
-active_title: null
-active_branch: null
-bounded_design: null
-authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+active_title: 'Consolidar o intake do contato e unificar o contrato em lib'
+active_branch: refactor/contato-intake
+bounded_design: 'Refactor sem mudança de comportamento em dois commits: unificar a união de resultado do contato como ContactSubmitResult em src/lib/contact-schema.ts com catraca de lint contra zod em componente, e consolidar submit.ts, service.ts e sender.ts em src/integrations/contact/intake.ts (createContactIntake), com CONTEXT.md e ADR-SITE-003; desenho completo em docs/superpowers/bounded-designs/refactor-contato-intake.md; prova é pnpm check mais pnpm e2e completo.'
+authorized_paths: 'src/integrations/contact/**, src/lib/contact-schema.ts, src/components/sections/ContactForm.tsx, src/components/sections/ContactForm.test.tsx, src/app/App.tsx, eslint.config.js, CONTEXT.md, docs/adr/ADR-SITE-003.md, docs/superpowers/bounded-designs/refactor-contato-intake.md'
+next_owner: claude
+next_action: continue_active_work_item
 resume_state: null
 context_packet: null
 active_spec: null
 active_plan: null
-executor: null
-reviewer: null
+executor: claude
+reviewer: codex
 blocker: null
 supervised_cycles_completed: 9
 last_completed_work_item: 6.1.1-6.3.1
-state_basis_commit: 5ab9d99
-updated_at: 2026-08-29T12:05:00Z
+state_basis_commit: 7431608
+updated_at: 2026-08-29T12:22:31Z
 ---
 
 # Estado operacional — Lotus Site
