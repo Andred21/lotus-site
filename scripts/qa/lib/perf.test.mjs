@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resumoMarkdown } from './perf.mjs'
+import { elementoLcp, resumoMarkdown } from './perf.mjs'
 
 const lhr = {
   finalDisplayedUrl: 'http://localhost:5184/',
@@ -30,6 +30,30 @@ const lhr = {
   },
 }
 
+// Formato real do Lighthouse 13.4.1: o audit clássico vem `null` e o nó do
+// LCP mora no audit `*-insight`.
+const lhr13 = {
+  ...lhr,
+  audits: {
+    ...lhr.audits,
+    'largest-contentful-paint-element': null,
+    'lcp-breakdown-insight': {
+      id: 'lcp-breakdown-insight',
+      details: {
+        type: 'list',
+        items: [
+          { type: 'table', items: [{ subpart: 'timeToFirstByte' }] },
+          {
+            type: 'node',
+            snippet: '<h1 id="hero-heading" class="font-display">',
+            nodeLabel: 'LOTUS OTEC',
+          },
+        ],
+      },
+    },
+  },
+}
+
 describe('resumoMarkdown', () => {
   it('registra as quatro categorias com o score medido', () => {
     const md = resumoMarkdown(lhr)
@@ -49,13 +73,35 @@ describe('resumoMarkdown', () => {
     expect(resumoMarkdown(lhr)).toContain('laboratório')
   })
 
-  it('não inventa elemento de LCP quando o audit não traz um', () => {
-    const semElemento = {
-      ...lhr,
-      audits: { ...lhr.audits, 'largest-contentful-paint-element': undefined },
-    }
-    expect(resumoMarkdown(semElemento)).toContain(
-      'elemento do LCP: não reportado',
+  it('aponta o relatório cru da própria execução', () => {
+    expect(resumoMarkdown(lhr)).toContain('`lighthouse.json`')
+    expect(resumoMarkdown(lhr13, 'lighthouse-pos-otimizacao.json')).toContain(
+      '`lighthouse-pos-otimizacao.json`',
     )
+  })
+})
+
+describe('elementoLcp', () => {
+  it('lê o audit clássico quando o Lighthouse ainda o popula', () => {
+    expect(elementoLcp(lhr)).toBe('<h1 id="hero-heading">')
+  })
+
+  it('lê o nó do `lcp-breakdown-insight` no formato do Lighthouse 13', () => {
+    expect(elementoLcp(lhr13)).toBe(
+      '<h1 id="hero-heading" class="font-display"> — "LOTUS OTEC"',
+    )
+    expect(resumoMarkdown(lhr13)).toContain('elemento do LCP: <h1')
+  })
+
+  it('não inventa elemento quando nenhum dos dois audits traz um', () => {
+    const semNada = {
+      ...lhr,
+      audits: {
+        ...lhr.audits,
+        'largest-contentful-paint-element': undefined,
+      },
+    }
+    expect(elementoLcp(semNada)).toBe('não reportado')
+    expect(resumoMarkdown(semNada)).toContain('elemento do LCP: não reportado')
   })
 })

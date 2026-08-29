@@ -17,7 +17,7 @@
 
 - LCP: 2.2 s (2184 ms)
 - CLS: 0
-- elemento do LCP: não reportado
+- elemento do LCP: <h1 id="hero-heading" class="font-display text-hero font-bold text-brand"> — "LOTUS OTEC"
 
 ## Ressalva
 
