@@ -2,7 +2,13 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { RUN_DIR, STATES, sha256File, writeManifest } from './paridade.mjs'
+import {
+  RUN_DIR,
+  STATES,
+  contactSheetHtml,
+  sha256File,
+  writeManifest,
+} from './paridade.mjs'
 
 describe('STATES', () => {
   it('cobre os quatro viewports do inventário mais o menu aberto em 375', () => {
@@ -74,5 +80,50 @@ describe('writeManifest', () => {
       expect(entry.sha256).toMatch(/^[0-9a-f]{64}$/)
     }
     expect(manifest.capturedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+  })
+})
+
+describe('contactSheetHtml', () => {
+  const referencia = {
+    target: 'referencia',
+    url: 'https://lotusotec.cl/',
+    capturedAt: '2026-08-29T10:00:00.000Z',
+    files: [
+      { name: 'home-375.png', bytes: 1, sha256: 'a'.repeat(64) },
+      { name: 'home-1440.png', bytes: 2, sha256: 'b'.repeat(64) },
+    ],
+  }
+  const clone = {
+    target: 'clone',
+    url: 'http://localhost:5184/',
+    capturedAt: '2026-08-29T10:05:00.000Z',
+    files: [
+      { name: 'home-375.png', bytes: 3, sha256: 'c'.repeat(64) },
+      { name: 'home-1440.png', bytes: 4, sha256: 'd'.repeat(64) },
+    ],
+  }
+
+  it('emite um par por estado, referência à esquerda e clone à direita', () => {
+    const html = contactSheetHtml(referencia, clone)
+    expect(html).toContain('referencia/home-375.png')
+    expect(html).toContain('clone/home-375.png')
+    expect(html.indexOf('referencia/home-375.png')).toBeLessThan(
+      html.indexOf('clone/home-375.png'),
+    )
+  })
+
+  it('ordena os pares pelo nome do estado e carimba as duas datas', () => {
+    const html = contactSheetHtml(referencia, clone)
+    expect(html.indexOf('home-1440.png')).toBeLessThan(
+      html.indexOf('home-375.png'),
+    )
+    expect(html).toContain('2026-08-29T10:00:00.000Z')
+    expect(html).toContain('2026-08-29T10:05:00.000Z')
+  })
+
+  it('reprova estado sem par, em vez de esconder a falta', () => {
+    expect(() =>
+      contactSheetHtml(referencia, { ...clone, files: clone.files.slice(1) }),
+    ).toThrow('sem par no clone: home-375.png')
   })
 })

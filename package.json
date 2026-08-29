@@ -24,6 +24,8 @@
     "inventario:styles": "node scripts/inventario/extract-styles.mjs",
     "inventario:baseline": "node scripts/inventario/capture-baseline.mjs",
     "qa:referencia": "node scripts/qa/capture-referencia.mjs",
+    "qa:clone": "node scripts/qa/capture-clone.mjs",
+    "qa:contact-sheet": "node scripts/qa/contact-sheet.mjs",
     "check": "pnpm agent:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {

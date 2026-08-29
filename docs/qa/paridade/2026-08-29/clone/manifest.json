@@ -1,0 +1,32 @@
+{
+  "target": "clone",
+  "url": "http://localhost:5184/",
+  "capturedAt": "2026-08-29T08:25:19.352Z",
+  "files": [
+    {
+      "name": "home-1440.png",
+      "bytes": 1241998,
+      "sha256": "aec215873ad7f023dbb71dfe97957a40cbd5ef485a3f8404661356b6ed0f66eb"
+    },
+    {
+      "name": "home-1920.png",
+      "bytes": 1415255,
+      "sha256": "bb0cf629f46639da8182c3f4480608565a3744f81d6338a88a7b5679f7ee1521"
+    },
+    {
+      "name": "home-375-menu.png",
+      "bytes": 23650,
+      "sha256": "e799b79aaea71dfa4918e8a9feb62ce86da27987b8d1e2de9f9cd5cb8c1279e1"
+    },
+    {
+      "name": "home-375.png",
+      "bytes": 415331,
+      "sha256": "d070fd104ef93333b9dbc2befe460215733921ea1fa9ef424b10a9bcca88c108"
+    },
+    {
+      "name": "home-768.png",
+      "bytes": 859141,
+      "sha256": "53e7cdf74de26bcf706aedf10babdbb561892d882aefc65b988b959fb135a22a"
+    }
+  ]
+}
