@@ -1,27 +1,27 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
-work_class: null
-active_work_item: null
-active_notion_eap: null
-active_title: null
-active_branch: null
+workflow_state: planning
+work_class: architectural
+active_work_item: 6.1.1-6.3.1
+active_notion_eap: '6.1.1, 6.1.2, 6.1.3, 6.1.4, 6.2.1, 6.2.2, 6.2.3, 6.3.1'
+active_title: QA visual e performance — Sprint 5
+active_branch: feat/6-1-1-6-3-1-qa-visual-performance
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
-context_packet: null
-active_spec: null
+context_packet: docs/superpowers/context-packets/6.1.1-6.3.1.md
+active_spec: docs/superpowers/specs/2026-08-29-6.1.1-6.3.1-qa-visual-performance-design.md
 active_plan: null
-executor: null
-reviewer: null
+executor: claude
+reviewer: codex
 blocker: null
 supervised_cycles_completed: 8
 last_completed_work_item: 5.1.1-5.3.2
-state_basis_commit: b57620c
-updated_at: 2026-08-29T06:12:04Z
+state_basis_commit: 9543ad0
+updated_at: 2026-08-29T07:05:00Z
 ---
 
 # Estado operacional — Lotus Site
