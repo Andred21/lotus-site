@@ -21,8 +21,8 @@ reviewer_exception: 'Autorizado por João em 2026-08-29: cota da conta Codex esg
 blocker: null
 supervised_cycles_completed: 9
 last_completed_work_item: 6.1.1-6.3.1
-state_basis_commit: dc0408d
-updated_at: 2026-08-29T12:55:28Z
+state_basis_commit: e590aa0
+updated_at: 2026-08-29T12:58:10Z
 ---
 
 # Estado operacional — Lotus Site
