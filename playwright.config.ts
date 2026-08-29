@@ -7,6 +7,11 @@ import { defineConfig, devices } from '@playwright/test'
 const PORT = Number(process.env.E2E_PORT ?? 5183)
 const baseURL = `http://localhost:${PORT}`
 
+// Porta separada da do dev server: `6.2.3` exige o build de produção, não o
+// bundle de desenvolvimento com HMR e sourcemaps.
+const PREVIEW_PORT = Number(process.env.E2E_PREVIEW_PORT ?? 5184)
+const previewURL = `http://localhost:${PREVIEW_PORT}`
+
 // Fluxo principal do site. a11y e seo ficam fora: as exceções nominais de
 // `e2e/a11y-exceptions.ts` foram medidas em Chromium (D-21), e replicá-las em
 // três motores multiplicaria exceção sem ganho de sinal.
@@ -30,6 +35,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: ['**/producao.spec.ts'],
     },
     {
       name: 'firefox',
@@ -46,15 +52,31 @@ export default defineConfig({
       use: { ...devices['iPhone 13'] },
       testMatch: FLUXO_PRINCIPAL,
     },
+    {
+      name: 'producao',
+      use: { ...devices['Desktop Chrome'], baseURL: previewURL },
+      testMatch: ['**/producao.spec.ts'],
+    },
   ],
-  webServer: {
-    command: `pnpm dev --port ${PORT} --strictPort`,
-    url: baseURL,
-    reuseExistingServer: false,
-    timeout: 120_000,
-    // Chave falsa: o E2E precisa do adapter Web3Forms montado para poder
-    // interceptar a rota. Nenhum envio real sai — todo teste que submete
-    // intercepta `api.web3forms.com` (D6 da spec: não há conta nesta rodada).
-    env: { VITE_WEB3FORMS_ACCESS_KEY: 'e2e-fake-access-key' },
-  },
+  webServer: [
+    {
+      command: `pnpm dev --port ${PORT} --strictPort`,
+      url: baseURL,
+      reuseExistingServer: false,
+      timeout: 120_000,
+      // Chave falsa: o E2E precisa do adapter Web3Forms montado para poder
+      // interceptar a rota. Nenhum envio real sai — todo teste que submete
+      // intercepta `api.web3forms.com` (D6 da spec: não há conta nesta rodada).
+      env: { VITE_WEB3FORMS_ACCESS_KEY: 'e2e-fake-access-key' },
+    },
+    {
+      command: `pnpm build && pnpm preview --port ${PREVIEW_PORT} --strictPort`,
+      url: previewURL,
+      reuseExistingServer: false,
+      timeout: 180_000,
+      // A chave entra no build: no Vite a variável é resolvida em tempo de
+      // compilação, não em runtime.
+      env: { VITE_WEB3FORMS_ACCESS_KEY: 'e2e-fake-access-key' },
+    },
+  ],
 })
