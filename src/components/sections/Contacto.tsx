@@ -13,9 +13,16 @@ type ContactoProps = {
  */
 export function Contacto({ onSubmit }: ContactoProps) {
   return (
-    <section id="Contacto" className="bg-ink pt-14.25 pb-14.5">
+    <section
+      id="Contacto"
+      aria-labelledby="contacto-heading"
+      className="bg-ink pt-14.25 pb-14.5"
+    >
       <Row className="bg-surface px-6 py-6.75 text-center">
-        <h2 className="font-display text-section font-bold text-title-light uppercase">
+        <h2
+          id="contacto-heading"
+          className="font-display text-section font-bold text-title-light uppercase"
+        >
           {site.contacto.heading}
         </h2>
         <p className="mx-auto max-w-lead font-display text-body font-medium text-accent-ink">

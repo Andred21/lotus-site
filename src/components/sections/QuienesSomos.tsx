@@ -11,6 +11,8 @@ export function QuienesSomos() {
         alt={site.institucional.logoAlt}
         width={320}
         height={320}
+        loading="lazy"
+        decoding="async"
         className="mx-auto w-full max-w-[320px]"
       />
       <p className="font-sans text-lead font-medium text-body-ink">

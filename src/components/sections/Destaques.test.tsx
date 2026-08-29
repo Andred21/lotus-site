@@ -12,7 +12,7 @@ describe('Destaques', () => {
 
     for (const destaque of site.destaques) {
       expect(
-        screen.getByRole('heading', { level: 4, name: destaque.label }),
+        screen.getByRole('heading', { level: 2, name: destaque.label }),
       ).toBeTruthy()
       expect(screen.getByText(destaque.body)).toBeTruthy()
     }

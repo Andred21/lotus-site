@@ -9,7 +9,11 @@ import { site } from '../../content/site'
  */
 export function Hero() {
   return (
-    <section id="Intrucción" className="grid bg-ink desktop:grid-cols-2">
+    <section
+      id="Intrucción"
+      aria-labelledby="hero-heading"
+      className="grid bg-ink desktop:grid-cols-2"
+    >
       <div className="px-[8vw] py-[10vw]">
         <p className="font-display text-kicker font-medium text-surface">
           {site.hero.kicker}
@@ -17,12 +21,17 @@ export function Hero() {
         {/* A reserva lateral é medida, não estética: sem ela o título cabe numa
             linha só e o clone diverge do baseline em 375 e 1440. */}
         <div className="pr-hero-inset">
-          <h1 className="font-display text-hero font-bold text-brand">
+          <h1
+            id="hero-heading"
+            className="font-display text-hero font-bold text-brand"
+          >
             {site.hero.title}
           </h1>
-          <h3 className="font-sans text-subtitle font-medium text-surface">
+          {/* Tagline, não título de seção: era `h3` pulando o `h2` (D2 do
+              bloco 5.1.1-5.3.2). A classe é a mesma — zero pixel. */}
+          <p className="font-sans text-subtitle font-medium text-surface">
             {site.hero.subtitle}
-          </h3>
+          </p>
         </div>
         <p className="mt-8 font-display text-body font-medium text-brand">
           {site.hero.body}

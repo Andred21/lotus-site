@@ -14,9 +14,9 @@ describe('Hero', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'LOTUS OTEC' }),
     ).toBeTruthy()
-    expect(
-      screen.getByRole('heading', { level: 3, name: site.hero.subtitle }),
-    ).toBeTruthy()
+    // D2 do bloco 5.1.1-5.3.2: o subtítulo é tagline, não título de seção.
+    expect(screen.getByText(site.hero.subtitle).tagName).toBe('P')
+    expect(screen.queryByRole('heading', { level: 3 })).toBeNull()
     expect(screen.getByText(site.hero.body)).toBeTruthy()
   })
 
