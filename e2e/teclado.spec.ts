@@ -54,6 +54,12 @@ test('Tab percorre a home inteira na ordem do DOM, com foco visível em cada par
   page,
 }) => {
   await page.goto('/')
+  // A primeira parada do Tab só é o logo depois que o React monta o header;
+  // sem essa espera, o Tab pode chegar antes e o foco cai no <body>,
+  // desalinhando toda a EXPECTED_ORDER (corrida, não regressão de produto).
+  await expect(
+    page.getByRole('link', { name: 'LOTUS', exact: true }),
+  ).toBeVisible()
 
   const stops: Stop[] = []
   for (let index = 0; index < EXPECTED_ORDER.length; index += 1) {
