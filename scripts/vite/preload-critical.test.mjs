@@ -6,9 +6,9 @@ const bundle = {
     type: 'asset',
     fileName: 'assets/index-a1b2c3.css',
   },
-  'assets/montserrat-400-d4e5f6.woff2': {
+  'assets/montserrat-700-d4e5f6.woff2': {
     type: 'asset',
-    fileName: 'assets/montserrat-400-d4e5f6.woff2',
+    fileName: 'assets/montserrat-700-d4e5f6.woff2',
   },
   'assets/open-sans-500-070809.woff2': {
     type: 'asset',
@@ -27,7 +27,7 @@ describe('preloadTags', () => {
   it('preloada as duas faces acima da dobra, com crossorigin', () => {
     const fontes = injetar({ bundle }).filter((tag) => tag.attrs.as === 'font')
     expect(fontes.map((tag) => tag.attrs.href)).toEqual([
-      '/assets/montserrat-400-d4e5f6.woff2',
+      '/assets/montserrat-700-d4e5f6.woff2',
       '/assets/open-sans-500-070809.woff2',
     ])
     for (const fonte of fontes) {

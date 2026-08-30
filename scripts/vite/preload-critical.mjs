@@ -8,17 +8,13 @@
  */
 const ALVOS = [
   {
-    // Débito descoberto na rodada de QA 2026-08-29: `montserrat-400.woff2`,
-    // `montserrat-500.woff2` e `montserrat-700.woff2` em `src/assets/fonts/`
-    // são bytes idênticos (mesmo sha256) — um sprint anterior fez self-host
-    // copiando o mesmo arquivo três vezes em vez de baixar cada peso real.
-    // O Vite dedupe por conteúdo: as três declarações `@font-face` do build
-    // apontam hoje para o mesmo arquivo físico, cujo nome herda o prefixo do
-    // primeiro `@font-face` declarado em `index.css` (`400`). É esse arquivo
-    // que o `<h1 id="hero-heading">` (elemento do LCP, `font-bold` = peso
-    // 700) carrega de verdade — por isso o alvo aqui é `400`, não `700`.
-    // Revisar quando os três pesos virarem arquivos de fato distintos.
-    padrao: /montserrat-400-[^/]*\.woff2$/,
+    // O elemento do LCP é o `<h1 id="hero-heading">` (`lcp-breakdown-insight`
+    // de `docs/qa/performance/`), pintado em `font-bold` = peso 700. Até
+    // 2026-08-30 o alvo aqui era `montserrat-400`, porque os três arquivos de
+    // Montserrat eram bytes idênticos e o Vite dedupava para o nome do
+    // primeiro `@font-face`. Com os pesos reais (`D-23` fechado) o dedupe
+    // acabou e o arquivo que o `h1` carrega é o do peso 700.
+    padrao: /montserrat-700-[^/]*\.woff2$/,
     attrs: { as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
   },
   {
