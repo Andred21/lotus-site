@@ -188,9 +188,11 @@ conta de bytes; a medição diz quanto.
 scripts/qa/medir-espacamento.mjs   novo — mede referência e clone, nó a nó, nas 4 larguras
 scripts/qa/lib/espacamento.mjs     lista de seletores e leitura das caixas
 package.json                       script `qa:espacamento`
-tsconfig.node.json                 include do script novo
-docs/qa/paridade/<data>/espacamento.json + .md
+docs/qa/paridade/AAAA-MM-DD/espacamento.json + .md
 ```
+
+`tsconfig.node.json` não muda: o `include` já traz `scripts/**/*.mjs`, então o arquivo novo é
+typechecado por `tsc -b` desde o primeiro commit.
 
 O script mede, para cada nó declarado: `getBoundingClientRect` (altura, top, bottom),
 `getComputedStyle` de `padding-*`, `margin-*`, `gap`, `font-size`, `line-height` e `font-weight`, nas
