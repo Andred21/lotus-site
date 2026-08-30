@@ -13,6 +13,18 @@ Fallback stacks medidos: `"Open Sans", Arial, sans-serif` e `Montserrat, Helveti
 
 O Elementor também carrega CSS próprio para `Roboto` e `Roboto Slab` (`wp-content/uploads/elementor/google-fonts/css/{roboto,robotoslab}.css`), mas nenhum elemento medido na home usa essas famílias — ficam registradas aqui como carregadas-mas-não-observadas, prováveis defaults globais do Elementor sem uso nesta página.
 
+## Faces self-hosted
+
+> As cinco faces de `src/assets/fonts/`, servidas pelo clone. `montserrat-400` e `open-sans-500` vieram da EAP `3.1.1` (2026-08-26); as três restantes foram baixadas em 2026-08-30 para fechar `D-23`, que registrou os cinco arquivos como só dois conteúdos distintos. `scripts/inventario/fontes.test.mjs` reprova se dois pesos voltarem a compartilhar bytes.
+
+| arquivo                | família      | peso | origem                                                                                                       | baixado em | bytes | sha256                                                             |
+| ---------------------- | ------------ | ---- | ------------------------------------------------------------------------------------------------------------ | ---------- | ----- | ------------------------------------------------------------------ |
+| `montserrat-400.woff2` | `Montserrat` | 400  | não registrada na EAP 3.1.1                                                                                  | 2026-08-26 | 37956 | `06b16db7a969135d48d38c49183be7fb88d4452e2a3011957c7851941f4e4879` |
+| `montserrat-500.woff2` | `Montserrat` | 500  | `https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtZ6Hw5aXo.woff2`               | 2026-08-30 | 18748 | `2b53300fb9471520df2f4905847fb7a209879b2029ae893c05c6ee346b1320cd` |
+| `montserrat-700.woff2` | `Montserrat` | 700  | `https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w5aXo.woff2`               | 2026-08-30 | 18824 | `f9d9e65b15372cebcafc3acd1e664a564c5c4b23278de4d5760de9a13c530371` |
+| `open-sans-500.woff2`  | `Open Sans`  | 500  | não registrada na EAP 3.1.1                                                                                  | 2026-08-26 | 48320 | `d8e4fe0452aa2076429a9bb5d8757d00a994dd95986cf950e9a1a371b9a072a0` |
+| `open-sans-600.woff2`  | `Open Sans`  | 600  | `https://fonts.gstatic.com/s/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4gaVI.woff2` | 2026-08-30 | 18620 | `a97a6ed7ef9f75c495e9224f5c59b2271d826e4a4345b738b390b0c76cc9f412` |
+
 ## Escala
 
 | papel                           | seletor                             | font-size  | font-weight | line-height | letter-spacing | cor       |
