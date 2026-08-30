@@ -84,6 +84,7 @@ describe('inventário como artefato', () => {
     // script) identifica bytes que não estão versionados: a proveniência do
     // documento vira ficção. Aqui todo prefixo citado precisa bater com o
     // sha256 real de alguma evidência.
+    const FONTS_DIR = 'src/assets/fonts'
     const evidence = [
       join(OUT, 'dom.json'),
       join(OUT, 'styles.json'),
@@ -91,6 +92,10 @@ describe('inventário como artefato', () => {
       ...readdirSync(join(OUT, 'baseline')).map((file) =>
         join(OUT, 'baseline', file),
       ),
+      // 04-tipografia.md passou a citar sha256 das faces self-hosted (D-23)
+      ...readdirSync(FONTS_DIR)
+        .filter((file) => file.endsWith('.woff2'))
+        .map((file) => join(FONTS_DIR, file)),
     ]
     const hashes = evidence.map((file) =>
       createHash('sha256').update(readFileSync(file)).digest('hex'),
