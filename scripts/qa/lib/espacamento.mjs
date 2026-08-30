@@ -12,7 +12,81 @@
  * (`D-16`). Aqui o seletor é nomeado, e `medirNo` reprova ambiguidade.
  * @type {No[]}
  */
-export const NOS = []
+export const NOS = [
+  { nome: 'hero.secao', referencia: '#Intrucción', clone: '#Intrucción' },
+  {
+    nome: 'hero.kicker',
+    referencia: '#Intrucción .et_pb_text_0 .et_pb_text_inner p',
+    clone: '#Intrucción > div > p:first-of-type',
+  },
+  {
+    nome: 'hero.titulo',
+    referencia: '#Intrucción .et_pb_text_1 h1',
+    clone: '#hero-heading',
+  },
+  {
+    nome: 'hero.subtitulo',
+    referencia: '#Intrucción .et_pb_text_1 h3',
+    clone: '#hero-heading + p',
+  },
+  {
+    nome: 'hero.corpo',
+    referencia: '#Intrucción .et_pb_text_2 .et_pb_text_inner p',
+    clone: '.pr-hero-inset + p',
+  },
+  {
+    nome: 'hero.cta',
+    referencia: '#Intrucción .et_pb_button_0',
+    clone: '#Intrucción a',
+  },
+  { nome: 'institucional.secao', referencia: '#Somos', clone: '#Somos' },
+  {
+    nome: 'institucional.corpo',
+    // A referência guarda o texto institucional num único <p> (precedido de
+    // dois <p>&nbsp;</p> decorativos vazios): a premissa de D4 — texto
+    // repartido em vários <p> — não se confirmou. Ver Step 3 da Task 5 em
+    // docs/qa/paridade/2026-08-30/espacamento.md.
+    referencia: '#Somos .et_pb_text_3 .et_pb_text_inner p:last-of-type',
+    clone: '#Somos p.text-lead',
+  },
+  {
+    nome: 'destaque.primeiro.card',
+    referencia: '#Somos .et_pb_blurb_0',
+    clone: '#Somos .text-center:nth-of-type(1)',
+  },
+  {
+    nome: 'destaque.primeiro.titulo',
+    referencia: '#Somos .et_pb_blurb_0 h4',
+    clone: '#Somos .text-center:nth-of-type(1) h2',
+  },
+  {
+    nome: 'destaque.primeiro.corpo',
+    referencia: '#Somos .et_pb_blurb_0 .et_pb_blurb_description p',
+    clone: '#Somos .text-center:nth-of-type(1) p',
+  },
+  { nome: 'cursos.secao', referencia: '#Cursos', clone: '#Cursos' },
+  {
+    nome: 'cursos.linha',
+    referencia: '#Cursos .et_pb_row_4',
+    clone: '#Cursos .grid',
+  },
+  {
+    nome: 'cursos.primeiro.card',
+    referencia: '#Cursos .et_pb_column_8',
+    clone: '#Cursos article:first-of-type',
+  },
+  { nome: 'contacto.secao', referencia: '#Contacto', clone: '#Contacto' },
+  {
+    nome: 'contacto.linha',
+    referencia: '#Contacto .et_pb_row_6',
+    clone: '#Contacto > div:first-of-type',
+  },
+  {
+    nome: 'rodape.copyright',
+    referencia: '#footer-info',
+    clone: 'footer > div',
+  },
+]
 
 /** @typedef {Record<string, number>} Medida */
 
