@@ -14,7 +14,7 @@ import lighthouse from 'lighthouse'
 import { resumoMarkdown } from './lib/perf.mjs'
 
 const URL_ALVO = process.env.CLONE_URL ?? 'http://localhost:5184/'
-const OUT_DIR = 'docs/qa/performance/2026-08-29'
+const OUT_DIR = 'docs/qa/performance/2026-08-30'
 const DEBUG_PORT = 9222
 const ROTULO = process.argv[2] ?? ''
 const SUFIXO = ROTULO ? `-${ROTULO}` : ''
