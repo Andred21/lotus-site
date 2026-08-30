@@ -27,6 +27,7 @@
     "qa:clone": "node scripts/qa/capture-clone.mjs",
     "qa:contact-sheet": "node scripts/qa/contact-sheet.mjs",
     "qa:perf": "node scripts/qa/perf.mjs",
+    "qa:espacamento": "node scripts/qa/medir-espacamento.mjs",
     "check": "pnpm agent:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
