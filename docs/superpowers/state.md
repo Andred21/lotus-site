@@ -1,16 +1,16 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
+workflow_state: planning
 work_class: null
-active_work_item: null
+active_work_item: paridade-espacamento-fontes
 active_notion_eap: null
-active_title: null
-active_branch: null
+active_title: 'Paridade residual — espaçamento vertical, pesos de fonte reais e guarda de regressão'
+active_branch: fix/paridade-espacamento-fontes
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+next_owner: claude
+next_action: brainstorm_and_write_spec
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 10
 last_completed_work_item: refactor-contato-intake
-state_basis_commit: 9a7130b
-updated_at: 2026-08-29T13:35:00Z
+state_basis_commit: 2094db3
+updated_at: 2026-08-30T00:00:00Z
 ---
 
 # Estado operacional — Lotus Site
