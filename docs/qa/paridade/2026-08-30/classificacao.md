@@ -96,10 +96,14 @@ independente do bloco, e não altera item ratificado.
   (`espacamento.json`; adendo em `espacamento.md`). É a maior divergência de espaçamento que
   permaneceu depois das Tasks 6-9 e não estava nomeada nesta classificação. Contribui em todas as
   larguras — inclusive em 768, onde a inversão de sinal do resíduo continua tendo o item 8 (imagem
-  do card de curso, `D-28`) como causa dominante, mas não como causa única. Reproduzir a
-  sobreposição desloca `#Contacto` e o rodapé em 105px: decisão de João, registrada como `D-29`.
+  do card de curso, `D-28`) como causa dominante, mas não como causa única. **Reproduzida em
+  2026-08-31 por decisão de João** (`-mb-26.25`): medição adicional mostrou que a margem cancela
+  105 dos 110px de `paddingBottom` de `#Cursos` — `#Contacto` começa 5px depois da linha do CTA, sem
+  sobrepor conteúdo, com o mesmo fundo nas duas seções. `D-29` fechada.
 - **`contacto.linha` tem `marginBottom: 9px` na referência e `0` no clone**, nas quatro larguras.
-  Mesma origem, mesmo débito `D-29`.
+  O clone produzia a mesma altura com um `<div className="h-2.25" />` separador — altura certa pela
+  propriedade errada, o mesmo defeito do `py-1.25` do rodapé. Trocado por `mb-2.25` na linha, com o
+  separador removido. `D-29` fechada.
 - **Padding horizontal do card de destaque medido** (achado C-4): a referência usa `30px` nos quatro
   lados, nas quatro larguras — `p-[30px]` confirmado por medição, sem mudança de código.
 - **Padding do container do copyright corrigido** (achado C-1): a referência usa `paddingTop 0` e
@@ -122,5 +126,29 @@ código antes de aceitos:
   resíduo (`-18` a `-76px`) encolhe 20px por coluna de texto; o restante continua sem causa de
   espaçamento aberta.
 - **`R-2`, `R-3` e `R-5`** coincidem com os achados `C-4`, `C-2` e `C-1` da lente Claude e estão
-  tratados nos adendos acima. `R-3` (margem de `-105px` em `#Cursos`) permanece como decisão de João
-  — débito `D-29`.
+  tratados nos adendos acima. `R-3` (margem de `-105px` em `#Cursos`) foi resolvida junto com `C-2`
+  em 2026-08-31, por decisão de João de reproduzir a margem.
+
+## Resíduo de altura depois da review (2026-08-31)
+
+`document.body.scrollHeight`, referência ao vivo × build de produção local, medido depois de `C-1`,
+`C-2`, `R-1` e `R-4`:
+
+| largura | referência | clone pós-Task 11 | clone pós-review | Δ clone | gap ref−clone pós-Task 11 | gap ref−clone pós-review |
+| ------: | ---------: | ----------------: | ---------------: | ------: | ------------------------: | -----------------------: |
+|     375 |       5467 |              5127 |             5042 |     -85 |                       336 |                      425 |
+|     768 |       4913 |              5014 |             4929 |     -85 |                      -105 |                      -16 |
+|    1440 |       3441 |              3244 |             3159 |     -85 |                       197 |                      282 |
+|    1920 |       3409 |              3240 |             3155 |     -85 |                       169 |                      254 |
+
+O clone encurtou 85px em todas as larguras: `-105px` da margem de `#Cursos` e `+20px` dos dois
+`paddingBottom: 10px` do hero (`R-4`). **O gap total cresce em 375/1440/1920 e isso é esperado**,
+não regressão: por D3 da spec a paridade é por elemento medido, e altura total é consequência. Os
+dois elementos corrigidos passaram a bater com a referência; o gap que sobra pertence ao resíduo já
+nomeado (bloco de ícone dos destaques com `D8` aprovado, imagem dos cards de curso com `D-28`, e
+resíduo de `line-height` do hero sem causa de espaçamento aberta).
+
+Em 768 o gap cai de `-105` para `-16`, mas **isso não é paridade de altura**: é compensação entre
+dois erros de sinal contrário — `D-28` continua inflando os cards de curso nessa largura, e a margem
+correta de `#Cursos` passou a descontar quase o mesmo tanto. A leitura válida ali continua sendo a
+medição elemento a elemento, não o total.

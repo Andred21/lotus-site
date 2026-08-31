@@ -284,3 +284,11 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   de posição de duas seções inteiras, não ajuste local, e a decisão é de João.
   **Gatilho:** decisão de João sobre reproduzir a sobreposição, ou próximo bloco de paridade visual
   (junto com `D-28`).
+  **Fechado em 2026-08-31 pelo bloco `paridade-espacamento-fontes`** — João mandou resolver todos os
+  achados da review. Medição adicional na referência mostrou que o `-105px` cancela 105 dos 110px de
+  `paddingBottom` de `#Cursos`, sem sobrepor conteúdo (mesmo fundo nas duas seções, `#Contacto`
+  começa 5px depois da linha do CTA). Aplicados `-mb-26.25` em `#Cursos` e `mb-2.25` na linha de
+  título do contato, no lugar do `<div className="h-2.25" />` separador. As duas propriedades batem
+  com a referência nas quatro larguras. Evidência:
+  `docs/qa/paridade/2026-08-30/espacamento.md` (seção "Desfecho"),
+  `docs/qa/paridade/2026-08-30/classificacao.md`.

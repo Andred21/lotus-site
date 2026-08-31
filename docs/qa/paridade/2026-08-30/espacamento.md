@@ -466,3 +466,36 @@ As duas são constantes nas quatro larguras. A de `cursos.secao` é a maior dive
 que sobrou depois das Tasks 6-9 e não estava nomeada na classificação da rodada: reproduzi-la muda a
 posição de `#Contacto` e do rodapé em 105px, o que é decisão de João, não ajuste dentro deste bloco.
 Registradas como `D-29` no backlog.
+
+### Desfecho — reproduzidas em 2026-08-31 por decisão de João
+
+João mandou resolver todos os achados da review. Medição adicional na referência (ad-hoc, 1440,
+`getBoundingClientRect`/`getComputedStyle`) para saber o que a margem negativa faz de fato antes de
+copiá-la:
+
+| nó                           | referência       | leitura                                                     |
+| ---------------------------- | ---------------- | ----------------------------------------------------------- |
+| `#Cursos`                    | `bottom 2625.83` | `paddingBottom 110px`, `marginBottom -105px`                |
+| `#Cursos .et_pb_row_5` (CTA) | `bottom 2515.83` | última linha de conteúdo da seção                           |
+| `#Contacto`                  | `top 2520.83`    | começa 5px depois da linha do CTA, não 110px                |
+| `#Contacto .et_pb_row_6`     | `top 2577.83`    | linha branca, já dentro do `paddingTop 57px` de `#Contacto` |
+
+**A margem negativa não sobrepõe conteúdo: ela cancela 105 dos 110px de `paddingBottom` de
+`#Cursos`.** As duas seções têm o mesmo fundo (`rgb(0, 0, 0)`), e a linha branca do contato entra
+62px abaixo do fim do CTA. Sem a margem, o clone abria 110px onde a referência abre 5px.
+
+Correção aplicada: `-mb-26.25` em `#Cursos` (`src/components/sections/Cursos.tsx`) e `mb-2.25` na
+linha de título do contato, no lugar do `<div className="h-2.25" />` separador
+(`src/components/sections/Contacto.tsx`) — o separador produzia a mesma altura pela propriedade
+errada, o mesmo defeito do `py-1.25` do rodapé no achado `C-1`.
+
+Medição do clone depois da correção (build de produção local, quatro larguras):
+
+| largura | `#Cursos` `marginBottom` | `#Contacto` `top` − `#Cursos` `bottom` | `contacto.linha` `marginBottom` |
+| ------: | ------------------------ | -------------------------------------- | ------------------------------- |
+|     375 | `-105px`                 | `-105`                                 | `9px`                           |
+|     768 | `-105px`                 | `-105`                                 | `9px`                           |
+|    1440 | `-105px`                 | `-105`                                 | `9px`                           |
+|    1920 | `-105px`                 | `-105`                                 | `9px`                           |
+
+As duas propriedades passam a bater com a referência nas quatro larguras. `D-29` fechada.
