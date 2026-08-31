@@ -16,9 +16,9 @@ export function Destaques() {
       {site.destaques.map((destaque, index) => {
         const Icon = ICONS[index] ?? Zap
         return (
-          <div key={destaque.label} className="text-center">
+          <div key={destaque.label} className="p-[30px] text-center">
             <Icon aria-hidden size={48} className="mx-auto text-brand" />
-            <h2 className="mt-4 font-display text-highlight font-bold text-accent-ink">
+            <h2 className="pb-[10px] font-display text-highlight font-bold text-accent-ink">
               {destaque.label}
             </h2>
             <p className="font-display text-body font-medium text-muted-ink">

@@ -38,4 +38,15 @@ describe('Destaques', () => {
       expect(paragraph.className).not.toContain('text-lead')
     }
   })
+
+  it('reproduz o padding do card e do título medidos na referência', () => {
+    const { container } = render(<Destaques />)
+    // `render(<Destaques />)` monta só a `Row`, então `div.text-center` casa
+    // exatamente com os três cards.
+    const cards = container.querySelectorAll('div.text-center')
+    expect(cards).toHaveLength(3)
+    const primeiro = cards[0]
+    expect(primeiro?.className).toContain('p-[30px]')
+    expect(primeiro?.querySelector('h2')?.className).toContain('pb-[10px]')
+  })
 })
