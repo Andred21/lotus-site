@@ -12,7 +12,15 @@ export function Cursos() {
     <section
       id="Cursos"
       aria-labelledby="cursos-heading"
-      className="bg-ink pb-27.5"
+      /*
+        docs/qa/paridade/2026-08-30/espacamento.md: a referência mede
+        `marginBottom: -105px` em `#Cursos` nas quatro larguras, contra
+        `paddingBottom: 110px` igual nos dois. A margem negativa cancela 105
+        dos 110px: `#Contacto` começa 5px depois da linha do CTA, não 110px.
+        Sem ela o clone abria 110px onde a referência abre 5px (achado C-2 da
+        review; a decisão de reproduzir é de João, 2026-08-31).
+      */
+      className="-mb-26.25 bg-ink pb-27.5"
     >
       <Row className="py-6.75 text-center">
         <h2

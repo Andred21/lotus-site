@@ -54,4 +54,15 @@ describe('Contacto', () => {
     expect(linha?.className).toContain('py-7.5')
     expect(linha?.className).toContain('desktop:py-6.75')
   })
+
+  it('produz os 9px abaixo da linha de título como marginBottom, a propriedade medida na referência', () => {
+    // docs/qa/paridade/2026-08-30/espacamento.md: `contacto.linha` mede
+    // `marginBottom: 9px` na referência nas quatro larguras. O clone tinha a
+    // mesma altura por um `<div className="h-2.25" />` separador — altura
+    // certa pela propriedade errada (achado C-2 da review).
+    const { container } = render(<Contacto onSubmit={handler()} />)
+    const linha = container.querySelector('#Contacto > div:first-of-type')
+    expect(linha?.className).toContain('mb-2.25')
+    expect(container.querySelector('.h-2\\.25')).toBeNull()
+  })
 })

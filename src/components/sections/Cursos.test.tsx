@@ -58,4 +58,15 @@ describe('Cursos', () => {
     expect(grid?.className).toContain('py-7.5')
     expect(grid?.className).toContain('desktop:py-6.75')
   })
+
+  it('reproduz a margem negativa medida na referência entre #Cursos e #Contacto (-105px)', () => {
+    // docs/qa/paridade/2026-08-30/espacamento.md: `cursos.secao` mede
+    // `marginBottom: -105px` na referência nas quatro larguras, contra
+    // `paddingBottom: 110px` idêntico nos dois. Sem a margem o clone abre
+    // 110px entre a linha do CTA e `#Contacto`, onde a referência abre 5px.
+    const { container } = render(<Cursos />)
+    const secao = container.querySelector('#Cursos')
+    expect(secao?.className).toContain('-mb-26.25')
+    expect(secao?.className).toContain('pb-27.5')
+  })
 })
