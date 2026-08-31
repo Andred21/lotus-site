@@ -132,6 +132,10 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   não corrigiu a seleção do nó: regerar `styles.json` sem tratar isso reintroduz o erro em qualquer
   seção nova.
   **Gatilho:** antes de qualquer regeração de `styles.json` ou de inventário de página nova.
+  **Reafirmado em 2026-08-30** pelo bloco `paridade-espacamento-fontes`: `scripts/qa/lib/espacamento.mjs`
+  evitou o defeito por construção (par de seletor explícito referência/clone, `medirNo` reprova
+  seletor que casa com zero ou mais de um nó) sem corrigir `extract-styles.mjs`. `D-16` continua
+  aberto.
 - **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
   `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
   markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
@@ -196,6 +200,11 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   performance do bloco `6.1.1-6.3.1` (D10 da spec: só o gargalo medido é atacado, sem otimizador ou
   asset novo sem medição que justifique).
   **Gatilho:** próxima rodada que mexer em tipografia, ou pedido explícito de João.
+  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — Task 1: as três faces
+  baixadas via UA de navegador antigo (endpoint `css2` sob UA moderno devolvia fonte variável
+  única, não instâncias estáticas; decisão de João), cinco `sha256` distintos, catraca em
+  `scripts/inventario/fontes.test.mjs`. Evidência: `docs/inventario/04-tipografia.md`,
+  `docs/qa/paridade/2026-08-30/classificacao.md`.
 - **D-24 · o clone é mais curto que a referência em todas as larguras** — 375 `5467px` -> `4902px`
   (-565), 768 `4913px` -> `4818px` (-95), 1440 `3441px` -> `3109px` (-332), 1920 `3409px` ->
   `3105px` (-304). A rodada `2026-08-29` registrou isso como observação não classificável; a
@@ -210,6 +219,13 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   vertical das seções" fica `pendente decisão` na matriz — ver
   `docs/qa/paridade/2026-08-29/classificacao.md`.
   **Gatilho:** decisão de João de abrir o bloco de correção, ou próxima rodada de paridade.
+  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — hero (margens
+  medidas 45/0/40/50px), destaques (padding `30px`/`10px`), calha e padding responsivo de cursos e
+  contacto, e rodapé (bate exato, delta `0`, nas quatro larguras). Institucional: premissa de D4
+  não se confirmou, revogada. Resíduo remanescente nomeado: bloco de ícone dos destaques (`-26px`,
+  já aprovado) e imagem dos cards de curso (ver `D-28`, débito novo). "Altura vertical das seções"
+  passa de `pendente decisão` para `divergência intencional` na matriz. Evidência:
+  `docs/qa/paridade/2026-08-30/espacamento.md`, `docs/qa/paridade/2026-08-30/classificacao.md`.
 - **D-25 · o guarda de regressão visual aponta para o dev server, não para o build** —
   `e2e/regressao-visual.spec.ts` roda no projeto `chromium` de `playwright.config.ts`, que serve o
   `pnpm dev` na porta 5183; a mudança que ele existe para guardar (`<link rel="preload">` injetado
@@ -221,6 +237,10 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   de uso da conta Codex. Registrado como débito por decisão de João em 2026-08-29, não corrigido.
   **Gatilho:** próxima mudança que só exista no build de produção, ou quando a cota do reviewer
   permitir a confirmação.
+  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — Task 10: `chromium` ganhou
+  `regressao-visual.spec.ts` no `testIgnore`, `producao` ganhou o spec no `testMatch`, snapshots
+  regenerados sob o pixel final do bloco. `pnpm e2e` completo fecha verde (67 passed). Evidência:
+  `e2e/regressao-visual.spec.ts`, `playwright.config.ts`.
 - **D-26 · peso real das fontes não tem linha na matriz de paridade** — `D-23` prova que nenhum
   texto `font-bold`/`font-semibold` do site renderiza com glifo mais pesado, o que é divergência
   visual contra o original; a matriz de `docs/inventario/README.md` não tem linha para isso, e a
@@ -229,6 +249,9 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   limitação de cota). Registrado por decisão de João em 2026-08-29: a linha na matriz entra quando
   o achado for confirmado, junto com a correção de `D-23` ou na próxima rodada de paridade.
   **Gatilho:** confirmação do reviewer, correção de `D-23`, ou nova rodada de paridade.
+  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — linha "Peso real das fontes
+  self-hosted" criada em `docs/inventario/README.md`, decisão `fiel`, citando `D-23` e a catraca de
+  `scripts/inventario/fontes.test.mjs`.
 - **D-27 · a review do bloco `refactor-contato-intake` não teve segunda lente** — o invariante do
   harness exige `executor` e `reviewer` diferentes, e `scripts/validate-agent-workflow.mjs:160`
   transforma isso em erro de `pnpm agent:check`. A cota da conta Codex estava esgotada, e João
@@ -239,3 +262,14 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   mecânica: com `reviewer: claude` no estado, `pnpm agent:check` reprova e `pnpm check` junto.
   **Gatilho:** cota do Codex de volta para uma segunda passada sobre estes dois commits, ou decisão
   de João sobre representar o desvio no validador em task própria do harness.
+- **D-28 · imagem dos cards de curso escala com a coluna; a referência usa tamanho fixo** —
+  `src/components/sections/Cursos.tsx` usa `className="aspect-[4/3] w-full object-cover"` na
+  imagem de cada card, escalando com a largura da coluna. A referência (`https://lotusotec.cl/`)
+  usa uma imagem de `400×300px` fixos, centralizada, que não cresce além disso. Em colunas mais
+  largas que 400px (768/1440/1920 neste layout) o clone fica desproporcionalmente mais alto —
+  achado da rodada de paridade `2026-08-30`, isolado ao investigar por que o resíduo de altura
+  vertical inverteu de sinal em 768px (clone passou de mais baixo para mais alto que a referência).
+  Categoria `asset`/`layout`, não `spacing`: fora do escopo do bloco `paridade-espacamento-fontes`,
+  que só corrigiu padding/margem/gap. Evidência: `docs/qa/paridade/2026-08-30/classificacao.md`
+  (item 8).
+  **Gatilho:** próximo bloco de paridade visual, ou pedido explícito de João.
