@@ -7,7 +7,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { chromium } from '@playwright/test'
 import { SITE_URL, VIEWPORTS } from '../inventario/lib/site.mjs'
-import { NOS, linhasMarkdown, medirNo } from './lib/espacamento.mjs'
+import { AMBIGUO, NOS, linhasMarkdown, medirNo } from './lib/espacamento.mjs'
 
 const CLONE_URL = process.env.CLONE_URL ?? 'http://localhost:5184/'
 const OUT_DIR = 'docs/qa/paridade/2026-08-30'
@@ -43,6 +43,9 @@ try {
       for (const no of NOS) {
         const seletor = alvo === 'referencia' ? no.referencia : no.clone
         const medida = await medirNo(page, seletor).catch((erro) => {
+          // Seletor ambíguo não vira `null`: a evidência sairia incompleta com
+          // exit 0 e autorizaria correção sem medição (D6 e aceite da Task 4).
+          if (String(erro.message).startsWith(AMBIGUO)) throw erro
           console.error(`${alvo} ${viewport.name} ${no.nome}: ${erro.message}`)
           return null
         })

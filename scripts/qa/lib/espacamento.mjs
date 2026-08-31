@@ -88,6 +88,9 @@ export const NOS = [
   },
 ]
 
+/** Prefixo da falha que derruba a medição inteira, ver `medirNo`. */
+export const AMBIGUO = 'seletor ambíguo'
+
 /** @typedef {Record<string, number>} Medida */
 
 /**
@@ -98,8 +101,15 @@ export const NOS = [
 export async function medirNo(page, seletor) {
   return await page.evaluate((alvo) => {
     const nos = document.querySelectorAll(alvo)
-    if (nos.length !== 1) {
-      throw new Error(`seletor casa com ${nos.length} nós: ${alvo}`)
+    // Duas falhas diferentes: seletor que casa com mais de um nó é deriva de
+    // seletor e derruba a medição inteira (D6 da spec — o script falha alto
+    // em vez de escolher o primeiro); seletor que não casa com nada vira
+    // linha `ausente na …` no markdown, sem inventar zero.
+    if (nos.length > 1) {
+      throw new Error(`seletor ambíguo (${nos.length} nós): ${alvo}`)
+    }
+    if (nos.length === 0) {
+      throw new Error(`seletor ausente: ${alvo}`)
     }
     // `nos.length === 1` já garantido acima; o cast só satisfaz
     // `noUncheckedIndexedAccess`, que não enxerga essa checagem.
