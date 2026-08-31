@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: reviewing
+workflow_state: blocked
 work_class: architectural
 active_work_item: paridade-espacamento-fontes
 active_notion_eap: null
@@ -9,19 +9,19 @@ active_title: 'Paridade residual — espaçamento vertical, pesos de fonte reais
 active_branch: fix/paridade-espacamento-fontes
 bounded_design: null
 authorized_paths: null
-next_owner: codex
-next_action: review_active_work_item
-resume_state: null
+next_owner: joao
+next_action: decidir_residuo_margem_cursos
+resume_state: reviewing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-08-30-paridade-espacamento-fontes-design.md
 active_plan: docs/superpowers/plans/2026-08-30-paridade-espacamento-fontes.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: null
+blocker: 'Achado C-2/R-3 das duas lentes: a referência mede marginBottom -105px em #Cursos e 9px em contacto.linha, nas quatro larguras; o clone tem 0 nos dois. Reproduzir o -105px desloca #Contacto e o rodapé em 105px — decisão de João. Alternativa: aceitar D-29 como débito e fechar D-24 com a divergência declarada na matriz.'
 supervised_cycles_completed: 10
 last_completed_work_item: refactor-contato-intake
-state_basis_commit: 147ccc4
+state_basis_commit: a8f4212
 updated_at: 2026-08-31T00:00:00Z
 ---
 
