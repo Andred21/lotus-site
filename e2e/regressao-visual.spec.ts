@@ -1,8 +1,12 @@
 import { expect, test } from '@playwright/test'
 
-// Guarda de `6.2.2`: compara o clone com ele mesmo, antes e depois da
-// otimização. Não é diff contra o WordPress — as divergências intencionais
-// aprovadas na matriz produziriam diferença alta e legítima (D9 da spec).
+// Guarda de pixel do build de produção. Roda no projeto `producao`
+// (`vite preview` na 5184), não no dev server: a mudança que ele guarda — o
+// `<link rel="preload">` injetado por `scripts/vite/preload-critical.mjs` —
+// só existe no bundle. Rodar no `chromium` provava que o dev server não
+// mudou, o que era verdadeiro e insuficiente (`D-25`).
+// Não é diff contra o WordPress: as divergências intencionais aprovadas na
+// matriz produziriam diferença alta e legítima (D9 do bloco 6.1.1-6.3.1).
 const VIEWPORTS = [
   { nome: '375', width: 375, height: 812 },
   { nome: '1440', width: 1440, height: 900 },
