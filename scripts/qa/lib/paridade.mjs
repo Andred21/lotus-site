@@ -4,7 +4,7 @@ import { readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 /** Pasta datada da rodada. Regerar cria pasta nova, não sobrescreve esta. */
-export const RUN_DIR = 'docs/qa/paridade/2026-08-29'
+export const RUN_DIR = 'docs/qa/paridade/2026-08-30'
 
 /** @typedef {{ name: string, width: number, height: number, fullPage: boolean, menu: boolean }} State */
 
