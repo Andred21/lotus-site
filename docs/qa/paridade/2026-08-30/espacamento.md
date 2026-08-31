@@ -57,18 +57,27 @@ faça o mesmo, o oposto do objetivo de paridade. Decisão de D4 fica para João 
 medição, conforme D9 da spec (divergência entre duas leituras do repositório não se resolve em
 silêncio).
 
-## Divergência entre medições — calha de cursos (D9)
+## Divergência entre medições — calha de cursos (D9) — RESOLVIDA
 
-`docs/inventario/05-layout.md` registra `--spacing-gutter: 59.39px`, usado por `Row`/`gap-gutter` na
-grade de cursos do clone. A review de 2026-08-29 mediu "30px" entre os cards de curso a olho. Esta
-medição não mede o espaço visual entre cards diretamente (`NOS` não inclui um segundo card de
-cursos para comparar `top`/`bottom` entre irmãos) — ela mede a propriedade CSS `row-gap` computada
-do container (`cursos.linha`), que na referência é `0` nas quatro larguras porque o Divi não usa
-`gap` (as colunas são flex/float com largura própria, sem propriedade `gap`), não porque não haja
-espaço visual entre colunas. Comparar `0` (propriedade ausente) com `59.39px` (propriedade real do
-clone) não prova nem refuta a divergência apontada em `05-layout.md` — a Task 9, que corrige
-`Cursos.tsx`, precisa medir o espaço real entre `cursos.primeiro.card` e o segundo card antes de
-decidir se `gap-gutter` muda.
+`docs/inventario/05-layout.md` registra `--spacing-gutter: 59.39px`; a review de 2026-08-29 mediu
+"30px" entre os cards de curso a olho. O `rowGap` computado (tabela acima) não resolvia isso — a
+referência não usa a propriedade CSS `gap`. Medição direta adicional (fora de `NOS`, ad-hoc),
+comparando `#Cursos .et_pb_column_8`/`_9` (referência) e o primeiro/segundo `<article>` (clone),
+`getBoundingClientRect` nas duas larguras onde o layout muda de coluna (375 empilhado, 1440 em
+grade):
+
+| largura | eixo medido            | referência | clone      |
+| ------- | ---------------------- | ---------- | ---------- |
+| 375     | vertical (empilhado)   | `30px`     | `59.375px` |
+| 1440    | horizontal (3 colunas) | `59.39px`  | `59.375px` |
+
+**As duas leituras estavam certas, cada uma no seu eixo — não há contradição real.** `59.39px` é o
+gap HORIZONTAL entre colunas no desktop (`--spacing-gutter` está certo para esse eixo, bate com a
+referência). `30px` é o gap VERTICAL entre cards empilhados no mobile — um eixo diferente, que
+`05-layout.md` nunca mediu. O defeito do clone é usar `gap-gutter` (que aplica o MESMO valor aos
+dois eixos via `gap` CSS) em vez de separar `gap-x`/`gap-y`. Correção para a Task 9: trocar
+`gap-gutter` por `gap-x-gutter gap-y-[30px]` na grade de cursos — mantém `--spacing-gutter` para a
+coluna (não muda o token, não contradiz `05-layout.md`) e corrige só o eixo vertical.
 
 | nó                         | largura | propriedade   | referência  | clone       | delta   |
 | -------------------------- | ------- | ------------- | ----------- | ----------- | ------- |
