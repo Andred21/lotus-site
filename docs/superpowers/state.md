@@ -1,27 +1,27 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_closure
-work_class: architectural
-active_work_item: paridade-espacamento-fontes
+workflow_state: idle
+work_class: null
+active_work_item: null
 active_notion_eap: null
-active_title: 'Paridade residual — espaçamento vertical, pesos de fonte reais e guarda de regressão'
-active_branch: fix/paridade-espacamento-fontes
+active_title: null
+active_branch: null
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: close_active_work_item
+next_owner: joao
+next_action: select_work_item
 resume_state: null
 context_packet: null
-active_spec: docs/superpowers/specs/2026-08-30-paridade-espacamento-fontes-design.md
-active_plan: docs/superpowers/plans/2026-08-30-paridade-espacamento-fontes.md
-executor: claude
-reviewer: codex
+active_spec: null
+active_plan: null
+executor: null
+reviewer: null
 reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 10
-last_completed_work_item: refactor-contato-intake
-state_basis_commit: b3af550
+supervised_cycles_completed: 11
+last_completed_work_item: paridade-espacamento-fontes
+state_basis_commit: 206f4a1
 updated_at: 2026-08-31T00:00:00Z
 ---
 
