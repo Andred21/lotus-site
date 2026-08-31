@@ -38,6 +38,11 @@ quatro ressalvas.
   (D6) sem corrigi-lo, e não regenera `styles.json`.
 - Não criar conta Web3Forms nem provar envio real (`D-17`).
 - Não alterar `e2e/a11y-exceptions.ts` (`D-21`): as correções deste bloco não mudam cor.
+  **Emenda de 2026-08-30, autorizada por João** (registrada em 2026-08-31 pelo achado `C-3` da
+  review): a premissa vale — nenhuma cor mudou —, mas o `p-[30px]` da Task 8 mudou o `target`
+  que o axe gera para o nó já isento (`#747d88` sobre `#f0f0f0`, 3.66:1), quebrando 15
+  violações reportadas do mesmo nó de sempre. O arquivo foi alterado só para atualizar o
+  seletor da exceção já catalogada (commit `af09ee6`); nenhuma exceção nova, nenhuma cor nova.
 - Não corrigir o resíduo do bloco de ícone dos destaques (D8): ele vem de divergência intencional já
   aprovada em 2026-08-25.
 - Não instalar dependência nova. Nenhuma tarefa aqui precisa de uma (Lei 7).

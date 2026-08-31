@@ -86,3 +86,22 @@ seguir pra Task 13 (matriz/homologação/backlog)?"; resposta: **"Ratifico a lis
 aprova os itens 1-9 como classificados e aceita o item 8 (imagem dos cards de curso) como débito
 novo para bloco separado, não corrigido aqui. É ratificação de lista (D7), não leitura par a par
 das capturas.
+
+## Adendo pós-ratificação — achados da review (2026-08-31)
+
+A tabela acima e a ratificação de D7 ficam como estão: o que segue foi levantado depois, pela review
+independente do bloco, e não altera item ratificado.
+
+- **`cursos.secao` tem `marginBottom: -105px` na referência e `0` no clone**, nas quatro larguras
+  (`espacamento.json`; adendo em `espacamento.md`). É a maior divergência de espaçamento que
+  permaneceu depois das Tasks 6-9 e não estava nomeada nesta classificação. Contribui em todas as
+  larguras — inclusive em 768, onde a inversão de sinal do resíduo continua tendo o item 8 (imagem
+  do card de curso, `D-28`) como causa dominante, mas não como causa única. Reproduzir a
+  sobreposição desloca `#Contacto` e o rodapé em 105px: decisão de João, registrada como `D-29`.
+- **`contacto.linha` tem `marginBottom: 9px` na referência e `0` no clone**, nas quatro larguras.
+  Mesma origem, mesmo débito `D-29`.
+- **Padding horizontal do card de destaque medido** (achado C-4): a referência usa `30px` nos quatro
+  lados, nas quatro larguras — `p-[30px]` confirmado por medição, sem mudança de código.
+- **Padding do container do copyright corrigido** (achado C-1): a referência usa `paddingTop 0` e
+  `paddingBottom 10px`; o clone reproduzia a altura total com `py-1.25` simétrico (5px/5px). Trocado
+  por `pb-2.5`, que reproduz o valor medido em vez de compensá-lo.

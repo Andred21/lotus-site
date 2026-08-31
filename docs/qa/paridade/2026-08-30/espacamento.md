@@ -430,3 +430,39 @@ coluna (não muda o token, não contradiz `05-layout.md`) e corrige só o eixo v
 | `rodape.copyright`         | 1920    | fontSize      | 14          | 16          | +2      |
 | `rodape.copyright`         | 1920    | lineHeight    | 23.8        | 24          | +0.2    |
 | `rodape.copyright`         | 1920    | fontWeight    | 500         | 400         | -100    |
+
+## Adendo da review — padding horizontal do card de destaque (achado C-4)
+
+`medirNo` captura só `paddingTop`/`paddingBottom`, então o `p-[30px]` aplicado em
+`src/components/sections/Destaques.tsx` tinha evidência para o eixo vertical e nenhuma para o
+horizontal. Medição ad-hoc direta em 2026-08-31 (mesmo par de seletores da lista `NOS`:
+`#Somos .et_pb_blurb_0` na referência, `#Somos .text-center:nth-of-type(1)` no clone), com o clone
+servido pelo build em `http://localhost:5184/`:
+
+| largura | lado       | paddingLeft | paddingRight | paddingTop | paddingBottom | largura do card |
+| ------: | ---------- | ----------- | ------------ | ---------- | ------------- | --------------- |
+|     375 | referência | `30px`      | `30px`       | `30px`     | `30px`        | `300px`         |
+|     375 | clone      | `30px`      | `30px`       | `30px`     | `30px`        | `300px`         |
+|     768 | referência | `30px`      | `30px`       | `30px`     | `30px`        | `614.39px`      |
+|     768 | clone      | `30px`      | `30px`       | `30px`     | `30px`        | `614.39px`      |
+|    1440 | referência | `30px`      | `30px`       | `30px`     | `30px`        | `320.39px`      |
+|    1440 | clone      | `30px`      | `30px`       | `30px`     | `30px`        | `320.41px`      |
+|    1920 | referência | `30px`      | `30px`       | `30px`     | `30px`        | `320.39px`      |
+|    1920 | clone      | `30px`      | `30px`       | `30px`     | `30px`        | `320.41px`      |
+
+A referência usa `30px` nos quatro lados, nas quatro larguras: `p-[30px]` está certo e agora tem
+linha de medição para o eixo que faltava. Nenhuma mudança de código decorre deste adendo.
+
+## Adendo da review — margens da referência não reproduzidas (achado C-2)
+
+Duas margens medidas na referência ficaram sem correção e, até esta review, sem declaração:
+
+| nó               | largura           | propriedade    | referência | clone | efeito no clone                                             |
+| ---------------- | ----------------- | -------------- | ---------- | ----- | ----------------------------------------------------------- |
+| `cursos.secao`   | 375/768/1440/1920 | `marginBottom` | `-105`     | `0`   | falta a sobreposição de 105px entre `#Cursos` e `#Contacto` |
+| `contacto.linha` | 375/768/1440/1920 | `marginBottom` | `9`        | `0`   | falta 9px abaixo da linha de contato                        |
+
+As duas são constantes nas quatro larguras. A de `cursos.secao` é a maior divergência de espaçamento
+que sobrou depois das Tasks 6-9 e não estava nomeada na classificação da rodada: reproduzi-la muda a
+posição de `#Contacto` e do rodapé em 105px, o que é decisão de João, não ajuste dentro deste bloco.
+Registradas como `D-29` no backlog.

@@ -273,3 +273,14 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   que só corrigiu padding/margem/gap. Evidência: `docs/qa/paridade/2026-08-30/classificacao.md`
   (item 8).
   **Gatilho:** próximo bloco de paridade visual, ou pedido explícito de João.
+- **D-29 · margens da referência não reproduzidas em `#Cursos` e na linha de contato** —
+  `docs/qa/paridade/2026-08-30/espacamento.json` mede, nas quatro larguras, `cursos.secao` com
+  `marginBottom: -105px` na referência contra `0` no clone, e `contacto.linha` com
+  `marginBottom: 9px` contra `0`. A rodada de 2026-08-30 corrigiu padding e gap, mas não estas duas
+  margens, e a classificação não as nomeava — achado `C-2` da review do bloco
+  `paridade-espacamento-fontes`, declarado em 2026-08-31 no adendo de
+  `docs/qa/paridade/2026-08-30/classificacao.md` e de `espacamento.md`. Reproduzir o `-105px` faz
+  `#Cursos` sobrepor `#Contacto` como na referência e desloca contato e rodapé em 105px: é mudança
+  de posição de duas seções inteiras, não ajuste local, e a decisão é de João.
+  **Gatilho:** decisão de João sobre reproduzir a sobreposição, ou próximo bloco de paridade visual
+  (junto com `D-28`).

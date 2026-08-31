@@ -16,6 +16,10 @@
 - Todo documento markdown deste bloco roda `pnpm format` antes do commit (`D-18` continua aberto: `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código em markdown).
 - Nenhum texto institucional muda. O diff de `src/content/site.ts` altera estrutura, nunca palavra, pontuação ou caixa.
 - Não tocar `.claude/**`, `.agents/**`, `e2e/a11y-exceptions.ts`, `docs/inventario/styles.json`, `docs/inventario/dom.json`.
+  **Emenda de 2026-08-30, autorizada por João** (registrada em 2026-08-31 pelo achado `C-3` da
+  review): `e2e/a11y-exceptions.ts` sai desta lista para atualizar o seletor da exceção de
+  contraste já catalogada, que o `p-[30px]` da Task 8 tornou obsoleto — mesmo nó, mesma cor,
+  mesma razão (commit `af09ee6`). O resto da lista continua valendo.
 - Pasta da rodada nova: `docs/qa/paridade/2026-08-30/` e `docs/qa/performance/2026-08-30/`.
 - **`pnpm e2e` fica vermelho entre as Tasks 1 e 9**, porque `e2e/regressao-visual.spec.ts` compara pixel contra snapshot antigo e este bloco muda pixel de propósito. Nessas tasks, rodar apenas `pnpm test` e os specs E2E nomeados na própria task. A suíte inteira volta ao verde na Task 10, que regenera os snapshots.
 
