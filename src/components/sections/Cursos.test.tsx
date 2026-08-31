@@ -42,4 +42,20 @@ describe('Cursos', () => {
       expect(caption.className).not.toContain('text-body')
     }
   })
+
+  it('reproduz a calha da grade de cursos medida na referência (D9): 59.39px no eixo horizontal, 30px no vertical, padding responsivo da linha', () => {
+    // docs/qa/paridade/2026-08-30/espacamento.md, seção "Divergência entre
+    // medições — calha de cursos (D9) — RESOLVIDA": --spacing-gutter
+    // (59.39px) está correto só para o eixo horizontal (desktop, 3 colunas);
+    // o gap vertical entre cards empilhados (mobile) é 30px, um eixo
+    // diferente que --spacing-gutter nunca deveria ter cobrido sozinho. O
+    // padding da linha também é responsivo: 30px em 375/768, 27px (via
+    // `py-6.75`) a partir do breakpoint `desktop` (1000px).
+    const { container } = render(<Cursos />)
+    const grid = container.querySelector('.grid')
+    expect(grid?.className).toContain('gap-x-gutter')
+    expect(grid?.className).toContain('gap-y-7.5')
+    expect(grid?.className).toContain('py-7.5')
+    expect(grid?.className).toContain('desktop:py-6.75')
+  })
 })

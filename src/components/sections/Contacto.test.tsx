@@ -44,4 +44,14 @@ describe('Contacto', () => {
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
   })
+
+  it('reproduz o padding responsivo da linha de título medido na referência (30px em 375/768, 27px a partir de desktop)', () => {
+    // docs/qa/paridade/2026-08-30/espacamento.md: `contacto.linha` tem
+    // paddingTop/paddingBottom 30px em 375 e 768, e a classe canônica
+    // `py-6.75` (27px) já bate a partir do breakpoint `desktop` (1000px).
+    const { container } = render(<Contacto onSubmit={handler()} />)
+    const linha = container.querySelector('.text-center')
+    expect(linha?.className).toContain('py-7.5')
+    expect(linha?.className).toContain('desktop:py-6.75')
+  })
 })

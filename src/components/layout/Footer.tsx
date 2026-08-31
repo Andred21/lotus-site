@@ -9,7 +9,12 @@ import { Row } from './Row'
 export function Footer() {
   return (
     <footer className="bg-footer pt-[15px] pb-1.25">
-      <Row>
+      {/*
+        docs/qa/paridade/2026-08-30/espacamento.md: `rodape.copyright` tem
+        paddingBottom 10px na referência contra 0 no clone. 5px em cima e
+        embaixo soma o mesmo total, valor simétrico do plano.
+      */}
+      <Row className="py-1.25">
         <p className="font-sans text-caption font-medium text-brand">
           {site.footer.copyright}
         </p>

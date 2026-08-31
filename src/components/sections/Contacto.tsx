@@ -18,7 +18,12 @@ export function Contacto({ onSubmit }: ContactoProps) {
       aria-labelledby="contacto-heading"
       className="bg-ink pt-14.25 pb-14.5"
     >
-      <Row className="bg-surface px-6 py-6.75 text-center">
+      {/*
+        docs/qa/paridade/2026-08-30/espacamento.md: `contacto.linha` tem
+        paddingTop/paddingBottom 30px em 375/768, e a classe canônica
+        `py-6.75` (27px) já bate a partir do breakpoint `desktop` (1000px).
+      */}
+      <Row className="bg-surface px-6 py-7.5 text-center desktop:py-6.75">
         <h2
           id="contacto-heading"
           className="font-display text-section font-bold text-title-light uppercase"
