@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: reviewing
+workflow_state: ready_for_closure
 work_class: architectural
 active_work_item: paridade-espacamento-fontes
 active_notion_eap: null
@@ -10,7 +10,7 @@ active_branch: fix/paridade-espacamento-fontes
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: aplicar_achados_da_review
+next_action: close_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-08-30-paridade-espacamento-fontes-design.md
@@ -21,7 +21,7 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 10
 last_completed_work_item: refactor-contato-intake
-state_basis_commit: 1e54fe8
+state_basis_commit: b3af550
 updated_at: 2026-08-31T00:00:00Z
 ---
 
