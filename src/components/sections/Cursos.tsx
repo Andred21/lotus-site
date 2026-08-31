@@ -12,7 +12,15 @@ export function Cursos() {
     <section
       id="Cursos"
       aria-labelledby="cursos-heading"
-      className="bg-ink pb-27.5"
+      /*
+        docs/qa/paridade/2026-08-30/espacamento.md: a referência mede
+        `marginBottom: -105px` em `#Cursos` nas quatro larguras, contra
+        `paddingBottom: 110px` igual nos dois. A margem negativa cancela 105
+        dos 110px: `#Contacto` começa 5px depois da linha do CTA, não 110px.
+        Sem ela o clone abria 110px onde a referência abre 5px (achado C-2 da
+        review; a decisão de reproduzir é de João, 2026-08-31).
+      */
+      className="-mb-26.25 bg-ink pb-27.5"
     >
       <Row className="py-6.75 text-center">
         <h2
@@ -26,7 +34,16 @@ export function Cursos() {
         </p>
       </Row>
 
-      <Row className="grid gap-gutter py-6.75 desktop:grid-cols-3">
+      {/*
+        docs/qa/paridade/2026-08-30/espacamento.md (D9 resolvida): 59.39px é a
+        calha HORIZONTAL entre colunas no desktop (--spacing-gutter está
+        correto para esse eixo — não mexer no token). 30px é o gap VERTICAL
+        entre cards empilhados no mobile, um eixo diferente que
+        --spacing-gutter nunca deveria ter coberto sozinho via `gap-gutter`.
+        O padding da linha também é responsivo: 30px em 375/768, 27px
+        (`py-6.75`) a partir do breakpoint `desktop` (1000px).
+      */}
+      <Row className="grid gap-x-gutter gap-y-7.5 py-7.5 desktop:grid-cols-3 desktop:py-6.75">
         {site.cursos.items.map((curso, index) => (
           <article key={curso.nombre} className="text-center">
             <img

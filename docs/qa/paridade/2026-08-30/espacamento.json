@@ -1,0 +1,2045 @@
+{
+  "capturadoEm": "2026-08-30T23:55:08.118Z",
+  "medidas": [
+    {
+      "nome": "hero.secao",
+      "largura": 375,
+      "referencia": {
+        "height": 771.96875,
+        "top": 79,
+        "bottom": 850.96875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 625.375,
+        "top": 79,
+        "bottom": 704.375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "hero.kicker",
+      "largura": 375,
+      "referencia": {
+        "height": 95.1875,
+        "top": 116.5,
+        "bottom": 211.6875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 95.1875,
+        "top": 116.5,
+        "bottom": 211.6875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.titulo",
+      "largura": 375,
+      "referencia": {
+        "height": 166,
+        "top": 256.6875,
+        "bottom": 422.6875,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 60,
+        "lineHeight": 78,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 156,
+        "top": 211.6875,
+        "bottom": 367.6875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 60,
+        "lineHeight": 78,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "hero.subtitulo",
+      "largura": 375,
+      "referencia": {
+        "height": 76,
+        "top": 422.6875,
+        "bottom": 498.6875,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 22,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 66,
+        "top": 367.6875,
+        "bottom": 433.6875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 22,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.corpo",
+      "largura": 375,
+      "referencia": {
+        "height": 172.78125,
+        "top": 538.6875,
+        "bottom": 711.46875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 115.1875,
+        "top": 465.6875,
+        "bottom": 580.875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 32,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.cta",
+      "largura": 375,
+      "referencia": {
+        "height": 52,
+        "top": 761.46875,
+        "bottom": 813.46875,
+        "paddingTop": 6,
+        "paddingBottom": 6,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 20,
+        "lineHeight": 34,
+        "fontWeight": 690
+      },
+      "clone": {
+        "height": 54,
+        "top": 612.875,
+        "bottom": 666.875,
+        "paddingTop": 6,
+        "paddingBottom": 6,
+        "marginTop": 32,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 20,
+        "lineHeight": 34,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "institucional.secao",
+      "largura": 375,
+      "referencia": {
+        "height": 1974.1875,
+        "top": 849.96875,
+        "bottom": 2824.15625,
+        "paddingTop": 110,
+        "paddingBottom": 16,
+        "marginTop": -1,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 1628.3125,
+        "top": 704.375,
+        "bottom": 2332.6875,
+        "paddingTop": 110,
+        "paddingBottom": 16,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "institucional.corpo",
+      "largura": 375,
+      "referencia": {
+        "height": 307.828125,
+        "top": 1426.375,
+        "bottom": 1734.203125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 19,
+        "lineHeight": 34.2,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 342.03125,
+        "top": 1203.75,
+        "bottom": 1545.78125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 19,
+        "lineHeight": 34.2,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "destaque.primeiro.card",
+      "largura": 375,
+      "referencia": {
+        "height": 305.984375,
+        "top": 1805.203125,
+        "bottom": 2111.1875,
+        "paddingTop": 30,
+        "paddingBottom": 30,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 209.984375,
+        "top": 1571.78125,
+        "bottom": 1781.765625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "destaque.primeiro.titulo",
+      "largura": 375,
+      "referencia": {
+        "height": 40.796875,
+        "top": 1925.203125,
+        "bottom": 1966,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 30.8,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 30.796875,
+        "top": 1635.78125,
+        "bottom": 1666.578125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 16,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 30.8,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "destaque.primeiro.corpo",
+      "largura": 375,
+      "referencia": {
+        "height": 115.1875,
+        "top": 1966,
+        "bottom": 2081.1875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 115.1875,
+        "top": 1666.578125,
+        "bottom": 1781.765625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "cursos.secao",
+      "largura": 375,
+      "referencia": {
+        "height": 1628.15625,
+        "top": 2852.15625,
+        "bottom": 4480.3125,
+        "paddingTop": 0,
+        "paddingBottom": 110,
+        "marginTop": 0,
+        "marginBottom": -105,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 1558.90625,
+        "top": 2332.6875,
+        "bottom": 3891.59375,
+        "paddingTop": 0,
+        "paddingBottom": 110,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "cursos.linha",
+      "largura": 375,
+      "referencia": {
+        "height": 1077.78125,
+        "top": 3180.53125,
+        "bottom": 4258.3125,
+        "paddingTop": 30,
+        "paddingBottom": 30,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 1062.53125,
+        "top": 2611.0625,
+        "bottom": 3673.59375,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 59.39,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "cursos.primeiro.card",
+      "largura": 375,
+      "referencia": {
+        "height": 302.59375,
+        "top": 3210.53125,
+        "bottom": 3513.125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 30,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 296.59375,
+        "top": 2638.0625,
+        "bottom": 2934.65625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "contacto.secao",
+      "largura": 375,
+      "referencia": {
+        "height": 1010.140625,
+        "top": 4375.3125,
+        "bottom": 5385.453125,
+        "paddingTop": 57,
+        "paddingBottom": 58,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 942.96875,
+        "top": 3891.59375,
+        "bottom": 4834.5625,
+        "paddingTop": 57,
+        "paddingBottom": 58,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "contacto.linha",
+      "largura": 375,
+      "referencia": {
+        "height": 383.96875,
+        "top": 4432.3125,
+        "bottom": 4816.28125,
+        "paddingTop": 30,
+        "paddingBottom": 30,
+        "marginTop": 0,
+        "marginBottom": 9,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 335.96875,
+        "top": 3948.59375,
+        "bottom": 4284.5625,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "rodape.copyright",
+      "largura": 375,
+      "referencia": {
+        "height": 57.59375,
+        "top": 5400.453125,
+        "bottom": 5458.046875,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 47.59375,
+        "top": 4849.5625,
+        "bottom": 4897.15625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "hero.secao",
+      "largura": 768,
+      "referencia": {
+        "height": 565.78125,
+        "top": 79,
+        "bottom": 644.78125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 476.78125,
+        "top": 79,
+        "bottom": 555.78125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "hero.kicker",
+      "largura": 768,
+      "referencia": {
+        "height": 47.59375,
+        "top": 155.796875,
+        "bottom": 203.390625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 47.59375,
+        "top": 155.796875,
+        "bottom": 203.390625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.titulo",
+      "largura": 768,
+      "referencia": {
+        "height": 88,
+        "top": 248.390625,
+        "bottom": 336.390625,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 60,
+        "lineHeight": 78,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 78,
+        "top": 203.390625,
+        "bottom": 281.390625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 60,
+        "lineHeight": 78,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "hero.subtitulo",
+      "largura": 768,
+      "referencia": {
+        "height": 32,
+        "top": 336.390625,
+        "bottom": 368.390625,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 22,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 22,
+        "top": 281.390625,
+        "bottom": 303.390625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 22,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.corpo",
+      "largura": 768,
+      "referencia": {
+        "height": 57.59375,
+        "top": 408.390625,
+        "bottom": 465.984375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 57.59375,
+        "top": 335.390625,
+        "bottom": 392.984375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 32,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.cta",
+      "largura": 768,
+      "referencia": {
+        "height": 52,
+        "top": 515.984375,
+        "bottom": 567.984375,
+        "paddingTop": 6,
+        "paddingBottom": 6,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 20,
+        "lineHeight": 34,
+        "fontWeight": 690
+      },
+      "clone": {
+        "height": 54,
+        "top": 424.984375,
+        "bottom": 478.984375,
+        "paddingTop": 6,
+        "paddingBottom": 6,
+        "marginTop": 32,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 20,
+        "lineHeight": 34,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "institucional.secao",
+      "largura": 768,
+      "referencia": {
+        "height": 1875.0625,
+        "top": 643.78125,
+        "bottom": 2518.84375,
+        "paddingTop": 110,
+        "paddingBottom": 16,
+        "marginTop": -1,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 1333.3125,
+        "top": 555.78125,
+        "bottom": 1889.09375,
+        "paddingTop": 110,
+        "paddingBottom": 16,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "institucional.corpo",
+      "largura": 768,
+      "referencia": {
+        "height": 171.015625,
+        "top": 1420.1875,
+        "bottom": 1591.203125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 19,
+        "lineHeight": 34.2,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 171.015625,
+        "top": 1075.15625,
+        "bottom": 1246.171875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 19,
+        "lineHeight": 34.2,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "destaque.primeiro.card",
+      "largura": 768,
+      "referencia": {
+        "height": 248.390625,
+        "top": 1672.671875,
+        "bottom": 1921.0625,
+        "paddingTop": 30,
+        "paddingBottom": 30,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 152.390625,
+        "top": 1272.171875,
+        "bottom": 1424.5625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "destaque.primeiro.titulo",
+      "largura": 768,
+      "referencia": {
+        "height": 40.796875,
+        "top": 1792.671875,
+        "bottom": 1833.46875,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 30.8,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 30.796875,
+        "top": 1336.171875,
+        "bottom": 1366.96875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 16,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 30.8,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "destaque.primeiro.corpo",
+      "largura": 768,
+      "referencia": {
+        "height": 57.59375,
+        "top": 1833.46875,
+        "bottom": 1891.0625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 57.59375,
+        "top": 1366.96875,
+        "bottom": 1424.5625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "cursos.secao",
+      "largura": 768,
+      "referencia": {
+        "height": 1519.578125,
+        "top": 2546.84375,
+        "bottom": 4066.421875,
+        "paddingTop": 0,
+        "paddingBottom": 110,
+        "marginTop": 0,
+        "marginBottom": -105,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 2082.671875,
+        "top": 1889.09375,
+        "bottom": 3971.765625,
+        "paddingTop": 0,
+        "paddingBottom": 110,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "cursos.linha",
+      "largura": 768,
+      "referencia": {
+        "height": 1081.390625,
+        "top": 2763.03125,
+        "bottom": 3844.421875,
+        "paddingTop": 30,
+        "paddingBottom": 30,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 1698.484375,
+        "top": 2055.28125,
+        "bottom": 3753.765625,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 59.39,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "cursos.primeiro.card",
+      "largura": 768,
+      "referencia": {
+        "height": 353.796875,
+        "top": 2793.03125,
+        "bottom": 3146.828125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 30,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 508.578125,
+        "top": 2082.28125,
+        "bottom": 2590.859375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "contacto.secao",
+      "largura": 768,
+      "referencia": {
+        "height": 893.453125,
+        "top": 3961.421875,
+        "bottom": 4854.875,
+        "paddingTop": 57,
+        "paddingBottom": 58,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 801.984375,
+        "top": 3971.765625,
+        "bottom": 4773.75,
+        "paddingTop": 57,
+        "paddingBottom": 58,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "contacto.linha",
+      "largura": 768,
+      "referencia": {
+        "height": 242.984375,
+        "top": 4018.421875,
+        "bottom": 4261.40625,
+        "paddingTop": 30,
+        "paddingBottom": 30,
+        "marginTop": 0,
+        "marginBottom": 9,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 194.984375,
+        "top": 4028.765625,
+        "bottom": 4223.75,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "rodape.copyright",
+      "largura": 768,
+      "referencia": {
+        "height": 33.796875,
+        "top": 4869.875,
+        "bottom": 4903.671875,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 23.796875,
+        "top": 4788.75,
+        "bottom": 4812.546875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "hero.secao",
+      "largura": 1440,
+      "referencia": {
+        "height": 830.984375,
+        "top": 94,
+        "bottom": 924.984375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 711.1875,
+        "top": 94,
+        "bottom": 805.1875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "hero.kicker",
+      "largura": 1440,
+      "referencia": {
+        "height": 47.59375,
+        "top": 238,
+        "bottom": 285.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 47.59375,
+        "top": 238,
+        "bottom": 285.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.titulo",
+      "largura": 1440,
+      "referencia": {
+        "height": 166,
+        "top": 330.59375,
+        "bottom": 496.59375,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 60,
+        "lineHeight": 78,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 156,
+        "top": 285.59375,
+        "bottom": 441.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 60,
+        "lineHeight": 78,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "hero.subtitulo",
+      "largura": 1440,
+      "referencia": {
+        "height": 54,
+        "top": 496.59375,
+        "bottom": 550.59375,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 22,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 44,
+        "top": 441.59375,
+        "bottom": 485.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 22,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.corpo",
+      "largura": 1440,
+      "referencia": {
+        "height": 86.390625,
+        "top": 590.59375,
+        "bottom": 676.984375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 57.59375,
+        "top": 517.59375,
+        "bottom": 575.1875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 32,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.cta",
+      "largura": 1440,
+      "referencia": {
+        "height": 54,
+        "top": 726.984375,
+        "bottom": 780.984375,
+        "paddingTop": 6,
+        "paddingBottom": 6,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 20,
+        "lineHeight": 34,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 54,
+        "top": 607.1875,
+        "bottom": 661.1875,
+        "paddingTop": 6,
+        "paddingBottom": 6,
+        "marginTop": 32,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 20,
+        "lineHeight": 34,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "institucional.secao",
+      "largura": 1440,
+      "referencia": {
+        "height": 864.6875,
+        "top": 923.984375,
+        "bottom": 1788.671875,
+        "paddingTop": 110,
+        "paddingBottom": 16,
+        "marginTop": -1,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 736.984375,
+        "top": 805.1875,
+        "bottom": 1542.171875,
+        "paddingTop": 110,
+        "paddingBottom": 16,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "institucional.corpo",
+      "largura": 1440,
+      "referencia": {
+        "height": 136.8125,
+        "top": 1167.390625,
+        "bottom": 1304.203125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 19,
+        "lineHeight": 34.2,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 136.8125,
+        "top": 1036.78125,
+        "bottom": 1173.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 19,
+        "lineHeight": 34.2,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "destaque.primeiro.card",
+      "largura": 1440,
+      "referencia": {
+        "height": 305.984375,
+        "top": 1419.875,
+        "bottom": 1725.859375,
+        "paddingTop": 30,
+        "paddingBottom": 30,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 209.984375,
+        "top": 1291.1875,
+        "bottom": 1501.171875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "destaque.primeiro.titulo",
+      "largura": 1440,
+      "referencia": {
+        "height": 40.796875,
+        "top": 1539.875,
+        "bottom": 1580.671875,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 30.8,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 30.796875,
+        "top": 1355.1875,
+        "bottom": 1385.984375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 16,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 30.8,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "destaque.primeiro.corpo",
+      "largura": 1440,
+      "referencia": {
+        "height": 115.1875,
+        "top": 1580.671875,
+        "bottom": 1695.859375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 86.390625,
+        "top": 1385.984375,
+        "bottom": 1472.375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "cursos.secao",
+      "largura": 1440,
+      "referencia": {
+        "height": 809.15625,
+        "top": 1816.671875,
+        "bottom": 2625.828125,
+        "paddingTop": 0,
+        "paddingBottom": 110,
+        "marginTop": 0,
+        "marginBottom": -105,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 750.09375,
+        "top": 1542.171875,
+        "bottom": 2292.265625,
+        "paddingTop": 0,
+        "paddingBottom": 110,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "cursos.linha",
+      "largura": 1440,
+      "referencia": {
+        "height": 381.28125,
+        "top": 2026.546875,
+        "bottom": 2407.828125,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 365.90625,
+        "top": 1708.359375,
+        "bottom": 2074.265625,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 59.39,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "cursos.primeiro.card",
+      "largura": 1440,
+      "referencia": {
+        "height": 317.5625,
+        "top": 2053.546875,
+        "bottom": 2371.109375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 311.90625,
+        "top": 1735.359375,
+        "bottom": 2047.265625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "contacto.secao",
+      "largura": 1440,
+      "referencia": {
+        "height": 866.671875,
+        "top": 2520.828125,
+        "bottom": 3387.5,
+        "paddingTop": 57,
+        "paddingBottom": 58,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 773.1875,
+        "top": 2292.265625,
+        "bottom": 3065.453125,
+        "paddingTop": 57,
+        "paddingBottom": 58,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "contacto.linha",
+      "largura": 1440,
+      "referencia": {
+        "height": 207.875,
+        "top": 2577.828125,
+        "bottom": 2785.703125,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 9,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 166.1875,
+        "top": 2349.265625,
+        "bottom": 2515.453125,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "rodape.copyright",
+      "largura": 1440,
+      "referencia": {
+        "height": 33.796875,
+        "top": 3402.5,
+        "bottom": 3436.296875,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 23.796875,
+        "top": 3080.453125,
+        "bottom": 3104.25,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "hero.secao",
+      "largura": 1920,
+      "referencia": {
+        "height": 796.1875,
+        "top": 94,
+        "bottom": 890.1875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 707.1875,
+        "top": 94,
+        "bottom": 801.1875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "hero.kicker",
+      "largura": 1920,
+      "referencia": {
+        "height": 47.59375,
+        "top": 286,
+        "bottom": 333.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 47.59375,
+        "top": 286,
+        "bottom": 333.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.titulo",
+      "largura": 1920,
+      "referencia": {
+        "height": 88,
+        "top": 378.59375,
+        "bottom": 466.59375,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 60,
+        "lineHeight": 78,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 78,
+        "top": 333.59375,
+        "bottom": 411.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 60,
+        "lineHeight": 78,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "hero.subtitulo",
+      "largura": 1920,
+      "referencia": {
+        "height": 32,
+        "top": 466.59375,
+        "bottom": 498.59375,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 22,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 22,
+        "top": 411.59375,
+        "bottom": 433.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 22,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.corpo",
+      "largura": 1920,
+      "referencia": {
+        "height": 57.59375,
+        "top": 538.59375,
+        "bottom": 596.1875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 57.59375,
+        "top": 465.59375,
+        "bottom": 523.1875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 32,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "hero.cta",
+      "largura": 1920,
+      "referencia": {
+        "height": 52,
+        "top": 646.1875,
+        "bottom": 698.1875,
+        "paddingTop": 6,
+        "paddingBottom": 6,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 20,
+        "lineHeight": 34,
+        "fontWeight": 678.5
+      },
+      "clone": {
+        "height": 54,
+        "top": 555.1875,
+        "bottom": 609.1875,
+        "paddingTop": 6,
+        "paddingBottom": 6,
+        "marginTop": 32,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 20,
+        "lineHeight": 34,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "institucional.secao",
+      "largura": 1920,
+      "referencia": {
+        "height": 864.6875,
+        "top": 889.1875,
+        "bottom": 1753.875,
+        "paddingTop": 110,
+        "paddingBottom": 16,
+        "marginTop": -1,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 736.984375,
+        "top": 801.1875,
+        "bottom": 1538.171875,
+        "paddingTop": 110,
+        "paddingBottom": 16,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "institucional.corpo",
+      "largura": 1920,
+      "referencia": {
+        "height": 136.8125,
+        "top": 1132.59375,
+        "bottom": 1269.40625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 19,
+        "lineHeight": 34.2,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 136.8125,
+        "top": 1032.78125,
+        "bottom": 1169.59375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 19,
+        "lineHeight": 34.2,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "destaque.primeiro.card",
+      "largura": 1920,
+      "referencia": {
+        "height": 305.984375,
+        "top": 1385.078125,
+        "bottom": 1691.0625,
+        "paddingTop": 30,
+        "paddingBottom": 30,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 209.984375,
+        "top": 1287.1875,
+        "bottom": 1497.171875,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "destaque.primeiro.titulo",
+      "largura": 1920,
+      "referencia": {
+        "height": 40.796875,
+        "top": 1505.078125,
+        "bottom": 1545.875,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 30.8,
+        "fontWeight": 700
+      },
+      "clone": {
+        "height": 30.796875,
+        "top": 1351.1875,
+        "bottom": 1381.984375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 16,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 22,
+        "lineHeight": 30.8,
+        "fontWeight": 700
+      }
+    },
+    {
+      "nome": "destaque.primeiro.corpo",
+      "largura": 1920,
+      "referencia": {
+        "height": 115.1875,
+        "top": 1545.875,
+        "bottom": 1661.0625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 86.390625,
+        "top": 1381.984375,
+        "bottom": 1468.375,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 28.8,
+        "fontWeight": 500
+      }
+    },
+    {
+      "nome": "cursos.secao",
+      "largura": 1920,
+      "referencia": {
+        "height": 807.15625,
+        "top": 1781.875,
+        "bottom": 2589.03125,
+        "paddingTop": 0,
+        "paddingBottom": 110,
+        "marginTop": 0,
+        "marginBottom": -105,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 750.09375,
+        "top": 1538.171875,
+        "bottom": 2288.265625,
+        "paddingTop": 0,
+        "paddingBottom": 110,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "cursos.linha",
+      "largura": 1920,
+      "referencia": {
+        "height": 381.28125,
+        "top": 1991.75,
+        "bottom": 2373.03125,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 365.90625,
+        "top": 1704.359375,
+        "bottom": 2070.265625,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 59.39,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "cursos.primeiro.card",
+      "largura": 1920,
+      "referencia": {
+        "height": 317.5625,
+        "top": 2018.75,
+        "bottom": 2336.3125,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 311.90625,
+        "top": 1731.359375,
+        "bottom": 2043.265625,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "contacto.secao",
+      "largura": 1920,
+      "referencia": {
+        "height": 864.671875,
+        "top": 2484.03125,
+        "bottom": 3348.703125,
+        "paddingTop": 57,
+        "paddingBottom": 58,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 773.1875,
+        "top": 2288.265625,
+        "bottom": 3061.453125,
+        "paddingTop": 57,
+        "paddingBottom": 58,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "contacto.linha",
+      "largura": 1920,
+      "referencia": {
+        "height": 207.875,
+        "top": 2541.03125,
+        "bottom": 2748.90625,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 9,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 166.1875,
+        "top": 2345.265625,
+        "bottom": 2511.453125,
+        "paddingTop": 27,
+        "paddingBottom": 27,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    },
+    {
+      "nome": "rodape.copyright",
+      "largura": 1920,
+      "referencia": {
+        "height": 33.796875,
+        "top": 3363.703125,
+        "bottom": 3397.5,
+        "paddingTop": 0,
+        "paddingBottom": 10,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 14,
+        "lineHeight": 23.8,
+        "fontWeight": 500
+      },
+      "clone": {
+        "height": 23.796875,
+        "top": 3076.453125,
+        "bottom": 3100.25,
+        "paddingTop": 0,
+        "paddingBottom": 0,
+        "marginTop": 0,
+        "marginBottom": 0,
+        "rowGap": 0,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      }
+    }
+  ]
+}

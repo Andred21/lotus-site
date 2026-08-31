@@ -114,3 +114,26 @@ laboratório local (uma máquina, `vite preview`), não campo. Nenhuma mensagem 
 uma caixa de entrada real. A ratificação de `6.1.3` foi por lista resumida (D2 da spec), não leitura
 par a par de cada captura — o `contact-sheet.html` fica versionado para essa leitura ficar possível
 depois.
+
+## Adendo de 2026-08-30 — bloco `paridade-espacamento-fontes`
+
+Quatro das ressalvas desta homologação foram fechadas: `D-23` (peso de fonte sem arquivo próprio),
+`D-24` (altura vertical das seções), `D-25` (guarda de regressão apontada para o dev server) e
+`D-26` (peso de fonte sem linha na matriz). Evidência: `docs/qa/paridade/2026-08-30/`. As ressalvas
+`D-17`, `D-21` e `D-22` continuam abertas.
+
+Duas notas adicionais desta rodada:
+
+- **D4 revogada.** A decisão de repartir `site.institucional.body` em array de parágrafos partia da
+  premissa de que a referência quebrava o texto em `<p>` separados; medição direta
+  (`document.querySelectorAll('#Somos p')`) mostrou um único `<p>`. A Task 7 do plano não rodou;
+  `site.institucional.body` permanece `string`.
+- **Débito novo, `D-28`.** A correção de `D-24` isolou um resíduo com causa própria: os cards de
+  curso escalam a imagem com a largura da coluna (`w-full`) no clone, contra uma imagem de tamanho
+  fixo (`400×300px`) na referência. Em colunas mais largas que 400px isso infla a altura do card —
+  visível sobretudo em 768px, onde inverteu o sinal do resíduo (clone passou de mais baixo para mais
+  alto que a referência). É categoria `asset`/`layout`, fora do escopo de `spacing` deste bloco.
+- **Custo de performance registrado.** As faces reais de fonte (`D-23`) somaram bytes ao bundle:
+  Performance caiu de 99 para 97 e o LCP piorou de 2112ms para 2569ms (CLS sem mudança). Nenhuma
+  otimização foi tentada — decisão de agir fica com João. Evidência:
+  `docs/qa/performance/2026-08-30/resumo-fontes-reais.md`.

@@ -37,12 +37,19 @@ export const A11Y_EXCEPTIONS: readonly A11yException[] = [
   contrast('a[href$="#Cursos"]'),
   contrast('a[href$="#Contacto"]'),
   // Corpo dos três destaques: #747d88 sobre #f0f0f0, 3.66:1. Seletor
-  // atualizado na rodada de QA 2026-08-29: a classe de tamanho corrigiu de
-  // `text-lead` (19px, errada) para `text-body` (16px, valor medido) —
-  // mesma cor, mesmo nó, mesma razão de contraste; só o nome da classe mudou.
-  contrast('.text-center:nth-child(1) > .text-muted-ink.text-body.font-medium'),
-  contrast('.text-center:nth-child(2) > .text-muted-ink.text-body.font-medium'),
-  contrast('.text-center:nth-child(3) > .text-muted-ink.text-body.font-medium'),
+  // atualizado de novo no bloco `paridade-espacamento-fontes` (2026-08-30,
+  // Task 8): o card ganhou `p-[30px]` (padding medido contra a referência),
+  // e o axe passou a incluir essa classe no `target` do mesmo nó — mesma
+  // cor, mesmo nó, mesma razão de contraste, só o prefixo de classe mudou.
+  contrast(
+    '.p-\\[30px\\].text-center:nth-child(1) > .text-muted-ink.text-body.font-medium',
+  ),
+  contrast(
+    '.p-\\[30px\\].text-center:nth-child(2) > .text-muted-ink.text-body.font-medium',
+  ),
+  contrast(
+    '.p-\\[30px\\].text-center:nth-child(3) > .text-muted-ink.text-body.font-medium',
+  ),
   // mailto da seção de contato: #2ea3f2 sobre #f0f0f0, 2.41:1.
   contrast('.text-link'),
   // Rodapé: #24a2e0 sobre #323232, 4.46:1. Só o nome da classe de tamanho

@@ -35,4 +35,14 @@ describe('Footer', () => {
     expect(paragraph.className).not.toContain('text-body')
     expect(paragraph.className).not.toContain('text-neutral-ink')
   })
+
+  it('reproduz o padding assimétrico do container do copyright medido na referência (0 em cima, 10px embaixo)', () => {
+    // docs/qa/paridade/2026-08-30/espacamento.md: `rodape.copyright` tem
+    // paddingTop 0 e paddingBottom 10px na referência, contra 0/0 no clone.
+    const classes = render(<Footer />).container.querySelector(
+      'footer > div',
+    )?.className
+    expect(classes).toContain('pb-2.5')
+    expect(classes).not.toContain('py-1.25')
+  })
 })
