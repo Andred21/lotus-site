@@ -34,7 +34,8 @@ describe('Hero', () => {
     const { container } = render(<Hero />)
     const kicker = container.querySelector('#Intrucción p')
     const corpo =
-      container.querySelector('#hero-heading')?.parentElement?.nextElementSibling
+      container.querySelector('#hero-heading')?.parentElement
+        ?.nextElementSibling
     expect(kicker?.className).toContain('mb-[45px]')
     expect(corpo?.className).toContain('mt-[40px]')
     expect(corpo?.nextElementSibling?.className).toContain('mt-[50px]')
