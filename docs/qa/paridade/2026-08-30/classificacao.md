@@ -105,3 +105,22 @@ independente do bloco, e não altera item ratificado.
 - **Padding do container do copyright corrigido** (achado C-1): a referência usa `paddingTop 0` e
   `paddingBottom 10px`; o clone reproduzia a altura total com `py-1.25` simétrico (5px/5px). Trocado
   por `pb-2.5`, que reproduz o valor medido em vez de compensá-lo.
+
+## Adendo pós-ratificação — achados da lente Codex (2026-08-31)
+
+Review independente do Codex sobre `2094db3...80f5afd`. Achados materiais, todos conferidos no
+código antes de aceitos:
+
+- **`R-1` — o runner engolia seletor ambíguo.** `scripts/qa/medir-espacamento.mjs` capturava a
+  exceção de `medirNo`, gravava `null` e terminava com exit 0, o que contraria D6 da spec e o aceite
+  da Task 4 ("seletor ambíguo faz o script falhar"). Corrigido: `medirNo` distingue seletor ambíguo
+  (`> 1` nó, derruba a medição) de seletor ausente (`0` nós, vira linha `ausente na …`), e o runner
+  só engole o segundo caso.
+- **`R-4` — dois paddings medidos do hero não tinham sido aplicados.** `hero.titulo` e
+  `hero.subtitulo` medem `paddingBottom: 10px` na referência contra `0` no clone, nas quatro
+  larguras. Aplicados (`pb-2.5` nos dois nós). O resíduo do hero declarado no item 2 e na tabela de
+  resíduo (`-18` a `-76px`) encolhe 20px por coluna de texto; o restante continua sem causa de
+  espaçamento aberta.
+- **`R-2`, `R-3` e `R-5`** coincidem com os achados `C-4`, `C-2` e `C-1` da lente Claude e estão
+  tratados nos adendos acima. `R-3` (margem de `-105px` em `#Cursos`) permanece como decisão de João
+  — débito `D-29`.

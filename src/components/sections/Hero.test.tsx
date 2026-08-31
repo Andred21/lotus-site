@@ -37,6 +37,11 @@ describe('Hero', () => {
       container.querySelector('#hero-heading')?.parentElement
         ?.nextElementSibling
     expect(kicker?.className).toContain('mb-[45px]')
+    // `hero.titulo` e `hero.subtitulo` medem paddingBottom 10px na referência
+    // contra 0 no clone, nas quatro larguras.
+    const titulo = container.querySelector('#hero-heading')
+    expect(titulo?.className).toContain('pb-2.5')
+    expect(titulo?.nextElementSibling?.className).toContain('pb-2.5')
     expect(corpo?.className).toContain('mt-[40px]')
     expect(corpo?.nextElementSibling?.className).toContain('mt-[50px]')
   })

@@ -21,15 +21,18 @@ export function Hero() {
         {/* A reserva lateral é medida, não estética: sem ela o título cabe numa
             linha só e o clone diverge do baseline em 375 e 1440. */}
         <div className="pr-hero-inset">
+          {/* `paddingBottom: 10px` medido no título e na tagline da
+              referência (docs/qa/paridade/2026-08-30/espacamento.md,
+              `hero.titulo` e `hero.subtitulo`, nas quatro larguras). */}
           <h1
             id="hero-heading"
-            className="font-display text-hero font-bold text-brand"
+            className="pb-2.5 font-display text-hero font-bold text-brand"
           >
             {site.hero.title}
           </h1>
           {/* Tagline, não título de seção: era `h3` pulando o `h2` (D2 do
               bloco 5.1.1-5.3.2). A classe é a mesma — zero pixel. */}
-          <p className="font-sans text-subtitle font-medium text-surface">
+          <p className="pb-2.5 font-sans text-subtitle font-medium text-surface">
             {site.hero.subtitle}
           </p>
         </div>
