@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: reviewing
 work_class: architectural
 active_work_item: paridade-espacamento-fontes
 active_notion_eap: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 10
 last_completed_work_item: refactor-contato-intake
-state_basis_commit: 6c99f44
-updated_at: 2026-08-30T00:00:00Z
+state_basis_commit: 147ccc4
+updated_at: 2026-08-31T00:00:00Z
 ---
 
 # Estado operacional — Lotus Site
