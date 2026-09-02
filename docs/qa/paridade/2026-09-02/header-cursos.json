@@ -1,5 +1,5 @@
 {
-  "capturadoEm": "2026-09-02T21:42:05.874Z",
+  "capturadoEm": "2026-09-02T21:56:51.775Z",
   "cabecalho": [
     {
       "nome": "cabecalho",
@@ -38,7 +38,7 @@
         "boxShadow": "rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
       },
       "clone": {
-        "backgroundColor": "rgb(248, 248, 248)",
+        "backgroundColor": "rgb(0, 0, 0)",
         "height": 94,
         "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
       }
@@ -52,7 +52,7 @@
         "boxShadow": "rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
       },
       "clone": {
-        "backgroundColor": "rgb(248, 248, 248)",
+        "backgroundColor": "rgb(0, 0, 0)",
         "height": 94,
         "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
       }
@@ -80,7 +80,7 @@
         "alturaRenderizada": 225,
         "offsetEsquerdo": 0,
         "offsetDireito": 0,
-        "ateLegenda": 24
+        "ateLegenda": 30
       }
     },
     {
@@ -100,11 +100,11 @@
         "larguraColuna": 300,
         "larguraIntrinseca": 250,
         "alturaIntrinseca": 250,
-        "larguraRenderizada": 300,
-        "alturaRenderizada": 225,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 25,
+        "offsetDireito": 25,
+        "ateLegenda": 30
       }
     },
     {
@@ -124,11 +124,11 @@
         "larguraColuna": 300,
         "larguraIntrinseca": 250,
         "alturaIntrinseca": 250,
-        "larguraRenderizada": 300,
-        "alturaRenderizada": 225,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 25,
+        "offsetDireito": 25,
+        "ateLegenda": 30
       }
     },
     {
@@ -148,11 +148,11 @@
         "larguraColuna": 614.39,
         "larguraIntrinseca": 400,
         "alturaIntrinseca": 300,
-        "larguraRenderizada": 614.39,
-        "alturaRenderizada": 460.78,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 400,
+        "alturaRenderizada": 300,
+        "offsetEsquerdo": 107.19,
+        "offsetDireito": 107.2,
+        "ateLegenda": 30
       }
     },
     {
@@ -172,11 +172,11 @@
         "larguraColuna": 614.39,
         "larguraIntrinseca": 250,
         "alturaIntrinseca": 250,
-        "larguraRenderizada": 614.39,
-        "alturaRenderizada": 460.78,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 182.19,
+        "offsetDireito": 182.2,
+        "ateLegenda": 30
       }
     },
     {
@@ -196,11 +196,11 @@
         "larguraColuna": 614.39,
         "larguraIntrinseca": 250,
         "alturaIntrinseca": 250,
-        "larguraRenderizada": 614.39,
-        "alturaRenderizada": 460.78,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 182.19,
+        "offsetDireito": 182.2,
+        "ateLegenda": 30
       }
     },
     {
@@ -224,7 +224,7 @@
         "alturaRenderizada": 240.3,
         "offsetEsquerdo": 0,
         "offsetDireito": 0,
-        "ateLegenda": 24
+        "ateLegenda": 30
       }
     },
     {
@@ -244,11 +244,11 @@
         "larguraColuna": 320.42,
         "larguraIntrinseca": 250,
         "alturaIntrinseca": 250,
-        "larguraRenderizada": 320.42,
-        "alturaRenderizada": 240.31,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.2,
+        "offsetDireito": 35.22,
+        "ateLegenda": 30
       }
     },
     {
@@ -268,11 +268,11 @@
         "larguraColuna": 320.41,
         "larguraIntrinseca": 250,
         "alturaIntrinseca": 250,
-        "larguraRenderizada": 320.41,
-        "alturaRenderizada": 240.3,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.2,
+        "offsetDireito": 35.2,
+        "ateLegenda": 30
       }
     },
     {
@@ -296,7 +296,7 @@
         "alturaRenderizada": 240.3,
         "offsetEsquerdo": 0,
         "offsetDireito": 0,
-        "ateLegenda": 24
+        "ateLegenda": 30
       }
     },
     {
@@ -316,11 +316,11 @@
         "larguraColuna": 320.42,
         "larguraIntrinseca": 250,
         "alturaIntrinseca": 250,
-        "larguraRenderizada": 320.42,
-        "alturaRenderizada": 240.31,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.2,
+        "offsetDireito": 35.22,
+        "ateLegenda": 30
       }
     },
     {
@@ -340,64 +340,13 @@
         "larguraColuna": 320.41,
         "larguraIntrinseca": 250,
         "alturaIntrinseca": 250,
-        "larguraRenderizada": 320.41,
-        "alturaRenderizada": 240.3,
-        "offsetEsquerdo": 0,
-        "offsetDireito": 0,
-        "ateLegenda": 24
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.2,
+        "offsetDireito": 35.2,
+        "ateLegenda": 30
       }
     }
   ],
-  "divergencias": [
-    "cabecalho @ 1440: backgroundColor rgb(0, 0, 0) != rgb(248, 248, 248)",
-    "cabecalho @ 1920: backgroundColor rgb(0, 0, 0) != rgb(248, 248, 248)",
-    "curso.1.media-tension @ 375: ateLegenda 30 != 24",
-    "curso.2.alta-tension @ 375: larguraRenderizada 250 != 300",
-    "curso.2.alta-tension @ 375: alturaRenderizada 250 != 225",
-    "curso.2.alta-tension @ 375: offsetEsquerdo 25 != 0",
-    "curso.2.alta-tension @ 375: offsetDireito 25 != 0",
-    "curso.2.alta-tension @ 375: ateLegenda 30 != 24",
-    "curso.3.supervisor @ 375: larguraRenderizada 250 != 300",
-    "curso.3.supervisor @ 375: alturaRenderizada 250 != 225",
-    "curso.3.supervisor @ 375: offsetEsquerdo 25 != 0",
-    "curso.3.supervisor @ 375: offsetDireito 25 != 0",
-    "curso.3.supervisor @ 375: ateLegenda 30 != 24",
-    "curso.1.media-tension @ 768: larguraRenderizada 400 != 614.39",
-    "curso.1.media-tension @ 768: alturaRenderizada 300 != 460.78",
-    "curso.1.media-tension @ 768: offsetEsquerdo 107.19 != 0",
-    "curso.1.media-tension @ 768: offsetDireito 107.2 != 0",
-    "curso.1.media-tension @ 768: ateLegenda 30 != 24",
-    "curso.2.alta-tension @ 768: larguraRenderizada 250 != 614.39",
-    "curso.2.alta-tension @ 768: alturaRenderizada 250 != 460.78",
-    "curso.2.alta-tension @ 768: offsetEsquerdo 182.19 != 0",
-    "curso.2.alta-tension @ 768: offsetDireito 182.2 != 0",
-    "curso.2.alta-tension @ 768: ateLegenda 30 != 24",
-    "curso.3.supervisor @ 768: larguraRenderizada 250 != 614.39",
-    "curso.3.supervisor @ 768: alturaRenderizada 250 != 460.78",
-    "curso.3.supervisor @ 768: offsetEsquerdo 182.19 != 0",
-    "curso.3.supervisor @ 768: offsetDireito 182.2 != 0",
-    "curso.3.supervisor @ 768: ateLegenda 30 != 24",
-    "curso.1.media-tension @ 1440: ateLegenda 29.69 != 24",
-    "curso.2.alta-tension @ 1440: larguraRenderizada 250 != 320.42",
-    "curso.2.alta-tension @ 1440: alturaRenderizada 250 != 240.31",
-    "curso.2.alta-tension @ 1440: offsetEsquerdo 35.19 != 0",
-    "curso.2.alta-tension @ 1440: offsetDireito 35.2 != 0",
-    "curso.2.alta-tension @ 1440: ateLegenda 29.69 != 24",
-    "curso.3.supervisor @ 1440: larguraRenderizada 250 != 320.41",
-    "curso.3.supervisor @ 1440: alturaRenderizada 250 != 240.3",
-    "curso.3.supervisor @ 1440: offsetEsquerdo 35.19 != 0",
-    "curso.3.supervisor @ 1440: offsetDireito 35.2 != 0",
-    "curso.3.supervisor @ 1440: ateLegenda 29.69 != 24",
-    "curso.1.media-tension @ 1920: ateLegenda 29.69 != 24",
-    "curso.2.alta-tension @ 1920: larguraRenderizada 250 != 320.42",
-    "curso.2.alta-tension @ 1920: alturaRenderizada 250 != 240.31",
-    "curso.2.alta-tension @ 1920: offsetEsquerdo 35.19 != 0",
-    "curso.2.alta-tension @ 1920: offsetDireito 35.2 != 0",
-    "curso.2.alta-tension @ 1920: ateLegenda 29.69 != 24",
-    "curso.3.supervisor @ 1920: larguraRenderizada 250 != 320.41",
-    "curso.3.supervisor @ 1920: alturaRenderizada 250 != 240.3",
-    "curso.3.supervisor @ 1920: offsetEsquerdo 35.19 != 0",
-    "curso.3.supervisor @ 1920: offsetDireito 35.2 != 0",
-    "curso.3.supervisor @ 1920: ateLegenda 29.69 != 24"
-  ]
+  "divergencias": []
 }
