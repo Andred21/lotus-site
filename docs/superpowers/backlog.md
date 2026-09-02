@@ -165,8 +165,8 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   `public/LOTUS-G2_TRANSP_Fondo-Blanco.png` com `twitter:card summary` (D4 do bloco `5.1.1-5.3.2`).
   Card grande (1200×630) exige arte nova, fora do clone.
   **Gatilho:** redesign ou pedido explícito de João.
-- **D-21 · nove nós de `color-contrast` sob exceção nominal** — quatro links do menu desktop
-  (`#24a2e0` sobre `#f8f8f8`, 2.7:1), três corpos dos destaques (`#747d88` sobre `#f0f0f0`,
+- **D-21 · cinco nós de `color-contrast` sob exceção nominal** (eram nove) — três corpos dos
+  destaques (`#747d88` sobre `#f0f0f0`,
   3.66:1), o `mailto` (`#2ea3f2` sobre `#f0f0f0`, 2.41:1) e o rodapé (`#24a2e0` sobre `#323232`,
   4.46:1) são cor medida do original, `fiel` na matriz, e
   vivem em `e2e/a11y-exceptions.ts` com motivo, fonte e gatilho (D9 do bloco `5.1.1-5.3.2`).
@@ -181,6 +181,11 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   (`docs/qa/paridade/2026-08-29/classificacao.md`). Só o nome da classe de tamanho mudou no
   seletor (`text-body` -> `text-caption`), e as duas entradas do rodapé viraram uma: com a classe
   nova o axe reporta o mesmo nó por um seletor só, igual nos cinco estados.
+  **Quatro dos nove nós fecharam em 2026-09-02, no bloco `paridade-header-cursos`:** os do menu
+  desktop eram `#24a2e0` sobre `#f8f8f8`, e o `#f8f8f8` era artefato de rasterização, não cor da
+  referência. Com o fundo na cor medida (`#000000`) a razão é 7,31:1 (AAA), o axe deixa de
+  reportar os nós e as quatro exceções saíram de `e2e/a11y-exceptions.ts` — exceção órfã reprova
+  o gate. Nenhuma cor foi trocada por escolha estética: a paridade fechou o defeito de contraste.
   **Gatilho:** redesign, quando a paleta deixar de ser paridade.
 - **D-22 · JSON-LD e tags sociais validados só localmente** — schema Zod `strict` e parse em
   `src/app/head.test.ts`, mais `og:image` resolvendo em `e2e/seo.spec.ts` (D5/D10 do bloco
@@ -273,6 +278,16 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   que só corrigiu padding/margem/gap. Evidência: `docs/qa/paridade/2026-08-30/classificacao.md`
   (item 8).
   **Gatilho:** próximo bloco de paridade visual, ou pedido explícito de João.
+  **Fechado em 2026-09-02 pelo bloco `paridade-header-cursos`, com o enunciado corrigido.** A
+  referência não usa `400×300px` fixos: usa `max-width: 100%` + `height: auto` sobre o tamanho
+  intrínseco de cada asset, centralizado. Medido nas quatro larguras — card 1 (`400×300`) rende
+  `300×225` em 375, `400×300` em 768 e `320×240` em 1440/1920; cards 2 e 3 são **quadrados** de
+  `250×250` que nunca escalam, não `4:3`. Os assets de `src/assets/` já tinham os intrínsecos
+  certos; o defeito era só o clone forçar `aspect-[4/3] w-full object-cover` nos três, esticando e
+  cortando os dois quadrados. Corrigido com `mx-auto h-auto max-w-full` e `width`/`height` por
+  asset. O vão até o nome do curso entrou junto por autorização de João (`30px` medidos contra os
+  `24px` de `mt-6`), porque a mudança de tamanho já obrigava snapshot novo no mesmo eixo.
+  Evidência: `docs/qa/paridade/2026-09-02/header-cursos.md`, sem divergência nas quatro larguras.
 - **D-29 · margens da referência não reproduzidas em `#Cursos` e na linha de contato** —
   `docs/qa/paridade/2026-08-30/espacamento.json` mede, nas quatro larguras, `cursos.secao` com
   `marginBottom: -105px` na referência contra `0` no clone, e `contacto.linha` com
@@ -292,3 +307,26 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   com a referência nas quatro larguras. Evidência:
   `docs/qa/paridade/2026-08-30/espacamento.md` (seção "Desfecho"),
   `docs/qa/paridade/2026-08-30/classificacao.md`.
+
+- **D-30 · os cinco PNG de `docs/inventario/baseline/` reportam o cabeçalho na cor errada** —
+  `scripts/inventario/capture-baseline.mjs:9` captura com `fullPage: true`, e nesse modo o
+  cabeçalho desktop rasteriza `#f8f8f8` onde o screenshot de viewport, na mesma página e na mesma
+  sessão, rasteriza `#000000`. `sample-baseline.mjs` amostrou esses PNG e publicou o artefato como
+  cor medida; `docs/inventario/04-tipografia.md` e `src/index.css` seguiram, e só a medição ao vivo
+  de 2026-09-02 desfez a cadeia (`docs/qa/paridade/2026-09-02/header-cursos.md`). Isso **trava a
+  conferência humana dos cinco PNG**, que já era débito e agora tem artefato conhecido no material
+  conferido. Demonstrado para `#main-header`; **não provado** para o resto da paleta — quem
+  recapturar precisa reamostrar tudo, não só o cabeçalho. Fora do bloco por decisão de João em
+  2026-09-02: corrigir `capture-baseline.mjs` invalida os cinco PNG de uma vez e arrasta
+  `sample-baseline.mjs`.
+  **Gatilho:** bloco próprio de recaptura do baseline, antes da conferência humana.
+- **D-31 · a afirmação `rgba(0, 0, 0, 0.03)` do cabeçalho não reproduz** —
+  `docs/inventario/04-tipografia.md` (corrigido em 2026-09-02) e
+  `scripts/inventario/lib/site.mjs:96-98` (ainda não) afirmam que `getComputedStyle` devolve
+  `rgba(0, 0, 0, 0.03)` para o fundo de `#main-header` sobre branco. A medição ao vivo devolve
+  `rgb(0, 0, 0)` opaco, e o `body` do site também é preto. O defeito de `rgbToHex` (descartar
+  alpha) é real e continua justificando o candidato 5 de `revisao-arquitetura-2026-09`, mas o
+  cabeçalho não é a prova dele — o caso genuíno é o rodapé (`#545454` na tabela, `#323232` na
+  tela). O docstring de `site.mjs` ficou fora do bloco `paridade-header-cursos` porque
+  `scripts/inventario/` não estava em `authorized_paths`.
+  **Gatilho:** bloco `revisao-arquitetura-2026-09` (candidato 5), ou pedido explícito de João.

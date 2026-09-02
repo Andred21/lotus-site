@@ -60,14 +60,16 @@ Três medições desta página descreviam o nó-eco escondido que o Divi duplica
 | `#353740` | texto de `h4` (`Somos`) e dos campos de formulário                         | texto — destaque / formulário      |
 | `#2ea3f2` | links de conteúdo (`a` fora do menu) e ícones                              | cor de destaque — link             |
 | `#24a2e0` | links do menu (`top-menu a`)                                               | cor de destaque — menu             |
-| `#f8f8f8` | fundo de `#main-header` em 1440/1920                                       | cor de fundo — cabeçalho desktop   |
+| `#000000` | fundo de `#main-header` em 1440/1920                                       | cor de fundo — cabeçalho desktop   |
 | `#ffffff` | fundo de `#main-header` em 375/768                                         | cor de fundo — cabeçalho mobile    |
 | `#323232` | faixa visível de `#main-footer`/`#footer-bottom`                           | cor de fundo — rodapé              |
 | `#747d88` | corpo dos três destaques de `#Somos`                                       | texto — destaque secundário        |
 
-O cabeçalho é o único elemento medido que troca de cor de fundo entre viewports: `#main-header` pinta `#f8f8f8` em `1440` e `1920` e `#ffffff` em `375` e `768` (amostragem do baseline). São dois tokens distintos, não um valor com ressalva — a Sprint 2 precisa reproduzir a troca, não escolher um dos dois.
+O cabeçalho é o único elemento medido que troca de cor de fundo entre viewports: `#main-header` pinta `#000000` em `1440` e `1920` e `#ffffff` em `375` e `768`. São dois tokens distintos, não um valor com ressalva — a Sprint 2 precisa reproduzir a troca, não escolher um dos dois.
 
-`getComputedStyle` devolve `rgba(0, 0, 0, 0.03)` para o fundo do cabeçalho e `rgbToHex` descartava o alpha, publicando `#000000` numa faixa que a tela pinta `#f8f8f8`. `cssColor` em `lib/site.mjs` preserva o alpha; a faixa do rodapé caía no mesmo erro (`#545454` na tabela, `#323232` na tela).
+O `#f8f8f8` que esta tabela publicou até 2026-09-02 nunca esteve na tela. `capture-baseline.mjs` captura com `fullPage: true`, e nesse modo o cabeçalho rasteriza `#f8f8f8` onde o screenshot de viewport rasteriza `#000000`; `sample-baseline.mjs` amostrou o artefato e o publicou como cor medida. Medição direta em `https://lotusotec.cl/` (`docs/qa/paridade/2026-09-02/header-cursos.md`) devolve `rgb(0, 0, 0)` **opaco** nas quatro larguras desktop, em repouso e com `.et-fixed-header`, em duas alturas de viewport; a página mede `3441px`, idêntico ao baseline de 2026-08-25, então o site não mudou.
+
+Isso desfaz também a afirmação anterior de que `getComputedStyle` devolvia `rgba(0, 0, 0, 0.03)` para o fundo do cabeçalho: não reproduz. O defeito de `rgbToHex` (descartar alpha) é real e `cssColor` em `lib/site.mjs` o corrige — a faixa do rodapé é o caso genuíno (`#545454` na tabela, `#323232` na tela) —, mas o cabeçalho nunca foi prova dele. Os cinco PNG de `baseline/` ainda carregam o artefato: ver o débito de recaptura no backlog.
 
 O par `#2ea3f2` (links de conteúdo) e `#24a2e0` (links de menu) são dois azuis próximos, não o mesmo token — mantidos separados porque a medição não encontrou um só valor usado nos dois lugares.
 
