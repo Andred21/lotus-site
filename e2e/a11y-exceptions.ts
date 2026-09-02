@@ -31,11 +31,11 @@ const contrast = (target: string): A11yException => ({
 })
 
 export const A11Y_EXCEPTIONS: readonly A11yException[] = [
-  // Menu desktop: #24a2e0 sobre #f8f8f8, 2.7:1 (só existe em 1440).
-  contrast('.text-menu.font-semibold[href="/"]'),
-  contrast('a[href$="#Somos"]'),
-  contrast('a[href$="#Cursos"]'),
-  contrast('a[href$="#Contacto"]'),
+  // O menu desktop saiu daqui em 2026-09-02: com o fundo do cabeçalho na cor
+  // medida (`#000000`, não o `#f8f8f8` de artefato de rasterização), `#24a2e0`
+  // dá 7,31:1 e o axe deixa de reportar os quatro nós. Fecha quatro dos nove
+  // nós de `D-21` sem tocar em cor nenhuma.
+
   // Corpo dos três destaques: #747d88 sobre #f0f0f0, 3.66:1. Seletor
   // atualizado de novo no bloco `paridade-espacamento-fontes` (2026-08-30,
   // Task 8): o card ganhou `p-[30px]` (padding medido contra a referência),
