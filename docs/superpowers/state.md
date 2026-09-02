@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: bounded
 active_work_item: paridade-header-cursos
 active_notion_eap: null
@@ -10,7 +10,7 @@ active_branch: fix/paridade-header-cursos
 bounded_design: 'Reproduzir duas medicoes feitas em 2026-09-02 contra https://lotusotec.cl/: o fundo de #main-header e #000000 opaco em 1440/1920 (o #f8f8f8 de --color-header veio de artefato de rasterizacao do fullPage em capture-baseline.mjs, nao do site) e as imagens dos cards de curso seguem max-width:100% + height:auto sobre o tamanho intrinseco de cada asset (400x300 no card 1, 250x250 quadrado nos cards 2 e 3), centralizadas, com 30px ate o nome do curso; desenho completo, tabelas de medicao e os cinco commits em docs/superpowers/bounded-designs/paridade-header-cursos.md; prova e o relatorio de paridade de docs/qa/paridade/2026-09-02/ mais pnpm check e pnpm e2e completo.'
 authorized_paths: 'src/index.css, src/components/layout/Header.tsx, src/components/layout/Header.test.tsx, src/components/sections/Cursos.tsx, src/components/sections/Cursos.test.tsx, e2e/a11y-exceptions.ts, e2e/regressao-visual.spec.ts-snapshots/**, scripts/qa/medir-header-cursos.mjs, scripts/qa/lib/header-cursos.mjs, scripts/qa/lib/header-cursos.test.mjs, docs/qa/paridade/2026-09-02/**, docs/inventario/04-tipografia.md, docs/inventario/README.md, docs/superpowers/bounded-designs/paridade-header-cursos.md, docs/superpowers/state.md, docs/superpowers/backlog.md, docs/superpowers/historico/progress.md'
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_work_item
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 11
 last_completed_work_item: paridade-espacamento-fontes
-state_basis_commit: 30a4c0b
-updated_at: 2026-09-02T00:00:00Z
+state_basis_commit: f19ee29
+updated_at: 2026-09-02T21:45:00Z
 ---
 
 # Estado operacional — Lotus Site
