@@ -415,3 +415,15 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   tela). O docstring de `site.mjs` ficou fora do bloco `paridade-header-cursos` porque
   `scripts/inventario/` não estava em `authorized_paths`.
   **Gatilho:** bloco `revisao-arquitetura-2026-09` (candidato 5), ou pedido explícito de João.
+- **D-32 · o incremento final do bloco `paridade-header-cursos` não teve segunda lente** —
+  os cinco primeiros commits (`f19ee29..d619f0d`, onde está todo o código) tiveram review
+  independente real do Codex, que produziu `R-1` (rebaixado a suggestion após verificação no
+  código) e `R-2` (blocking, corrigido em `b9ac09a`). Os dois commits seguintes — `b9ac09a`, uma
+  linha em `docs/inventario/04-tipografia.md`, e `68542eb`, só `docs/superpowers/backlog.md` — não
+  puderam ser revisados: o Codex CLI encerra antes de iniciar, em 0.147.0 e 0.146.0, com
+  `Error: failed to initialize in-process app-server client: Read-only file system (os error 30)`.
+  Quem revisou esses dois commits escreveu ambos, então não valem como lente independente; nenhum
+  toca código de produção. Desvio declarado em `reviewer_exception`, autorizado por João em
+  2026-09-03. Mesma classe de `D-27`.
+  **Gatilho:** Codex CLI funcional para uma segunda passada sobre `d619f0d..68542eb`, ou decisão de
+  João de dispensar a passada por serem commits só de documentação.
