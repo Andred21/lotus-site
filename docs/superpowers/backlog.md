@@ -31,6 +31,89 @@ paridade visual contra os cinco PNG de `docs/inventario/baseline/`, herdada da S
 feita — nenhum gate a substitui —, e a conta do Web3Forms, sem a qual o envio real continua não
 provado (`D-17`).
 
+**Autorizado por João em 2026-09-02, ainda não selecionado:** bloco `revisao-arquitetura-2026-09`.
+Mesma regra: só fica ativo quando escrito em `docs/superpowers/state.md`.
+
+## `revisao-arquitetura-2026-09` — autorizado, aguardando seleção
+
+Revisão de arquitetura de 2026-09-02 (`/improve-codebase-architecture`, vocabulário de
+`/codebase-design`, base `main@30a4c0b`). Dez candidatos de aprofundamento, nenhum contradiz
+ADR-SITE-001/002/003. João decidiu juntar todos num bloco só; um commit por candidato. Ordem
+sugerida: 1, 2+3, 4, 5, depois os demais. Relatório HTML da rodada ficou em
+`/tmp/architecture-review-2026-09-02.html` (efêmero; a substância está abaixo).
+
+**Strong**
+
+1. **Ganchos `data-node` nos nós medidos.** `scripts/qa/lib/espacamento.mjs:30-95` (`NOS`),
+   `e2e/a11y-exceptions.ts:45-52` e os testes unitários de `Contacto`/`Cursos`/`Destaques`
+   endereçam o mesmo nó por classe Tailwind; cada fix de paridade muda classe e quebra os três
+   (`a11y-exceptions.ts:39-44` registra duas rodadas dessa churn). Decisões fechadas no grilling
+   de 2026-09-02:
+   - atributo `data-node="<nome de NOS>"`, literal no JSX, em todos os 17 nós de `NOS` (inclusive os
+     já ancorados por `#id`); `clone:` de cada entrada vira `[data-node="…"]`;
+   - `Row` ganha prop explícita `node?: string` que vira `data-node` (sem spread de `...rest`);
+   - Destaques: três cards e três `<p>` indexados, `destaque.1.card`/`destaque.1.corpo` …
+     `destaque.3.*`; as entradas `destaque.primeiro.*` de `NOS` são renomeadas para `destaque.1.*`
+     (fixture de 2026-08-30 fica como histórico; `espacamento.json` não guarda seletor);
+   - exceções do axe viram `p[data-node="destaque.N.corpo"]` — axe-core 4.13.0 inclui `data-*`
+     único no target com a tag na frente, nó com `id` único é imune, descendente herda prefixo
+     do pai, e valor com 31+ caracteres é descartado em silêncio;
+   - `espacamento.test.mjs` prova órfão (nome de `NOS` sem `data-node` em `src/`) e valor
+     `< 31` caracteres;
+   - testes unitários trocam `querySelector` de classe por `getByTestId` com
+     `testIdAttribute: 'data-node'` no Vitest; asserções de string de classe ficam para o item 9;
+   - `CONTEXT.md` ganha o termo "Nó medido" quando o código passar a usá-lo.
+2. **Um módulo de sessão de navegador para QA e inventário.** Launch + goto + scroll de lazy-load +
+   `document.fonts.ready` + toggle do menu estão copiados em `scripts/inventario/lib/site.mjs:67-86`
+   (`openPage`, URL fixa), `scripts/qa/capture-clone.mjs:15-34`, `capture-referencia.mjs:19-21`,
+   `capture-baseline.mjs:18`, `medir-espacamento.mjs:23-42` (único que espera fonte), `perf.mjs:25`
+   e `sample-baseline.mjs:104`. Só o rabo (`writeManifest`, `contactSheetHtml`, `linhasMarkdown`)
+   é testado. Alvo: `scripts/qa/lib/browser.mjs` com
+   `withPage({ url, viewport, fontsReady, scrollFull, openMenu: 'referencia' | 'clone' }, fn)`;
+   `openPage` vira adapter de uma linha.
+3. **Rodada de QA parametrizada.** `paridade.mjs:7`, `medir-espacamento.mjs:13` e `perf.mjs:17`
+   fixam `2026-08-30` no código; `capture-clone.mjs:8`, `medir-espacamento.mjs:12`, `perf.mjs:16` e
+   `playwright.config.ts:12` repetem a porta `5184`. O comentário de `paridade.mjs:6` ("regenerar
+   cria pasta nova") é falso. Alvo: `scripts/qa/lib/run.mjs` com `runDir(kind, date)` (data por
+   argumento ou env) e `cloneUrl()`.
+4. **Helpers de contato no E2E.** `fillContact`, `page.route` do Web3Forms e strings de feedback
+   triplicados em `e2e/contacto.spec.ts`, `e2e/a11y.spec.ts` e `e2e/teclado.spec.ts`. Alvo:
+   `e2e/contact.ts` com `fillContact(page, data)`, `stubWeb3Forms(page, { success })` e feedback
+   importado de `src/content/site.ts` (content não importa React).
+5. **Apagar `rgbToHex`.** `scripts/inventario/lib/site.mjs:47-59` descarta alpha e ainda alimenta
+   `extract-styles.mjs:87-88`; `cssColor` (`site.mjs:102-116`) já é o parser correto e o
+   comentário de `:96-98` diz que `rgbToHex` produziu paleta errada (`#000000` onde o site tem
+   `rgba(0,0,0,0.03)`). Deletion test: concentra.
+
+**Worth exploring**
+
+6. **Tabela única de campos do contato.** O nome de campo é relistado em `src/content/site.ts:75-80`,
+   `src/lib/contact-fields.ts:7-25`, `src/lib/contact-schema.ts:57-71,86-94`,
+   `src/integrations/contact/intake.ts:47-53` e `ContactForm.tsx:35-49,162` (`type` do email é
+   override). Alvo: `CONTACT_FIELDS` em `contact-fields.ts` com
+   `{ name, required, min, max, inputType, autocomplete }`; schema, leitura do intake e
+   atributos do form derivam dela. Intake continua um módulo (ADR-SITE-003).
+7. **Estado de `ContactForm` como união discriminada.** `ContactForm.tsx:95-116` guarda `status` +
+   `fieldErrors` e recalcula `hasFieldErrors` (segundo lugar que sabe que o honeypot é invisível).
+   Alvo: `{ kind: 'idle' } | { kind: 'submitting' } | ContactSubmitResult`; `onSubmit` não muda.
+8. **Uma lista de viewports.** Seis cópias: `scripts/inventario/lib/site.mjs:11-16`,
+   `scripts/qa/lib/paridade.mjs:16-22`, `e2e/regressao-visual.spec.ts:10-13`, `e2e/a11y.spec.ts:27-28`,
+   `e2e/home.spec.ts:20,46` (altura 900 divergente), `menu`/`teclado`/`producao` inline;
+   `paridade.test.mjs:14` relista em vez de importar. Alvo: módulo de viewports nomeados de onde
+   `STATES` deriva; e2e importa via `tsconfig.e2e.json`.
+9. **Testes de string de classe provam JSX, não pixel.** `Contacto.test.tsx:62`
+   `toContain('mb-2.25')` duplica `Contacto.tsx:30` e não liga aos `9px` de `espacamento.json`.
+   Alvo: e2e que lê o fixture de referência e compara `getComputedStyle` por `data-node`
+   (depende do item 1); asserções de classe saem.
+10. **CTA pílula como `@utility`.** String idêntica em `Hero.tsx:44` e `Cursos.tsx:68`, variante em
+    `ContactForm.tsx:200`. Alvo: `@utility pill-cta` em `src/index.css`, sem criar
+    `components/ui/` (ADR-SITE-001).
+
+**Não tocar, com motivo:** Contact intake + adapter (ADR-SITE-003); `Row` (apagar espalha
+`mx-auto w-4/5 max-w-row` em 8 chamadores); título+lead de Cursos/Contacto (extração só move);
+composição em `App.tsx` (vale só com segunda integração); `preload-critical.mjs`, `MobileMenu`,
+`NOS` com ambiguidade = throw, catracas do eslint.
+
 ---
 
 # DEPOIS
@@ -39,7 +122,9 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 
 - **SEO e acessibilidade** — Sprint 4 (10).
 - **QA visual e performance** — Sprint 5 (8).
-- **Deploy e go-live** — Sprint 6 (12).
+- **Deploy e go-live** — Sprint 6 (12). Infra decidida por João em 2026-09-02: **AWS S3 +
+  CloudFront**. O planejamento da sprint reabre depois do bloco de paridade; conferir se as
+  EAP do Notion descrevem outro host antes de planejar (mesma classe de stale de `D-01`).
 - **Evolução pós-clone** — Sprint 7 (7).
 - **Workflow IA** — Sprint 8 (3): `9.1.1`–`9.1.3`, ver `D-03`.
 
