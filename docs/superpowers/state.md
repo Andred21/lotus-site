@@ -19,10 +19,10 @@ executor: null
 reviewer: null
 reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 11
-last_completed_work_item: paridade-espacamento-fontes
-state_basis_commit: 206f4a1
-updated_at: 2026-08-31T00:00:00Z
+supervised_cycles_completed: 12
+last_completed_work_item: paridade-header-cursos
+state_basis_commit: ef702a6
+updated_at: 2026-09-03T23:59:00Z
 ---
 
 # Estado operacional — Lotus Site

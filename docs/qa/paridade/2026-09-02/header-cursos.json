@@ -1,0 +1,352 @@
+{
+  "capturadoEm": "2026-09-02T21:56:51.775Z",
+  "cabecalho": [
+    {
+      "nome": "cabecalho",
+      "largura": 375,
+      "referencia": {
+        "backgroundColor": "rgb(255, 255, 255)",
+        "height": 80,
+        "boxShadow": "rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
+      },
+      "clone": {
+        "backgroundColor": "rgb(255, 255, 255)",
+        "height": 80,
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
+      }
+    },
+    {
+      "nome": "cabecalho",
+      "largura": 768,
+      "referencia": {
+        "backgroundColor": "rgb(255, 255, 255)",
+        "height": 80,
+        "boxShadow": "rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
+      },
+      "clone": {
+        "backgroundColor": "rgb(255, 255, 255)",
+        "height": 80,
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
+      }
+    },
+    {
+      "nome": "cabecalho",
+      "largura": 1440,
+      "referencia": {
+        "backgroundColor": "rgb(0, 0, 0)",
+        "height": 94,
+        "boxShadow": "rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
+      },
+      "clone": {
+        "backgroundColor": "rgb(0, 0, 0)",
+        "height": 94,
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
+      }
+    },
+    {
+      "nome": "cabecalho",
+      "largura": 1920,
+      "referencia": {
+        "backgroundColor": "rgb(0, 0, 0)",
+        "height": 94,
+        "boxShadow": "rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
+      },
+      "clone": {
+        "backgroundColor": "rgb(0, 0, 0)",
+        "height": 94,
+        "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 0px 0px"
+      }
+    }
+  ],
+  "cards": [
+    {
+      "nome": "curso.1.media-tension",
+      "largura": 375,
+      "referencia": {
+        "larguraColuna": 300,
+        "larguraIntrinseca": 374,
+        "alturaIntrinseca": 281,
+        "larguraRenderizada": 300,
+        "alturaRenderizada": 225,
+        "offsetEsquerdo": 0,
+        "offsetDireito": 0,
+        "ateLegenda": 30
+      },
+      "clone": {
+        "larguraColuna": 300,
+        "larguraIntrinseca": 400,
+        "alturaIntrinseca": 300,
+        "larguraRenderizada": 300,
+        "alturaRenderizada": 225,
+        "offsetEsquerdo": 0,
+        "offsetDireito": 0,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.2.alta-tension",
+      "largura": 375,
+      "referencia": {
+        "larguraColuna": 300,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 25,
+        "offsetDireito": 25,
+        "ateLegenda": 30
+      },
+      "clone": {
+        "larguraColuna": 300,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 25,
+        "offsetDireito": 25,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.3.supervisor",
+      "largura": 375,
+      "referencia": {
+        "larguraColuna": 300,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 25,
+        "offsetDireito": 25,
+        "ateLegenda": 30
+      },
+      "clone": {
+        "larguraColuna": 300,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 25,
+        "offsetDireito": 25,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.1.media-tension",
+      "largura": 768,
+      "referencia": {
+        "larguraColuna": 614.39,
+        "larguraIntrinseca": 400,
+        "alturaIntrinseca": 300,
+        "larguraRenderizada": 400,
+        "alturaRenderizada": 300,
+        "offsetEsquerdo": 107.19,
+        "offsetDireito": 107.2,
+        "ateLegenda": 30
+      },
+      "clone": {
+        "larguraColuna": 614.39,
+        "larguraIntrinseca": 400,
+        "alturaIntrinseca": 300,
+        "larguraRenderizada": 400,
+        "alturaRenderizada": 300,
+        "offsetEsquerdo": 107.19,
+        "offsetDireito": 107.2,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.2.alta-tension",
+      "largura": 768,
+      "referencia": {
+        "larguraColuna": 614.39,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 182.19,
+        "offsetDireito": 182.2,
+        "ateLegenda": 30
+      },
+      "clone": {
+        "larguraColuna": 614.39,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 182.19,
+        "offsetDireito": 182.2,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.3.supervisor",
+      "largura": 768,
+      "referencia": {
+        "larguraColuna": 614.39,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 182.19,
+        "offsetDireito": 182.2,
+        "ateLegenda": 30
+      },
+      "clone": {
+        "larguraColuna": 614.39,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 182.19,
+        "offsetDireito": 182.2,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.1.media-tension",
+      "largura": 1440,
+      "referencia": {
+        "larguraColuna": 320.39,
+        "larguraIntrinseca": 400,
+        "alturaIntrinseca": 300,
+        "larguraRenderizada": 320.39,
+        "alturaRenderizada": 240.28,
+        "offsetEsquerdo": 0,
+        "offsetDireito": 0,
+        "ateLegenda": 29.69
+      },
+      "clone": {
+        "larguraColuna": 320.41,
+        "larguraIntrinseca": 400,
+        "alturaIntrinseca": 300,
+        "larguraRenderizada": 320.41,
+        "alturaRenderizada": 240.3,
+        "offsetEsquerdo": 0,
+        "offsetDireito": 0,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.2.alta-tension",
+      "largura": 1440,
+      "referencia": {
+        "larguraColuna": 320.39,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.19,
+        "offsetDireito": 35.2,
+        "ateLegenda": 29.69
+      },
+      "clone": {
+        "larguraColuna": 320.42,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.2,
+        "offsetDireito": 35.22,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.3.supervisor",
+      "largura": 1440,
+      "referencia": {
+        "larguraColuna": 320.39,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.19,
+        "offsetDireito": 35.2,
+        "ateLegenda": 29.69
+      },
+      "clone": {
+        "larguraColuna": 320.41,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.2,
+        "offsetDireito": 35.2,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.1.media-tension",
+      "largura": 1920,
+      "referencia": {
+        "larguraColuna": 320.39,
+        "larguraIntrinseca": 400,
+        "alturaIntrinseca": 300,
+        "larguraRenderizada": 320.39,
+        "alturaRenderizada": 240.28,
+        "offsetEsquerdo": 0,
+        "offsetDireito": 0,
+        "ateLegenda": 29.69
+      },
+      "clone": {
+        "larguraColuna": 320.41,
+        "larguraIntrinseca": 400,
+        "alturaIntrinseca": 300,
+        "larguraRenderizada": 320.41,
+        "alturaRenderizada": 240.3,
+        "offsetEsquerdo": 0,
+        "offsetDireito": 0,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.2.alta-tension",
+      "largura": 1920,
+      "referencia": {
+        "larguraColuna": 320.39,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.19,
+        "offsetDireito": 35.2,
+        "ateLegenda": 29.69
+      },
+      "clone": {
+        "larguraColuna": 320.42,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.2,
+        "offsetDireito": 35.22,
+        "ateLegenda": 30
+      }
+    },
+    {
+      "nome": "curso.3.supervisor",
+      "largura": 1920,
+      "referencia": {
+        "larguraColuna": 320.39,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.19,
+        "offsetDireito": 35.2,
+        "ateLegenda": 29.69
+      },
+      "clone": {
+        "larguraColuna": 320.41,
+        "larguraIntrinseca": 250,
+        "alturaIntrinseca": 250,
+        "larguraRenderizada": 250,
+        "alturaRenderizada": 250,
+        "offsetEsquerdo": 35.2,
+        "offsetDireito": 35.2,
+        "ateLegenda": 30
+      }
+    }
+  ],
+  "divergencias": []
+}

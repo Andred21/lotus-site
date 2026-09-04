@@ -11,6 +11,16 @@ describe('Header', () => {
     expect(screen.getByAltText('LOTUS')).toBeTruthy()
   })
 
+  it('pinta o fundo desktop com o token do preto medido', () => {
+    const { container } = render(<Header />)
+    const cabecalho = container.querySelector('header')
+
+    // A troca de cor entre viewports é o que a referência faz; a classe
+    // mobile sozinha, ou a desktop sozinha, deixaria de reproduzi-la.
+    expect(cabecalho?.className).toContain('bg-header-mobile')
+    expect(cabecalho?.className).toContain('desktop:bg-header')
+  })
+
   it('publica os quatro itens de navegação com os destinos medidos', () => {
     render(<Header />)
     const nav = screen.getByRole('navigation', { name: 'Principal' })

@@ -23,6 +23,40 @@ describe('Cursos', () => {
     }
   })
 
+  it('dimensiona cada imagem pelo intrínseco do asset, como a referência (D-28)', () => {
+    // docs/qa/paridade/2026-09-02/header-cursos.md: a referência não usa
+    // medida fixa. Card 1 é 400x300 e encolhe com a coluna; cards 2 e 3 são
+    // quadrados de 250px que nunca escalam. O `aspect-[4/3] w-full
+    // object-cover` anterior esticava e cortava os dois quadrados.
+    render(<Cursos />)
+    const medidas = [
+      ['400', '300'],
+      ['250', '250'],
+      ['250', '250'],
+    ]
+
+    site.cursos.items.forEach((curso, index) => {
+      const imagem = screen.getByAltText(curso.imageAlt)
+      expect([
+        imagem.getAttribute('width'),
+        imagem.getAttribute('height'),
+      ]).toEqual(medidas[index])
+      expect(imagem.className).toContain('max-w-full')
+      expect(imagem.className).toContain('h-auto')
+      expect(imagem.className).toContain('mx-auto')
+      expect(imagem.className).not.toContain('object-cover')
+    })
+  })
+
+  it('abre os 30px medidos entre a imagem e o nome do curso', () => {
+    // A referência mede 30px (29,69px em 1440/1920, arredondamento de layout);
+    // `mt-6` abria 24px.
+    render(<Cursos />)
+    for (const curso of site.cursos.items) {
+      expect(screen.getByText(curso.nombre).className).toContain('mt-7.5')
+    }
+  })
+
   it('mantém o CTA apontando para # como no original', () => {
     render(<Cursos />)
     expect(
