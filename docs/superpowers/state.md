@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: reviewing
+workflow_state: ready_for_closure
 work_class: architectural
 active_work_item: 7.1.1+7.1.2+7.1.5
 active_notion_eap: 7.1.1, 7.1.2, 7.1.5
@@ -10,7 +10,7 @@ active_branch: feat/7-1-1-7-1-2-7-1-5-deploy-aws
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: fix_review_findings
+next_action: close_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-03-7.1.1-7.1.2-7.1.5-deploy-aws-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 12
 last_completed_work_item: paridade-header-cursos
-state_basis_commit: c59547e
-updated_at: 2026-09-04T19:55:00Z
+state_basis_commit: 3f3d1a2
+updated_at: 2026-09-04T21:40:00Z
 ---
 
 # Estado operacional — Lotus Site
