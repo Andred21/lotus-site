@@ -427,3 +427,49 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   2026-09-03. Mesma classe de `D-27`.
   **Gatilho:** Codex CLI funcional para uma segunda passada sobre `d619f0d..68542eb`, ou decisão de
   João de dispensar a passada por serem commits só de documentação.
+- **D-33 · a prova ponta a ponta de `7.1.5` só existe depois do merge do PR** — o aceite é
+  "merge/promoção definida gera deployment rastreável e falha de CI impede publicação". Provar isso
+  exige um push em `main` do pessoal, para o espelho ter o que ler, e um push em `main` do
+  corporativo, para o pipeline disparar. A Lei 6 proíbe push antes de `/fechar-site` e o merge não é
+  do agente, então dentro do bloco o pipeline foi conferido por simulação e inspeção de diff, não
+  exercitado. Falta: rodar o espelho de verdade, conferir `procedencia` verde e `deploy` publicando
+  `releases/<sha>/` no corporativo, conferir `deploy` como `skipped` no run de push do pessoal, e
+  conferir que um push direto sem trailer reprova em `procedencia`.
+  **Gatilho:** a sessão do merge do PR deste bloco.
+- **D-34 · o campo `ADR ref` das doze EAP das Sprints 6 e 7 aponta `ADR-SITE-003`, que é outro
+  assunto** — `docs/adr/ADR-SITE-003.md` é "O intake do contato é um módulo, não quatro". A decisão
+  de hospedagem é a `ADR-SITE-004`. A Descrição e o Critério de `7.1.1` também estão stale: falam de
+  Vercel, Next.js e Server Actions, e o repositório é Vite SPA desde `1.2.1` (sexta instância de
+  `D-01`). João autorizou a correção no Notion em 2026-09-03; a Lei 6 exige reconfirmação no momento
+  de executá-la.
+  **Gatilho:** `ADR-SITE-004` commitado (feito) mais a reconfirmação de João.
+- **D-35 · `7.1.5` não separa preview/staging de produção** — o aceite pede a separação e a
+  arquitetura aprovada tem um bucket e uma distribuição (D3 da spec). O preview real do site é o CI
+  de PR, que roda `pnpm check` e `pnpm e2e` desde `1.3.7`. Divergência declarada, não esquecida.
+  **Gatilho:** `7.2.1`, quando o domínio criar a distinção de verdade.
+- **D-36 · o `package.json` do espelho mantém os scripts `inventario:*` e `qa:*` apontando para
+  arquivos que não atravessam** — `scripts/inventario/` e `scripts/qa/` estão em
+  `.espelho-exclusoes` (emenda E1), e o manifesto precisa atravessar inteiro. Nenhum desses scripts
+  é chamado por `check`, `e2e` ou pelo CI, então eles falham só se alguém os invocar à mão no
+  corporativo. Separar os scripts exigiria um segundo `package.json`, que custa mais que o defeito.
+  **Gatilho:** alguém precisar rodar inventário ou QA a partir do corporativo.
+- **D-37 · o rollback é procedimento, não botão** — `ADR-SITE-004` traz o comando exato e ele foi
+  exercitado uma vez na execução do bloco. Não há automação, não há teste que o exercite e não há
+  alarme que o dispare.
+  **Gatilho:** segundo incidente de publicação errada, ou `7.2.6` (observabilidade).
+- **D-38 · a trust policy da role de deploy fixa `refs/heads/main`** — `sub` com `StringEquals` em
+  `repo:Gatika-CL/lotus-site:ref:refs/heads/main`. Publicar a partir de tag ou de outra branch exige
+  editar `infra/lotus-site.yaml` e reimplantar o stack. É a restrição desejada, registrada para que
+  a próxima pessoa não a confunda com defeito.
+  **Gatilho:** necessidade de publicar a partir de tag.
+- **D-39 · `PriceClass_100` não inclui borda na América do Sul** — a distribuição usa a classe mais
+  barata, que cobre Estados Unidos, Canadá, Europa e Israel. O visitante chileno é servido por uma
+  borda do hemisfério norte, com latência maior. Aceitável enquanto o endereço é de homologação sem
+  tráfego; a decisão precisa ser reconsiderada, com medição, antes de o domínio do cliente apontar
+  para lá.
+  **Gatilho:** `7.2.5` (cutover), ou primeira medição de latência real a partir do Chile.
+- **D-40 · a distribuição não grava access log** — CloudTrail registra quem mudou o quê e o run do
+  GitHub Actions registra o deploy, mas não existe registro de quem acessou o site. Ligar o log hoje
+  criaria volume de objetos com custo e nenhum consumidor: não há dashboard, alerta nem consulta que
+  os leia.
+  **Gatilho:** `7.2.6` (observabilidade), junto com quem vai lê-los.
