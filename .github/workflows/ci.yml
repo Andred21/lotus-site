@@ -235,17 +235,46 @@ jobs:
 
       # A raiz só é tocada depois de o release inteiro estar no bucket: upload
       # interrompido deixa `releases/<sha>/` incompleto, nunca a raiz meio
-      # publicada. `--exclude "releases/*"` NÃO é enfeite -- sem ele o
-      # `--delete` apagaria todo o histórico de releases, e o rollback seguinte
-      # não teria de onde vir. Cópia servidor-a-servidor preserva o
-      # Cache-Control gravado acima.
-      - name: Promover o release para a raiz
+      # publicada.
+      #
+      # A origem é `dist/`, LOCAL, e não `s3://$BALDE/releases/$SHA/`. Numa
+      # cópia servidor-a-servidor as chaves que `--exclude "releases/*"`
+      # precisa proteger no destino sao exatamente as chaves da origem -- a
+      # mesma string -- e nenhum padrao separa as duas. Medido em 2026-09-04,
+      # com 21 objetos no bucket:
+      #
+      #   sync s3://B/releases/<sha>/ -> s3://B/  --delete --exclude releases/*
+      #     copy 0    delete 0     no-op: o site nunca seria publicado
+      #   o mesmo, sem o --exclude
+      #     copy 21   delete 21    apaga o historico inteiro de releases
+      #   o mesmo, com --exclude "*/releases/*"
+      #     copy 21   delete 21    nao protege nada
+      #   sync dist/ -> s3://B/    --delete --exclude releases/*
+      #     copy 21   delete 0     correto
+      #
+      # Com origem local as duas sao strings diferentes e o filtro faz o que se
+      # espera dele. Emenda E3 da spec, autorizada por Joao em 2026-09-04.
+      #
+      # A consequencia é que o Cache-Control precisa ser reescrito aqui: sem
+      # cópia servidor-a-servidor não há metadado para preservar. Mesma divisão
+      # em dois passos do upload do release, pela mesma razão.
+      - name: Promover para a raiz (assets com hash)
         env:
           BALDE: ${{ vars.AWS_BUCKET }}
-          SHA: ${{ github.sha }}
         run: |
-          aws s3 sync "s3://$BALDE/releases/$SHA/" "s3://$BALDE/" \
-            --delete --exclude "releases/*"
+          aws s3 sync dist/ "s3://$BALDE/" --delete \
+            --exclude "releases/*" \
+            --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
+            --cache-control "public, max-age=31536000, immutable"
+
+      - name: Promover para a raiz (arquivos de nome fixo)
+        env:
+          BALDE: ${{ vars.AWS_BUCKET }}
+        run: |
+          aws s3 sync dist/ "s3://$BALDE/" \
+            --exclude "*" \
+            --include "index.html" --include "robots.txt" --include "sitemap.xml" \
+            --cache-control "no-cache"
 
       # Três caminhos e não `/*`: o resto tem hash no nome. Invalidar `/*` a
       # cada deploy é o que faz a conta de CloudFront crescer sem motivo.

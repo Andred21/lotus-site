@@ -435,6 +435,12 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   exercitado. Falta: rodar o espelho de verdade, conferir `procedencia` verde e `deploy` publicando
   `releases/<sha>/` no corporativo, conferir `deploy` como `skipped` no run de push do pessoal, e
   conferir que um push direto sem trailer reprova em `procedencia`.
+  Duas afirmações que este débito carregava foram medidas em 2026-09-04 e saíram daqui: a proteção
+  do histórico pelo `--exclude` e a preservação do `Cache-Control` na cópia servidor-a-servidor. A
+  primeira era falsa e a segunda perdeu o objeto — ver emenda **E3**, `ADR-SITE-004` e o commit
+  `fix(7.1.5)` que corrige o job `deploy`. O ambiente já foi provado à mão: home em 200 com
+  `X-Robots-Tag`, caminho inventado em 404, bucket em 403, `releases/` intacto depois da promoção.
+  O que resta aqui é o pipeline se exercitando sozinho, com a role OIDC.
   **Gatilho:** a sessão do merge do PR deste bloco.
 - **D-34 · o campo `ADR ref` das doze EAP das Sprints 6 e 7 aponta `ADR-SITE-003`, que é outro
   assunto** — `docs/adr/ADR-SITE-003.md` é "O intake do contato é um módulo, não quatro". A decisão

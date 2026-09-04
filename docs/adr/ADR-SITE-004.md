@@ -107,8 +107,8 @@ armazenamento e nenhum consumidor — não há dashboard, alerta nem consulta qu
 
 ## Rollback
 
-Cada deploy escreve `releases/<sha>/` **antes** de tocar a raiz do bucket. Voltar é copiar um
-prefixo antigo por cima da raiz — sem rebuild, sem CI, sem tocar em CloudFormation:
+Cada deploy escreve `releases/<sha>/` **antes** de tocar a raiz do bucket. Voltar é pôr um release
+antigo de volta na raiz — sem rebuild, sem CI, sem tocar em CloudFormation:
 
 ```bash
 BALDE=lotus-site-prod
@@ -116,14 +116,44 @@ SHA_ANTERIOR=<sha do commit de espelho que estava no ar>
 ID=<id da distribuição>
 
 aws s3 ls "s3://$BALDE/releases/"                       # confere que o prefixo existe
-aws s3 sync "s3://$BALDE/releases/$SHA_ANTERIOR/" "s3://$BALDE/" \
-  --delete --exclude "releases/*"
+
+VOLTA=$(mktemp -d)
+aws s3 sync "s3://$BALDE/releases/$SHA_ANTERIOR/" "$VOLTA/"
+
+aws s3 sync "$VOLTA/" "s3://$BALDE/" --delete \
+  --exclude "releases/*" \
+  --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
+  --cache-control "public, max-age=31536000, immutable"
+
+aws s3 sync "$VOLTA/" "s3://$BALDE/" \
+  --exclude "*" \
+  --include "index.html" --include "robots.txt" --include "sitemap.xml" \
+  --cache-control "no-cache"
+
+rm -rf "$VOLTA"
+
 aws cloudfront create-invalidation --distribution-id "$ID" \
   --paths /index.html /robots.txt /sitemap.xml
 ```
 
-O `--exclude "releases/*"` não é enfeite: sem ele o `--delete` apagaria todo o histórico de
-releases na primeira promoção, e o rollback seguinte não teria de onde vir.
+**A descida para o disco não é desperdício, é o que faz o comando funcionar.** Numa cópia
+servidor-a-servidor as chaves que `--exclude "releases/*"` precisa proteger no destino são
+exatamente as chaves da origem — a mesma string — e nenhum padrão de filtro separa as duas.
+Medido em 2026-09-04 contra o bucket real, com 21 objetos:
+
+| Comando                                                             | Copiou | Apagou |
+| ------------------------------------------------------------------- | ------ | ------ |
+| `sync s3://B/releases/<sha>/ s3://B/ --delete --exclude releases/*` | 0      | 0      |
+| o mesmo, sem o `--exclude`                                          | 21     | 21     |
+| o mesmo, com `--exclude "*/releases/*"`                             | 21     | 21     |
+| `sync <dir local>/ s3://B/ --delete --exclude releases/*`           | 21     | 0      |
+
+A primeira linha é um no-op: o site nunca seria republicado. A segunda e a terceira apagam o
+histórico inteiro de releases, e o rollback seguinte não teria de onde vir. Só a quarta faz as
+duas coisas certas. Emenda **E3** da spec, autorizada por João em 2026-09-04.
+
+O `Cache-Control` é reescrito nos dois passos porque, sem cópia servidor-a-servidor, não há
+metadado de origem para preservar. É a mesma divisão em dois passos que o job `deploy` usa.
 
 A invalidação lista três caminhos e não `/*` porque todo o resto sai do Vite com hash no nome —
 asset novo tem URL nova e não precisa ser invalidado. Invalidar `/*` a cada deploy é o que faz a
