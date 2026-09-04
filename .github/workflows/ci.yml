@@ -1,12 +1,26 @@
 name: CI
 
+# O gatilho de push não é preferência: `scripts/espelhar-corporativo.sh` exige
+# um run de `CI` verde para o SHA de `main` antes de promover, e o arquivo
+# disparava só em `pull_request` -- o SHA de main nunca teria run e o espelho
+# recusaria todo commit.
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Push em main NÃO cancela push em main: `github.ref` vale `refs/heads/main`
+  # para todos eles, então o grupo é um só, e um segundo push cancelaria o
+  # `deploy` do primeiro no meio da promoção para a raiz do bucket -- deixando
+  # a raiz meio publicada. Em `pull_request` o cancelamento continua valendo:
+  # lá o run antigo só gasta minuto.
+  cancel-in-progress: ${{ github.event_name != 'push' }}
 
 jobs:
   check:
@@ -50,3 +64,269 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # A régua que branch protection daria, reconstruída onde ela cabe. Duas
+  # procedências são aceitas, e nenhuma outra:
+  #   - commit que chegou por Pull Request MESCLADO (o fluxo do repo pessoal);
+  #   - commit de espelho, que carrega o trailer `Source-Commit:`, tem a árvore
+  #     limpa de todo path de `.espelho-exclusoes` E cujo trailer aponta para um
+  #     commit que está mesmo no histórico de main da origem.
+  #
+  # O segundo caminho não serve de atalho no pessoal: lá `docs/` e `.claude/`
+  # existem, então a checagem de árvore limpa reprova e a exigência de PR volta
+  # a valer. A regra se autorrestringe, sem nome de repositório no meio.
+  #
+  # A conferência do trailer existe porque no CORPORATIVO a árvore limpa é o
+  # normal, não uma propriedade especial: sem ela bastaria uma linha de trailer
+  # inventada num push direto para o commit se passar por release de espelho.
+  # Quem responde qual é a origem é a variável de repositório ESPELHO_FONTE
+  # (`owner/nome`), não uma constante aqui: o arquivo continua sem nome de dono,
+  # e onde a variável não existe o caminho de espelho simplesmente não abre.
+  procedencia:
+    name: procedencia
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # `forced` vem do payload do push. Reescrita de histórico em main não é
+      # impedida aqui, mas fica vermelha e datada no histórico de runs -- que é
+      # o que uma auditoria pede depois.
+      - name: Force-push não passa despercebido
+        if: github.event.forced
+        run: |
+          echo "::error::force-push detectado em ${{ github.ref }}. main foi reescrita."
+          exit 1
+
+      - name: Procedência do commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          FONTE: ${{ vars.ESPELHO_FONTE }}
+        run: |
+          trailer=$(git log -1 --pretty='%(trailers:key=Source-Commit,valueonly)' | tr -d '[:space:]')
+
+          sujos=""
+          while IFS= read -r caminho; do
+            case "$caminho" in ''|\#*) continue ;; esac
+            [ -e "$caminho" ] && sujos="$sujos $caminho"
+          done < .espelho-exclusoes
+
+          if [ -n "$trailer" ]; then
+            if [ -n "$sujos" ]; then
+              echo "::error::commit de espelho, mas a árvore carrega arquivo de desenvolvimento:$sujos"
+              exit 1
+            fi
+
+            if [ -z "$FONTE" ]; then
+              echo "::error::o commit traz Source-Commit, mas a variável de repositório ESPELHO_FONTE não está definida. Sem ela não há contra o que conferir a origem, e um trailer inventado passaria. Defina ESPELHO_FONTE como o repositório de origem (owner/nome)."
+              exit 1
+            fi
+
+            if [ ${#trailer} -ne 40 ] || [ -n "$(printf '%s' "$trailer" | tr -d '0-9a-f')" ]; then
+              echo "::error::Source-Commit '$trailer' não é um SHA de 40 hexadecimais."
+              exit 1
+            fi
+
+            # base=main, head=$trailer. `identical` = o trailer É a ponta de
+            # main na origem; `behind` = ele é ancestral dela. Qualquer outra
+            # coisa -- `ahead`, `diverged` ou erro de API -- significa commit
+            # que nunca entrou em main lá, inclusive o SHA inventado, que a API
+            # responde com 404 e cai no mesmo ramo.
+            # `|| situacao=""` e não `|| true`: em erro o gh escreve o corpo do
+            # 404 na saída padrão, e sem isso o JSON inteiro viraria o valor de
+            # $situacao e vazaria para a mensagem de erro.
+            situacao=$(gh api "repos/$FONTE/compare/main...$trailer" --jq .status 2>/dev/null) || situacao=""
+            case "$situacao" in
+              identical|behind)
+                echo "release de espelho. Fonte: $FONTE@$trailer ($situacao em relação a main de $FONTE)."
+                exit 0
+                ;;
+              *)
+                echo "::error::Source-Commit $trailer não está no histórico de main em $FONTE (situação: ${situacao:-inacessível}). O trailer não comprova procedência; nada será publicado."
+                exit 1
+                ;;
+            esac
+          fi
+
+          mesclados=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '[.[] | select(.merged_at != null)] | length')
+          if [ "$mesclados" -ge 1 ]; then
+            echo "commit entrou por Pull Request mesclado."
+            exit 0
+          fi
+
+          echo "::error::$SHA entrou em main sem Pull Request mesclado e sem trailer de espelho. Nada será publicado para ele."
+          exit 1
+
+  # Duas camadas independentes impedem o repositório pessoal de publicar: a
+  # variável AWS_DEPLOY_ROLE_ARN só existe no corporativo, e a trust policy da
+  # role recusa qualquer `sub` que não seja
+  # `repo:Gatika-CL/lotus-site:ref:refs/heads/main`. Se a primeira falhar, a
+  # segunda devolve AccessDenied no AssumeRoleWithWebIdentity. Nenhum nome de
+  # dono aparece nesta condição.
+  deploy:
+    name: deploy
+    needs: [check, procedencia]
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    # 30 e não 20: `wait invalidation-completed` espera até 10 minutos sozinho.
+    timeout-minutes: 30
+    permissions:
+      # id-token: write é o que permite pedir o token OIDC. Não há segredo de
+      # longa duração em lugar nenhum.
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Habilitar Corepack
+        run: corepack enable
+
+      - name: Instalar Node da .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      # O mesmo `pnpm build` que roda em PR: sem flag de ambiente e sem
+      # variável que mude o bundle. É isso que "reproduz build de produção"
+      # quer dizer.
+      - name: Build
+        run: pnpm build
+
+      - name: Assumir a role por OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: sa-east-1
+
+      # Todo asset do Vite tem hash no nome: URL nova a cada conteúdo novo,
+      # então pode ser cacheado para sempre e nunca precisa de invalidação.
+      - name: Publicar o release deste SHA (assets com hash)
+        env:
+          BALDE: ${{ vars.AWS_BUCKET }}
+          SHA: ${{ github.sha }}
+        run: |
+          aws s3 sync dist/ "s3://$BALDE/releases/$SHA/" --delete \
+            --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
+            --cache-control "public, max-age=31536000, immutable"
+
+      # Estes três têm nome fixo, então o navegador precisa revalidar sempre --
+      # senão a invalidação do CloudFront não chega a quem já visitou.
+      - name: Publicar o release deste SHA (arquivos de nome fixo)
+        env:
+          BALDE: ${{ vars.AWS_BUCKET }}
+          SHA: ${{ github.sha }}
+        run: |
+          aws s3 sync dist/ "s3://$BALDE/releases/$SHA/" \
+            --exclude "*" \
+            --include "index.html" --include "robots.txt" --include "sitemap.xml" \
+            --cache-control "no-cache"
+
+      # A raiz só é tocada depois de o release inteiro estar no bucket: upload
+      # interrompido deixa `releases/<sha>/` incompleto, nunca a raiz meio
+      # publicada.
+      #
+      # A origem é `dist/`, LOCAL, e não `s3://$BALDE/releases/$SHA/`. Numa
+      # cópia servidor-a-servidor as chaves que `--exclude "releases/*"`
+      # precisa proteger no destino sao exatamente as chaves da origem -- a
+      # mesma string -- e nenhum padrao separa as duas. Medido em 2026-09-04,
+      # com 21 objetos no bucket:
+      #
+      #   sync s3://B/releases/<sha>/ -> s3://B/  --delete --exclude releases/*
+      #     copy 0    delete 0     no-op: o site nunca seria publicado
+      #   o mesmo, sem o --exclude
+      #     copy 21   delete 21    apaga o historico inteiro de releases
+      #   o mesmo, com --exclude "*/releases/*"
+      #     copy 21   delete 21    nao protege nada
+      #   sync dist/ -> s3://B/    --delete --exclude releases/*
+      #     copy 21   delete 0     correto
+      #
+      # Com origem local as duas sao strings diferentes e o filtro faz o que se
+      # espera dele. Emenda E3 da spec, autorizada por Joao em 2026-09-04.
+      #
+      # A consequencia é que o Cache-Control precisa ser reescrito aqui: sem
+      # cópia servidor-a-servidor não há metadado para preservar. Mesma divisão
+      # por tipo de arquivo do upload do release, pela mesma razão.
+      # A promoção tem TRÊS passos, nesta ordem: assets novos SEM `--delete`,
+      # os três de nome fixo, a invalidação, e só então a limpeza com
+      # `--delete`. Com `--delete` já no primeiro passo existiria uma janela --
+      # entre ele e o passo seguinte -- em que o `index.html` antigo, ainda no
+      # ar e revalidado a cada visita, apontaria assets já apagados: 404 de
+      # asset e página quebrada em borda fria. A limpeza não pode vir antes de
+      # o index novo estar valendo.
+      - name: Promover para a raiz (assets com hash)
+        env:
+          BALDE: ${{ vars.AWS_BUCKET }}
+        run: |
+          aws s3 sync dist/ "s3://$BALDE/" \
+            --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
+            --cache-control "public, max-age=31536000, immutable"
+
+      - name: Promover para a raiz (arquivos de nome fixo)
+        env:
+          BALDE: ${{ vars.AWS_BUCKET }}
+        run: |
+          aws s3 sync dist/ "s3://$BALDE/" \
+            --exclude "*" \
+            --include "index.html" --include "robots.txt" --include "sitemap.xml" \
+            --cache-control "no-cache"
+
+      # Três caminhos e não `/*`: o resto tem hash no nome. Invalidar `/*` a
+      # cada deploy é o que faz a conta de CloudFront crescer sem motivo.
+      #
+      # O `wait` não é zelo: `create-invalidation` volta com `Status:
+      # InProgress` e a invalidação ainda não chegou às bordas. Enquanto não
+      # chegar, borda que guardou o index antigo continua servindo-o -- o
+      # `no-cache` manda revalidar, mas o `MinTTL` de 1s da política de cache
+      # sobrepõe isso por esse tempo. A limpeza do passo seguinte apaga os
+      # assets que esse index aponta, então ela só pode começar depois daqui.
+      - name: Invalidar só o que tem nome fixo, e esperar a propagação
+        env:
+          ID: ${{ vars.AWS_CLOUDFRONT_ID }}
+        run: |
+          INVALIDACAO=$(aws cloudfront create-invalidation \
+            --distribution-id "$ID" \
+            --paths /index.html /robots.txt /sitemap.xml \
+            --query Invalidation.Id --output text)
+          echo "invalidação $INVALIDACAO criada; esperando concluir"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$ID" --id "$INVALIDACAO"
+          echo "invalidação $INVALIDACAO concluída"
+
+      # Só agora, com a invalidação concluída e o index novo valendo em toda
+      # borda, os assets do release anterior deixam de ter leitor novo. Este
+      # `sync` não copia nada: os objetos subiram nos passos acima, então a
+      # cópia remota é MAIS NOVA que a local e o `sync` local->S3 só sobe o que
+      # tiver tamanho diferente ou for mais recente. Sobra a deleção do que o
+      # `dist/` deste commit não tem. A raiz precisa ficar igual ao `dist/`:
+      # essa igualdade é a prova de aceite de `7.1.2`, então a limpeza não pode
+      # simplesmente deixar de existir. Continua exposto o cliente que carregou
+      # o index antigo ANTES da invalidação e só pede os assets dele depois --
+      # `D-43`.
+      - name: Limpar da raiz o que saiu do build
+        env:
+          BALDE: ${{ vars.AWS_BUCKET }}
+        run: |
+          aws s3 sync dist/ "s3://$BALDE/" --delete \
+            --exclude "releases/*"
+
+      - name: Rastro do deployment
+        env:
+          BALDE: ${{ vars.AWS_BUCKET }}
+          SHA: ${{ github.sha }}
+        run: |
+          echo "release publicado em s3://$BALDE/releases/$SHA/"
+          git log -1 --pretty='%(trailers:key=Source-Commit,valueonly)' \
+            | sed 's/^/commit de origem: /'

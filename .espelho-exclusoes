@@ -1,0 +1,33 @@
+# Fonte ÚNICA do que não atravessa para Gatika-CL/lotus-site.
+#
+# Dois consumidores leem este arquivo: `scripts/espelhar-corporativo.sh`, que
+# filtra na origem, e o job `procedencia` do CI, que confere no destino. Um
+# arquivo e dois leitores de propósito -- lista mantida em dois lugares é a
+# forma clássica de o espelho vazar sem ninguém perceber.
+#
+# Critério: entra aqui o que existe para DESENVOLVER. Fica de fora o que existe
+# para o site ser construído, testado ou servido. Comentário e linha em branco
+# são ignorados; diretório termina em barra.
+.agents/
+.claude/
+.codex/
+.superpowers/
+AGENTS.md
+CLAUDE.md
+CONTEXT.md
+docs/
+
+# O próprio script de espelho não atravessa: ele é a ferramenta de promoção,
+# e no destino não há o que promover.
+scripts/espelhar-corporativo.sh
+
+# `vitest.config.ts` inclui `scripts/**/*.test.mjs`, então estes testes rodam
+# dentro de `pnpm test`. `scripts/inventario/inventario.test.mjs` lê
+# `docs/inventario/` do disco: com `docs/` fora e o teste dentro, `pnpm check`
+# ficaria vermelho no corporativo -- e vermelho por acerto, não por defeito. O
+# alvo deles é o inventário do WordPress, que é material de desenvolvimento.
+#
+# `scripts/vite/` NÃO entra nesta lista: `vite.config.ts` importa
+# `./scripts/vite/preload-critical.mjs` e sem ele não há build.
+scripts/inventario/
+scripts/qa/
