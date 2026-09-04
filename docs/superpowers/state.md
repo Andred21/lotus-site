@@ -1,28 +1,28 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_closure
-work_class: bounded
-active_work_item: paridade-header-cursos
+workflow_state: idle
+work_class: null
+active_work_item: null
 active_notion_eap: null
-active_title: 'Paridade — fundo do cabeçalho desktop e dimensionamento das imagens dos cards de curso'
-active_branch: fix/paridade-header-cursos
-bounded_design: 'Reproduzir duas medicoes feitas em 2026-09-02 contra https://lotusotec.cl/: o fundo de #main-header e #000000 opaco em 1440/1920 (o #f8f8f8 de --color-header veio de artefato de rasterizacao do fullPage em capture-baseline.mjs, nao do site) e as imagens dos cards de curso seguem max-width:100% + height:auto sobre o tamanho intrinseco de cada asset (400x300 no card 1, 250x250 quadrado nos cards 2 e 3), centralizadas, com 30px ate o nome do curso; desenho completo, tabelas de medicao e os cinco commits em docs/superpowers/bounded-designs/paridade-header-cursos.md; prova e o relatorio de paridade de docs/qa/paridade/2026-09-02/ mais pnpm check e pnpm e2e completo.'
-authorized_paths: 'src/index.css, src/components/layout/Header.tsx, src/components/layout/Header.test.tsx, src/components/sections/Cursos.tsx, src/components/sections/Cursos.test.tsx, e2e/a11y-exceptions.ts, e2e/regressao-visual.spec.ts-snapshots/**, scripts/qa/medir-header-cursos.mjs, scripts/qa/lib/header-cursos.mjs, scripts/qa/lib/header-cursos.test.mjs, docs/qa/paridade/2026-09-02/**, docs/inventario/04-tipografia.md, docs/inventario/README.md, docs/superpowers/bounded-designs/paridade-header-cursos.md, docs/superpowers/state.md, docs/superpowers/backlog.md, docs/superpowers/historico/progress.md'
-next_owner: claude
-next_action: close_active_work_item
+active_title: null
+active_branch: null
+bounded_design: null
+authorized_paths: null
+next_owner: joao
+next_action: select_work_item
 resume_state: null
 context_packet: null
 active_spec: null
 active_plan: null
-executor: claude
-reviewer: claude
-reviewer_exception: 'Codex indisponivel em 2026-09-03: o CLI encerra antes de iniciar em 0.147.0 e 0.146.0 com failed to initialize in-process app-server client: Read-only file system (os error 30). Autorizado por Joao em 2026-09-03. O codigo do bloco (f19ee29..d619f0d) teve review independente real do Codex, com R-1 rebaixado a suggestion e R-2 corrigido em b9ac09a; sem segunda lente ficaram so b9ac09a e 68542eb, ambos somente documentacao, revisados por Claude. Debito D-32 no backlog.'
+executor: null
+reviewer: null
+reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 11
-last_completed_work_item: paridade-espacamento-fontes
-state_basis_commit: 68542eb
-updated_at: 2026-09-03T00:00:00Z
+supervised_cycles_completed: 12
+last_completed_work_item: paridade-header-cursos
+state_basis_commit: ef702a6
+updated_at: 2026-09-03T23:59:00Z
 ---
 
 # Estado operacional — Lotus Site
