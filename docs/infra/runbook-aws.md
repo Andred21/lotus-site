@@ -141,15 +141,19 @@ BALDE=<nome-do-bucket>
 # O bucket é versionado, e isso muda tudo aqui. `aws s3 rm --recursive` não
 # apaga nada: só empilha delete marker sobre cada chave. Some com as duas
 # listas -- versões E delete markers -- em lotes de até 1000, que é o limite
-# de `delete-objects`. O flag é `--max-items`, da paginação do próprio CLI:
-# `list-object-versions` não aceita `--max-keys` no aws-cli v2 (conferido em
-# 2.36.38).
+# de `delete-objects`. O corte de 1000 é a FATIA JMESPath `[0:1000]`, e não
+# `--max-items`: o paginador do CLI aplica o limite pela chave `Versions`, então
+# uma lista de delete markers pode vir maior que 1000, o `delete-objects`
+# rejeitaria o lote e o laço nunca sairia do lugar. A fatia corta a lista
+# depois de montada, seja qual for a paginação. (`--max-keys` não existe neste
+# comando no aws-cli v2, conferido em 2.36.38.)
 for TIPO in Versions DeleteMarkers; do
-  while [ "$(aws s3api list-object-versions --bucket "$BALDE" --max-items 1000 \
+  while [ "$(aws s3api list-object-versions --bucket "$BALDE" \
       --query "length(${TIPO} || \`[]\`)" --output text)" != "0" ]; do
     aws s3api delete-objects --bucket "$BALDE" --delete "$(aws s3api list-object-versions \
-      --bucket "$BALDE" --max-items 1000 \
-      --query "{Objects: ${TIPO}[].{Key:Key,VersionId:VersionId}}" --output json)"
+      --bucket "$BALDE" \
+      --query "{Objects: ${TIPO}[0:1000].{Key:Key,VersionId:VersionId}}" --output json)" \
+      --output text > /dev/null || break
   done
 done
 
@@ -160,6 +164,7 @@ aws s3api list-object-versions --bucket "$BALDE" \
 aws s3 rb "s3://$BALDE"
 ```
 
-O laço existe porque o `rb` recusa bucket não vazio, e num bucket versionado "vazio" quer dizer sem
+O `|| break` existe para o laço não girar para sempre quando a deleção falhar; a conferência logo
+abaixo é que diz se ele terminou o serviço. O laço existe porque o `rb` recusa bucket não vazio, e num bucket versionado "vazio" quer dizer sem
 versão **e** sem delete marker. Varrer só `Versions[]` deixa os marcadores para trás e o `rb` falha
 depois de o procedimento já ter anunciado remoção completa.

@@ -504,3 +504,14 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   **Gatilho:** o repositório pessoal virar público, ou surgir credencial de leitura cruzada.
   Levantado na review do bloco `7.1.1+7.1.2+7.1.5` (achado R-1 do Codex, rebaixado a `suggestion`
   depois de verificado).
+- **D-43 · a limpeza da raiz ainda expõe o cliente que carregou o index antigo antes da
+  invalidação** — o job `deploy` e o rollback do `ADR-SITE-004` esperam `wait
+invalidation-completed` antes de apagar da raiz o que saiu do build, então nenhuma borda serve
+  index que aponte asset removido. Fica de fora o cliente que já tinha o index anterior na mão
+  quando a invalidação terminou e só pede os assets dele depois: recebe 404. Fechar de verdade pede
+  retenção — manter na raiz, por algumas horas, o asset que saiu, e apagar num passo separado — mas
+  isso quebra a prova de aceite de `7.1.2`, que exige a raiz idêntica ao `dist/` do commit. As duas
+  coisas só coexistem com uma regra de ciclo de vida no bucket, que é mudança de
+  `infra/lotus-site.yaml` com desenho próprio.
+  **Gatilho:** primeiro 404 de asset observado em produção, ou o bloco que puder redesenhar a
+  retenção da raiz. Levantado na review do bloco `7.1.1+7.1.2+7.1.5`.

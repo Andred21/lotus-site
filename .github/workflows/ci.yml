@@ -176,7 +176,8 @@ jobs:
       github.ref == 'refs/heads/main' &&
       vars.AWS_DEPLOY_ROLE_ARN != ''
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 30 e não 20: `wait invalidation-completed` espera até 10 minutos sozinho.
+    timeout-minutes: 30
     permissions:
       # id-token: write é o que permite pedir o token OIDC. Não há segredo de
       # longa duração em lugar nenhum.
@@ -284,19 +285,36 @@ jobs:
 
       # Três caminhos e não `/*`: o resto tem hash no nome. Invalidar `/*` a
       # cada deploy é o que faz a conta de CloudFront crescer sem motivo.
-      - name: Invalidar só o que tem nome fixo
+      #
+      # O `wait` não é zelo: `create-invalidation` volta com `Status:
+      # InProgress` e a invalidação ainda não chegou às bordas. Enquanto não
+      # chegar, borda que guardou o index antigo continua servindo-o -- o
+      # `no-cache` manda revalidar, mas o `MinTTL` de 1s da política de cache
+      # sobrepõe isso por esse tempo. A limpeza do passo seguinte apaga os
+      # assets que esse index aponta, então ela só pode começar depois daqui.
+      - name: Invalidar só o que tem nome fixo, e esperar a propagação
         env:
           ID: ${{ vars.AWS_CLOUDFRONT_ID }}
         run: |
-          aws cloudfront create-invalidation \
+          INVALIDACAO=$(aws cloudfront create-invalidation \
             --distribution-id "$ID" \
-            --paths /index.html /robots.txt /sitemap.xml
+            --paths /index.html /robots.txt /sitemap.xml \
+            --query Invalidation.Id --output text)
+          echo "invalidação $INVALIDACAO criada; esperando concluir"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "$ID" --id "$INVALIDACAO"
+          echo "invalidação $INVALIDACAO concluída"
 
-      # Só agora, com o index novo valendo, os assets do release anterior
-      # deixam de ter leitor. Este `sync` não copia nada: os objetos subiram
-      # nos passos acima, então a cópia remota é MAIS NOVA que a local e o
-      # `sync` local->S3 só sobe o que for maior/menor ou mais recente. Sobra
-      # a deleção do que o `dist/` deste commit não tem.
+      # Só agora, com a invalidação concluída e o index novo valendo em toda
+      # borda, os assets do release anterior deixam de ter leitor novo. Este
+      # `sync` não copia nada: os objetos subiram nos passos acima, então a
+      # cópia remota é MAIS NOVA que a local e o `sync` local->S3 só sobe o que
+      # tiver tamanho diferente ou for mais recente. Sobra a deleção do que o
+      # `dist/` deste commit não tem. A raiz precisa ficar igual ao `dist/`:
+      # essa igualdade é a prova de aceite de `7.1.2`, então a limpeza não pode
+      # simplesmente deixar de existir. Continua exposto o cliente que carregou
+      # o index antigo ANTES da invalidação e só pede os assets dele depois --
+      # `D-43`.
       - name: Limpar da raiz o que saiu do build
         env:
           BALDE: ${{ vars.AWS_BUCKET }}

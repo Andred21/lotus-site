@@ -138,11 +138,17 @@ aws s3 sync "$VOLTA/" "s3://$BALDE/" \
   --include "index.html" --include "robots.txt" --include "sitemap.xml" \
   --cache-control "no-cache"
 
-aws cloudfront create-invalidation --distribution-id "$ID" \
-  --paths /index.html /robots.txt /sitemap.xml
+INVALIDACAO=$(aws cloudfront create-invalidation --distribution-id "$ID" \
+  --paths /index.html /robots.txt /sitemap.xml \
+  --query Invalidation.Id --output text)
 
-# A limpeza é o ÚLTIMO passo, depois da invalidação: enquanto o index que sai
-# ainda puder ser servido, os assets que ele aponta precisam existir na raiz.
+# `create-invalidation` volta com Status InProgress: esperar é obrigatório
+# antes da limpeza, senão a borda que ainda serve o index que sai aponta asset
+# já apagado.
+aws cloudfront wait invalidation-completed --distribution-id "$ID" --id "$INVALIDACAO"
+
+# A limpeza é o ÚLTIMO passo. É ela que faz a raiz voltar a ser exatamente o
+# release escolhido.
 aws s3 sync "$VOLTA/" "s3://$BALDE/" --delete --exclude "releases/*"
 
 rm -rf "$VOLTA"
@@ -166,8 +172,8 @@ duas coisas certas. Emenda **E3** da spec, autorizada por João em 2026-09-04.
 
 O `Cache-Control` é reescrito nos dois passos de publicação porque, sem cópia servidor-a-servidor,
 não há metadado de origem para preservar. É a mesma divisão por tipo de arquivo que o job `deploy`
-usa, e a mesma ordem: assets sem `--delete`, arquivos de nome fixo, invalidação, limpeza. Apagar
-antes da invalidação deixaria o index que ainda está no ar apontando asset já removido.
+usa, e a mesma ordem: assets sem `--delete`, arquivos de nome fixo, invalidação **concluída**,
+limpeza. Apagar antes disso deixaria o index que ainda está no ar apontando asset já removido.
 
 A invalidação lista três caminhos e não `/*` porque todo o resto sai do Vite com hash no nome —
 asset novo tem URL nova e não precisa ser invalidado. Invalidar `/*` a cada deploy é o que faz a
