@@ -119,6 +119,40 @@ depurar):
 **Nenhuma delas é criada no repositório pessoal.** A ausência de `AWS_DEPLOY_ROLE_ARN` lá é a
 primeira das duas camadas que impedem o pessoal de publicar.
 
+### Se o `deploy` reprovar em `sts:AssumeRoleWithWebIdentity`
+
+```
+Could not assume role with OIDC: Not authorized to perform sts:AssumeRoleWithWebIdentity
+```
+
+Antes de mexer em IAM, leia o formato do `sub` que o GitHub realmente emite:
+
+```bash
+gh api /repos/Gatika-CL/lotus-site/actions/oidc/customization/sub
+```
+
+Medido em 2026-09-04, ele responde `sub_claim_prefix` com identificadores numéricos —
+`repo:Gatika-CL@310231788/lotus-site@1357439884` — e não com o nome legível, mesmo com
+`use_default: true` e `use_immutable_subject: false`. O token carrega esse prefixo mais
+`:ref:refs/heads/main`. Por isso a trust policy da role aceita **duas** strings exatas, uma de cada
+formato, no parâmetro `RepositorioDeDeployImutavel`. Se os identificadores da organização ou do
+repositório mudarem — repositório recriado, não renomeado —, é esse parâmetro que precisa ser
+atualizado.
+
+Não troque `StringEquals` por `StringLike` para contornar isso: curinga em `sub` abre a role para
+outras branches e para forks.
+
+### Se o `deploy` reprovar em `cloudfront:GetInvalidation`
+
+```
+not authorized to perform: cloudfront:GetInvalidation
+```
+
+`aws cloudfront wait invalidation-completed` faz polling com `GetInvalidation`, então a role precisa
+das **duas** ações, não só de `CreateInvalidation`. Medido em 2026-09-04: com só uma delas o job
+reprova **depois** de já ter publicado no S3, e o passo de limpeza da raiz fica `skipped` — o site
+sai no ar, mas arquivos que saíram do build continuam na raiz do bucket.
+
 ## 5. Prova de aceite
 
 Ver a secção correspondente do plano do bloco. Em resumo: a home responde 200 com

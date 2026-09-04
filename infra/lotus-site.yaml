@@ -21,6 +21,15 @@ Parameters:
     Description: >-
       owner/nome do unico repositorio autorizado a assumir a role de deploy.
 
+  RepositorioDeDeployImutavel:
+    Type: String
+    Default: Gatika-CL@310231788/lotus-site@1357439884
+    Description: >-
+      O mesmo repositorio na forma de identificadores numericos, owner@id/nome@id.
+      Medido em 2026-09-04 com
+      `gh api /repos/Gatika-CL/lotus-site/actions/oidc/customization/sub`.
+      Os ids nao mudam quando o repositorio ou a organizacao e renomeado.
+
   EmailDeAlerta:
     Type: String
     Description: Destinatario do alerta de 80% do budget.
@@ -190,7 +199,17 @@ Resources:
               # um curinga mal posto, para um fork.
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub 'repo:${RepositorioDeDeploy}:ref:refs/heads/main'
+                # Duas strings exatas, nao um curinga: em StringEquals a lista e
+                # um OR, e cada item continua sendo comparado por igualdade.
+                # A segunda forma e a que o GitHub realmente emite hoje. Medido
+                # em 2026-09-04: com so a primeira, o job deploy reprovou em
+                # "Could not assume role with OIDC: Not authorized to perform
+                # sts:AssumeRoleWithWebIdentity", porque o sub do token vem com
+                # os ids numericos. A primeira fica para o caso de a plataforma
+                # voltar atras; nenhuma das duas abre outra branch nem um fork.
+                token.actions.githubusercontent.com:sub:
+                  - !Sub 'repo:${RepositorioDeDeploy}:ref:refs/heads/main'
+                  - !Sub 'repo:${RepositorioDeDeployImutavel}:ref:refs/heads/main'
       Policies:
         - PolicyName: publicar-no-lotus-site
           PolicyDocument:
@@ -210,7 +229,15 @@ Resources:
                 Resource: !GetAtt Balde.Arn
               - Sid: InvalidarSomenteEstaDistribuicao
                 Effect: Allow
-                Action: cloudfront:CreateInvalidation
+                # GetInvalidation e obrigatorio junto de CreateInvalidation:
+                # `aws cloudfront wait invalidation-completed` faz polling com
+                # ela. Medido em 2026-09-04: so com CreateInvalidation o job
+                # reprovou em "not authorized to perform: cloudfront:GetInvalidation",
+                # DEPOIS de ja ter publicado no S3, deixando o passo de limpeza
+                # da raiz sem rodar. Ambas continuam presas a esta distribuicao.
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetInvalidation
                 Resource: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
       Tags:
         - Key: Projeto
