@@ -37,6 +37,20 @@ const required = [
   'docs/superpowers/historico/progress.md',
 ]
 
+// Árvore de espelho: `.espelho-exclusoes` está aqui e NENHUM artefato do
+// harness atravessou. Não existe contrato para validar, e reprovar a ausência
+// reprovaria por acerto -- o `pnpm check` do repositório corporativo ficaria
+// vermelho em toda publicação, que é o que `scripts/espelhar-corporativo.sh`
+// exige verde para promover o commit seguinte.
+//
+// O pulo exige os quinze ausentes DE UMA VEZ. Harness pela metade continua
+// sendo erro no repositório de desenvolvimento, que é o único lugar onde este
+// gate tem serventia.
+if (exists('.espelho-exclusoes') && required.every((rel) => !exists(rel))) {
+  console.log('Agent workflow contract skipped: árvore de espelho')
+  process.exit(0)
+}
+
 for (const rel of required) {
   if (!exists(rel)) errors.push(`missing: ${rel}`)
 }
