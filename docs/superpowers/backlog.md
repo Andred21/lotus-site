@@ -493,3 +493,14 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   `@source` explícito em `src/index.css`, que está fora dos paths deste bloco.
   **Gatilho:** bloco que puder tocar `src/index.css`, ou a primeira vez que o conjunto publicado
   precisar bater com um build local.
+- **D-42 · o job `procedencia` confere o trailer, não a árvore** — `Source-Commit` é validado por
+  `gh api repos/$ESPELHO_FONTE/compare/main...$trailer`, que prova só que o SHA está no histórico de
+  `main` na origem; nada compara `HEAD^{tree}` do espelho com a árvore daquele SHA filtrada por
+  `.espelho-exclusoes`. Um push direto em `Gatika-CL:main` com conteúdo arbitrário e trailer válido
+  passaria. O impacto real é limitado: quem tem escrita no corporativo já publica pelo outro ramo do
+  mesmo job (`commit entrou por Pull Request mesclado`), então o trailer não é a fronteira de
+  confiança — e a spec pede exatamente o que foi implementado. Fechar de verdade exige o corporativo
+  ler o repositório pessoal (privado), ou seja, um token cruzado que hoje não existe.
+  **Gatilho:** o repositório pessoal virar público, ou surgir credencial de leitura cruzada.
+  Levantado na review do bloco `7.1.1+7.1.2+7.1.5` (achado R-1 do Codex, rebaixado a `suggestion`
+  depois de verificado).

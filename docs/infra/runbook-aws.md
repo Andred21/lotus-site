@@ -136,11 +136,30 @@ Isso derruba distribuição, política de cabeçalhos, OAC, role e budget. O **b
 `DeletionPolicy: Retain`, com todos os releases. Para removê-lo também:
 
 ```bash
-aws s3 rm "s3://<nome-do-bucket>" --recursive
-aws s3api delete-objects --bucket <nome-do-bucket> --delete "$(aws s3api list-object-versions \
-  --bucket <nome-do-bucket> --query '{Objects: Versions[].{Key:Key,VersionId:VersionId}}' --output json)"
-aws s3 rb "s3://<nome-do-bucket>"
+BALDE=<nome-do-bucket>
+
+# O bucket é versionado, e isso muda tudo aqui. `aws s3 rm --recursive` não
+# apaga nada: só empilha delete marker sobre cada chave. Some com as duas
+# listas -- versões E delete markers -- em lotes de até 1000, que é o limite
+# de `delete-objects`. O flag é `--max-items`, da paginação do próprio CLI:
+# `list-object-versions` não aceita `--max-keys` no aws-cli v2 (conferido em
+# 2.36.38).
+for TIPO in Versions DeleteMarkers; do
+  while [ "$(aws s3api list-object-versions --bucket "$BALDE" --max-items 1000 \
+      --query "length(${TIPO} || \`[]\`)" --output text)" != "0" ]; do
+    aws s3api delete-objects --bucket "$BALDE" --delete "$(aws s3api list-object-versions \
+      --bucket "$BALDE" --max-items 1000 \
+      --query "{Objects: ${TIPO}[].{Key:Key,VersionId:VersionId}}" --output json)"
+  done
+done
+
+# Precisa responder 0 e 0 antes do `rb`.
+aws s3api list-object-versions --bucket "$BALDE" \
+  --query '{versoes: length(Versions || `[]`), marcadores: length(DeleteMarkers || `[]`)}'
+
+aws s3 rb "s3://$BALDE"
 ```
 
-O segundo comando existe porque o bucket é versionado: `rm --recursive` cria delete markers e deixa
-as versões antigas para trás, e o `rb` recusa bucket não vazio.
+O laço existe porque o `rb` recusa bucket não vazio, e num bucket versionado "vazio" quer dizer sem
+versão **e** sem delete marker. Varrer só `Versions[]` deixa os marcadores para trás e o `rb` falha
+depois de o procedimento já ter anunciado remoção completa.

@@ -120,8 +120,16 @@ aws s3 ls "s3://$BALDE/releases/"                       # confere que o prefixo 
 VOLTA=$(mktemp -d)
 aws s3 sync "s3://$BALDE/releases/$SHA_ANTERIOR/" "$VOLTA/"
 
-aws s3 sync "$VOLTA/" "s3://$BALDE/" --delete \
-  --exclude "releases/*" \
+# Obrigatório. `aws s3 sync` local->S3 só sobe o arquivo quando o tamanho
+# difere ou quando a origem local é MAIS NOVA que o objeto. O download acima
+# preserva o LastModified do objeto, então o release antigo chega ao disco mais
+# velho que a raiz atual -- e o `index.html` de dois releases tem exatamente o
+# mesmo tamanho, porque o hash do Vite tem comprimento fixo. Sem o `touch` o
+# rollback apagaria os assets atuais e MANTERIA o index atual, que é a raiz
+# quebrada em vez do release anterior de volta.
+find "$VOLTA" -type f -exec touch {} +
+
+aws s3 sync "$VOLTA/" "s3://$BALDE/" \
   --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
   --cache-control "public, max-age=31536000, immutable"
 
@@ -130,10 +138,14 @@ aws s3 sync "$VOLTA/" "s3://$BALDE/" \
   --include "index.html" --include "robots.txt" --include "sitemap.xml" \
   --cache-control "no-cache"
 
-rm -rf "$VOLTA"
-
 aws cloudfront create-invalidation --distribution-id "$ID" \
   --paths /index.html /robots.txt /sitemap.xml
+
+# A limpeza é o ÚLTIMO passo, depois da invalidação: enquanto o index que sai
+# ainda puder ser servido, os assets que ele aponta precisam existir na raiz.
+aws s3 sync "$VOLTA/" "s3://$BALDE/" --delete --exclude "releases/*"
+
+rm -rf "$VOLTA"
 ```
 
 **A descida para o disco não é desperdício, é o que faz o comando funcionar.** Numa cópia
@@ -152,8 +164,10 @@ A primeira linha é um no-op: o site nunca seria republicado. A segunda e a terc
 histórico inteiro de releases, e o rollback seguinte não teria de onde vir. Só a quarta faz as
 duas coisas certas. Emenda **E3** da spec, autorizada por João em 2026-09-04.
 
-O `Cache-Control` é reescrito nos dois passos porque, sem cópia servidor-a-servidor, não há
-metadado de origem para preservar. É a mesma divisão em dois passos que o job `deploy` usa.
+O `Cache-Control` é reescrito nos dois passos de publicação porque, sem cópia servidor-a-servidor,
+não há metadado de origem para preservar. É a mesma divisão por tipo de arquivo que o job `deploy`
+usa, e a mesma ordem: assets sem `--delete`, arquivos de nome fixo, invalidação, limpeza. Apagar
+antes da invalidação deixaria o index que ainda está no ar apontando asset já removido.
 
 A invalidação lista três caminhos e não `/*` porque todo o resto sai do Vite com hash no nome —
 asset novo tem URL nova e não precisa ser invalidado. Invalidar `/*` a cada deploy é o que faz a

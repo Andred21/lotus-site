@@ -257,13 +257,19 @@ jobs:
       #
       # A consequencia é que o Cache-Control precisa ser reescrito aqui: sem
       # cópia servidor-a-servidor não há metadado para preservar. Mesma divisão
-      # em dois passos do upload do release, pela mesma razão.
+      # por tipo de arquivo do upload do release, pela mesma razão.
+      # A promoção tem TRÊS passos, nesta ordem: assets novos SEM `--delete`,
+      # os três de nome fixo, a invalidação, e só então a limpeza com
+      # `--delete`. Com `--delete` já no primeiro passo existiria uma janela --
+      # entre ele e o passo seguinte -- em que o `index.html` antigo, ainda no
+      # ar e revalidado a cada visita, apontaria assets já apagados: 404 de
+      # asset e página quebrada em borda fria. A limpeza não pode vir antes de
+      # o index novo estar valendo.
       - name: Promover para a raiz (assets com hash)
         env:
           BALDE: ${{ vars.AWS_BUCKET }}
         run: |
-          aws s3 sync dist/ "s3://$BALDE/" --delete \
-            --exclude "releases/*" \
+          aws s3 sync dist/ "s3://$BALDE/" \
             --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
             --cache-control "public, max-age=31536000, immutable"
 
@@ -285,6 +291,18 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "$ID" \
             --paths /index.html /robots.txt /sitemap.xml
+
+      # Só agora, com o index novo valendo, os assets do release anterior
+      # deixam de ter leitor. Este `sync` não copia nada: os objetos subiram
+      # nos passos acima, então a cópia remota é MAIS NOVA que a local e o
+      # `sync` local->S3 só sobe o que for maior/menor ou mais recente. Sobra
+      # a deleção do que o `dist/` deste commit não tem.
+      - name: Limpar da raiz o que saiu do build
+        env:
+          BALDE: ${{ vars.AWS_BUCKET }}
+        run: |
+          aws s3 sync dist/ "s3://$BALDE/" --delete \
+            --exclude "releases/*"
 
       - name: Rastro do deployment
         env:

@@ -58,8 +58,17 @@ git show "$FONTE:.espelho-exclusoes" > "$EXCLUSOES" 2>/dev/null || {
 # ── o que atravessa ja passou no CI? ──────────────────────────────────────────
 ORIGEM_REPO=$(git remote get-url origin | sed -E 's#^git@github\.com:##; s#^https://github\.com/##; s#\.git$##')
 
+# Trailer que o commit de espelho carrega quando o gate de CI da origem foi
+# pulado. O bypass e uma saida de emergencia legitima -- o `check` do
+# corporativo roda de novo sobre a arvore espelhada e o `deploy` depende dele,
+# entao commit vermelho nao vira release por este caminho --, mas ele nao pode
+# sumir do historico: quem ler o commit precisa ver que a conferencia da origem
+# nao aconteceu.
+CI_IGNORADO=""
+
 if [ "${LOTUS_ESPELHO_SEM_CI:-0}" = "1" ]; then
   echo "==> AVISO: LOTUS_ESPELHO_SEM_CI=1 -- espelhando SEM conferir o CI de $FONTE_CURTO"
+  CI_IGNORADO="CI-Origem-Nao-Conferido: LOTUS_ESPELHO_SEM_CI=1"
 elif ! command -v gh >/dev/null 2>&1; then
   echo "erro: gh nao encontrado, e sem ele nao da para saber se $FONTE_CURTO passou no CI." >&2
   echo "      instale o gh, ou force com LOTUS_ESPELHO_SEM_CI=1 assumindo o risco." >&2
@@ -129,6 +138,11 @@ revisao acontece. Aqui entra o que constroi, testa e serve o site.
 Source-Commit: $FONTE
 EOF
 )
+
+if [ -n "$CI_IGNORADO" ]; then
+  MENSAGEM="$MENSAGEM
+$CI_IGNORADO"
+fi
 
 if [ -n "$PAI" ]; then
   NOVO=$(git commit-tree "$ARVORE" -p "$PAI" -m "$MENSAGEM")
