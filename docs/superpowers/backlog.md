@@ -473,3 +473,17 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   criaria volume de objetos com custo e nenhum consumidor: não há dashboard, alerta nem consulta que
   os leia.
   **Gatilho:** `7.2.6` (observabilidade), junto com quem vai lê-los.
+- **D-41 · o `dist/` do repositório de desenvolvimento não é byte a byte o `dist/` do espelho** —
+  Tailwind v4 varre a raiz do projeto sozinho, sem lista de `@source`, então prosa em `docs/` gera
+  utilitário. Medido em 2026-09-04, comparando o build deste repositório com o build da árvore
+  filtrada do mesmo commit: 135 seletores contra 120. Os quinze a mais são `.table`, `.inline`,
+  `.visible`, `.sticky`, `.border`, `.underline`, `.outline`, `.isolate`, `.transition`,
+  `.text-balance`, `.mt-4`, `.mt-8`, `.w-4`, `.bg-header` e `.h-header-desktop` — palavras que
+  aparecem em texto de documentação, não em componente. O CSS do espelho é subconjunto estrito do
+  daqui, então o que vai ao ar é o correto e mais enxuto; o defeito é o excesso local. Consequência
+  operacional: os nomes com hash divergem (`index-BzSLLf5o.css` aqui, `index-BJogPgYX.css` lá), e a
+  prova "conjunto de arquivos publicado idêntico ao `dist/` do mesmo commit" precisa construir a
+  partir da árvore filtrada, não deste repositório, ou reprova por acerto. Corrigir de verdade pede
+  `@source` explícito em `src/index.css`, que está fora dos paths deste bloco.
+  **Gatilho:** bloco que puder tocar `src/index.css`, ou a primeira vez que o conjunto publicado
+  precisar bater com um build local.
