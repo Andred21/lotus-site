@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Provedor OIDC do GitHub Actions. E recurso de escopo de CONTA e so pode
+  existir uma vez por conta, entao fica em stack proprio: lotus-site, lotus e
+  qualquer projeto futuro o compartilham sem que um deles seja dono dele. Este
+  stack e implantado PRIMEIRO -- a role de deploy nao pode ser criada antes de
+  o provedor existir.
+
+Resources:
+  ProvedorGitHub:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      # Sem ThumbprintList de proposito: desde 2023 o IAM valida a cadeia de
+      # certificados dos emissores conhecidos pelas CAs raiz, e thumbprint
+      # fixado a mao vira lixo que quebra quando o GitHub rotaciona o
+      # certificado.
+      Tags:
+        - Key: Projeto
+          Value: lotus-compartilhado
+
+Outputs:
+  ProvedorArn:
+    Description: >-
+      ARN do provedor. O stack do site NAO importa este export: o ARN e
+      derivavel da conta e do host, e a trust policy o monta com !Sub. O export
+      existe para quem for ler o stack e para o lotus quando ele trocar a chave
+      IAM por OIDC -- nao para acoplar os dois.
+    Value: !Ref ProvedorGitHub
+    Export:
+      Name: !Sub '${AWS::StackName}-ProvedorArn'

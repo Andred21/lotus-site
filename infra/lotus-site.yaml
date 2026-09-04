@@ -1,0 +1,265 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Ambiente do lotus-site: bucket S3 privado, distribuicao CloudFront com Origin
+  Access Control, role de deploy assumida por OIDC pelo GitHub Actions do
+  repositorio corporativo, e budget proprio. Nao encosta em DNS nem em
+  certificado -- o endereco publicado e o dominio do CloudFront. Depende do
+  stack lotus-oidc-github ja implantado.
+
+Parameters:
+  NomeDoBucket:
+    Type: String
+    Default: lotus-site-prod
+    Description: >-
+      O namespace de nomes de bucket e GLOBAL. Se lotus-site-prod estiver
+      tomado por outra conta, passe lotus-site-prod-<id-da-conta>.
+    AllowedPattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'
+
+  RepositorioDeDeploy:
+    Type: String
+    Default: Gatika-CL/lotus-site
+    Description: >-
+      owner/nome do unico repositorio autorizado a assumir a role de deploy.
+
+  EmailDeAlerta:
+    Type: String
+    Description: Destinatario do alerta de 80% do budget.
+    AllowedPattern: '^[^@]+@[^@]+$'
+
+  TetoMensalUSD:
+    Type: Number
+    Default: 30
+    MinValue: 1
+    Description: Teto mensal em USD somando S3 e CloudFront.
+
+Resources:
+  # ── armazenamento ──────────────────────────────────────────────────────────
+  Balde:
+    Type: AWS::S3::Bucket
+    # O bucket guarda releases/<sha>/, que e a base do rollback. delete-stack
+    # derruba distribuicao, role e budget; o historico de releases sobrevive e
+    # exige remocao explicita. Ver a seccao de desmonte do runbook.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Ref NomeDoBucket
+      # Sem WebsiteConfiguration de proposito: o website endpoint e HTTP puro,
+      # nao aceita OAC e obrigaria o bucket a ser publico. A origem da
+      # distribuicao e a API REST do S3.
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  # ── borda ──────────────────────────────────────────────────────────────────
+  ControleDeAcesso:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-oac'
+        Description: Assina com SigV4 as requisicoes do CloudFront ao bucket privado.
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # X-Robots-Tag em TODA resposta enquanto o endereco publicado for o dominio do
+  # CloudFront. Cobre o que o robots.txt nao cobre -- um robots.txt proibe
+  # rastrear, nao indexar -- e some em 7.2.5 removendo esta politica, sem tocar
+  # em public/ e sem build diferente entre homologacao e producao.
+  #
+  # A razao completa mora AQUI, em comentario de YAML, e nao no campo Comment:
+  # ele aceita no maximo 128 caracteres. Medido em 2026-09-04, com 286 o stack
+  # reprovou em CREATE_FAILED com "The parameter Comment is too big", e os
+  # outros seis recursos foram cancelados junto.
+  PoliticaDeCabecalhos:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub '${AWS::StackName}-noindex'
+        Comment: X-Robots-Tag em toda resposta enquanto o endereco publicado for o dominio do CloudFront. Sai em 7.2.5.
+        CustomHeadersConfig:
+          Items:
+            - Header: X-Robots-Tag
+              Value: noindex, nofollow
+              Override: true
+
+  Distribuicao:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: lotus-site
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        # Mais barata das classes. NAO inclui borda na America do Sul: o
+        # visitante chileno e servido do hemisferio norte, com latencia maior.
+        # Aceitavel para homologacao; revisar no corte de DNS (D-39).
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: balde
+            # RegionalDomainName e nao DomainName: o alias global responde 307
+            # nas primeiras horas de vida de um bucket novo, e o CloudFront
+            # cacheia esse redirecionamento.
+            DomainName: !GetAtt Balde.RegionalDomainName
+            OriginAccessControlId: !GetAtt ControleDeAcesso.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: balde
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          # Managed-CachingOptimized. Honra o Cache-Control que o deploy grava
+          # em cada objeto: immutable nos assets com hash, no-cache no
+          # index.html.
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: !Ref PoliticaDeCabecalhos
+        # Sem CustomErrorResponses de proposito: nao existe rota de cliente
+        # para salvar (#Somos e #Cursos sao fragmentos, resolvidos no
+        # navegador, que nunca chegam ate aqui). Mapear 404 para index.html com
+        # status 200 devolveria 200 a qualquer caminho inventado.
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  PoliticaDoBalde:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Balde
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: CloudFrontLeObjeto
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${Balde.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
+          # Sem esta segunda declaracao o S3 responde 403 a chave inexistente:
+          # sem permissao de listagem o principal nao consegue distinguir "nao
+          # existe" de "nao pode ver", e o CloudFront repassa o 403 ao
+          # visitante. Com ela o S3 responde 404, que e o que a decisao de nao
+          # ter fallback de SPA exige. E listagem sobre o bucket, concedida so
+          # ao principal do CloudFront e so a esta distribuicao; o bucket
+          # continua sem qualquer acesso publico.
+          - Sid: CloudFrontDistingue404De403
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:ListBucket
+            Resource: !GetAtt Balde.Arn
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
+
+  # ── quem publica ───────────────────────────────────────────────────────────
+  PapelDeDeploy:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lotus-site-deploy
+      Description: Assumida por OIDC pelo GitHub Actions do repositorio corporativo.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              # StringEquals e NAO StringLike. Curinga em sub e o erro classico
+              # que abre a role para qualquer branch do repositorio -- ou, com
+              # um curinga mal posto, para um fork.
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${RepositorioDeDeploy}:ref:refs/heads/main'
+      Policies:
+        - PolicyName: publicar-no-lotus-site
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: EscreverObjetos
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub '${Balde.Arn}/*'
+              # sync precisa listar para saber o que ja esta la e o que apagar.
+              - Sid: ListarParaSincronizar
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt Balde.Arn
+              - Sid: InvalidarSomenteEstaDistribuicao
+                Effect: Allow
+                Action: cloudfront:CreateInvalidation
+                Resource: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  # ── guarda de custo ────────────────────────────────────────────────────────
+  Teto:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub '${AWS::StackName}-teto'
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: !Ref TetoMensalUSD
+          Unit: USD
+        # Filtro por SERVICO e nao por tag: tag de alocacao de custo precisa
+        # ser ativada no painel de billing e leva ate 24h para valer, e um
+        # budget que nao mede nada e pior que nenhum.
+        CostFilters:
+          Service:
+            - Amazon Simple Storage Service
+            - Amazon CloudFront
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref EmailDeAlerta
+
+Outputs:
+  DominioDaDistribuicao:
+    Description: Endereco publicado enquanto 7.2.1 nao apontar o dominio do cliente.
+    Value: !GetAtt Distribuicao.DomainName
+
+  IdDaDistribuicao:
+    Description: Variavel de repositorio AWS_CLOUDFRONT_ID no corporativo.
+    Value: !Ref Distribuicao
+
+  NomeDoBaldePublicado:
+    Description: Variavel de repositorio AWS_BUCKET no corporativo.
+    Value: !Ref Balde
+
+  ArnDoPapelDeDeploy:
+    Description: >-
+      Variavel de repositorio AWS_DEPLOY_ROLE_ARN no corporativo. A ausencia
+      dela e a primeira das duas camadas que impedem o repositorio pessoal de
+      publicar; a segunda e o sub fixo da trust policy.
+    Value: !GetAtt PapelDeDeploy.Arn
