@@ -1,19 +1,19 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
-work_class: null
-active_work_item: null
-active_notion_eap: null
-active_title: null
-active_branch: null
+workflow_state: planning
+work_class: architectural
+active_work_item: 7.1.1+7.1.2+7.1.5
+active_notion_eap: 7.1.1, 7.1.2, 7.1.5
+active_title: Deploy AWS S3 + CloudFront com CD pelo espelho Gatika-CL
+active_branch: feat/7-1-1-7-1-2-7-1-5-deploy-aws
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+next_owner: claude
+next_action: writing_plan
 resume_state: null
 context_packet: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-03-7.1.1-7.1.2-7.1.5-deploy-aws-design.md
 active_plan: null
 executor: null
 reviewer: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 12
 last_completed_work_item: paridade-header-cursos
-state_basis_commit: ef702a6
-updated_at: 2026-09-03T23:59:00Z
+state_basis_commit: 0d29343
+updated_at: 2026-09-04T02:05:00Z
 ---
 
 # Estado operacional — Lotus Site
