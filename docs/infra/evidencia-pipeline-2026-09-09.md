@@ -16,8 +16,8 @@ que commit sem procedência não publica.
 
 | #   | Evidência                                            | Estado |
 | --- | ---------------------------------------------------- | ------ |
-| E1  | `procedencia` verde no corporativo                   | —      |
-| E2  | `deploy` publicando `releases/<sha>/` no corporativo | —      |
+| E1  | `procedencia` verde no corporativo                   | ✅     |
+| E2  | `deploy` publicando `releases/<sha>/` no corporativo | ✅     |
 | E3  | `deploy` como `skipped` no run de push do pessoal    | ✅     |
 | E4  | push direto sem trailer reprovando em `procedencia`  | —      |
 
@@ -67,3 +67,90 @@ espelho de qualquer jeito. E o `deploy` é `skipped` porque a condição `vars.A
 != ''` não se satisfaz: a variável só existe no corporativo. É a primeira das duas camadas
 descritas no `ci.yml`; a segunda é a trust policy da role, que recusa qualquer `sub` diferente de
 `repo:Gatika-CL/lotus-site:ref:refs/heads/main`.
+
+## A promoção
+
+`scripts/espelhar-corporativo.sh` rodado em 2026-09-09, sem `LOTUS_ESPELHO_SEM_CI`:
+
+```text
+==> conferindo o CI de c6c6f9a em Andred21/lotus-site
+    CI verde.
+==> commit de espelho f9069269cf61ac406eed8da892737d87e1eb3353 (fonte c6c6f9a)
+   08026af..f906926  -> main
+```
+
+O `--simular` antes disso mediu a árvore filtrada: **95 arquivos**, contra 252 na origem. Nenhum
+`docs/`, `.claude/`, `.agents/`, `CLAUDE.md` ou `scripts/espelhar-corporativo.sh` na lista de raiz —
+o filtro do `.espelho-exclusoes` fez o que promete, e é essa mesma propriedade que o `procedencia`
+confere do outro lado.
+
+Run resultante: `Gatika-CL/lotus-site` run 2, push em `main`, `f906926`.
+<https://github.com/Gatika-CL/lotus-site/actions/runs/34415359603>
+
+```text
+procedencia  completed  success
+check        completed  success
+deploy       completed  success
+```
+
+## E1 · `procedencia` verde no corporativo
+
+Saída do job (`procedencia` do run 2):
+
+```text
+release de espelho. Fonte: Andred21/lotus-site@c6c6f9a335f5e61ee351b135cc7e7208767bb452
+(identical em relação a main de Andred21/lotus-site).
+```
+
+`identical` é o caso forte dos dois aceitos: o trailer não só está no histórico de `main` da
+origem, ele **é** a ponta dela. O caminho de espelho só abriu porque as três condições valeram ao
+mesmo tempo — trailer presente, árvore sem nenhum path de `.espelho-exclusoes`, e `ESPELHO_FONTE`
+definida para conferir a origem contra a API. A `E4` mostra o que acontece quando a primeira falta.
+
+## E2 · `deploy` publicando `releases/<sha>/` no corporativo
+
+O `deploy` assumiu a role por OIDC, sem segredo de longa duração:
+
+```text
+Authenticated as assumedRoleId AROA3B7BDINPHL2WCXNLV:GitHubActions
+```
+
+Este é o `fix(7.1.2)` `4986caa` funcionando pela primeira vez em run real: era ele que corrigia o
+`sub` da trust policy e a espera da invalidação, e era ele que nunca tinha atravessado para o
+corporativo (`D-33`).
+
+Objetos movidos, contados no log do job:
+
+```text
+21 upload  -> s3://lotus-site-prod/releases/f9069269cf61ac406eed8da892737d87e1eb3353/
+21 upload  -> s3://lotus-site-prod/            (promoção para a raiz)
+ 0 delete                                       (nada saiu do build desde o release anterior)
+```
+
+Invalidação criada e esperada até concluir, os dois passos no mesmo job:
+
+```text
+invalidação I64T5RWAP29QCQZEWV7CJS24X3 criada; esperando concluir
+invalidação I64T5RWAP29QCQZEWV7CJS24X3 concluída
+```
+
+Rastro final, que é a parte "deployment rastreável" do aceite:
+
+```text
+release publicado em s3://lotus-site-prod/releases/f9069269cf61ac406eed8da892737d87e1eb3353/
+commit de origem: c6c6f9a335f5e61ee351b135cc7e7208767bb452
+```
+
+Conferido no ar logo depois, em `https://dhpoztt69jydz.cloudfront.net/`:
+
+```text
+HTTP/2 200
+last-modified: Wed, 09 Sep 2026 23:09:52 GMT
+cache-control: no-cache
+x-robots-tag: noindex, nofollow
+
+/nao-existe -> 404
+```
+
+O `last-modified` é o minuto do `deploy`, não o de uma publicação anterior: o que está no ar é o
+artefato deste run.
