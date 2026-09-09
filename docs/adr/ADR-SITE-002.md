@@ -1,8 +1,15 @@
 # ADR-SITE-002 · Envio do formulário de contato
 
-- **Status:** aceito
+- **Status:** superseded pela [`ADR-SITE-005`](ADR-SITE-005.md) em 2026-09-09
 - **Data:** 2026-08-27
 - **Escopo:** Sprint 3, EAP 4.1.1 a 4.1.10
+
+> **Substituída.** O envio do formulário passou a ser SES atrás de uma Lambda na mesma origem, por
+> decisão de João em 2026-09-09. Dois motivos: a conta do Web3Forms nunca foi criada, então o envio
+> nunca foi provado (`D-17`), e a EAP `7.1.4` pede domínio remetente autenticado, o que não é
+> atingível com remetente de terceiro. O texto abaixo fica como está — a comparação de provedores e
+> o que foi medido sobre retenção continuam sendo o registro de por que esta escolha foi feita na
+> época.
 
 ## Contexto
 
