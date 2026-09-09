@@ -2,7 +2,7 @@
 
 > Fila operacional local. Não é fase e não autoriza execução: item só fica ativo por seleção
 > explícita do João em `docs/superpowers/state.md`. Notion é o roadmap externo; este arquivo é o
-> recorte ainda relevante. Item fechado sai daqui e o rastro fica em
+> recorte ainda relevante. Item fechado sai da fila e o rastro fica em
 > `docs/superpowers/historico/progress.md`.
 >
 > Este arquivo nunca promove item, nunca define fase e nunca replica todas as tasks do Notion.
@@ -17,120 +17,212 @@ closure → progress.md
 `seleção explícita → context_required (quando indicado) → /planejar-site → /executar-site →
 /revisar-site → /fechar-site`
 
+## Como ler este arquivo
+
+| Secção       | O que é                                                           |
+| ------------ | ----------------------------------------------------------------- |
+| `AGORA`      | o que está ativo e as decisões vigentes que moldam a fila         |
+| `BLOCOS`     | a fila do MVP em ordem lógica de execução, com dependência real   |
+| `DEPOIS`     | tema fora do MVP, sem ordem e sem estimativa                      |
+| `PENDÊNCIAS` | o que depende do João ou de terceiro e não avança por conta nossa |
+| `DÉBITOS`    | dívida declarada, aberta ou fechada, com gatilho                  |
+
+Bloco desta fila não vira `active_work_item` por estar aqui. Continua valendo a Lei 3: seleção é
+sempre explícita.
+
 ---
 
 # AGORA
 
-Nada ativo. `docs/superpowers/state.md` está em `idle`: o próximo item entra por seleção explícita
-do João, nunca por promoção automática deste arquivo.
+Nada ativo. `docs/superpowers/state.md` está em `idle`.
 
-O bloco `4.1.1`–`4.1.10` (Formulário e integrações — Sprint 3) fechou em 2026-08-28 no PR
-https://github.com/Andred21/lotus-site/pull/7; o rastro está em
-`docs/superpowers/historico/progress.md`. **Pendências abertas com João:** a conferência humana de
-paridade visual contra os cinco PNG de `docs/inventario/baseline/`, herdada da Sprint 2 e nunca
-feita — nenhum gate a substitui —, e a conta do Web3Forms, sem a qual o envio real continua não
-provado (`D-17`).
+## Decisões de 2026-09-09 (João)
 
-**Autorizado por João em 2026-09-02, ainda não selecionado:** bloco `revisao-arquitetura-2026-09`.
-Mesma regra: só fica ativo quando escrito em `docs/superpowers/state.md`.
+Estas seis decisões reorganizaram a fila e estão registradas nos ADR citados:
 
-## `revisao-arquitetura-2026-09` — autorizado, aguardando seleção
+1. **Toda a infraestrutura do site fica na AWS**, dentro do que a AWS aceita hospedar.
+2. **O e-mail corporativo continua no Google Workspace.** A zona DNS migra; o MX não muda.
+   (`ADR-SITE-006`)
+3. **O envio do formulário passa a ser SES + Lambda Function URL.** Web3Forms sai.
+   (`ADR-SITE-005`, que substitui a `ADR-SITE-002`)
+4. **CI/CD continua no GitHub Actions**, com OIDC. Não migra para CodePipeline.
+5. **A integração com a API do Lotus administrativo (`8.2.1`) está congelada.** Não planejar, não
+   estimar, não abrir contexto. O subdomínio `sistema.lotusotec.cl` é registro de DNS e nada mais:
+   criá-lo não abre esta task.
+6. **Escrita no Notion autorizada** para registrar estas decisões. A Lei 6 exige autorização nova
+   a cada vez; esta não vale para a próxima rodada.
 
-Revisão de arquitetura de 2026-09-02 (`/improve-codebase-architecture`, vocabulário de
-`/codebase-design`, base `main@30a4c0b`). Dez candidatos de aprofundamento, nenhum contradiz
-ADR-SITE-001/002/003. João decidiu juntar todos num bloco só; um commit por candidato. Ordem
-sugerida: 1, 2+3, 4, 5, depois os demais. Relatório HTML da rodada ficou em
-`/tmp/architecture-review-2026-09-02.html` (efêmero; a substância está abaixo).
+## O que a AWS não aceita
 
-**Strong**
+`.cl` não pode ser registrado nem transferido para o Route 53 — a documentação do registrador da
+AWS diz, na página do TLD, "You can no longer use Route 53 to register new .cl domains or transfer
+.cl domains to Route 53" (lida em 2026-09-09). O **registro** do domínio fica onde está, na
+BlueHosting. O que move para a AWS é a **zona**: o Route 53 hospeda zona de qualquer TLD. Detalhe
+e consequências na `ADR-SITE-006`.
 
-1. **Ganchos `data-node` nos nós medidos.** `scripts/qa/lib/espacamento.mjs:30-95` (`NOS`),
-   `e2e/a11y-exceptions.ts:45-52` e os testes unitários de `Contacto`/`Cursos`/`Destaques`
-   endereçam o mesmo nó por classe Tailwind; cada fix de paridade muda classe e quebra os três
-   (`a11y-exceptions.ts:39-44` registra duas rodadas dessa churn). Decisões fechadas no grilling
-   de 2026-09-02:
-   - atributo `data-node="<nome de NOS>"`, literal no JSX, em todos os 17 nós de `NOS` (inclusive os
-     já ancorados por `#id`); `clone:` de cada entrada vira `[data-node="…"]`;
-   - `Row` ganha prop explícita `node?: string` que vira `data-node` (sem spread de `...rest`);
-   - Destaques: três cards e três `<p>` indexados, `destaque.1.card`/`destaque.1.corpo` …
-     `destaque.3.*`; as entradas `destaque.primeiro.*` de `NOS` são renomeadas para `destaque.1.*`
-     (fixture de 2026-08-30 fica como histórico; `espacamento.json` não guarda seletor);
-   - exceções do axe viram `p[data-node="destaque.N.corpo"]` — axe-core 4.13.0 inclui `data-*`
-     único no target com a tag na frente, nó com `id` único é imune, descendente herda prefixo
-     do pai, e valor com 31+ caracteres é descartado em silêncio;
-   - `espacamento.test.mjs` prova órfão (nome de `NOS` sem `data-node` em `src/`) e valor
-     `< 31` caracteres;
-   - testes unitários trocam `querySelector` de classe por `getByTestId` com
-     `testIdAttribute: 'data-node'` no Vitest; asserções de string de classe ficam para o item 9;
-   - `CONTEXT.md` ganha o termo "Nó medido" quando o código passar a usá-lo.
-2. **Um módulo de sessão de navegador para QA e inventário.** Launch + goto + scroll de lazy-load +
-   `document.fonts.ready` + toggle do menu estão copiados em `scripts/inventario/lib/site.mjs:67-86`
-   (`openPage`, URL fixa), `scripts/qa/capture-clone.mjs:15-34`, `capture-referencia.mjs:19-21`,
-   `capture-baseline.mjs:18`, `medir-espacamento.mjs:23-42` (único que espera fonte), `perf.mjs:25`
-   e `sample-baseline.mjs:104`. Só o rabo (`writeManifest`, `contactSheetHtml`, `linhasMarkdown`)
-   é testado. Alvo: `scripts/qa/lib/browser.mjs` com
-   `withPage({ url, viewport, fontsReady, scrollFull, openMenu: 'referencia' | 'clone' }, fn)`;
-   `openPage` vira adapter de uma linha.
-3. **Rodada de QA parametrizada.** `paridade.mjs:7`, `medir-espacamento.mjs:13` e `perf.mjs:17`
-   fixam `2026-08-30` no código; `capture-clone.mjs:8`, `medir-espacamento.mjs:12`, `perf.mjs:16` e
-   `playwright.config.ts:12` repetem a porta `5184`. O comentário de `paridade.mjs:6` ("regenerar
-   cria pasta nova") é falso. Alvo: `scripts/qa/lib/run.mjs` com `runDir(kind, date)` (data por
-   argumento ou env) e `cloneUrl()`.
-4. **Helpers de contato no E2E.** `fillContact`, `page.route` do Web3Forms e strings de feedback
-   triplicados em `e2e/contacto.spec.ts`, `e2e/a11y.spec.ts` e `e2e/teclado.spec.ts`. Alvo:
-   `e2e/contact.ts` com `fillContact(page, data)`, `stubWeb3Forms(page, { success })` e feedback
-   importado de `src/content/site.ts` (content não importa React).
-5. **Apagar `rgbToHex`.** `scripts/inventario/lib/site.mjs:47-59` descarta alpha e ainda alimenta
-   `extract-styles.mjs:87-88`; `cssColor` (`site.mjs:102-116`) já é o parser correto e o
-   comentário de `:96-98` diz que `rgbToHex` produziu paleta errada (`#000000` onde o site tem
-   `rgba(0,0,0,0.03)`). Deletion test: concentra.
+---
 
-**Worth exploring**
+# BLOCOS
 
-6. **Tabela única de campos do contato.** O nome de campo é relistado em `src/content/site.ts:75-80`,
-   `src/lib/contact-fields.ts:7-25`, `src/lib/contact-schema.ts:57-71,86-94`,
-   `src/integrations/contact/intake.ts:47-53` e `ContactForm.tsx:35-49,162` (`type` do email é
-   override). Alvo: `CONTACT_FIELDS` em `contact-fields.ts` com
-   `{ name, required, min, max, inputType, autocomplete }`; schema, leitura do intake e
-   atributos do form derivam dela. Intake continua um módulo (ADR-SITE-003).
-7. **Estado de `ContactForm` como união discriminada.** `ContactForm.tsx:95-116` guarda `status` +
-   `fieldErrors` e recalcula `hasFieldErrors` (segundo lugar que sabe que o honeypot é invisível).
-   Alvo: `{ kind: 'idle' } | { kind: 'submitting' } | ContactSubmitResult`; `onSubmit` não muda.
-8. **Uma lista de viewports.** Seis cópias: `scripts/inventario/lib/site.mjs:11-16`,
-   `scripts/qa/lib/paridade.mjs:16-22`, `e2e/regressao-visual.spec.ts:10-13`, `e2e/a11y.spec.ts:27-28`,
-   `e2e/home.spec.ts:20,46` (altura 900 divergente), `menu`/`teclado`/`producao` inline;
-   `paridade.test.mjs:14` relista em vez de importar. Alvo: módulo de viewports nomeados de onde
-   `STATES` deriva; e2e importa via `tsconfig.e2e.json`.
-9. **Testes de string de classe provam JSX, não pixel.** `Contacto.test.tsx:62`
-   `toContain('mb-2.25')` duplica `Contacto.tsx:30` e não liga aos `9px` de `espacamento.json`.
-   Alvo: e2e que lê o fixture de referência e compara `getComputedStyle` por `data-node`
-   (depende do item 1); asserções de classe saem.
-10. **CTA pílula como `@utility`.** String idêntica em `Hero.tsx:44` e `Cursos.tsx:68`, variante em
-    `ContactForm.tsx:200`. Alvo: `@utility pill-cta` em `src/index.css`, sem criar
-    `components/ui/` (ADR-SITE-001).
+Ordem lógica de execução do MVP. `B0` a `B7` são o caminho crítico do go-live e a dependência entre
+eles é real, não preferência. `B8` a `B10` não bloqueiam o go-live e entram quando o João quiser —
+um por vez, porque o harness admite um `active_work_item` só.
 
-**Não tocar, com motivo:** Contact intake + adapter (ADR-SITE-003); `Row` (apagar espalha
-`mx-auto w-4/5 max-w-row` em 8 chamadores); título+lead de Cursos/Contacto (extração só move);
-composição em `App.tsx` (vale só com segunda integração); `preload-critical.mjs`, `MobileMenu`,
-`NOS` com ambiguidade = throw, catracas do eslint.
+## B0 · `espelho-8982f50` — promover o release e provar o pipeline
+
+- **Escopo:** rodar `scripts/espelhar-corporativo.sh` e levar `8982f50` ao corporativo.
+- **Por que é o primeiro:** `upstream/main` está em `08026af`, cujo trailer aponta `257c807`
+  (medido em 2026-09-09). O `fix(7.1.2)` `4986caa` — que destrava o OIDC e a espera da invalidação
+  — nunca atravessou. Todo bloco seguinte que publique depende deste caminho funcionar.
+- **Nenhum arquivo do repositório muda.** É operação, classe `bounded`.
+- **Fecha:** `D-33`.
+- **Evidência exigida:** `procedencia` verde no corporativo; `deploy` publicando
+  `releases/<sha>/`; `deploy` como `skipped` no run de push do pessoal; push direto sem trailer
+  reprovando em `procedencia`.
+- **Bloqueio externo:** nenhum.
+
+## B1 · `7.2.1` — zona DNS em Route 53
+
+- **Escopo:** recriar a zona de `lotusotec.cl` no Route 53, conferir, trocar os nameservers no
+  registrador, emitir o certificado ACM em `us-east-1` e apontar o alias da distribuição.
+- **Entrega junto:** `sistema.lotusotec.cl` como registro explícito. Hoje ele só existe por
+  wildcard (`D-45`), e o limite de um subdomínio do painel atual deixa de valer no Route 53, que
+  não tem esse limite.
+- **Entrega junto:** ampliar o filtro do `AWS::Budgets::Budget` para o Route 53. Hoje ele filtra S3
+  e CloudFront; assim que a zona existir, o teto de US$ 30 para de medir parte da conta.
+- **Depende de:** `B0` não; depende de **acesso ao painel do registrador** (`D-44`).
+- **Débitos que toca:** `D-44`, `D-45`, `D-46`.
+- **Evidência exigida:** a zona nova respondendo nos nameservers da AWS **antes** da troca
+  (`dig @ns-xxx.awsdns-yy.com`); cada registro do inventário conferido antes e depois; MX do Google
+  intacto e recebimento testado com mensagem real; certificado em `ISSUED`; `curl -sI` do apex e do
+  `www` batendo na distribuição.
+- **Bloqueio externo:** acesso ao StackCP/BlueHosting, e o export BIND da zona.
+- **Inventário medido da zona:** `docs/infra/zona-dns-lotusotec.md`.
+
+## B2 · `4.1.7+7.1.3+7.1.4` — contato por SES + Lambda
+
+- **Escopo:** `ADR-SITE-005`; Lambda com `AuthType: AWS_IAM` publicada como segunda origin do
+  CloudFront em `/api/contacto`, com OAC assinando SigV4; SES com identidade de domínio, DKIM e
+  MAIL FROM em subdomínio; adapter novo no lugar de `src/integrations/contact/web3forms.ts`.
+- **Por que depende de `B1`:** DKIM e MAIL FROM são registros na zona. Sem a zona na AWS não há
+  onde publicá-los.
+- **Por que same-origin e não CORS:** com `/api/contacto` na mesma origem, a CSP de `B3` fecha em
+  `connect-src 'self'` e a URL da função não é chamável direto.
+- **Superfície de mudança medida:** 13 arquivos citam `web3forms` — o adapter, os testes unitários,
+  `e2e/contacto.spec.ts`, `e2e/a11y.spec.ts`, `e2e/teclado.spec.ts`, `.env.example` e
+  `src/vite-env.d.ts`. A porta `ContactSender` de `src/integrations/contact/intake.ts` **não muda**:
+  é troca de adapter, o que a `ADR-SITE-003` já pagou.
+- **Entrega junto:** ampliar o filtro do Budget para SES e Lambda.
+- **Fecha:** `D-17`, por substituição — deixa de existir conta Web3Forms a criar.
+- **Evidência exigida:** mensagem real chegando na caixa do Google Workspace; `/api/contacto`
+  respondendo pela distribuição e a URL da função recusando chamada direta; nenhum segredo no
+  bundle (`7.1.3` fecha por construção: a credencial é a role da função).
+- **Bloqueio externo:** production access do SES. Conta nova nasce em sandbox — 200 mensagens/dia e
+  só destinatário verificado —, e sair disso é ticket de suporte com espera. **Pedir no início de
+  `B1`, não aqui.**
+
+## B3 · `7.2.2` — headers e hardening HTTP
+
+- **Escopo:** `Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` e `frame-ancestors` na `ResponseHeadersPolicy` de
+  `infra/lotus-site.yaml`, que hoje declara só o `X-Robots-Tag`.
+- **Depende de `B2`:** a CSP precisa saber quem o formulário chama.
+- **Depende de `B1`:** HSTS só depois do domínio próprio servindo HTTPS estável — HSTS num domínio
+  que ainda vai mudar é armadilha, não hardening.
+- **Evidência exigida:** `curl -sI` mostrando cada cabeçalho; `pnpm e2e` verde com a CSP ligada,
+  provando que ela não quebra fonte self-hosted, imagem nem o envio do formulário.
+
+## B4 · `7.2.3+7.2.4` — backup do WordPress e smoke test
+
+- **Escopo:** backup restaurável do WordPress e plano de rollback do corte; smoke test completo
+  usando o artefato exato que vai ao ar.
+- **Depende de:** `B2`, `B3`.
+- **Evidência exigida:** restauração exercitada, não descrita; checklist de produção rodado contra
+  o release que será promovido.
+
+## B5 · `7.2.5` — cutover de `lotusotec.cl`
+
+- **Escopo:** apex e `www` apontando para a distribuição; remoção do `X-Robots-Tag`; decisão de
+  `D-39` (`PriceClass_100` não tem borda na América do Sul, e o visitante é chileno).
+- **Depende de:** `B4`.
+- **Fecha:** `D-22` — Rich Results Test e depuradores sociais passam a ter URL pública.
+- **Evidência exigida:** `lotusotec.cl` entregando o clone por HTTPS; nenhum recurso essencial
+  quebrado; rollback do `ADR-SITE-004` pronto para uso.
+
+## B6 · `7.2.6` — observabilidade mínima
+
+- **Escopo:** access log do CloudFront; alarme CloudWatch de taxa 5xx; health check do Route 53 com
+  SNS; notificação de falha do workflow do Actions.
+- **Depende de:** `B5` — antes do corte não há tráfego que valha medir.
+- **Fecha:** `D-40`. **Toca:** `D-37` (rollback continua procedimento, sem botão).
+- **Evidência exigida:** falha provocada de propósito chegando ao destinatário do alarme.
+
+## B7 · `7.2.7` — desativar o WordPress
+
+- **Escopo:** parar de servir produção pelo WordPress, preservando conteúdo e backup final.
+- **Depende de:** `B6` mais aceite explícito do João, depois de estabilização.
+
+## B8 · `recaptura-baseline` — `D-30` e a conferência humana de paridade
+
+- **Escopo:** corrigir `scripts/inventario/capture-baseline.mjs`, recapturar os cinco PNG de
+  `docs/inventario/baseline/` e reamostrar a paleta inteira.
+- **Por que existe:** os cinco PNG reportam o cabeçalho na cor errada, e a conferência humana de
+  paridade — pendente desde a Sprint 2 e nunca feita — usa exatamente esse material.
+- **Não bloqueia o go-live.** Bloqueia a conferência humana.
+
+## B9 · `revisao-arquitetura-2026-09`
+
+Autorizado por João em 2026-09-02, nunca selecionado. Dez candidatos de aprofundamento da revisão de
+arquitetura (`/improve-codebase-architecture`, base `main@30a4c0b`), nenhum contradiz
+`ADR-SITE-001/002/003`. Um commit por candidato; ordem sugerida 1, 2+3, 4, 5, depois os demais. O
+detalhe dos candidatos está no histórico da rodada — o relatório HTML era efêmero e não sobreviveu.
+
+Nota de 2026-09-09: o candidato 5 (defeito de `rgbToHex` descartando alpha) continua válido e é o
+mesmo de `D-31`. A `ADR-SITE-002` passou a `superseded`, o que não invalida nenhum candidato.
+
+## B10 · `harness-debitos`
+
+- **Escopo:** `D-15` (rule de ícones órfã), `D-18` (Prettier reescreve plano e spec aprovados),
+  `D-19` (transição de estado viajando junto de commit de código), `D-27` e `D-32` (segunda lente
+  ausente). `D-16` e `D-31` entram se `scripts/inventario/` estiver nos `paths_autorizados`.
+- **Não bloqueia o go-live.**
 
 ---
 
 # DEPOIS
 
-Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
+Tema, sem replicar EAP e sem ordem.
 
-- **SEO e acessibilidade** — Sprint 4 (10).
-- **QA visual e performance** — Sprint 5 (8).
-- **Deploy e go-live** — Sprint 6 (12). Infra decidida por João em 2026-09-02: **AWS S3 +
-  CloudFront**. O planejamento da sprint reabre depois do bloco de paridade; conferir se as
-  EAP do Notion descrevem outro host antes de planejar (mesma classe de stale de `D-01`).
-- **Evolução pós-clone** — Sprint 7 (7).
-- **Workflow IA** — Sprint 8 (3): `9.1.1`–`9.1.3`, ver `D-03`.
+- **`8.2.1` · Integração com a API do Lotus administrativo — CONGELADO** por decisão de João em
+  2026-09-09. Não planejar, não estimar, não abrir contexto. `sistema.lotusotec.cl` é registro de
+  DNS entregue em `B1` e não abre esta task.
+- **Evolução pós-clone** — `8.1.1`, `8.1.2`, `8.2.2`, `8.2.3`, `8.2.4`, `8.2.5` (Sprint 7).
+- **Workflow IA** — `9.1.1`–`9.1.3` (Sprint 8), ver `D-03`.
+
+---
+
+# PENDÊNCIAS
+
+O que não avança por conta nossa.
+
+1. **Acesso ao painel de DNS.** João não tem mais acesso a `https://www.stackcp.com/`. Trava `B1`
+   inteiro. Ver `D-44`.
+2. **Export BIND da zona**, a pedir ao suporte da BlueHosting. Reduz o risco de `B1`: a enumeração
+   por DNS não enxerga registro que ninguém adivinhou, e o wildcard (`D-45`) faz qualquer palpite
+   responder.
+3. **Production access do SES.** Prazo externo. Pedir no início de `B1` para não travar `B2`.
+4. **Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
+   da Sprint 2 e nunca feita. Nenhum gate a substitui — e hoje está travada por `D-30`.
+5. **Autorização de escrita no Notion.** Concedida em 2026-09-09 para registrar as decisões deste
+   bloco. Não vale para a próxima rodada.
 
 ---
 
 # DÉBITOS
+
+Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a discussão.
+
+## Abertos
 
 - **D-01 · Notion descreve Next.js onde o repositório é Vite** — `4.1.2`, `4.1.3`, `5.1.1`, `5.1.2`,
   `5.2.2` e `7.1.1` citam Server Action, App Router, `next/image` ou sitemap via Next.js. A task
@@ -151,16 +243,6 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
 - **D-04 · Limite numérico de tamanho/complexidade adiado** — sem amostra do clone não há como
   calibrar `max-lines`, `max-lines-per-function` ou `complexity`; hoje a regra é textual.
   **Gatilho:** após Sprint 2.
-- **D-06 · `scripts/*.mjs` fora de qualquer projeto TypeScript** — `tsconfig.node.json` tem
-  `"include": ["vite.config.ts"]`, então `scripts/validate-agent-workflow.mjs` não é typechecked por
-  `tsc -b` nem coberto pelo `strict` ligado em `1.2.3`. Levantado na review de `1.2.2+1.2.3` como
-  suggestion e deixado fora do escopo.
-  **Gatilho:** ao planejar `1.3.6` (scripts de qualidade) ou `1.3.7` (CI).
-  **Fechado por este bloco** (`1.2.4`–`1.3.9`) em 2026-08-24.
-- **D-07 · `engineStrict` exige Node 24 no CI** — com `engineStrict: true`, qualquer script pnpm
-  morre com `ERR_PNPM_UNSUPPORTED_ENGINE` fora da faixa de `engines`. O runner precisa ler `.nvmrc`.
-  **Gatilho:** ao planejar `1.3.7`.
-  **Fechado por este bloco** (`1.2.4`–`1.3.9`) em 2026-08-24.
 - **D-05 · Cobertura de gate incompleta** — `agent:check` não roda em CI até `1.3.7`; review visual
   não tem Playwright até `1.3.3`. A limitação é registrada no relatório de review, nunca simulada.
   **Gatilho:** ao fechar `1.3.3` e `1.3.7`.
@@ -176,15 +258,6 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   decisão de João em 2026-08-24. `components/`, `app/` e `integrations/` nascem com consumidor
   real.
   **Gatilho:** ao planejar o Sprint 3.
-- **D-10 · Playwright cobre só Chromium** — **fechado em 2026-08-29** pelo bloco `6.1.1-6.3.1`
-  (`6.1.4`): `playwright.config.ts` declara `chromium`, `firefox`, `webkit` e `mobile-webkit`; o
-  fluxo principal (`home`, `menu`, `contacto`) roda nos quatro, e o CI instala os três motores.
-  `a11y.spec.ts` e `seo.spec.ts` seguem só em Chromium — ver débito novo na homologação
-  `docs/qa/homologacao-2026-08-29.md`.
-- **D-11 · axe reporta mas não reprova** — **fechado em 2026-08-28** pelo bloco `5.1.1-5.3.2`
-  (`5.2.4`): `e2e/a11y.spec.ts` audita cinco estados e reprova violação `critical`/`serious` sem
-  exceção nominal em `e2e/a11y-exceptions.ts`; exceção órfã também reprova. As nove exceções
-  iniciais viraram `D-21`.
 - **D-12 · `3.1.4` manda os assets para `public/`, a rule manda para `src/assets/`** — o título da EAP
   é "Migrar assets para public", mas `.claude/rules/architecture.md:12` e `CLAUDE.md:92` reservam
   `public/` para arquivo que precisa de URL estável. João decidiu em 2026-08-25 que a regra do
@@ -198,12 +271,6 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   introduzir estado/interatividade sem necessidade". Terceira instância do mesmo problema de `D-01`,
   agora dentro do Sprint 2.
   **Gatilho:** junto de `D-01`, antes de planejar o Sprint 3.
-- **D-14 · breakpoints exatos não medidos** — `05-layout.md` só prova que a virada do menu
-  desktop/mobile e a do container `1080px` ficam entre `768` e `1440`; `1350px` é derivação da regra
-  dos 80%, não largura medida. A EAP `3.2.10` precisa dos quatro viewports-alvo, não do valor exato,
-  então o bloco não fica bloqueado — mas o clone escolhe um breakpoint sem medição que o confirme.
-  **Fechado por este bloco** (`3.1.1`–`3.2.11`) em 2026-08-26 — o commit `chore(3.1.2)` mediu
-  `900`–`1400` e `05-layout.md:64-76` registra as duas viradas; o clone usa `1000px`, medido.
 - **D-15 · rule de ícones ficou órfã** — `.claude/rules/architecture.md:13` manda ícone novo entrar
   como `<symbol id>` em `public/icons.svg`; o sprite era do scaffold Vite, morreu no commit
   `feat(3.1.1)` junto do `App.tsx` que o consumia, e os ícones deste bloco vêm de `lucide-react`.
@@ -221,6 +288,14 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   evitou o defeito por construção (par de seletor explícito referência/clone, `medirNo` reprova
   seletor que casa com zero ou mais de um nó) sem corrigir `extract-styles.mjs`. `D-16` continua
   aberto.
+- **D-17 · envio real do formulário não provado** — não existe conta nem access key do Web3Forms
+  nesta rodada (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
+  `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
+  no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
+  chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
+  **Reafirmado em 2026-08-29** (D5 da spec do bloco `6.1.1-6.3.1`): a homologação `6.3.1` também
+  fecha com o formulário como parcial declarado.
+  **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
 - **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
   `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
   markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
@@ -238,14 +313,6 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   bloco decide de novo. Não é corrigível aqui: reescrever histórico da branch em review custa mais
   do que o defeito.
   **Gatilho:** task própria de harness, junto de `D-15` e `D-18`.
-- **D-17 · envio real do formulário não provado** — não existe conta nem access key do Web3Forms
-  nesta rodada (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
-  `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
-  no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
-  chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
-  **Reafirmado em 2026-08-29** (D5 da spec do bloco `6.1.1-6.3.1`): a homologação `6.3.1` também
-  fecha com o formulário como parcial declarado.
-  **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
 - **D-20 · imagem social é o logo 500×500** — `og:image`/`twitter:image` usam
   `public/LOTUS-G2_TRANSP_Fondo-Blanco.png` com `twitter:card summary` (D4 do bloco `5.1.1-5.3.2`).
   Card grande (1200×630) exige arte nova, fora do clone.
@@ -277,71 +344,6 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   `5.1.1-5.3.2`). Rich Results Test e depuradores sociais (Facebook, LinkedIn, X) exigem URL
   pública.
   **Gatilho:** primeiro deploy, antes do go-live.
-- **D-23 · fontes self-hosted de peso 500/700 (Montserrat) e 600 (Open Sans) são cópias do
-  arquivo de outro peso** — `src/assets/fonts/montserrat-400.woff2`, `montserrat-500.woff2` e
-  `montserrat-700.woff2` têm o mesmo `sha256`; `open-sans-500.woff2` e `open-sans-600.woff2`
-  também. Achado na rodada de QA `2026-08-29` ao medir performance
-  (`docs/qa/performance/2026-08-29/resumo-pos-otimizacao.md`; a classificação de paridade da rodada
-  não trata de fonte self-hosted): o Vite dedupe
-  por conteúdo, então as três declarações `@font-face` de Montserrat no build resolvem hoje para
-  um único arquivo físico. Nenhum texto `font-bold`/`font-semibold` do site (h1 do hero, headings
-  de seção, botões CTA, nav semibold) renderiza com glifo realmente mais pesado. Corrigir exige
-  baixar/gerar o arquivo real de cada peso — aquisição de asset, não código; fora do escopo de
-  performance do bloco `6.1.1-6.3.1` (D10 da spec: só o gargalo medido é atacado, sem otimizador ou
-  asset novo sem medição que justifique).
-  **Gatilho:** próxima rodada que mexer em tipografia, ou pedido explícito de João.
-  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — Task 1: as três faces
-  baixadas via UA de navegador antigo (endpoint `css2` sob UA moderno devolvia fonte variável
-  única, não instâncias estáticas; decisão de João), cinco `sha256` distintos, catraca em
-  `scripts/inventario/fontes.test.mjs`. Evidência: `docs/inventario/04-tipografia.md`,
-  `docs/qa/paridade/2026-08-30/classificacao.md`.
-- **D-24 · o clone é mais curto que a referência em todas as larguras** — 375 `5467px` -> `4902px`
-  (-565), 768 `4913px` -> `4818px` (-95), 1440 `3441px` -> `3109px` (-332), 1920 `3409px` ->
-  `3105px` (-304). A rodada `2026-08-29` registrou isso como observação não classificável; a
-  review do bloco `6.1.1-6.3.1` mediu a causa elemento a elemento contra `https://lotusotec.cl/` e
-  classificou como `spacing`: `padding: 30px` nos cards de destaque e `padding-bottom: 10px` no
-  título deles, margens verticais do hero (`45/40/50px` na referência contra `mt-8`/`32px` no
-  clone), parágrafo institucional que a referência quebra em `<p>` com 19px entre eles, `padding`
-  e gap das linhas de cursos e de contato, e o container do copyright. Nenhum conteúdo falta e não
-  há defeito visual observável (sem corte, sem sobreposição, sem rolagem horizontal). Corrigir é
-  bloco de paridade próprio: mexe em cinco seções, nas quatro larguras, e obriga recaptura, nova
-  ratificação (D2) e novos snapshots de `toHaveScreenshot`. Enquanto isso, a linha "Altura
-  vertical das seções" fica `pendente decisão` na matriz — ver
-  `docs/qa/paridade/2026-08-29/classificacao.md`.
-  **Gatilho:** decisão de João de abrir o bloco de correção, ou próxima rodada de paridade.
-  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — hero (margens
-  medidas 45/0/40/50px), destaques (padding `30px`/`10px`), calha e padding responsivo de cursos e
-  contacto, e rodapé (bate exato, delta `0`, nas quatro larguras). Institucional: premissa de D4
-  não se confirmou, revogada. Resíduo remanescente nomeado: bloco de ícone dos destaques (`-26px`,
-  já aprovado) e imagem dos cards de curso (ver `D-28`, débito novo). "Altura vertical das seções"
-  passa de `pendente decisão` para `divergência intencional` na matriz. Evidência:
-  `docs/qa/paridade/2026-08-30/espacamento.md`, `docs/qa/paridade/2026-08-30/classificacao.md`.
-- **D-25 · o guarda de regressão visual aponta para o dev server, não para o build** —
-  `e2e/regressao-visual.spec.ts` roda no projeto `chromium` de `playwright.config.ts`, que serve o
-  `pnpm dev` na porta 5183; a mudança que ele existe para guardar (`<link rel="preload">` injetado
-  por `scripts/vite/preload-critical.mjs`) só é produzida pelo build, servido pelo projeto
-  `producao` na 5184. O guarda prova que o dev server não mudou de pixel, o que é verdadeiro e
-  insuficiente. Mover o spec para o projeto `producao` implica regerar os snapshots sob o nome do
-  projeto novo. Achado da segunda lente (Claude) na review do bloco `6.1.1-6.3.1`, **sem a
-  confirmação do Codex que D7 da spec exige**: a segunda passada do reviewer não rodou por limite
-  de uso da conta Codex. Registrado como débito por decisão de João em 2026-08-29, não corrigido.
-  **Gatilho:** próxima mudança que só exista no build de produção, ou quando a cota do reviewer
-  permitir a confirmação.
-  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — Task 10: `chromium` ganhou
-  `regressao-visual.spec.ts` no `testIgnore`, `producao` ganhou o spec no `testMatch`, snapshots
-  regenerados sob o pixel final do bloco. `pnpm e2e` completo fecha verde (67 passed). Evidência:
-  `e2e/regressao-visual.spec.ts`, `playwright.config.ts`.
-- **D-26 · peso real das fontes não tem linha na matriz de paridade** — `D-23` prova que nenhum
-  texto `font-bold`/`font-semibold` do site renderiza com glifo mais pesado, o que é divergência
-  visual contra o original; a matriz de `docs/inventario/README.md` não tem linha para isso, e a
-  homologação `6.3.1` aprova a matriz "com ressalva" citando o débito. Achado da segunda lente
-  (Claude) na review do bloco `6.1.1-6.3.1`, **sem a confirmação do Codex que D7 exige** (mesma
-  limitação de cota). Registrado por decisão de João em 2026-08-29: a linha na matriz entra quando
-  o achado for confirmado, junto com a correção de `D-23` ou na próxima rodada de paridade.
-  **Gatilho:** confirmação do reviewer, correção de `D-23`, ou nova rodada de paridade.
-  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — linha "Peso real das fontes
-  self-hosted" criada em `docs/inventario/README.md`, decisão `fiel`, citando `D-23` e a catraca de
-  `scripts/inventario/fontes.test.mjs`.
 - **D-27 · a review do bloco `refactor-contato-intake` não teve segunda lente** — o invariante do
   harness exige `executor` e `reviewer` diferentes, e `scripts/validate-agent-workflow.mjs:160`
   transforma isso em erro de `pnpm agent:check`. A cota da conta Codex estava esgotada, e João
@@ -352,47 +354,6 @@ Tema, sem replicar EAP. Contagem medida contra o Notion em 2026-08-24.
   mecânica: com `reviewer: claude` no estado, `pnpm agent:check` reprova e `pnpm check` junto.
   **Gatilho:** cota do Codex de volta para uma segunda passada sobre estes dois commits, ou decisão
   de João sobre representar o desvio no validador em task própria do harness.
-- **D-28 · imagem dos cards de curso escala com a coluna; a referência usa tamanho fixo** —
-  `src/components/sections/Cursos.tsx` usa `className="aspect-[4/3] w-full object-cover"` na
-  imagem de cada card, escalando com a largura da coluna. A referência (`https://lotusotec.cl/`)
-  usa uma imagem de `400×300px` fixos, centralizada, que não cresce além disso. Em colunas mais
-  largas que 400px (768/1440/1920 neste layout) o clone fica desproporcionalmente mais alto —
-  achado da rodada de paridade `2026-08-30`, isolado ao investigar por que o resíduo de altura
-  vertical inverteu de sinal em 768px (clone passou de mais baixo para mais alto que a referência).
-  Categoria `asset`/`layout`, não `spacing`: fora do escopo do bloco `paridade-espacamento-fontes`,
-  que só corrigiu padding/margem/gap. Evidência: `docs/qa/paridade/2026-08-30/classificacao.md`
-  (item 8).
-  **Gatilho:** próximo bloco de paridade visual, ou pedido explícito de João.
-  **Fechado em 2026-09-02 pelo bloco `paridade-header-cursos`, com o enunciado corrigido.** A
-  referência não usa `400×300px` fixos: usa `max-width: 100%` + `height: auto` sobre o tamanho
-  intrínseco de cada asset, centralizado. Medido nas quatro larguras — card 1 (`400×300`) rende
-  `300×225` em 375, `400×300` em 768 e `320×240` em 1440/1920; cards 2 e 3 são **quadrados** de
-  `250×250` que nunca escalam, não `4:3`. Os assets de `src/assets/` já tinham os intrínsecos
-  certos; o defeito era só o clone forçar `aspect-[4/3] w-full object-cover` nos três, esticando e
-  cortando os dois quadrados. Corrigido com `mx-auto h-auto max-w-full` e `width`/`height` por
-  asset. O vão até o nome do curso entrou junto por autorização de João (`30px` medidos contra os
-  `24px` de `mt-6`), porque a mudança de tamanho já obrigava snapshot novo no mesmo eixo.
-  Evidência: `docs/qa/paridade/2026-09-02/header-cursos.md`, sem divergência nas quatro larguras.
-- **D-29 · margens da referência não reproduzidas em `#Cursos` e na linha de contato** —
-  `docs/qa/paridade/2026-08-30/espacamento.json` mede, nas quatro larguras, `cursos.secao` com
-  `marginBottom: -105px` na referência contra `0` no clone, e `contacto.linha` com
-  `marginBottom: 9px` contra `0`. A rodada de 2026-08-30 corrigiu padding e gap, mas não estas duas
-  margens, e a classificação não as nomeava — achado `C-2` da review do bloco
-  `paridade-espacamento-fontes`, declarado em 2026-08-31 no adendo de
-  `docs/qa/paridade/2026-08-30/classificacao.md` e de `espacamento.md`. Reproduzir o `-105px` faz
-  `#Cursos` sobrepor `#Contacto` como na referência e desloca contato e rodapé em 105px: é mudança
-  de posição de duas seções inteiras, não ajuste local, e a decisão é de João.
-  **Gatilho:** decisão de João sobre reproduzir a sobreposição, ou próximo bloco de paridade visual
-  (junto com `D-28`).
-  **Fechado em 2026-08-31 pelo bloco `paridade-espacamento-fontes`** — João mandou resolver todos os
-  achados da review. Medição adicional na referência mostrou que o `-105px` cancela 105 dos 110px de
-  `paddingBottom` de `#Cursos`, sem sobrepor conteúdo (mesmo fundo nas duas seções, `#Contacto`
-  começa 5px depois da linha do CTA). Aplicados `-mb-26.25` em `#Cursos` e `mb-2.25` na linha de
-  título do contato, no lugar do `<div className="h-2.25" />` separador. As duas propriedades batem
-  com a referência nas quatro larguras. Evidência:
-  `docs/qa/paridade/2026-08-30/espacamento.md` (seção "Desfecho"),
-  `docs/qa/paridade/2026-08-30/classificacao.md`.
-
 - **D-30 · os cinco PNG de `docs/inventario/baseline/` reportam o cabeçalho na cor errada** —
   `scripts/inventario/capture-baseline.mjs:9` captura com `fullPage: true`, e nesse modo o
   cabeçalho desktop rasteriza `#f8f8f8` onde o screenshot de viewport, na mesma página e na mesma
@@ -515,3 +476,161 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `infra/lotus-site.yaml` com desenho próprio.
   **Gatilho:** primeiro 404 de asset observado em produção, ou o bloco que puder redesenhar a
   retenção da raiz. Levantado na review do bloco `7.1.1+7.1.2+7.1.5`.
+- **D-44 · o acesso ao painel de DNS foi perdido** — o domínio é comprado na BlueHosting e a zona é
+  gerenciada em `https://www.stackcp.com/` (Stack Control Panel). João informou em 2026-09-09 que
+  não tem mais acesso ao painel. Sem ele não há como ler os registros que a enumeração não alcança,
+  não há como exportar a zona e não há como trocar os nameservers — que é o passo que efetivamente
+  move a zona para o Route 53. Trava `B1` inteiro, e `B1` é o gargalo de `B2` a `B7`.
+  **Gatilho:** recuperação de acesso pelo suporte da BlueHosting, ou confirmação de que o suporte
+  troca os nameservers a pedido.
+- **D-45 · a zona tem wildcard** — `*.lotusotec.cl` responde `A 185.146.167.195`, o mesmo IP do
+  apex. Medido em 2026-09-09 por DNS-over-HTTPS: `zzz-nao-existe-19283.lotusotec.cl` e
+  `outro-teste-aleatorio-77.lotusotec.cl` respondem esse IP. Duas consequências. **Primeira:**
+  enumerar subdomínio por tentativa não prova nada, porque todo palpite responde — só o export BIND
+  diz quais registros existem de verdade, e é por isso que ele é pendência e não zelo. **Segunda:**
+  a zona nova precisa decidir entre reproduzir o wildcard ou removê-lo. Remover é o correto —
+  wildcard esconde erro de digitação e faz qualquer subdomínio inventado apontar para o WordPress —
+  mas remover sem o export derruba, sem aviso, subdomínio em uso que ninguém listou.
+  **Gatilho:** `B1`.
+- **D-46 · o domínio não publica DMARC nem DKIM** — medido em 2026-09-09:
+  `_dmarc.lotusotec.cl` e `google._domainkey.lotusotec.cl` não têm registro TXT; o `A` que
+  aparece nos dois é o wildcard de `D-45`, não configuração. O que existe é só o SPF do apex,
+  `v=spf1 include:_spf.google.com include:spf.stackmail.com -all`. O e-mail corporativo sai hoje
+  sem assinatura e sem política de alinhamento. Não é regressão causada por nós — já era assim —,
+  mas `B2` acrescenta um remetente novo (SES) ao mesmo domínio, e sem DMARC não há como observar o
+  efeito disso na entregabilidade. O `include:spf.stackmail.com` também precisa de decisão: o MX é
+  Google, e esse include pode ser resíduo do provedor antigo ou caminho de envio ainda em uso.
+  **Gatilho:** `B2`.
+
+## Fechados
+
+- **D-06 · `scripts/*.mjs` fora de qualquer projeto TypeScript** — `tsconfig.node.json` tem
+  `"include": ["vite.config.ts"]`, então `scripts/validate-agent-workflow.mjs` não é typechecked por
+  `tsc -b` nem coberto pelo `strict` ligado em `1.2.3`. Levantado na review de `1.2.2+1.2.3` como
+  suggestion e deixado fora do escopo.
+  **Gatilho:** ao planejar `1.3.6` (scripts de qualidade) ou `1.3.7` (CI).
+  **Fechado por este bloco** (`1.2.4`–`1.3.9`) em 2026-08-24.
+- **D-07 · `engineStrict` exige Node 24 no CI** — com `engineStrict: true`, qualquer script pnpm
+  morre com `ERR_PNPM_UNSUPPORTED_ENGINE` fora da faixa de `engines`. O runner precisa ler `.nvmrc`.
+  **Gatilho:** ao planejar `1.3.7`.
+  **Fechado por este bloco** (`1.2.4`–`1.3.9`) em 2026-08-24.
+- **D-10 · Playwright cobre só Chromium** — **fechado em 2026-08-29** pelo bloco `6.1.1-6.3.1`
+  (`6.1.4`): `playwright.config.ts` declara `chromium`, `firefox`, `webkit` e `mobile-webkit`; o
+  fluxo principal (`home`, `menu`, `contacto`) roda nos quatro, e o CI instala os três motores.
+  `a11y.spec.ts` e `seo.spec.ts` seguem só em Chromium — ver débito novo na homologação
+  `docs/qa/homologacao-2026-08-29.md`.
+- **D-11 · axe reporta mas não reprova** — **fechado em 2026-08-28** pelo bloco `5.1.1-5.3.2`
+  (`5.2.4`): `e2e/a11y.spec.ts` audita cinco estados e reprova violação `critical`/`serious` sem
+  exceção nominal em `e2e/a11y-exceptions.ts`; exceção órfã também reprova. As nove exceções
+  iniciais viraram `D-21`.
+- **D-14 · breakpoints exatos não medidos** — `05-layout.md` só prova que a virada do menu
+  desktop/mobile e a do container `1080px` ficam entre `768` e `1440`; `1350px` é derivação da regra
+  dos 80%, não largura medida. A EAP `3.2.10` precisa dos quatro viewports-alvo, não do valor exato,
+  então o bloco não fica bloqueado — mas o clone escolhe um breakpoint sem medição que o confirme.
+  **Fechado por este bloco** (`3.1.1`–`3.2.11`) em 2026-08-26 — o commit `chore(3.1.2)` mediu
+  `900`–`1400` e `05-layout.md:64-76` registra as duas viradas; o clone usa `1000px`, medido.
+- **D-23 · fontes self-hosted de peso 500/700 (Montserrat) e 600 (Open Sans) são cópias do
+  arquivo de outro peso** — `src/assets/fonts/montserrat-400.woff2`, `montserrat-500.woff2` e
+  `montserrat-700.woff2` têm o mesmo `sha256`; `open-sans-500.woff2` e `open-sans-600.woff2`
+  também. Achado na rodada de QA `2026-08-29` ao medir performance
+  (`docs/qa/performance/2026-08-29/resumo-pos-otimizacao.md`; a classificação de paridade da rodada
+  não trata de fonte self-hosted): o Vite dedupe
+  por conteúdo, então as três declarações `@font-face` de Montserrat no build resolvem hoje para
+  um único arquivo físico. Nenhum texto `font-bold`/`font-semibold` do site (h1 do hero, headings
+  de seção, botões CTA, nav semibold) renderiza com glifo realmente mais pesado. Corrigir exige
+  baixar/gerar o arquivo real de cada peso — aquisição de asset, não código; fora do escopo de
+  performance do bloco `6.1.1-6.3.1` (D10 da spec: só o gargalo medido é atacado, sem otimizador ou
+  asset novo sem medição que justifique).
+  **Gatilho:** próxima rodada que mexer em tipografia, ou pedido explícito de João.
+  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — Task 1: as três faces
+  baixadas via UA de navegador antigo (endpoint `css2` sob UA moderno devolvia fonte variável
+  única, não instâncias estáticas; decisão de João), cinco `sha256` distintos, catraca em
+  `scripts/inventario/fontes.test.mjs`. Evidência: `docs/inventario/04-tipografia.md`,
+  `docs/qa/paridade/2026-08-30/classificacao.md`.
+- **D-24 · o clone é mais curto que a referência em todas as larguras** — 375 `5467px` -> `4902px`
+  (-565), 768 `4913px` -> `4818px` (-95), 1440 `3441px` -> `3109px` (-332), 1920 `3409px` ->
+  `3105px` (-304). A rodada `2026-08-29` registrou isso como observação não classificável; a
+  review do bloco `6.1.1-6.3.1` mediu a causa elemento a elemento contra `https://lotusotec.cl/` e
+  classificou como `spacing`: `padding: 30px` nos cards de destaque e `padding-bottom: 10px` no
+  título deles, margens verticais do hero (`45/40/50px` na referência contra `mt-8`/`32px` no
+  clone), parágrafo institucional que a referência quebra em `<p>` com 19px entre eles, `padding`
+  e gap das linhas de cursos e de contato, e o container do copyright. Nenhum conteúdo falta e não
+  há defeito visual observável (sem corte, sem sobreposição, sem rolagem horizontal). Corrigir é
+  bloco de paridade próprio: mexe em cinco seções, nas quatro larguras, e obriga recaptura, nova
+  ratificação (D2) e novos snapshots de `toHaveScreenshot`. Enquanto isso, a linha "Altura
+  vertical das seções" fica `pendente decisão` na matriz — ver
+  `docs/qa/paridade/2026-08-29/classificacao.md`.
+  **Gatilho:** decisão de João de abrir o bloco de correção, ou próxima rodada de paridade.
+  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — hero (margens
+  medidas 45/0/40/50px), destaques (padding `30px`/`10px`), calha e padding responsivo de cursos e
+  contacto, e rodapé (bate exato, delta `0`, nas quatro larguras). Institucional: premissa de D4
+  não se confirmou, revogada. Resíduo remanescente nomeado: bloco de ícone dos destaques (`-26px`,
+  já aprovado) e imagem dos cards de curso (ver `D-28`, débito novo). "Altura vertical das seções"
+  passa de `pendente decisão` para `divergência intencional` na matriz. Evidência:
+  `docs/qa/paridade/2026-08-30/espacamento.md`, `docs/qa/paridade/2026-08-30/classificacao.md`.
+- **D-25 · o guarda de regressão visual aponta para o dev server, não para o build** —
+  `e2e/regressao-visual.spec.ts` roda no projeto `chromium` de `playwright.config.ts`, que serve o
+  `pnpm dev` na porta 5183; a mudança que ele existe para guardar (`<link rel="preload">` injetado
+  por `scripts/vite/preload-critical.mjs`) só é produzida pelo build, servido pelo projeto
+  `producao` na 5184. O guarda prova que o dev server não mudou de pixel, o que é verdadeiro e
+  insuficiente. Mover o spec para o projeto `producao` implica regerar os snapshots sob o nome do
+  projeto novo. Achado da segunda lente (Claude) na review do bloco `6.1.1-6.3.1`, **sem a
+  confirmação do Codex que D7 da spec exige**: a segunda passada do reviewer não rodou por limite
+  de uso da conta Codex. Registrado como débito por decisão de João em 2026-08-29, não corrigido.
+  **Gatilho:** próxima mudança que só exista no build de produção, ou quando a cota do reviewer
+  permitir a confirmação.
+  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — Task 10: `chromium` ganhou
+  `regressao-visual.spec.ts` no `testIgnore`, `producao` ganhou o spec no `testMatch`, snapshots
+  regenerados sob o pixel final do bloco. `pnpm e2e` completo fecha verde (67 passed). Evidência:
+  `e2e/regressao-visual.spec.ts`, `playwright.config.ts`.
+- **D-26 · peso real das fontes não tem linha na matriz de paridade** — `D-23` prova que nenhum
+  texto `font-bold`/`font-semibold` do site renderiza com glifo mais pesado, o que é divergência
+  visual contra o original; a matriz de `docs/inventario/README.md` não tem linha para isso, e a
+  homologação `6.3.1` aprova a matriz "com ressalva" citando o débito. Achado da segunda lente
+  (Claude) na review do bloco `6.1.1-6.3.1`, **sem a confirmação do Codex que D7 exige** (mesma
+  limitação de cota). Registrado por decisão de João em 2026-08-29: a linha na matriz entra quando
+  o achado for confirmado, junto com a correção de `D-23` ou na próxima rodada de paridade.
+  **Gatilho:** confirmação do reviewer, correção de `D-23`, ou nova rodada de paridade.
+  **Fechado em 2026-08-30 pelo bloco `paridade-espacamento-fontes`** — linha "Peso real das fontes
+  self-hosted" criada em `docs/inventario/README.md`, decisão `fiel`, citando `D-23` e a catraca de
+  `scripts/inventario/fontes.test.mjs`.
+- **D-28 · imagem dos cards de curso escala com a coluna; a referência usa tamanho fixo** —
+  `src/components/sections/Cursos.tsx` usa `className="aspect-[4/3] w-full object-cover"` na
+  imagem de cada card, escalando com a largura da coluna. A referência (`https://lotusotec.cl/`)
+  usa uma imagem de `400×300px` fixos, centralizada, que não cresce além disso. Em colunas mais
+  largas que 400px (768/1440/1920 neste layout) o clone fica desproporcionalmente mais alto —
+  achado da rodada de paridade `2026-08-30`, isolado ao investigar por que o resíduo de altura
+  vertical inverteu de sinal em 768px (clone passou de mais baixo para mais alto que a referência).
+  Categoria `asset`/`layout`, não `spacing`: fora do escopo do bloco `paridade-espacamento-fontes`,
+  que só corrigiu padding/margem/gap. Evidência: `docs/qa/paridade/2026-08-30/classificacao.md`
+  (item 8).
+  **Gatilho:** próximo bloco de paridade visual, ou pedido explícito de João.
+  **Fechado em 2026-09-02 pelo bloco `paridade-header-cursos`, com o enunciado corrigido.** A
+  referência não usa `400×300px` fixos: usa `max-width: 100%` + `height: auto` sobre o tamanho
+  intrínseco de cada asset, centralizado. Medido nas quatro larguras — card 1 (`400×300`) rende
+  `300×225` em 375, `400×300` em 768 e `320×240` em 1440/1920; cards 2 e 3 são **quadrados** de
+  `250×250` que nunca escalam, não `4:3`. Os assets de `src/assets/` já tinham os intrínsecos
+  certos; o defeito era só o clone forçar `aspect-[4/3] w-full object-cover` nos três, esticando e
+  cortando os dois quadrados. Corrigido com `mx-auto h-auto max-w-full` e `width`/`height` por
+  asset. O vão até o nome do curso entrou junto por autorização de João (`30px` medidos contra os
+  `24px` de `mt-6`), porque a mudança de tamanho já obrigava snapshot novo no mesmo eixo.
+  Evidência: `docs/qa/paridade/2026-09-02/header-cursos.md`, sem divergência nas quatro larguras.
+- **D-29 · margens da referência não reproduzidas em `#Cursos` e na linha de contato** —
+  `docs/qa/paridade/2026-08-30/espacamento.json` mede, nas quatro larguras, `cursos.secao` com
+  `marginBottom: -105px` na referência contra `0` no clone, e `contacto.linha` com
+  `marginBottom: 9px` contra `0`. A rodada de 2026-08-30 corrigiu padding e gap, mas não estas duas
+  margens, e a classificação não as nomeava — achado `C-2` da review do bloco
+  `paridade-espacamento-fontes`, declarado em 2026-08-31 no adendo de
+  `docs/qa/paridade/2026-08-30/classificacao.md` e de `espacamento.md`. Reproduzir o `-105px` faz
+  `#Cursos` sobrepor `#Contacto` como na referência e desloca contato e rodapé em 105px: é mudança
+  de posição de duas seções inteiras, não ajuste local, e a decisão é de João.
+  **Gatilho:** decisão de João sobre reproduzir a sobreposição, ou próximo bloco de paridade visual
+  (junto com `D-28`).
+  **Fechado em 2026-08-31 pelo bloco `paridade-espacamento-fontes`** — João mandou resolver todos os
+  achados da review. Medição adicional na referência mostrou que o `-105px` cancela 105 dos 110px de
+  `paddingBottom` de `#Cursos`, sem sobrepor conteúdo (mesmo fundo nas duas seções, `#Contacto`
+  começa 5px depois da linha do CTA). Aplicados `-mb-26.25` em `#Cursos` e `mb-2.25` na linha de
+  título do contato, no lugar do `<div className="h-2.25" />` separador. As duas propriedades batem
+  com a referência nas quatro larguras. Evidência:
+  `docs/qa/paridade/2026-08-30/espacamento.md` (seção "Desfecho"),
+  `docs/qa/paridade/2026-08-30/classificacao.md`.
