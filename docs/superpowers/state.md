@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: bounded
 active_work_item: espelho-8982f50
 active_notion_eap: null
@@ -10,7 +10,7 @@ active_branch: chore/espelho-8982f50-promover-release
 bounded_design: 'Rodar scripts/espelhar-corporativo.sh para levar origin/main ao corporativo e colher as quatro evidências do D-33 — procedencia verde e deploy publicando releases/<sha>/ no corporativo, deploy skipped no pessoal, e push sem trailer reprovando em procedencia por commit vazio deixado no histórico. Nenhum arquivo de aplicação, infra ou build muda; os commits registram evidência, fecham o D-33 e atualizam o histórico.'
 authorized_paths: 'docs/infra/**, docs/superpowers/backlog.md, docs/superpowers/state.md, docs/superpowers/historico/progress.md'
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_work_item
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 13
 last_completed_work_item: 7.1.1+7.1.2+7.1.5
-state_basis_commit: c6c6f9a
-updated_at: 2026-09-09T21:47:00Z
+state_basis_commit: a2aa03f
+updated_at: 2026-09-09T22:10:00Z
 ---
 
 # Estado operacional — Lotus Site
