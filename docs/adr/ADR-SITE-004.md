@@ -56,6 +56,11 @@ precise de servidor cabe aqui sem mudar a decisão: renderização no servidor, 
 segredo que não possa ir para o navegador exigiriam outra peça (Lambda@Edge, CloudFront Function ou
 um serviço fora do bloco), e essa peça precisaria do seu próprio ADR.
 
+> **Atualização de 2026-09-09.** Esse ADR foi escrito: a [`ADR-SITE-005`](ADR-SITE-005.md) põe uma
+> Lambda atrás do CloudFront em `/api/contacto` para o envio do formulário por SES. A partir dela,
+> "o modo de falha aplicação caiu não existe" deixa de valer para esse caminho — vale para o site.
+> O resto desta decisão continua de pé, rollback incluído.
+
 ## Custo
 
 Estimativa, não medição — o clone ainda não recebe tráfego (spec §9). Os preços unitários não foram
@@ -195,6 +200,13 @@ certificado em `us-east-1` → só então apontar o domínio.
 Trocar os nameservers é seguro porque a zona não tem DNSSEC — também medido. E é arriscado por
 outro motivo: o MX é Google Workspace, e um registro esquecido na cópia derruba o e-mail da
 empresa. `7.2.1` começa pedindo o export BIND ao suporte.
+
+> **Atualização de 2026-09-09.** A decisão de domínio saiu daqui e virou a
+> [`ADR-SITE-006`](ADR-SITE-006.md): a zona vai para o Route 53 e o registro do domínio continua na
+> BlueHosting, porque a AWS não aceita registro nem transferência de `.cl`. A ordem descrita acima
+> continua correta. Duas medições novas mudam o risco: João perdeu o acesso ao painel (`D-44`) e a
+> zona tem um wildcard que faz qualquer subdomínio inventado responder (`D-45`), o que torna o
+> export BIND condição, não zelo.
 
 ## Motivo da decisão
 

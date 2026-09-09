@@ -159,7 +159,166 @@ Ver a secção correspondente do plano do bloco. Em resumo: a home responde 200 
 `X-Robots-Tag`, um caminho inventado responde 404, o bucket responde 403 quando acessado direto, e
 os quatro bloqueios de acesso público estão ligados.
 
-## 6. Desmonte
+## 6. Route 53 — mover a zona de `lotusotec.cl`
+
+Decisão em [`ADR-SITE-006`](../adr/ADR-SITE-006.md). Inventário medido da zona atual em
+[`zona-dns-lotusotec.md`](zona-dns-lotusotec.md). Bloco `B1`, EAP `7.2.1`.
+
+**O registro do domínio não move.** A AWS não aceita registro nem transferência de `.cl`. O que
+muda de dono é a zona; na BlueHosting fica a tela de nameservers e a renovação.
+
+### 6.0 Antes de qualquer comando
+
+Duas coisas, nesta ordem, e nenhuma delas é AWS:
+
+1. **Recuperar o acesso ao painel** (`https://www.stackcp.com/`, pelo suporte da BlueHosting).
+   Sem ele não há como trocar o nameserver, que é o passo que efetivamente move a zona. `D-44`.
+2. **Pedir o export BIND da zona** ao mesmo suporte. Com wildcard na zona (`D-45`), enumerar por
+   DNS devolve resposta para qualquer palpite, e não há como afirmar que a cópia está completa sem
+   o export.
+
+Em paralelo, e num lugar diferente: abrir o pedido de **production access do SES** no suporte da
+**AWS** — não no da BlueHosting. Ele tem espera e trava `B2` se ficar para depois.
+
+### 6.1 Criar a zona
+
+```bash
+export AWS_PROFILE=lotus
+
+aws route53 create-hosted-zone \
+  --name lotusotec.cl \
+  --caller-reference "lotus-site-$(date +%s)" \
+  --hosted-zone-config Comment="zona do site e do e-mail; ADR-SITE-006"
+```
+
+A resposta traz o `Id` da zona e o **delegation set**: os quatro `ns-*.awsdns-*` que vão para o
+registrador no passo 6.4. Anote os dois.
+
+### 6.2 Popular a zona
+
+Se o export BIND chegou, o caminho mais curto é o **console**: Route 53 → a zona → _Import zone
+file_ → colar o conteúdo. O CLI não tem importador de arquivo de zona.
+
+Sem o export, ou para conferir o que o import fez, cada mudança é um change batch:
+
+```bash
+ZONA=Z0123456789ABCDEFGHIJ
+
+cat > /tmp/lote.json <<'JSON'
+{
+  "Comment": "copia fiel da zona atual - ADR-SITE-006",
+  "Changes": [
+    { "Action": "UPSERT", "ResourceRecordSet": {
+        "Name": "lotusotec.cl.", "Type": "MX", "TTL": 3600,
+        "ResourceRecords": [
+          {"Value": "1 ASPMX.L.GOOGLE.COM."},
+          {"Value": "5 ALT1.ASPMX.L.GOOGLE.COM."},
+          {"Value": "5 ALT2.ASPMX.L.GOOGLE.COM."},
+          {"Value": "10 ALT3.ASPMX.L.GOOGLE.COM."},
+          {"Value": "10 ALT4.ASPMX.L.GOOGLE.COM."}
+        ] } }
+  ]
+}
+JSON
+
+aws route53 change-resource-record-sets --hosted-zone-id "$ZONA" --change-batch file:///tmp/lote.json
+aws route53 list-resource-record-sets --hosted-zone-id "$ZONA" --output table
+```
+
+Regras que valem para esta zona especificamente:
+
+- **O MX do Google entra idêntico.** É o e-mail da empresa.
+- **O wildcard `*` não entra.** Se o export revelar nome que só funciona por causa dele, esse nome
+  vira registro explícito, um a um.
+- **O apontamento para o CloudFront não entra agora.** `B1` move a zona sem mudar o que ela
+  responde; apontar o site é `B5`. Durante a propagação os dois lados precisam dar a mesma resposta.
+
+### 6.3 Conferir antes de trocar
+
+Perguntar **direto** aos nameservers da AWS, sem depender da delegação, que ainda aponta para a
+StackDNS:
+
+```bash
+NS_AWS=ns-XXXX.awsdns-YY.com     # um do delegation set do passo 6.1
+
+for t in A AAAA MX TXT NS SOA; do dig +norec "@$NS_AWS" "$t" lotusotec.cl; done
+for n in mail smtp imap autodiscover ftp; do dig +norec "@$NS_AWS" CNAME "$n.lotusotec.cl"; done
+```
+
+Cada resposta tem de bater com [`zona-dns-lotusotec.md`](zona-dns-lotusotec.md). Diferença aqui é
+barata; diferença depois do passo 6.4 é serviço fora do ar para parte do mundo.
+
+### 6.4 Trocar os nameservers
+
+No painel do registrador, substituir `ns1..ns4.stackdns.com` pelos quatro `ns-*.awsdns-*`.
+
+Quem manda no tempo de convergência é o TTL da delegação no registro `.cl`, que não controlamos e
+costuma ser de horas a dois dias. Nesse intervalo resolvedores diferentes leem servidores
+diferentes — por isso o passo 6.3 existe.
+
+Não peça remoção da zona antiga enquanto a convergência não terminar.
+
+### 6.5 Provar que o e-mail sobreviveu
+
+Resolução correta não prova entrega. Depois da convergência:
+
+```bash
+dig MX lotusotec.cl +short          # os cinco do Google, sem sobra e sem falta
+dig TXT lotusotec.cl +short         # o SPF
+```
+
+E então **enviar uma mensagem de fora para uma caixa `@lotusotec.cl` e confirmar que chegou**. Essa
+é a prova de aceite do bloco, não o `dig`.
+
+### 6.6 Certificado no ACM
+
+`us-east-1` obrigatoriamente: o CloudFront não lê certificado de outra região.
+
+```bash
+aws acm request-certificate --region us-east-1 \
+  --domain-name lotusotec.cl \
+  --subject-alternative-names www.lotusotec.cl \
+  --validation-method DNS \
+  --query CertificateArn --output text
+
+aws acm describe-certificate --region us-east-1 --certificate-arn <arn> \
+  --query 'Certificate.DomainValidationOptions[].ResourceRecord'
+```
+
+Criar os CNAME que a resposta pedir, com o mesmo change batch do passo 6.2, e esperar:
+
+```bash
+aws acm wait certificate-validated --region us-east-1 --certificate-arn <arn>
+```
+
+Este é o passo que o painel antigo impedia: sem editor de registros não havia como criar o CNAME de
+validação.
+
+### 6.7 Subdomínios
+
+Com a zona no Route 53 não há limite de um subdomínio. `sistema.lotusotec.cl` nasce como registro
+explícito — hoje ele só resolve por causa do wildcard.
+
+```bash
+cat > /tmp/sistema.json <<'JSON'
+{ "Changes": [ { "Action": "UPSERT", "ResourceRecordSet": {
+    "Name": "sistema.lotusotec.cl.", "Type": "A", "TTL": 300,
+    "ResourceRecords": [{"Value": "<IP do Lotus administrativo>"}] } } ] }
+JSON
+
+aws route53 change-resource-record-sets --hosted-zone-id "$ZONA" --change-batch file:///tmp/sistema.json
+```
+
+Criar esse registro é DNS e nada mais. A integração com a API do Lotus (`8.2.1`) está congelada por
+decisão de João em 2026-09-09 e não é aberta por este comando.
+
+### 6.8 Budget
+
+O `AWS::Budgets::Budget` de `infra/lotus-site.yaml` filtra hoje S3 e CloudFront. Assim que a zona
+existir, o teto de US$ 30 deixa de medir parte da conta. Incluir Route 53 no filtro é entrega de
+`B1` — e SES e Lambda entram no mesmo lugar em `B2`.
+
+## 7. Desmonte
 
 ```bash
 aws cloudformation delete-stack --stack-name lotus-site
