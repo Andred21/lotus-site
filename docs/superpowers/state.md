@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 work_class: bounded
 active_work_item: espelho-8982f50
 active_notion_eap: null
@@ -9,8 +9,8 @@ active_title: 'B0 · espelho-8982f50 — promover o release e provar o pipeline'
 active_branch: chore/espelho-8982f50-promover-release
 bounded_design: 'Rodar scripts/espelhar-corporativo.sh para levar origin/main ao corporativo e colher as quatro evidências do D-33 — procedencia verde e deploy publicando releases/<sha>/ no corporativo, deploy skipped no pessoal, e push sem trailer reprovando em procedencia por commit vazio deixado no histórico. Nenhum arquivo de aplicação, infra ou build muda; os commits registram evidência, fecham o D-33 e atualizam o histórico.'
 authorized_paths: 'docs/infra/**, docs/superpowers/backlog.md, docs/superpowers/state.md, docs/superpowers/historico/progress.md'
-next_owner: codex
-next_action: review_active_work_item
+next_owner: claude
+next_action: close_active_work_item
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 13
 last_completed_work_item: 7.1.1+7.1.2+7.1.5
-state_basis_commit: 80dfa27
-updated_at: 2026-09-10T16:55:00Z
+state_basis_commit: 68658d9
+updated_at: 2026-09-10T17:05:00Z
 ---
 
 # Estado operacional — Lotus Site
