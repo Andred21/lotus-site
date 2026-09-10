@@ -19,7 +19,7 @@ que commit sem procedência não publica.
 | E1  | `procedencia` verde no corporativo                   | ✅     |
 | E2  | `deploy` publicando `releases/<sha>/` no corporativo | ✅     |
 | E3  | `deploy` como `skipped` no run de push do pessoal    | ✅     |
-| E4  | push direto sem trailer reprovando em `procedencia`  | —      |
+| E4  | push direto sem trailer reprovando em `procedencia`  | ✅     |
 
 ## Ponto de partida medido
 
@@ -154,3 +154,66 @@ x-robots-tag: noindex, nofollow
 
 O `last-modified` é o minuto do `deploy`, não o de uma publicação anterior: o que está no ar é o
 artefato deste run.
+
+## E4 · push direto sem trailer reprovando em `procedencia`
+
+Colhida em 2026-09-10. Commit vazio criado com `commit-tree` sobre a ponta do corporativo —
+**árvore idêntica** à de `f906926`, `git diff --stat` sem uma linha — e empurrado direto em `main`,
+sem Pull Request e sem trailer `Source-Commit:`. O push foi feito à mão pelo João: o classificador
+de permissão do agente recusa push em remoto compartilhado.
+
+```text
+3cd9619  test: push direto sem trailer, para o procedencia reprovar
+```
+
+Run 3: <https://github.com/Gatika-CL/lotus-site/actions/runs/34502747852>
+
+```text
+check        completed  success
+procedencia  completed  failure
+deploy       completed  skipped
+```
+
+Mensagem do job:
+
+```text
+##[error]3cd96195897ac0f4259712bdf5b45edb2824fc18 entrou em main sem Pull Request mesclado
+e sem trailer de espelho. Nada será publicado para ele.
+```
+
+Três coisas valem ser lidas juntas nesse resultado:
+
+- o `check` passou. A árvore é a mesma do release, então qualidade não é o que reprovou —
+  **procedência** é. As duas conferências são independentes de propósito.
+- o `deploy` ficou `skipped` por `needs: [check, procedencia]`, e não por uma condição de
+  ambiente. É a metade "falha de CI impede publicação" do aceite da `7.1.5`, exercitada.
+- o site não mudou. Conferido depois do run:
+
+  ```text
+  HTTP/2 200
+  last-modified: Wed, 09 Sep 2026 23:09:52 GMT
+  etag: "8749cdc364c1fd0b2dffc3e963e6a1df"
+  ```
+
+  `last-modified` e `etag` são os do artefato de `f906926`, publicado na véspera. `main` do
+  corporativo aponta para um commit vermelho e o que está no ar continua sendo o último release
+  aprovado.
+
+O commit fica no histórico de propósito, como manda o `bounded_design` do bloco: prova apagada não
+é prova. Quem for espelhar de novo não precisa fazer nada com ele — o script usa `upstream/main`
+como pai, a árvore nova difere, e o release seguinte entra por cima normalmente.
+
+## O que ficou provado
+
+O `D-33` pedia o pipeline se exercitando sozinho, com a role OIDC, em vez de simulação e inspeção
+de diff. As quatro evidências cobrem os dois sentidos do aceite:
+
+| Caminho                            | Resultado                                      |
+| ---------------------------------- | ---------------------------------------------- |
+| espelho com trailer válido         | publica, e o release é rastreável até a origem |
+| push em `main` do pessoal          | `deploy` nem começa                            |
+| push direto no corporativo, sem PR | `procedencia` reprova, nada é publicado        |
+
+O que continua **não** provado por este bloco, e é registrado para não virar afirmação por
+omissão: rollback automático (`D-37`), separação preview/produção (`D-35`) e a janela de `D-43`
+entre o index invalidado e a limpeza dos assets antigos.

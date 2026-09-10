@@ -34,7 +34,9 @@ sempre explícita.
 
 # AGORA
 
-Nada ativo. `docs/superpowers/state.md` está em `idle`.
+`B0 · espelho-8982f50` está ativo em `docs/superpowers/state.md`. As quatro evidências do `D-33`
+foram colhidas em 2026-09-09/10 e estão em
+[`docs/infra/evidencia-pipeline-2026-09-09.md`](../infra/evidencia-pipeline-2026-09-09.md).
 
 ## Decisões de 2026-09-09 (João)
 
@@ -80,6 +82,10 @@ um por vez, porque o harness admite um `active_work_item` só.
   `releases/<sha>/`; `deploy` como `skipped` no run de push do pessoal; push direto sem trailer
   reprovando em `procedencia`.
 - **Bloqueio externo:** nenhum.
+- **Executado em 2026-09-09/10.** As quatro evidências estão colhidas em
+  [`docs/infra/evidencia-pipeline-2026-09-09.md`](../infra/evidencia-pipeline-2026-09-09.md). O que
+  atravessou foi `c6c6f9a`, a ponta de `origin/main` de agora, que já contém `8982f50`. O bloco sai
+  desta fila em `/fechar-site`, depois da review.
 
 ## B1 · `7.2.1` — zona DNS em Route 53
 
@@ -388,21 +394,6 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   2026-09-03. Mesma classe de `D-27`.
   **Gatilho:** Codex CLI funcional para uma segunda passada sobre `d619f0d..68542eb`, ou decisão de
   João de dispensar a passada por serem commits só de documentação.
-- **D-33 · a prova ponta a ponta de `7.1.5` só existe depois do merge do PR** — o aceite é
-  "merge/promoção definida gera deployment rastreável e falha de CI impede publicação". Provar isso
-  exige um push em `main` do pessoal, para o espelho ter o que ler, e um push em `main` do
-  corporativo, para o pipeline disparar. A Lei 6 proíbe push antes de `/fechar-site` e o merge não é
-  do agente, então dentro do bloco o pipeline foi conferido por simulação e inspeção de diff, não
-  exercitado. Falta: rodar o espelho de verdade, conferir `procedencia` verde e `deploy` publicando
-  `releases/<sha>/` no corporativo, conferir `deploy` como `skipped` no run de push do pessoal, e
-  conferir que um push direto sem trailer reprova em `procedencia`.
-  Duas afirmações que este débito carregava foram medidas em 2026-09-04 e saíram daqui: a proteção
-  do histórico pelo `--exclude` e a preservação do `Cache-Control` na cópia servidor-a-servidor. A
-  primeira era falsa e a segunda perdeu o objeto — ver emenda **E3**, `ADR-SITE-004` e o commit
-  `fix(7.1.5)` que corrige o job `deploy`. O ambiente já foi provado à mão: home em 200 com
-  `X-Robots-Tag`, caminho inventado em 404, bucket em 403, `releases/` intacto depois da promoção.
-  O que resta aqui é o pipeline se exercitando sozinho, com a role OIDC.
-  **Gatilho:** a sessão do merge do PR deste bloco.
 - **D-34 · o campo `ADR ref` das doze EAP das Sprints 6 e 7 aponta `ADR-SITE-003`, que é outro
   assunto** — `docs/adr/ADR-SITE-003.md` é "O intake do contato é um módulo, não quatro". A decisão
   de hospedagem é a `ADR-SITE-004`. A Descrição e o Critério de `7.1.1` também estão stale: falam de
@@ -634,3 +625,14 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   com a referência nas quatro larguras. Evidência:
   `docs/qa/paridade/2026-08-30/espacamento.md` (seção "Desfecho"),
   `docs/qa/paridade/2026-08-30/classificacao.md`.
+- **D-33 · a prova ponta a ponta de `7.1.5` só existe depois do merge do PR** — **fechado em
+  2026-09-10** pelo bloco `B0 · espelho-8982f50`. O que faltava era o pipeline se exercitando
+  sozinho, com a role OIDC, em vez de simulação e inspeção de diff. As quatro evidências estão em
+  [`docs/infra/evidencia-pipeline-2026-09-09.md`](../infra/evidencia-pipeline-2026-09-09.md):
+  `procedencia` aceitou o espelho de `c6c6f9a` com `identical`; o `deploy` assumiu a role por OIDC e
+  publicou `releases/f906926…/` no `lotus-site-prod`, promovendo a raiz e esperando a invalidação;
+  o run de push em `main` do pessoal deixou o `deploy` como `skipped`; e um commit vazio empurrado
+  direto no corporativo reprovou em `procedencia` com o `deploy` `skipped` por `needs`, sem alterar
+  o que está no ar. O commit vermelho `3cd9619` fica no histórico do corporativo de propósito.
+  Continuam abertos, e este bloco não os toca: `D-35` (preview/produção), `D-37` (rollback sem
+  botão) e `D-43` (janela entre invalidação e limpeza).
