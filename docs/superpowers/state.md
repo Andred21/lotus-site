@@ -1,8 +1,8 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: planning
-work_class: null
+workflow_state: ready_for_execution
+work_class: architectural
 active_work_item: 7.2.1
 active_notion_eap: 7.2.1
 active_title: Configurar domínio, DNS, HTTPS e redirects necessários
@@ -10,18 +10,18 @@ active_branch: feat/7-2-1-zona-dns-route53
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: brainstorm_and_spec
+next_action: execute_active_work_item
 resume_state: null
 context_packet: null
-active_spec: null
-active_plan: null
-executor: null
-reviewer: null
+active_spec: docs/superpowers/specs/2026-09-20-7.2.1-zona-dns-route53-design.md
+active_plan: docs/superpowers/plans/2026-09-20-7.2.1-zona-dns-route53.md
+executor: claude
+reviewer: codex
 reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 14
 last_completed_work_item: espelho-8982f50
-state_basis_commit: b16ebd2
+state_basis_commit: c7137e0
 updated_at: 2026-09-20T00:00:00Z
 ---
 
