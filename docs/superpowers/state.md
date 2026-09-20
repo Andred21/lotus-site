@@ -1,16 +1,16 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
+workflow_state: planning
 work_class: null
-active_work_item: null
-active_notion_eap: null
-active_title: null
-active_branch: null
+active_work_item: 7.2.1
+active_notion_eap: 7.2.1
+active_title: Configurar domínio, DNS, HTTPS e redirects necessários
+active_branch: feat/7-2-1-zona-dns-route53
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+next_owner: claude
+next_action: brainstorm_and_spec
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 14
 last_completed_work_item: espelho-8982f50
-state_basis_commit: 1e693e7
-updated_at: 2026-09-10T17:25:00Z
+state_basis_commit: b16ebd2
+updated_at: 2026-09-20T00:00:00Z
 ---
 
 # Estado operacional — Lotus Site
