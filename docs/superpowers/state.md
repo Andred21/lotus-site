@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: reviewing
+workflow_state: ready_for_closure
 work_class: architectural
 active_work_item: 7.2.1
 active_notion_eap: 7.2.1
@@ -9,8 +9,8 @@ active_title: Configurar domínio, DNS, HTTPS e redirects necessários
 active_branch: feat/7-2-1-zona-dns-route53
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: approve_review_corrections
+next_owner: claude
+next_action: close_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-20-7.2.1-zona-dns-route53-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 14
 last_completed_work_item: espelho-8982f50
-state_basis_commit: 16a0740
-updated_at: 2026-09-21T00:20:45Z
+state_basis_commit: a78b7f9
+updated_at: 2026-09-21T00:23:59Z
 ---
 
 # Estado operacional — Lotus Site
