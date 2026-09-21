@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.1
 active_notion_eap: 7.2.1
@@ -10,7 +10,7 @@ active_branch: feat/7-2-1-delegacao-certificado
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_plan
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-20-7.2.1-delegacao-certificado-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 15
 last_completed_work_item: 7.2.1
-state_basis_commit: 4a6db40
-updated_at: 2026-09-20T22:24:00Z
+state_basis_commit: b9bf8bc
+updated_at: 2026-09-21T23:12:46Z
 ---
 
 # Estado operacional — Lotus Site

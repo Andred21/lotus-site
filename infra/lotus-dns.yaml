@@ -104,6 +104,14 @@ Resources:
           ResourceRecords:
             - !Ref IpDoWordPress
 
+        # O wildcard do painel tem A e AAAA. Sem este registro, cliente
+        # dual-stack perde IPv6 em www na troca de delegacao.
+        - Name: !Sub 'www.${NomeDaZona}.'
+          Type: AAAA
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Ref Ipv6DoWordPress
+
         # Registro de DNS e nada mais. Nao abre a 8.2.1, congelada por Joao em
         # 2026-09-09.
         - Name: !Sub 'sistema.${NomeDaZona}.'
@@ -111,6 +119,12 @@ Resources:
           TTL: !Ref TtlPadrao
           ResourceRecords:
             - !Ref IpDoWordPress
+
+        - Name: !Sub 'sistema.${NomeDaZona}.'
+          Type: AAAA
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Ref Ipv6DoWordPress
 
         - Name: !Sub 'mail.${NomeDaZona}.'
           Type: CNAME
@@ -129,6 +143,16 @@ Resources:
           TTL: !Ref TtlPadrao
           ResourceRecords:
             - imap.stackmail.com.
+
+        # Existe no painel e a sondagem de 2026-09-09 nao podia te-lo achado:
+        # `pop` foi perguntado e devolveu o IP do apex pelo wildcard; `pop3`
+        # nao foi perguntado. Sem ele, a troca derruba POP3 de quem ainda usa
+        # o correio antigo.
+        - Name: !Sub 'pop3.${NomeDaZona}.'
+          Type: CNAME
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - pop3.stackmail.com.
 
         - Name: !Sub 'autodiscover.${NomeDaZona}.'
           Type: CNAME

@@ -14,15 +14,22 @@
  */
 
 /**
- * Inventário medido em 2026-09-09 por DNS-over-HTTPS contra `dns.google` e
- * registrado em `docs/infra/zona-dns-lotusotec.md`. Nomes com ponto final,
+ * Inventário fechado da zona, transcrito do painel do StackCP em 2026-09-20
+ * e registrado em `docs/infra/zona-dns-lotusotec.md`. Nomes com ponto final,
  * como o Route 53 os guarda.
  *
- * Nove destes são registro provado: respondem coisa diferente do que o
- * wildcard responderia. `www` e `sistema` não — hoje eles só resolvem porque
- * o wildcard existe, e por DNS não há como distinguir registro de wildcard
- * falando. Entram aqui porque a spec §3 D5 decidiu declará-los explícitos: a
- * troca de delegação apagaria os dois se eles não estivessem no template.
+ * A fonte deixou de ser a sondagem por DNS de 2026-09-09, que não podia
+ * enxergar nome que ninguém adivinhasse: com wildcard na zona, todo palpite
+ * responde. Foi essa cegueira que escondeu `pop3` — `pop` foi sondado,
+ * devolveu o IP do apex e foi lido como wildcard falando; `pop3` nunca foi
+ * perguntado.
+ *
+ * `www` e `sistema` continuam aqui, e agora por prova em vez de precaução: o
+ * painel mostra que nenhum dos dois é registro do outro lado. Eles só
+ * resolvem hoje por causa do wildcard, que não atravessa — sem estas linhas,
+ * a troca de delegação apagaria os dois. O `AAAA` dos dois existe pelo mesmo
+ * motivo: o wildcard do painel tem `A` **e** `AAAA`, então cliente
+ * dual-stack perderia IPv6 na troca.
  * @type {readonly RegistroEsperado[]}
  */
 export const INVENTARIO = Object.freeze([
@@ -47,7 +54,13 @@ export const INVENTARIO = Object.freeze([
     ],
   },
   { nome: 'www.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
+  { nome: 'www.lotusotec.cl.', tipo: 'AAAA', valores: ['2a07:7800::195'] },
   { nome: 'sistema.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
+  {
+    nome: 'sistema.lotusotec.cl.',
+    tipo: 'AAAA',
+    valores: ['2a07:7800::195'],
+  },
   {
     nome: 'mail.lotusotec.cl.',
     tipo: 'CNAME',
@@ -62,6 +75,11 @@ export const INVENTARIO = Object.freeze([
     nome: 'imap.lotusotec.cl.',
     tipo: 'CNAME',
     valores: ['imap.stackmail.com.'],
+  },
+  {
+    nome: 'pop3.lotusotec.cl.',
+    tipo: 'CNAME',
+    valores: ['pop3.stackmail.com.'],
   },
   {
     nome: 'autodiscover.lotusotec.cl.',
