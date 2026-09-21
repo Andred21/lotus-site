@@ -104,6 +104,10 @@ um por vez, porque o harness admite um `active_work_item` só.
   `www` batendo na distribuição.
 - **Bloqueio externo:** acesso ao StackCP/BlueHosting, e o export BIND da zona.
 - **Inventário medido da zona:** `docs/infra/zona-dns-lotusotec.md`.
+- **Entregue em 2026-09-20 (parcial):** zona criada no Route 53 pelo stack `lotus-dns`, conferida
+  contra a StackDNS registro a registro, catraca offline dentro do `pnpm check`, e filtro do
+  Budget ampliado para Route 53. **Não** entregue: delegação, certificado, HTTPS, alias. Ver
+  `D-47`.
 
 ## B2 · `4.1.7+7.1.3+7.1.4` — contato por SES + Lambda
 
@@ -211,16 +215,17 @@ Tema, sem replicar EAP e sem ordem.
 
 O que não avança por conta nossa.
 
-1. **Acesso ao painel de DNS.** João não tem mais acesso a `https://www.stackcp.com/`. Trava `B1`
-   inteiro. Ver `D-44`.
-2. **Export BIND da zona**, a pedir ao suporte da BlueHosting. Reduz o risco de `B1`: a enumeração
-   por DNS não enxerga registro que ninguém adivinhou, e o wildcard (`D-45`) faz qualquer palpite
-   responder.
+1. ~~**Acesso ao painel de DNS.**~~ Recuperado; confirmado por João em 2026-09-20. Ver `D-44`,
+   fechado.
+2. **Export BIND da zona**, a pedir ao suporte da BlueHosting. **É o que falta para a troca de
+   nameservers acontecer.** A enumeração por DNS não enxerga registro que ninguém adivinhou, e o
+   wildcard (`D-45`) faz qualquer palpite responder.
 3. **Production access do SES.** Prazo externo. Pedir no início de `B1` para não travar `B2`.
 4. **Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
    da Sprint 2 e nunca feita. Nenhum gate a substitui — e hoje está travada por `D-30`.
-5. **Autorização de escrita no Notion.** Concedida em 2026-09-09 para registrar as decisões deste
-   bloco. Não vale para a próxima rodada.
+5. **Autorização de escrita no Notion.** Concedida em 2026-09-09 para registrar as decisões
+   daquele bloco. **Não vale para esta rodada**: a EAP `7.2.1` não foi marcada no Notion, e o
+   aceite parcial está declarado em `D-47`.
 
 ---
 
@@ -467,13 +472,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `infra/lotus-site.yaml` com desenho próprio.
   **Gatilho:** primeiro 404 de asset observado em produção, ou o bloco que puder redesenhar a
   retenção da raiz. Levantado na review do bloco `7.1.1+7.1.2+7.1.5`.
-- **D-44 · o acesso ao painel de DNS foi perdido** — o domínio é comprado na BlueHosting e a zona é
-  gerenciada em `https://www.stackcp.com/` (Stack Control Panel). João informou em 2026-09-09 que
-  não tem mais acesso ao painel. Sem ele não há como ler os registros que a enumeração não alcança,
-  não há como exportar a zona e não há como trocar os nameservers — que é o passo que efetivamente
-  move a zona para o Route 53. Trava `B1` inteiro, e `B1` é o gargalo de `B2` a `B7`.
-  **Gatilho:** recuperação de acesso pelo suporte da BlueHosting, ou confirmação de que o suporte
-  troca os nameservers a pedido.
 - **D-45 · a zona tem wildcard** — `*.lotusotec.cl` responde `A 185.146.167.195`, o mesmo IP do
   apex. Medido em 2026-09-09 por DNS-over-HTTPS: `zzz-nao-existe-19283.lotusotec.cl` e
   `outro-teste-aleatorio-77.lotusotec.cl` respondem esse IP. Duas consequências. **Primeira:**
@@ -482,7 +480,11 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   a zona nova precisa decidir entre reproduzir o wildcard ou removê-lo. Remover é o correto —
   wildcard esconde erro de digitação e faz qualquer subdomínio inventado apontar para o WordPress —
   mas remover sem o export derruba, sem aviso, subdomínio em uso que ninguém listou.
-  **Gatilho:** `B1`.
+  Desfecho parcial em 2026-09-20 (`7.2.1`): a zona nova nasceu **sem** wildcard, e os dois nomes
+  que dependiam dele e não podiam quebrar — `www` e `sistema` — nasceram explícitos. A decisão de
+  remover está tomada e provada no template; o que continua aberto é a outra metade, a que só o
+  export BIND resolve: **quais outros nomes existem**. Por isso a delegação não foi trocada.
+  **Gatilho:** export BIND na mão de João.
 - **D-46 · o domínio não publica DMARC nem DKIM** — medido em 2026-09-09:
   `_dmarc.lotusotec.cl` e `google._domainkey.lotusotec.cl` não têm registro TXT; o `A` que
   aparece nos dois é o wildcard de `D-45`, não configuração. O que existe é só o SPF do apex,
@@ -493,8 +495,30 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   Google, e esse include pode ser resíduo do provedor antigo ou caminho de envio ainda em uso.
   **Gatilho:** `B2`.
 
+- **D-47 · `7.2.1` fechou parcial: sem delegação, sem certificado, sem HTTPS** — o critério de
+  aceite da EAP no Notion pede domínio resolvendo e HTTPS válido. O bloco de 2026-09-20 entregou
+  só a zona: criada no Route 53, conferida registro a registro contra a StackDNS e travada por
+  catraca, mas **não delegada**. Sem delegação não há validação DNS-01, sem ela não há
+  certificado, e sem certificado não há HTTPS. A EAP **não** foi marcada como concluída, e não
+  havia autorização de escrita no Notion nesta rodada de qualquer forma. O que falta, em ordem:
+  export BIND, troca de nameservers, `Certificate` no stack `lotus-dns`, alias do CloudFront
+  (`B5`).
+  **Gatilho:** export BIND na mão de João.
+- **D-48 · o runbook descreve duas formas de emitir o certificado** — a secção 6.6 passou a
+  descrever o recurso `AWS::CertificateManager::Certificate` no stack `lotus-dns` como caminho
+  padrão, e manteve `aws acm request-certificate` como fallback declarado. Duas descrições da
+  mesma coisa divergem com o tempo, e um certificado emitido pela CLI não é gerenciado pelo
+  stack: o próximo deploy tentaria criar outro. Enquanto as duas convivem, **a do template
+  vence**.
+  **Gatilho:** ao emitir o certificado, no bloco da delegação.
+
 ## Fechados
 
+- **D-44 · o acesso ao painel de DNS foi perdido** — o domínio é comprado na BlueHosting e a zona
+  é gerenciada em `https://www.stackcp.com/` (Stack Control Panel). João informou em 2026-09-09
+  que não tinha mais acesso; travava `B1` inteiro, e `B1` é o gargalo de `B2` a `B7`.
+  **Fechado em 2026-09-20**, por confirmação de João de que o acesso à tela de nameservers
+  voltou. É declaração, não medição nossa: quem executar a troca comprova na hora.
 - **D-06 · `scripts/*.mjs` fora de qualquer projeto TypeScript** — `tsconfig.node.json` tem
   `"include": ["vite.config.ts"]`, então `scripts/validate-agent-workflow.mjs` não é typechecked por
   `tsc -b` nem coberto pelo `strict` ligado em `1.2.3`. Levantado na review de `1.2.2+1.2.3` como

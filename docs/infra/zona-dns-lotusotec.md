@@ -25,7 +25,8 @@ NS   ns1.stackdns.com.   ns2.stackdns.com.   ns3.stackdns.com.   ns4.stackdns.co
 ```
 
 O painel é o Stack Control Panel (`https://www.stackcp.com/`), revenda da BlueHosting, onde o
-domínio foi comprado. **João perdeu o acesso** (`D-44`).
+domínio foi comprado. João confirmou em 2026-09-20 que recuperou o acesso (`D-44` fechado); o
+export BIND continua pendente, e é ele que autoriza a troca.
 
 ## Apex
 
@@ -108,6 +109,27 @@ Por isso o **export BIND pedido ao suporte da BlueHosting é condição de `B1`*
 forma de afirmar "a cópia está completa" sem mentir. Enquanto ele não chegar, este arquivo é o piso
 da conferência, não o teto.
 
+## Cópia no Route 53
+
+Desde 2026-09-20 a zona existe também no Route 53, criada pelo stack `lotus-dns`
+(`infra/lotus-dns.yaml`, `us-east-1`), **sem delegação**: o registro `.cl` continua apontando para
+`ns1..ns4.stackdns.com`, então este arquivo continua descrevendo o que o mundo lê.
+
+A cópia tem duas diferenças deliberadas em relação ao que está medido acima:
+
+- **não tem wildcard** — `www` e `sistema` viraram registro explícito no lugar dele;
+- **não declara `NS` nem `SOA`** do apex, que a própria zona gera.
+
+Conferência registro a registro em `conferencia-zona-2026-09-21.md`, gerada por
+`pnpm infra:conferir-zona`. A catraca `scripts/infra/zona.test.mjs` impede o template de divergir
+desta medição sem reprovar `pnpm check`.
+
+Houve uma corrida anterior, em 2026-09-20, com os mesmos números. Ela saiu de um script cujas
+guardas davam verde falso — nome inventado que voltasse a resolver na AWS contava como "sim", e
+resposta `NS` vazia passava por delegação intacta —, então foi removida em vez de conviver com
+esta: evidência que não sabe reprovar acaba lida como se soubesse. Ela continua no histórico, no
+commit `537b8dd`.
+
 ## Conferência antes e depois da troca
 
 A zona nova precisa responder **igual** à atual antes de a delegação mudar, porque durante a
@@ -116,14 +138,7 @@ entra aqui — é `B5`.
 
 ```bash
 # antes da troca: perguntar direto aos nameservers da AWS, sem depender da delegação
-for t in A AAAA MX TXT NS SOA; do
-  dig +norec @ns-XXXX.awsdns-YY.com "$t" lotusotec.cl
-done
-
-# os cinco explícitos
-for n in mail smtp imap autodiscover ftp; do
-  dig +norec @ns-XXXX.awsdns-YY.com CNAME "$n.lotusotec.cl"
-done
+pnpm infra:conferir-zona
 
 # depois da troca: recebimento real, não só resolução
 # enviar uma mensagem de fora para uma caixa @lotusotec.cl e confirmar a entrega

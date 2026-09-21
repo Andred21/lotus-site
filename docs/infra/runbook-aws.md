@@ -169,84 +169,75 @@ muda de dono é a zona; na BlueHosting fica a tela de nameservers e a renovaçã
 
 ### 6.0 Antes de qualquer comando
 
-Duas coisas, nesta ordem, e nenhuma delas é AWS:
+1. ~~Recuperar o acesso ao painel~~ — **feito**. João confirmou em 2026-09-20 que tem acesso à
+   tela de nameservers (`D-44` fechado). É declaração, não medição nossa: quem executar a troca
+   comprova na hora.
+2. **Pedir o export BIND da zona** ao suporte da BlueHosting. **Ainda pendente, e é ele que
+   autoriza a troca.** Com wildcard na zona (`D-45`), enumerar por DNS devolve resposta para
+   qualquer palpite: não há como afirmar que a cópia está completa sem o export, e um registro
+   esquecido só aparece depois da troca, como falha intermitente, para parte do mundo.
 
-1. **Recuperar o acesso ao painel** (`https://www.stackcp.com/`, pelo suporte da BlueHosting).
-   Sem ele não há como trocar o nameserver, que é o passo que efetivamente move a zona. `D-44`.
-2. **Pedir o export BIND da zona** ao mesmo suporte. Com wildcard na zona (`D-45`), enumerar por
-   DNS devolve resposta para qualquer palpite, e não há como afirmar que a cópia está completa sem
-   o export.
+A EAP `7.2.1` cobre da criação da zona até o HTTPS válido. O bloco de 2026-09-20 entregou só o
+primeiro pedaço: a zona existe, está conferida e **não** está delegada. A ordem do que falta é
+export BIND, troca de nameservers (6.4), certificado (6.6) e alias do CloudFront (`B5`).
 
 Em paralelo, e num lugar diferente: abrir o pedido de **production access do SES** no suporte da
 **AWS** — não no da BlueHosting. Ele tem espera e trava `B2` se ficar para depois.
 
-### 6.1 Criar a zona
+### 6.1 Criar e popular a zona
+
+A zona é um stack, `infra/lotus-dns.yaml`, e não uma sequência de `change-resource-record-sets`.
+Editar registros à mão funciona e **é desfeito pelo próximo deploy**: o template é a fonte.
 
 ```bash
 export AWS_PROFILE=lotus
 
-aws route53 create-hosted-zone \
-  --name lotusotec.cl \
-  --caller-reference "lotus-site-$(date +%s)" \
-  --hosted-zone-config Comment="zona do site e do e-mail; ADR-SITE-006"
+aws cloudformation deploy \
+  --region us-east-1 \
+  --stack-name lotus-dns \
+  --template-file infra/lotus-dns.yaml \
+  --tags Projeto=lotus-site
+
+aws cloudformation describe-stacks --region us-east-1 --stack-name lotus-dns \
+  --query 'Stacks[0].Outputs' --output table
 ```
 
-A resposta traz o `Id` da zona e o **delegation set**: os quatro `ns-*.awsdns-*` que vão para o
-registrador no passo 6.4. Anote os dois.
+`us-east-1` de propósito, embora o Route 53 seja global: o certificado de 6.6 entra neste mesmo
+stack, e o CloudFront só lê certificado de lá.
 
-### 6.2 Popular a zona
+O output `NameServers` traz os quatro `ns-*.awsdns-*` que vão para o registrador no passo 6.4.
+`IdDaZona` é a entrada de `list-resource-record-sets`.
 
-Se o export BIND chegou, o caminho mais curto é o **console**: Route 53 → a zona → _Import zone
-file_ → colar o conteúdo. O CLI não tem importador de arquivo de zona.
-
-Sem o export, ou para conferir o que o import fez, cada mudança é um change batch:
-
-```bash
-ZONA=Z0123456789ABCDEFGHIJ
-
-cat > /tmp/lote.json <<'JSON'
-{
-  "Comment": "copia fiel da zona atual - ADR-SITE-006",
-  "Changes": [
-    { "Action": "UPSERT", "ResourceRecordSet": {
-        "Name": "lotusotec.cl.", "Type": "MX", "TTL": 3600,
-        "ResourceRecords": [
-          {"Value": "1 ASPMX.L.GOOGLE.COM."},
-          {"Value": "5 ALT1.ASPMX.L.GOOGLE.COM."},
-          {"Value": "5 ALT2.ASPMX.L.GOOGLE.COM."},
-          {"Value": "10 ALT3.ASPMX.L.GOOGLE.COM."},
-          {"Value": "10 ALT4.ASPMX.L.GOOGLE.COM."}
-        ] } }
-  ]
-}
-JSON
-
-aws route53 change-resource-record-sets --hosted-zone-id "$ZONA" --change-batch file:///tmp/lote.json
-aws route53 list-resource-record-sets --hosted-zone-id "$ZONA" --output table
-```
-
-Regras que valem para esta zona especificamente:
+Três regras que o template já aplica e que edição manual não deve desfazer:
 
 - **O MX do Google entra idêntico.** É o e-mail da empresa.
-- **O wildcard `*` não entra.** Se o export revelar nome que só funciona por causa dele, esse nome
-  vira registro explícito, um a um.
+- **O wildcard `*` não entra.** `www` e `sistema`, que hoje só respondem por causa dele, nascem
+  explícitos. Se o export BIND revelar outro nome nessa situação, ele vira registro explícito no
+  template, um a um — não um wildcard de volta.
 - **O apontamento para o CloudFront não entra agora.** `B1` move a zona sem mudar o que ela
-  responde; apontar o site é `B5`. Durante a propagação os dois lados precisam dar a mesma resposta.
+  responde; apontar o site é `B5`.
+
+A catraca `scripts/infra/zona.test.mjs` roda em `pnpm check` e reprova se qualquer uma das três
+for violada no template.
 
 ### 6.3 Conferir antes de trocar
 
-Perguntar **direto** aos nameservers da AWS, sem depender da delegação, que ainda aponta para a
-StackDNS:
-
 ```bash
-NS_AWS=ns-XXXX.awsdns-YY.com     # um do delegation set do passo 6.1
-
-for t in A AAAA MX TXT NS SOA; do dig +norec "@$NS_AWS" "$t" lotusotec.cl; done
-for n in mail smtp imap autodiscover ftp; do dig +norec "@$NS_AWS" CNAME "$n.lotusotec.cl"; done
+pnpm infra:conferir-zona
 ```
 
-Cada resposta tem de bater com [`zona-dns-lotusotec.md`](zona-dns-lotusotec.md). Diferença aqui é
-barata; diferença depois do passo 6.4 é serviço fora do ar para parte do mundo.
+Pergunta direto aos quatro nameservers da zona nova — consulta comum devolveria o lado antigo,
+porque a delegação ainda aponta para a StackDNS —, compara com esse lado atual por
+DNS-over-HTTPS, grava `docs/infra/conferencia-zona-<data>.md` e sai 1 na primeira divergência não
+esperada.
+
+A única divergência esperada: nome inventado não resolve na AWS e resolve na StackDNS. É a prova
+de que o wildcard não atravessou.
+
+Se UDP/53 não sair da máquina, o lado AWS cai para `route53 list-resource-record-sets` e o
+relatório **declara a troca no cabeçalho**: configuração escrita não é resposta servida.
+
+Diferença aqui é barata; diferença depois do passo 6.4 é serviço fora do ar para parte do mundo.
 
 ### 6.4 Trocar os nameservers
 
@@ -272,7 +263,42 @@ E então **enviar uma mensagem de fora para uma caixa `@lotusotec.cl` e confirma
 
 ### 6.6 Certificado no ACM
 
-`us-east-1` obrigatoriamente: o CloudFront não lê certificado de outra região.
+**Só depois de 6.4.** A validação DNS-01 precisa que o mundo leia a zona da AWS; com a delegação
+ainda na StackDNS, o CNAME de validação existe e ninguém o enxerga.
+
+Caminho padrão: um `AWS::CertificateManager::Certificate` no stack `lotus-dns`, com
+`DomainValidationOptions.HostedZoneId` apontando para a própria zona — o ACM cria e remove o CNAME
+de validação sozinho, e a renovação é automática e silenciosa.
+
+```yaml
+Certificado:
+  Type: AWS::CertificateManager::Certificate
+  Properties:
+    DomainName: !Ref NomeDaZona
+    SubjectAlternativeNames:
+      - !Sub 'www.${NomeDaZona}'
+    ValidationMethod: DNS
+    DomainValidationOptions:
+      - DomainName: !Ref NomeDaZona
+        HostedZoneId: !Ref Zona
+      - DomainName: !Sub 'www.${NomeDaZona}'
+        HostedZoneId: !Ref Zona
+```
+
+SANs explícitos, **nunca** `*.lotusotec.cl`: o wildcard amplia o raio de uma chave comprometida e
+esconde o inventário de nomes.
+
+Três armadilhas, todas de ordem:
+
+1. **Pedido pendente do ACM é cancelado em 72h.** Pedir antes de a delegação funcionar queima o
+   pedido.
+2. **Com `HostedZoneId`, o stack fica em `CREATE_IN_PROGRESS` até validar.** Zona não delegada
+   significa stack travado até o timeout, e depois rollback.
+3. **`CAA` restringindo emissão a `amazon.com` entra depois do primeiro `ISSUED`, nunca antes.**
+   CAA errado bloqueia a própria renovação. A zona não tem CAA hoje (medido em 2026-09-09), e é
+   por isso que o ACM emite sem obstáculo.
+
+Fallback declarado, para o caso de o recurso do template travar e ser preciso emitir à mão:
 
 ```bash
 aws acm request-certificate --region us-east-1 \
@@ -283,40 +309,52 @@ aws acm request-certificate --region us-east-1 \
 
 aws acm describe-certificate --region us-east-1 --certificate-arn <arn> \
   --query 'Certificate.DomainValidationOptions[].ResourceRecord'
-```
 
-Criar os CNAME que a resposta pedir, com o mesmo change batch do passo 6.2, e esperar:
-
-```bash
 aws acm wait certificate-validated --region us-east-1 --certificate-arn <arn>
 ```
 
-Este é o passo que o painel antigo impedia: sem editor de registros não havia como criar o CNAME de
-validação.
+Um certificado emitido por este caminho **não** é gerenciado pelo stack, e o próximo deploy
+tentaria criar outro. Se as duas descrições divergirem, a do template vence (`D-48`).
 
 ### 6.7 Subdomínios
 
-Com a zona no Route 53 não há limite de um subdomínio. `sistema.lotusotec.cl` nasce como registro
-explícito — hoje ele só resolve por causa do wildcard.
+Com a zona no Route 53 não há limite de um subdomínio. `sistema.lotusotec.cl` já nasce no template
+como `A` para o WordPress — hoje ele só resolve por causa do wildcard, e a troca o apagaria se ele
+não estivesse declarado.
 
-```bash
-cat > /tmp/sistema.json <<'JSON'
-{ "Changes": [ { "Action": "UPSERT", "ResourceRecordSet": {
-    "Name": "sistema.lotusotec.cl.", "Type": "A", "TTL": 300,
-    "ResourceRecords": [{"Value": "<IP do Lotus administrativo>"}] } } ] }
-JSON
+Subdomínio novo é uma entrada a mais em `RecordSets` **e** uma linha a mais no inventário de
+`scripts/infra/lib/zona.mjs`, senão a catraca reprova. Não é `change-resource-record-sets` à mão.
 
-aws route53 change-resource-record-sets --hosted-zone-id "$ZONA" --change-batch file:///tmp/sistema.json
-```
-
-Criar esse registro é DNS e nada mais. A integração com a API do Lotus (`8.2.1`) está congelada por
-decisão de João em 2026-09-09 e não é aberta por este comando.
+Criar esse registro é DNS e nada mais. A integração com a API do Lotus (`8.2.1`) está congelada
+por decisão de João em 2026-09-09 e não é aberta por este comando.
 
 ### 6.8 Budget
 
-O `AWS::Budgets::Budget` de `infra/lotus-site.yaml` filtra hoje S3 e CloudFront. Assim que a zona
-existir, o teto de US$ 30 deixa de medir parte da conta. Incluir Route 53 no filtro é entrega de
-`B1` — e SES e Lambda entram no mesmo lugar em `B2`.
+**Feito em `7.2.1`.** `CostFilters.Service` em `infra/lotus-site.yaml` lista
+`Amazon Simple Storage Service`, `Amazon CloudFront` e `Amazon Route 53`. SES e Lambda entram no
+mesmo lugar em `B2`.
+
+O filtro é da **conta**, não do stack: a zona `komit.cl`, que já existia nesta conta antes de nós,
+passa a ser contada também.
+
+```bash
+aws budgets describe-budget --region us-east-1 --account-id 760144413534 \
+  --budget-name lotus-site-teto --query 'Budget.CostFilters' --output json
+```
+
+### 6.9 Desmontar a zona (leia antes de pensar em fazer)
+
+`delete-stack` de `lotus-dns` **não apaga a zona**: `DeletionPolicy: Retain` a deixa para trás, de
+propósito. Apagá-la é um ato manual e separado:
+
+```bash
+aws route53 delete-hosted-zone --id <IdDaZona>
+```
+
+Uma hosted zone recriada ganha **nameservers novos**. Se a zona já estiver delegada nessa altura,
+apagá-la derruba o site e o e-mail corporativo no mesmo movimento, e recriá-la não conserta — é
+preciso voltar ao painel do registrador com os quatro nomes novos e esperar a propagação outra
+vez.
 
 ## 7. Desmonte
 
