@@ -17,6 +17,12 @@
  * Inventário medido em 2026-09-09 por DNS-over-HTTPS contra `dns.google` e
  * registrado em `docs/infra/zona-dns-lotusotec.md`. Nomes com ponto final,
  * como o Route 53 os guarda.
+ *
+ * Nove destes são registro provado: respondem coisa diferente do que o
+ * wildcard responderia. `www` e `sistema` não — hoje eles só resolvem porque
+ * o wildcard existe, e por DNS não há como distinguir registro de wildcard
+ * falando. Entram aqui porque a spec §3 D5 decidiu declará-los explícitos: a
+ * troca de delegação apagaria os dois se eles não estivessem no template.
  * @type {readonly RegistroEsperado[]}
  */
 export const INVENTARIO = Object.freeze([
