@@ -39,7 +39,7 @@ Parameters:
     Type: Number
     Default: 30
     MinValue: 1
-    Description: Teto mensal em USD somando S3 e CloudFront.
+    Description: Teto mensal em USD somando S3, CloudFront e Route 53.
 
 Resources:
   # ── armazenamento ──────────────────────────────────────────────────────────
@@ -257,10 +257,17 @@ Resources:
         # Filtro por SERVICO e nao por tag: tag de alocacao de custo precisa
         # ser ativada no painel de billing e leva ate 24h para valer, e um
         # budget que nao mede nada e pior que nenhum.
+        #
+        # Route 53 entra em 7.2.1, com a zona de lotusotec.cl. O filtro e da
+        # CONTA, nao do stack: a zona komit.cl, que ja existia nesta conta
+        # antes de nos, passa a ser contada tambem. E o comportamento correto
+        # -- o teto existe para a conta -- mas a primeira fatura filtrada
+        # parece erro se isto nao estiver escrito.
         CostFilters:
           Service:
             - Amazon Simple Storage Service
             - Amazon CloudFront
+            - Amazon Route 53
       NotificationsWithSubscribers:
         - Notification:
             NotificationType: FORECASTED
