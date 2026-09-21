@@ -81,6 +81,19 @@ export const NOMES_INVENTADOS = Object.freeze([
   'outro-teste-aleatorio-77.lotusotec.cl.',
 ])
 
+/**
+ * A delegação que o registro `.cl` aponta hoje, medida em 2026-09-09. Conjunto
+ * exato, e não substring: `every` sobre lista vazia devolve `true`, e uma
+ * resposta DoH sem `Answer` passaria por delegação intacta.
+ * @type {readonly string[]}
+ */
+export const NS_DA_STACKDNS = Object.freeze([
+  'ns1.stackdns.com.',
+  'ns2.stackdns.com.',
+  'ns3.stackdns.com.',
+  'ns4.stackdns.com.',
+])
+
 const ASPAS_EXTERNAS = /^(['"])([\s\S]*)\1$/
 
 /** @param {string} bruto */

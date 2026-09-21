@@ -120,9 +120,14 @@ A cópia tem duas diferenças deliberadas em relação ao que está medido acima
 - **não tem wildcard** — `www` e `sistema` viraram registro explícito no lugar dele;
 - **não declara `NS` nem `SOA`** do apex, que a própria zona gera.
 
-Conferência registro a registro em `conferencia-zona-2026-09-20.md`, gerada por
+Conferência registro a registro em `conferencia-zona-2026-09-21.md`, gerada por
 `pnpm infra:conferir-zona`. A catraca `scripts/infra/zona.test.mjs` impede o template de divergir
 desta medição sem reprovar `pnpm check`.
+
+`conferencia-zona-2026-09-20.md` é a mesma conferência rodada um dia antes, e está **superada**: a
+review do bloco achou duas guardas que davam verde falso — nome inventado que voltasse a resolver
+na AWS contava como "sim", e resposta `NS` vazia passava por delegação intacta. Os números daquela
+corrida estavam certos; o que não estava era a capacidade de reprovar. Leia a de 2026-09-21.
 
 ## Conferência antes e depois da troca
 

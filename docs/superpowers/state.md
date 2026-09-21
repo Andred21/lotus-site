@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: reviewing
 work_class: architectural
 active_work_item: 7.2.1
 active_notion_eap: 7.2.1
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 14
 last_completed_work_item: espelho-8982f50
-state_basis_commit: 537b8dd
-updated_at: 2026-09-20T18:00:00Z
+state_basis_commit: b0d7be5
+updated_at: 2026-09-20T19:10:00Z
 ---
 
 # Estado operacional — Lotus Site

@@ -9,7 +9,7 @@
 //
 // Uso: `pnpm infra:conferir-zona`
 //   --nameservers ns-1.awsdns-01.org,ns-2.awsdns-02.com  pula a leitura do stack
-//   --saida docs/infra/conferencia-zona-2026-09-20.md    muda o destino
+//   --saida docs/infra/conferencia-zona-2026-09-21.md    muda o destino
 //
 // Sai com codigo 1 quando ha divergencia fora das esperadas.
 import { execFileSync } from 'node:child_process'
@@ -19,8 +19,8 @@ import { format, resolveConfig } from 'prettier'
 import {
   INVENTARIO,
   NOMES_INVENTADOS,
+  NS_DA_STACKDNS,
   mesmoConjunto,
-  normalizar,
 } from './lib/zona.mjs'
 
 const STACK = 'lotus-dns'
@@ -286,7 +286,11 @@ for (const inventado of NOMES_INVENTADOS) {
     inventario: [],
     aws: naAws,
     atual: naStack,
-    igual: mesmoConjunto(naAws, naStack),
+    // Nunca `igual`: para nome inventado nao existe lado certo a bater. O
+    // unico desfecho aceitavel e a divergencia -- vazio na AWS, IP na
+    // StackDNS. Comparar os dois lados aqui daria verde justamente quando o
+    // wildcard tivesse atravessado, porque ai eles voltam a coincidir.
+    igual: false,
     esperado: naAws.length === 0 && naStack.length > 0,
     nota: 'wildcard removido de proposito',
   })
@@ -295,18 +299,20 @@ for (const inventado of NOMES_INVENTADOS) {
 // A delegacao nao e deste bloco. Se ela ja tiver mudado, o relatorio inteiro
 // muda de significado.
 const delegacao = await perguntarDoh('lotusotec.cl.', 'NS')
-const delegacaoIntacta = delegacao.every((valor) =>
-  normalizar(valor).includes('stackdns.com'),
-)
+const delegacaoIntacta = mesmoConjunto(delegacao, [...NS_DA_STACKDNS])
 linhas.push({
   nome: 'lotusotec.cl.',
   tipo: 'NS',
-  inventario: ['ns1..ns4.stackdns.com.'],
+  inventario: [...NS_DA_STACKDNS],
   aws: [],
   atual: delegacao,
-  igual: delegacaoIntacta,
+  // A coluna AWS fica vazia porque nada foi perguntado a ela: o que esta
+  // linha afirma e sobre a delegacao, nao sobre a zona nova. Por isso ela
+  // nunca e `igual` -- "sim" ao lado de uma coluna vazia leria como se os
+  // dois lados tivessem batido, e nenhuma comparacao aconteceu.
+  igual: false,
   esperado: delegacaoIntacta,
-  nota: 'delegacao inalterada, como o bloco exige',
+  nota: 'a linha afirma a delegacao, nao a zona nova; AWS nao consultada',
 })
 
 const problemas = linhas.filter((linha) => !linha.igual && !linha.esperado)
