@@ -9,8 +9,8 @@ active_title: Configurar domínio, DNS, HTTPS e redirects necessários
 active_branch: feat/7-2-1-zona-dns-route53
 bounded_design: null
 authorized_paths: null
-next_owner: codex
-next_action: review_active_work_item
+next_owner: joao
+next_action: approve_review_corrections
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-20-7.2.1-zona-dns-route53-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 14
 last_completed_work_item: espelho-8982f50
-state_basis_commit: b0d7be5
-updated_at: 2026-09-20T19:10:00Z
+state_basis_commit: 16a0740
+updated_at: 2026-09-21T00:20:45Z
 ---
 
 # Estado operacional — Lotus Site
