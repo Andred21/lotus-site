@@ -124,10 +124,11 @@ Conferência registro a registro em `conferencia-zona-2026-09-21.md`, gerada por
 `pnpm infra:conferir-zona`. A catraca `scripts/infra/zona.test.mjs` impede o template de divergir
 desta medição sem reprovar `pnpm check`.
 
-`conferencia-zona-2026-09-20.md` é a mesma conferência rodada um dia antes, e está **superada**: a
-review do bloco achou duas guardas que davam verde falso — nome inventado que voltasse a resolver
-na AWS contava como "sim", e resposta `NS` vazia passava por delegação intacta. Os números daquela
-corrida estavam certos; o que não estava era a capacidade de reprovar. Leia a de 2026-09-21.
+Houve uma corrida anterior, em 2026-09-20, com os mesmos números. Ela saiu de um script cujas
+guardas davam verde falso — nome inventado que voltasse a resolver na AWS contava como "sim", e
+resposta `NS` vazia passava por delegação intacta —, então foi removida em vez de conviver com
+esta: evidência que não sabe reprovar acaba lida como se soubesse. Ela continua no histórico, no
+commit `537b8dd`.
 
 ## Conferência antes e depois da troca
 
