@@ -2,12 +2,14 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   INVENTARIO,
+  delegacaoEsperada,
   lerParametros,
   lerPoliticasDaZona,
   lerRegistros,
   mesmoConjunto,
   normalizar,
   resolver,
+  wildcardAusente,
 } from './lib/zona.mjs'
 
 // Caminho a partir da raiz do repositório, como os outros testes de
@@ -116,5 +118,43 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     expect(registros.map((registro) => registro.ttl)).toEqual(
       INVENTARIO.map(() => 3600),
     )
+  })
+})
+
+describe('vereditos que a delegação inverte', () => {
+  it('antes da troca, nome inventado só pode resolver do lado da StackDNS', () => {
+    expect(wildcardAusente([], ['185.146.167.195'], false)).toBe(true)
+    // Resolveu na AWS: o wildcard atravessou.
+    expect(
+      wildcardAusente(['185.146.167.195'], ['185.146.167.195'], false),
+    ).toBe(false)
+    // Não resolveu em lado nenhum: ou a StackDNS mudou, ou a pergunta não
+    // chegou. Nos dois casos o relatório não pode dar verde.
+    expect(wildcardAusente([], [], false)).toBe(false)
+  })
+
+  it('depois da troca, nome inventado não pode resolver em lado nenhum', () => {
+    // Os dois lados passaram a ser a mesma zona; a assimetria de antes
+    // deixaria de ser possível mesmo que tudo estivesse certo.
+    expect(wildcardAusente([], [], true)).toBe(true)
+    expect(wildcardAusente([], ['185.146.167.195'], true)).toBe(false)
+    expect(wildcardAusente(['185.146.167.195'], [], true)).toBe(false)
+  })
+
+  it('antes da troca, a delegação esperada é a da StackDNS', () => {
+    expect(delegacaoEsperada(['ns-31.awsdns-03.com'], false)).toEqual([
+      'ns1.stackdns.com.',
+      'ns2.stackdns.com.',
+      'ns3.stackdns.com.',
+      'ns4.stackdns.com.',
+    ])
+  })
+
+  it('depois da troca, a delegação esperada são os nameservers do stack', () => {
+    // Com ponto final, que é como a resposta DoH chega. Hardcodar os quatro
+    // nomes aqui seria mentira a partir da primeira zona recriada.
+    expect(
+      delegacaoEsperada(['ns-31.awsdns-03.com', 'ns-904.awsdns-49.net.'], true),
+    ).toEqual(['ns-31.awsdns-03.com.', 'ns-904.awsdns-49.net.'])
   })
 })

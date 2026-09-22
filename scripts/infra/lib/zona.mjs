@@ -285,3 +285,37 @@ export function mesmoConjunto(a, b) {
     esquerda.every((valor, i) => valor === direita[i])
   )
 }
+
+/**
+ * Veredito da linha de nome inventado, que a delegação inverte.
+ *
+ * Antes da troca os dois lados são zonas diferentes, e a prova de que o
+ * wildcard não atravessou é a assimetria: vazio na AWS, IP na StackDNS.
+ * Depois da troca os dois lados são a MESMA zona lida por caminhos
+ * diferentes, e essa assimetria deixa de ser possível — o único desfecho
+ * correto passa a ser vazio dos dois lados. Manter a regra antiga daria
+ * vermelho justamente quando tudo estivesse certo.
+ *
+ * Resolver na AWS reprova nos dois casos: é o wildcard tendo atravessado.
+ * @param {string[]} naAws
+ * @param {string[]} naStack
+ * @param {boolean} posDelegacao
+ */
+export function wildcardAusente(naAws, naStack, posDelegacao) {
+  if (naAws.length > 0) return false
+  return posDelegacao ? naStack.length === 0 : naStack.length > 0
+}
+
+/**
+ * Qual delegação o relatório espera encontrar. Depois da troca ela é a do
+ * próprio stack, e não uma lista fixa: uma hosted zone recriada ganha
+ * nameservers novos, e uma constante aqui viraria mentira silenciosa na
+ * primeira vez que isso acontecesse.
+ * @param {string[]} nomesDeServidor
+ * @param {boolean} posDelegacao
+ * @returns {string[]}
+ */
+export function delegacaoEsperada(nomesDeServidor, posDelegacao) {
+  if (!posDelegacao) return [...NS_DA_STACKDNS]
+  return nomesDeServidor.map((nome) => `${nome.replace(/\.$/, '')}.`)
+}

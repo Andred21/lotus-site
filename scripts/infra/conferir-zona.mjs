@@ -1,15 +1,21 @@
 // Confere a zona nova do Route 53 contra a zona que a StackDNS ainda serve,
 // registro a registro, e grava a evidencia.
 //
-// Perguntar "ao DNS" nao serve aqui: a delegacao de lotusotec.cl ainda aponta
-// para ns1..ns4.stackdns.com, entao qualquer consulta normal devolve o lado
-// antigo -- esteja a zona nova certa ou errada. Este script pergunta DIRETO
-// aos nameservers da zona nova e compara com o lado atual, lido por
+// Perguntar "ao DNS" nao basta: enquanto a delegacao de lotusotec.cl apontar
+// para ns1..ns4.stackdns.com, qualquer consulta normal devolve o lado antigo
+// -- esteja a zona nova certa ou errada. Este script pergunta DIRETO aos
+// nameservers da zona nova e compara com o lado servido, lido por
 // DNS-over-HTTPS porque nao ha `dig` nesta maquina.
+//
+// Depois da troca a premissa muda, e e por isso que existe `--pos-delegacao`:
+// os dois lados passam a ser a MESMA zona lida por caminhos diferentes, entao
+// as colunas baterem prova convergencia, nao paridade. A consulta direta
+// continua valendo nos dois modos, porque ela e a unica que ignora cache.
 //
 // Uso: `pnpm infra:conferir-zona`
 //   --nameservers ns-1.awsdns-01.org,ns-2.awsdns-02.com  pula a leitura do stack
 //   --saida docs/infra/conferencia-zona-2026-09-21.md    muda o destino
+//   --pos-delegacao                                      inverte os vereditos
 //
 // Sai com codigo 1 quando ha divergencia fora das esperadas.
 import { execFileSync } from 'node:child_process'
@@ -19,8 +25,9 @@ import { format, resolveConfig } from 'prettier'
 import {
   INVENTARIO,
   NOMES_INVENTADOS,
-  NS_DA_STACKDNS,
+  delegacaoEsperada,
   mesmoConjunto,
+  wildcardAusente,
 } from './lib/zona.mjs'
 
 const STACK = 'lotus-dns'
@@ -46,6 +53,9 @@ function argumento(nome) {
   const posicao = process.argv.indexOf(`--${nome}`)
   return posicao === -1 ? undefined : process.argv[posicao + 1]
 }
+
+// Flag sem valor: `argumento()` leria o proximo argv como se fosse o dela.
+const posDelegacao = process.argv.includes('--pos-delegacao')
 
 /** @param {string[]} args */
 function aws(args) {
@@ -275,8 +285,6 @@ for (const registro of INVENTARIO) {
   })
 }
 
-// O wildcard nao atravessou: nome inventado nao resolve na AWS e resolve na
-// StackDNS. E a unica divergencia esperada do relatorio.
 for (const inventado of NOMES_INVENTADOS) {
   const naAws = await ladoAws(inventado, 'A')
   const naStack = await perguntarDoh(inventado, 'A')
@@ -286,33 +294,31 @@ for (const inventado of NOMES_INVENTADOS) {
     inventario: [],
     aws: naAws,
     atual: naStack,
-    // Nunca `igual`: para nome inventado nao existe lado certo a bater. O
-    // unico desfecho aceitavel e a divergencia -- vazio na AWS, IP na
-    // StackDNS. Comparar os dois lados aqui daria verde justamente quando o
-    // wildcard tivesse atravessado, porque ai eles voltam a coincidir.
+    // Nunca `igual`: para nome inventado nao existe lado certo a bater.
     igual: false,
-    esperado: naAws.length === 0 && naStack.length > 0,
-    nota: 'wildcard removido de proposito',
+    esperado: wildcardAusente(naAws, naStack, posDelegacao),
+    nota: posDelegacao
+      ? 'wildcard removido; os dois lados ja leem a zona nova'
+      : 'wildcard removido de proposito',
   })
 }
 
-// A delegacao nao e deste bloco. Se ela ja tiver mudado, o relatorio inteiro
-// muda de significado.
 const delegacao = await perguntarDoh('lotusotec.cl.', 'NS')
-const delegacaoIntacta = mesmoConjunto(delegacao, [...NS_DA_STACKDNS])
+const esperadaNs = delegacaoEsperada(nomesDeServidor, posDelegacao)
 linhas.push({
   nome: 'lotusotec.cl.',
   tipo: 'NS',
-  inventario: [...NS_DA_STACKDNS],
+  inventario: esperadaNs,
   aws: [],
   atual: delegacao,
   // A coluna AWS fica vazia porque nada foi perguntado a ela: o que esta
   // linha afirma e sobre a delegacao, nao sobre a zona nova. Por isso ela
-  // nunca e `igual` -- "sim" ao lado de uma coluna vazia leria como se os
-  // dois lados tivessem batido, e nenhuma comparacao aconteceu.
+  // nunca e `igual`.
   igual: false,
-  esperado: delegacaoIntacta,
-  nota: 'a linha afirma a delegacao, nao a zona nova; AWS nao consultada',
+  esperado: mesmoConjunto(delegacao, esperadaNs),
+  nota: posDelegacao
+    ? 'a linha afirma que a delegacao ja e a da AWS; AWS nao consultada'
+    : 'a linha afirma a delegacao, nao a zona nova; AWS nao consultada',
 })
 
 const problemas = linhas.filter((linha) => !linha.igual && !linha.esperado)
@@ -327,9 +333,15 @@ const relatorio = [
       ' **configuração** (`aws route53 list-resource-record-sets`), e não da resposta servida.' +
       ' São afirmações diferentes: esta prova que a zona está escrita assim, não que ela' +
       ' responde assim.'
-    : '> Lado AWS lido da **resposta servida**, perguntando direto aos quatro nameservers da' +
-      ' zona nova — a delegação ainda aponta para a StackDNS, então nenhuma consulta comum' +
-      ' enxergaria esta zona.',
+    : posDelegacao
+      ? '> Lado AWS lido da **resposta servida**, perguntando direto aos quatro nameservers da' +
+        ' zona nova. A delegação já aponta para eles, então a coluna StackDNS deixou de ser um' +
+        ' segundo lado: é a mesma zona, lida pelo caminho comum. As duas colunas baterem prova' +
+        ' **convergência**, não paridade — e uma delas ainda pode carregar cache de antes da' +
+        ' troca.'
+      : '> Lado AWS lido da **resposta servida**, perguntando direto aos quatro nameservers da' +
+        ' zona nova — a delegação ainda aponta para a StackDNS, então nenhuma consulta comum' +
+        ' enxergaria esta zona.',
   '>',
   '> Lado atual lido por DNS-over-HTTPS contra `dns.google`, mesmo método do inventário de' +
     ' 2026-09-09.',
@@ -356,8 +368,11 @@ const relatorio = [
     : `**${problemas.length} divergência(s) não esperada(s).** A troca de nameservers não pode` +
       ' acontecer enquanto elas existirem.',
   '',
-  'Resolução correta não prova entrega de e-mail. A prova do MX é mensagem recebida, e ela só é',
-  'possível depois da delegação — que não é deste bloco.',
+  posDelegacao
+    ? 'Resolução correta não prova entrega de e-mail. A prova do MX é mensagem recebida, e ela fica' +
+      ' em `docs/infra/delegacao-<data>.md`.'
+    : 'Resolução correta não prova entrega de e-mail. A prova do MX é mensagem recebida, e ela só é' +
+      ' possível depois da delegação.',
   '',
 ].join('\n')
 
