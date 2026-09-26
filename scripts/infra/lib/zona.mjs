@@ -30,6 +30,9 @@
  * a troca de delegação apagaria os dois. O `AAAA` dos dois existe pelo mesmo
  * motivo: o wildcard do painel tem `A` **e** `AAAA`, então cliente
  * dual-stack perderia IPv6 na troca.
+ *
+ * Os seis registros do SES foram acrescentados em `B2`, com os tokens lidos
+ * dos outputs do stack `lotus-contato`.
  * @type {readonly RegistroEsperado[]}
  */
 export const INVENTARIO = Object.freeze([
@@ -90,6 +93,37 @@ export const INVENTARIO = Object.freeze([
     nome: 'ftp.lotusotec.cl.',
     tipo: 'CNAME',
     valores: ['ftp.us.stackcp.com.'],
+  },
+  // ── SES (bloco B2), publicados em 2026-09-26 ────────────────────────────
+  {
+    nome: 'whkczrifauntvx6dy3r5uwx4g7w2p4p2._domainkey.lotusotec.cl.',
+    tipo: 'CNAME',
+    valores: ['whkczrifauntvx6dy3r5uwx4g7w2p4p2.dkim.amazonses.com.'],
+  },
+  {
+    nome: 'veys5msb7mgj6vstojj4pmsnfs5htq5g._domainkey.lotusotec.cl.',
+    tipo: 'CNAME',
+    valores: ['veys5msb7mgj6vstojj4pmsnfs5htq5g.dkim.amazonses.com.'],
+  },
+  {
+    nome: 'ilecjqmzurmfbtcete7ip5sdurjx6irz._domainkey.lotusotec.cl.',
+    tipo: 'CNAME',
+    valores: ['ilecjqmzurmfbtcete7ip5sdurjx6irz.dkim.amazonses.com.'],
+  },
+  {
+    nome: 'ses.lotusotec.cl.',
+    tipo: 'MX',
+    valores: ['10 feedback-smtp.sa-east-1.amazonses.com.'],
+  },
+  {
+    nome: 'ses.lotusotec.cl.',
+    tipo: 'TXT',
+    valores: ['"v=spf1 include:amazonses.com ~all"'],
+  },
+  {
+    nome: '_dmarc.lotusotec.cl.',
+    tipo: 'TXT',
+    valores: ['"v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl"'],
   },
 ])
 

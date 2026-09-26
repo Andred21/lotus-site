@@ -37,6 +37,25 @@ Parameters:
       TTL de toda a zona atual. Copia fiel: mudar o TTL aqui mudaria o
       comportamento durante a propagacao da troca de nameservers.
 
+  # Os tres tokens do Easy DKIM da identidade SES (stack lotus-contato,
+  # sa-east-1). Sao Default por dois motivos: a catraca de zona.test.mjs so le
+  # parametro com Default, e o valor e publico -- e o nome de uma chave
+  # publica. Trocar a identidade troca os tres.
+  TokenDkim1:
+    Type: String
+    Default: whkczrifauntvx6dy3r5uwx4g7w2p4p2
+    AllowedPattern: '^[a-z0-9]+$'
+
+  TokenDkim2:
+    Type: String
+    Default: veys5msb7mgj6vstojj4pmsnfs5htq5g
+    AllowedPattern: '^[a-z0-9]+$'
+
+  TokenDkim3:
+    Type: String
+    Default: ilecjqmzurmfbtcete7ip5sdurjx6irz
+    AllowedPattern: '^[a-z0-9]+$'
+
 Resources:
   Zona:
     Type: AWS::Route53::HostedZone
@@ -164,6 +183,52 @@ Resources:
           TTL: !Ref TtlPadrao
           ResourceRecords:
             - ftp.us.stackcp.com.
+
+        # ── SES (bloco B2, ADR-SITE-005) ──────────────────────────────────
+        # Easy DKIM: tres CNAME para a chave publica que a AWS hospeda. O
+        # seletor e o token, entao nao colide com o DKIM do Google Workspace
+        # (google._domainkey), que continua em D-46.
+        - Name: !Sub '${TokenDkim1}._domainkey.${NomeDaZona}.'
+          Type: CNAME
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Sub '${TokenDkim1}.dkim.amazonses.com.'
+
+        - Name: !Sub '${TokenDkim2}._domainkey.${NomeDaZona}.'
+          Type: CNAME
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Sub '${TokenDkim2}.dkim.amazonses.com.'
+
+        - Name: !Sub '${TokenDkim3}._domainkey.${NomeDaZona}.'
+          Type: CNAME
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Sub '${TokenDkim3}.dkim.amazonses.com.'
+
+        # MAIL FROM em subdominio proprio: o Return-Path passa a ser
+        # ...@ses.lotusotec.cl e o SPF alinha ao dominio. O MX recebe os
+        # bounces; a regiao esta no nome.
+        - Name: !Sub 'ses.${NomeDaZona}.'
+          Type: MX
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - '10 feedback-smtp.sa-east-1.amazonses.com.'
+
+        - Name: !Sub 'ses.${NomeDaZona}.'
+          Type: TXT
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - '"v=spf1 include:amazonses.com ~all"'
+
+        # DMARC em p=none: nao muda a entrega de nada, so gera o relatorio
+        # agregado na caixa que ja existe (spec D11). Fecha a parte DMARC de
+        # D-46; o DKIM do Google e o include:spf.stackmail.com continuam la.
+        - Name: !Sub '_dmarc.${NomeDaZona}.'
+          Type: TXT
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - '"v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl"'
 
   Certificado:
     Type: AWS::CertificateManager::Certificate
