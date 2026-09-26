@@ -17,8 +17,9 @@ ns1.stackdns.com   ns2.stackdns.com   ns3.stackdns.com   ns4.stackdns.com
 O painel os listava fora de ordem (`ns2`, `ns1`, `ns4`, `ns3`); NS é conjunto, a ordem não conta.
 São eles o rollback, e a zona da StackDNS continua de pé e respondendo até `B7`.
 
-A conferência pré-troca é `conferencia-zona-2026-09-21-pre-delegacao.md`, rodada cinco dias antes da
-troca. O intervalo não escondeu mudança: a conferência pós-delegação confere as mesmas 14 linhas.
+A conferência pré-troca é `conferencia-zona-2026-09-22-pre-delegacao.md`, rodada às
+2026-09-22T00:01Z (21:01 do João do dia 21), quatro dias antes da troca. O intervalo não escondeu
+mudança: a conferência pós-delegação confere as mesmas 14 linhas.
 
 ## Depois
 
@@ -28,7 +29,8 @@ ns-904.awsdns-49.net   ns-31.awsdns-03.com   ns-1889.awsdns-44.co.uk   ns-1507.a
 
 Troca feita por João no painel do StackCP; o aviso de "feito" chegou às 2026-09-26T01:12Z. O whois
 do NIC Chile (`whois.nic.cl`, registrar Haulmer SpA) já listava os quatro às 01:13Z — é ele o
-registro do valor gravado.
+registro do valor gravado. Não há print do painel depois de salvar: o whois confirma o valor pelo
+lado do registro, independente do que o painel mostra.
 
 ## Convergência
 
@@ -118,8 +120,9 @@ sem `DATA`, nenhuma mensagem enviada:
 
 O Google aceita correio para o domínio e reconhece `contacto@` como caixa real. Aceitação no `RCPT`
 ainda não é entrega: a prova de entrada é a mensagem de fora chegando em `contacto@` e a resposta
-voltando. João decidiu seguir o bloco sem esperar por ela; a confirmação, com o dono da caixa, entra
-nesta secção quando for feita.
+voltando. João decidiu seguir o bloco sem esperar por ela, às 2026-09-26T06:34Z, na sessão de
+execução: "Perfeito vamos continuar, não quero que bloqueie". A confirmação, com o dono da caixa,
+entra nesta secção quando for feita.
 
 ## Conferência pós-delegação
 
