@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 15
 last_completed_work_item: 7.2.1
-state_basis_commit: b9bf8bc
-updated_at: 2026-09-21T23:12:46Z
+state_basis_commit: 6e34229
+updated_at: 2026-09-26T06:35:26Z
 ---
 
 # Estado operacional — Lotus Site
