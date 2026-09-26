@@ -29,13 +29,16 @@ em tudo que as duas enxergam. O TTL de 3600 vem da medição.
 
 ## Delegação
 
+Antes de 2026-09-26, a delegação de `lotusotec.cl` era a da StackDNS:
+
 ```text
 SOA  ns1.stackdns.com. hostmaster.stackdns.com. 1753989299 1800 900 1209600 300
 NS   ns1.stackdns.com.   ns2.stackdns.com.   ns3.stackdns.com.   ns4.stackdns.com.
 ```
 
 O painel é o Stack Control Panel (`https://www.stackcp.com/`), revenda da BlueHosting, onde o
-domínio foi comprado. João recuperou o acesso em 2026-09-20 (`D-44` fechado).
+domínio foi comprado. João recuperou o acesso em 2026-09-20 (`D-44` fechado). **Desde 2026-09-26 a
+delegação é a do Route 53** — ver [`delegacao-2026-09-26.md`](delegacao-2026-09-26.md).
 
 ## Inventário fechado — o que o painel lista
 
@@ -130,8 +133,9 @@ hipótese é erro de digitação aqui, não registro perdido lá.
 ## Cópia no Route 53
 
 Desde 2026-09-20 a zona existe também no Route 53, criada pelo stack `lotus-dns`
-(`infra/lotus-dns.yaml`, `us-east-1`), **sem delegação**: o registro `.cl` continua apontando para
-`ns1..ns4.stackdns.com`, então este arquivo continua descrevendo o que o mundo lê.
+(`infra/lotus-dns.yaml`, `us-east-1`). A delegação foi trocada em 2026-09-26 — ver
+[`delegacao-2026-09-26.md`](delegacao-2026-09-26.md) — e desde então é o Route 53 quem responde
+pela zona.
 
 A cópia tem três diferenças deliberadas em relação ao painel:
 
@@ -140,9 +144,21 @@ A cópia tem três diferenças deliberadas em relação ao painel:
 - **não declara `NS` nem `SOA`** do apex, que a própria zona gera;
 - **não tem os três atalhos do StackCP**, cujos nomes não são nomes de host.
 
-Conferência registro a registro em `conferencia-zona-2026-09-21.md`, gerada por
-`pnpm infra:conferir-zona`. A catraca `scripts/infra/zona.test.mjs` impede o template de divergir
-desta medição sem reprovar `pnpm check`.
+Três conferências, cada uma provando uma coisa diferente:
+
+- `conferencia-zona-2026-09-21.md` — primeira rodada, 2026-09-20: a comparação inicial, registro a
+  registro, contra a StackDNS;
+- `conferencia-zona-2026-09-22-pre-delegacao.md` — conferência pré-troca desta rodada, quatro dias
+  antes de a delegação mudar;
+- `conferencia-zona-2026-09-26-pos-delegacao.md` — conferência pós-delegação, gerada por
+  `pnpm infra:conferir-zona --pos-delegacao` depois de a troca convergir.
+
+A catraca `scripts/infra/zona.test.mjs` impede o template de divergir desta medição sem reprovar
+`pnpm check`.
+
+Registros efêmeros de automação — o `_acme-challenge` que a 20i grava para renovar o certificado do
+WordPress — não aparecem no painel nem na medição, não atravessaram, e isso tem consequência:
+`D-51`.
 
 Houve uma corrida anterior, em 2026-09-20, com os mesmos números. Ela saiu de um script cujas
 guardas davam verde falso — nome inventado que voltasse a resolver na AWS contava como "sim", e
@@ -186,7 +202,9 @@ sozinho um CNAME de validação por nome (`_….lotusotec.cl` e `_….www.lotuso
 Não entram no inventário, que é o que a StackDNS servia; a conferência só pergunta pelas linhas do
 inventário, então não os acusa.
 
-A validade é de 198 dias: é o teto que o ACM aplica a certificado público desde 2026-02-18, para
+A validade é de 198 dias: é o teto que o ACM aplica a certificado público desde 2026-02-18
+(anúncio da AWS,
+<https://aws.amazon.com/about-aws/whats-new/2026/02/aws-certificate-manager-updates-default>), para
 caber nos 200 dias do CA/Browser Forum. O plano esperava cerca de treze meses, o número de antes.
 
 **A renovação ainda não é automática.** O ACM só renova sozinho certificado associado a outro

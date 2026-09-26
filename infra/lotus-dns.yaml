@@ -167,9 +167,10 @@ Resources:
 
   Certificado:
     Type: AWS::CertificateManager::Certificate
-    # Entra so depois da delegacao ter convergido. Com HostedZoneId o ACM cria
-    # e remove o CNAME de validacao sozinho nesta zona -- mas se o mundo ainda
-    # lesse a StackDNS, ninguem enxergaria esse CNAME e o stack ficaria em
+    # Entra so depois da delegacao ter convergido. Com HostedZoneId o
+    # CloudFormation cria o CNAME de validacao nesta zona, e ele fica: e por
+    # ele que o ACM revalida a cada renovacao -- mas se o mundo ainda lesse a
+    # StackDNS, ninguem enxergaria esse CNAME e o stack ficaria em
     # CREATE_IN_PROGRESS ate o timeout.
     #
     # SANs explicitos, NUNCA wildcard: wildcard amplia o raio de uma

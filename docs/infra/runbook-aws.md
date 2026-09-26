@@ -187,7 +187,15 @@ Em paralelo, e num lugar diferente: abrir o pedido de **production access do SES
 ### 6.1 Criar e popular a zona
 
 A zona é um stack, `infra/lotus-dns.yaml`, e não uma sequência de `change-resource-record-sets`.
-Editar registros à mão funciona e **é desfeito pelo próximo deploy**: o template é a fonte.
+Editar registros à mão fica fora do template e vira drift, que o CloudFormation **não corrige
+sozinho** — não é desfeito pelo próximo deploy: pode conviver com ele, sem aviso. Antes de qualquer
+deploy na zona viva:
+
+```bash
+AWS_PROFILE=lotus aws cloudformation detect-stack-drift --region us-east-1 --stack-name lotus-dns
+```
+
+O template continua sendo a fonte.
 
 ```bash
 export AWS_PROFILE=lotus
@@ -227,13 +235,14 @@ for violada no template.
 pnpm infra:conferir-zona
 ```
 
-Pergunta direto aos quatro nameservers da zona nova — consulta comum devolveria o lado antigo,
-porque a delegação ainda aponta para a StackDNS —, compara com esse lado atual por
-DNS-over-HTTPS, grava `docs/infra/conferencia-zona-<data>.md` e sai 1 na primeira divergência não
-esperada.
+Pergunta direto aos quatro nameservers da zona nova — no modo padrão, antes da troca, consulta
+comum devolveria o lado antigo, porque a delegação ainda aponta para a StackDNS —, compara com
+esse lado atual por DNS-over-HTTPS, grava `docs/infra/conferencia-zona-<data>.md` e sai 1 na
+primeira divergência não esperada.
 
-A única divergência esperada: nome inventado não resolve na AWS e resolve na StackDNS. É a prova
-de que o wildcard não atravessou.
+No modo padrão, antes da troca, a única divergência esperada é: nome inventado não resolve na AWS
+e resolve na StackDNS. É a prova de que o wildcard não atravessou. Depois da troca, os vereditos se
+invertem — use `--pos-delegacao`, logo abaixo.
 
 Se UDP/53 não sair da máquina, o lado AWS cai para `route53 list-resource-record-sets` e o
 relatório **declara a troca no cabeçalho**: configuração escrita não é resposta servida.
@@ -244,7 +253,7 @@ Depois da troca, a mesma conferência roda com `--pos-delegacao`:
 
 ```bash
 pnpm infra:conferir-zona --pos-delegacao \
-  --saida "docs/infra/conferencia-zona-$(date +%F)-pos-delegacao.md"
+  --saida "docs/infra/conferencia-zona-$(date -u +%F)-pos-delegacao.md"
 ```
 
 O modo inverte os dois vereditos que a delegação inverte: a linha `NS` passa a esperar os
@@ -283,8 +292,10 @@ E então **enviar uma mensagem de fora para uma caixa `@lotusotec.cl` e confirma
 ### 6.6 Certificado no ACM
 
 **Emitido em 2026-09-26**, pelo recurso do template (commit `60dd2c2`). `Status: ISSUED`, para
-`lotusotec.cl` e `www.lotusotec.cl`, válido até 2027-04-11 — 198 dias, o teto do ACM para
-certificado público. O ARN sai no output `ArnDoCertificado` e é consumido por `B5` como parâmetro,
+`lotusotec.cl` e `www.lotusotec.cl`, válido até 2027-04-11 — 198 dias, o teto que o ACM aplica a
+certificado público desde 2026-02-18 (anúncio da AWS,
+<https://aws.amazon.com/about-aws/whats-new/2026/02/aws-certificate-manager-updates-default>). O
+ARN sai no output `ArnDoCertificado` e é consumido por `B5` como parâmetro,
 não por `ImportValue`. A renovação só fica automática quando o certificado estiver em uso:
 `RenewalEligibility` é `INELIGIBLE` até `B5` ligá-lo à distribuição.
 
@@ -373,7 +384,10 @@ aws budgets describe-budget --region us-east-1 --account-id 760144413534 \
 ### 6.9 Desmontar a zona (leia antes de pensar em fazer)
 
 `delete-stack` de `lotus-dns` **não apaga a zona**: `DeletionPolicy: Retain` a deixa para trás, de
-propósito. Apagá-la é um ato manual e separado:
+propósito. Mas apaga os registros. `Registros` não tem `DeletionPolicy`, então `delete-stack`
+remove MX, SPF e o resto e deixa a zona retida vazia — e-mail fora do ar; recuperar exige import de
+recurso. Hoje o stack não tem termination protection (medido: `false`). Ver `D-52`. Apagar a zona
+em si é um ato manual e separado:
 
 ```bash
 aws route53 delete-hosted-zone --id <IdDaZona>

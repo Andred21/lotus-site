@@ -94,10 +94,12 @@ export const INVENTARIO = Object.freeze([
 ])
 
 /**
- * Nomes que só respondem hoje porque o wildcard existe (`D-45`, medido em
- * 2026-09-09). A zona nova não os declara, então os dois lados divergirem
- * neles é a prova de que o wildcard não atravessou — e é a única divergência
- * esperada da conferência.
+ * Nomes que só respondiam, antes de 2026-09-26, porque o wildcard existia na
+ * StackDNS (`D-45`, medido em 2026-09-09). No modo padrão (antes da troca),
+ * os dois lados divergirem neles é a prova de que o wildcard não
+ * atravessou — a única divergência esperada da conferência. Desde a troca,
+ * no modo `--pos-delegacao`, o esperado é não resolver em lado nenhum
+ * (`wildcardAusente`).
  * @type {readonly string[]}
  */
 export const NOMES_INVENTADOS = Object.freeze([
@@ -106,9 +108,12 @@ export const NOMES_INVENTADOS = Object.freeze([
 ])
 
 /**
- * A delegação que o registro `.cl` aponta hoje, medida em 2026-09-09. Conjunto
- * exato, e não substring: `every` sobre lista vazia devolve `true`, e uma
- * resposta DoH sem `Answer` passaria por delegação intacta.
+ * A delegação que o registro `.cl` apontava antes de 2026-09-26, medida em
+ * 2026-09-09. Conjunto exato, e não substring: `every` sobre lista vazia
+ * devolve `true`, e uma resposta DoH sem `Answer` passaria por delegação
+ * intacta. Desde a troca, `delegacaoEsperada` só usa esta lista no modo
+ * padrão (o "antes"); no modo `--pos-delegacao` o esperado são os
+ * nameservers do próprio stack, não esta constante.
  * @type {readonly string[]}
  */
 export const NS_DA_STACKDNS = Object.freeze([

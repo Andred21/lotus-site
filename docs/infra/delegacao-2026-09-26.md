@@ -18,8 +18,9 @@ O painel os listava fora de ordem (`ns2`, `ns1`, `ns4`, `ns3`); NS é conjunto, 
 São eles o rollback, e a zona da StackDNS continua de pé e respondendo até `B7`.
 
 A conferência pré-troca é `conferencia-zona-2026-09-22-pre-delegacao.md`, rodada às
-2026-09-22T00:01Z (21:01 do João do dia 21), quatro dias antes da troca. O intervalo não escondeu
-mudança: a conferência pós-delegação confere as mesmas 14 linhas.
+2026-09-22T00:01Z (21:01 do João do dia 21), quatro dias antes da troca. A conferência
+pós-delegação lê só o Route 53, então não prova que a StackDNS ficou parada nesses quatro dias; o
+que ela prova é o que importa depois da troca — o Route 53 serve as 14 linhas do inventário.
 
 ## Depois
 
@@ -80,13 +81,15 @@ separadamente.
 
 ### Saída e SPF — provado
 
-- mensagem enviada por João de `jvandreoli@lotusotec.cl` para `jvbatalha32@gmail.com`, às 03:27 do
+- mensagem enviada por João de `jvandreoli@lotusotec.cl` para o Gmail pessoal do João, às 03:27 do
   João de 2026-09-26 (06:27Z), quase quatro horas depois da convergência;
 - entregue em 1 segundo;
 - "Mostrar original" no Gmail: `SPF: PASS com o IP 185.151.28.66`;
 - mesmo quadro: `DMARC: 'FAIL'`, e nenhuma linha de DKIM — a mensagem saiu sem assinatura.
 
-O `PASS` prova que o SPF atravessou a troca: o Gmail o avaliou lendo o Route 53. O `FAIL` de DMARC
+O `PASS` prova que o SPF atravessou a troca: os dois lados servem o mesmo TXT, então o `PASS` prova
+o conteúdo do SPF, não o caminho; à hora da mensagem a delegação já estava convergida havia quase
+quatro horas. O `FAIL` de DMARC
 não veio da troca. `_dmarc.lotusotec.cl` não existe em nenhum dos dois lados (medido direto em
 `ns-904.awsdns-49.net` e `ns1.stackdns.com`), e a StackMail não assina com DKIM; a condição é a
 mesma de antes, e o DMARC já é débito do backlog, com gatilho em `B2`.

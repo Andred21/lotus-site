@@ -1,11 +1,12 @@
-// Confere a zona nova do Route 53 contra a zona que a StackDNS ainda serve,
-// registro a registro, e grava a evidencia.
+// Confere a zona nova do Route 53 contra a zona que, antes de 2026-09-26, a
+// StackDNS servia, registro a registro, e grava a evidencia.
 //
-// Perguntar "ao DNS" nao basta: enquanto a delegacao de lotusotec.cl apontar
-// para ns1..ns4.stackdns.com, qualquer consulta normal devolve o lado antigo
-// -- esteja a zona nova certa ou errada. Este script pergunta DIRETO aos
-// nameservers da zona nova e compara com o lado servido, lido por
-// DNS-over-HTTPS porque nao ha `dig` nesta maquina.
+// Perguntar "ao DNS" nao basta no modo padrao (antes da troca): enquanto a
+// delegacao de lotusotec.cl apontava para ns1..ns4.stackdns.com, qualquer
+// consulta normal devolvia o lado antigo -- estivesse a zona nova certa ou
+// errada. Este script pergunta DIRETO aos nameservers da zona nova e compara
+// com o lado servido, lido por DNS-over-HTTPS porque nao ha `dig` nesta
+// maquina.
 //
 // Depois da troca a premissa muda, e e por isso que existe `--pos-delegacao`:
 // os dois lados passam a ser a MESMA zona lida por caminhos diferentes, entao
@@ -365,8 +366,11 @@ const relatorio = [
   '',
   problemas.length === 0
     ? 'Nenhuma divergência fora das esperadas.'
-    : `**${problemas.length} divergência(s) não esperada(s).** A troca de nameservers não pode` +
-      ' acontecer enquanto elas existirem.',
+    : posDelegacao
+      ? `**${problemas.length} divergência(s) não esperada(s).** Depois da troca, divergência é` +
+        ' resposta errada para parte do mundo: investigar antes de qualquer outra mudança na zona.'
+      : `**${problemas.length} divergência(s) não esperada(s).** A troca de nameservers não pode` +
+        ' acontecer enquanto elas existirem.',
   '',
   posDelegacao
     ? 'Resolução correta não prova entrega de e-mail. A prova do MX é mensagem recebida, e ela fica' +
