@@ -536,3 +536,88 @@ aws sesv2 get-email-identity --region sa-east-1 --email-identity lotusotec.cl \
 
 Enquanto `Dkim` estiver em `PENDING`, nenhum `deploy` do `lotus-site` faz sentido: a função enviaria
 sem assinatura e a mensagem cairia em spam.
+
+### 8.3 Segunda volta: a função, e o `lotus-site`
+
+Pré-condições: identidade verificada (8.2) **e** parâmetro SSM criado (8.0). Sem o parâmetro a
+função sobe, mas todo envio responde `502`.
+
+```bash
+export AWS_PROFILE=lotus
+
+aws cloudformation deploy --region sa-east-1 \
+  --stack-name lotus-contato \
+  --template-file infra/lotus-contato.yaml \
+  --capabilities CAPABILITY_IAM \
+  --tags Projeto=lotus-site \
+  --no-execute-changeset
+```
+
+Change set esperado: `Add` para `Registros`, `PapelDaFuncao`, `Funcao` e `UrlDaFuncao`; **nenhuma**
+linha para `IdentidadeDeEnvio`. Execute, espere `stack-update-complete`, leia os outputs
+`DominioDaUrlDaFuncao`, `ArnDaFuncao` e `NomeDaFuncao`. Depois o site:
+
+```bash
+aws cloudformation deploy --region sa-east-1 \
+  --stack-name lotus-site \
+  --template-file infra/lotus-site.yaml \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides \
+    EmailDeAlerta=<seu-email> \
+    DominioDaFuncaoDeContato=<output DominioDaUrlDaFuncao> \
+    ArnDaFuncaoDeContato=<output ArnDaFuncao> \
+  --no-execute-changeset
+```
+
+Change set esperado: `Add` para `ControleDeAcessoDaFuncao`, `PermissaoDeUrl` e
+`PermissaoDeInvocacao`; `Modify` sem `Replacement` para `Distribuicao`, `PapelDeDeploy` e `Teto`.
+`Balde` e `PoliticaDoBalde` **não** aparecem. Execute e espere a distribuição propagar:
+
+```bash
+aws cloudformation wait stack-update-complete --region sa-east-1 --stack-name lotus-site
+aws cloudfront wait distribution-deployed --id E1R7SPH4OLUIEQ
+```
+
+### 8.4 Variáveis de repositório
+
+Duas linhas a mais na tabela da secção 4, em `Gatika-CL/lotus-site` → Settings → Secrets and
+variables → Actions → **Variables**:
+
+| Variável                  | Vem de                                                  |
+| ------------------------- | ------------------------------------------------------- |
+| `AWS_CONTACT_FUNCTION`    | Output `NomeDaFuncao` do `lotus-contato`                |
+| `VITE_TURNSTILE_SITE_KEY` | Site key do widget Turnstile (pública; entra no bundle) |
+
+Sem `AWS_CONTACT_FUNCTION` o job `deploy` publica o site e **pula** a função, com aviso; o
+placeholder `503` fica no ar e o formulário mostra "no pudimos enviar".
+
+### 8.5 Publicar a função à mão, e rollback
+
+O CI faz isto a cada push em `main` do corporativo. Para publicar fora do CI — na prova de aceite
+do bloco, ou num rollback — o mesmo comando, com a mesma role ou o profile `lotus`:
+
+```bash
+export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use
+pnpm build:lambda
+(cd dist-lambda/contato && zip -q -X ../contato.zip index.mjs)
+AWS_PROFILE=lotus aws lambda update-function-code --region sa-east-1 \
+  --function-name lotus-site-contato --zip-file fileb://dist-lambda/contato.zip \
+  --query '{Sha:CodeSha256,Tamanho:CodeSize}'
+AWS_PROFILE=lotus aws lambda wait function-updated-v2 --region sa-east-1 \
+  --function-name lotus-site-contato
+```
+
+Rollback (`ADR-SITE-005`, spec §8), do mais leve ao mais pesado:
+
+1. **Função:** `git checkout <sha-anterior> -- lambda src/lib` e os comandos acima; ou o
+   placeholder, com `aws lambda update-function-code --zip-file` de um zip contendo só o
+   `index.js` inline do template.
+2. **Site:** o rollback da `ADR-SITE-004` não muda; um release anterior não chama `/api/contacto`.
+3. **Behavior `/api/*`:** remover do `lotus-site.yaml` e reimplantar. O bucket não é tocado.
+4. **DNS:** remover os seis registros de `lotus-dns.yaml` e do `INVENTARIO`. Nenhum deles é lido
+   pelo e-mail do Google.
+5. **Identidade:** `delete-stack lotus-contato` só depois de o site parar de chamar a função —
+   senão o `Add` das permissões no `lotus-site` fica órfão.
+
+Logs da função: `aws logs tail /aws/lambda/lotus-site-contato --region sa-east-1 --since 1h`. Cada
+linha é `{"requestId","desfecho"}` e nada mais: nome, e-mail, empresa e mensagem não são logados.

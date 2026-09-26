@@ -312,6 +312,15 @@ Resources:
                   - cloudfront:CreateInvalidation
                   - cloudfront:GetInvalidation
                 Resource: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
+              # GetFunction e obrigatorio junto de UpdateFunctionCode: `aws
+              # lambda wait function-updated-v2` faz polling com ela. Ambas
+              # presas a esta funcao.
+              - Sid: PublicarAFuncaoDeContato
+                Effect: Allow
+                Action:
+                  - lambda:UpdateFunctionCode
+                  - lambda:GetFunction
+                Resource: !Ref ArnDaFuncaoDeContato
       Tags:
         - Key: Projeto
           Value: lotus-site
