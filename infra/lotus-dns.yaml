@@ -1,15 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   Zona DNS de lotusotec.cl no Route 53, copia conferida da zona que a StackDNS
-  serve hoje (inventario em docs/infra/zona-dns-lotusotec.md, ADR-SITE-006).
-  Stack separado do lotus-site porque o ciclo de vida e outro: delete-stack do
-  site nao pode arrastar a zona junto. NAO troca a delegacao, NAO emite
-  certificado e NAO aponta nada para o CloudFront -- a zona nasce respondendo
-  exatamente o que a zona atual responde.
+  servia (inventario em docs/infra/zona-dns-lotusotec.md, ADR-SITE-006), e o
+  certificado ACM do dominio. Stack separado do lotus-site porque o ciclo de
+  vida e outro: delete-stack do site nao pode arrastar a zona junto. NAO troca
+  a delegacao -- ela e feita no painel do registrador -- e NAO aponta nada para
+  o CloudFront: isso e B5.
 
-  Regiao us-east-1 de proposito, embora o Route 53 seja global: o certificado
-  do bloco seguinte entra neste mesmo stack, e o CloudFront so le certificado
-  de us-east-1.
+  Regiao us-east-1 de proposito, embora o Route 53 seja global: o CloudFront so
+  le certificado de us-east-1.
 
 Parameters:
   NomeDaZona:
@@ -104,6 +103,14 @@ Resources:
           ResourceRecords:
             - !Ref IpDoWordPress
 
+        # O wildcard do painel tem A e AAAA. Sem este registro, cliente
+        # dual-stack perde IPv6 em www na troca de delegacao.
+        - Name: !Sub 'www.${NomeDaZona}.'
+          Type: AAAA
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Ref Ipv6DoWordPress
+
         # Registro de DNS e nada mais. Nao abre a 8.2.1, congelada por Joao em
         # 2026-09-09.
         - Name: !Sub 'sistema.${NomeDaZona}.'
@@ -111,6 +118,12 @@ Resources:
           TTL: !Ref TtlPadrao
           ResourceRecords:
             - !Ref IpDoWordPress
+
+        - Name: !Sub 'sistema.${NomeDaZona}.'
+          Type: AAAA
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Ref Ipv6DoWordPress
 
         - Name: !Sub 'mail.${NomeDaZona}.'
           Type: CNAME
@@ -130,6 +143,16 @@ Resources:
           ResourceRecords:
             - imap.stackmail.com.
 
+        # Existe no painel e a sondagem de 2026-09-09 nao podia te-lo achado:
+        # `pop` foi perguntado e devolveu o IP do apex pelo wildcard; `pop3`
+        # nao foi perguntado. Sem ele, a troca derruba POP3 de quem ainda usa
+        # o correio antigo.
+        - Name: !Sub 'pop3.${NomeDaZona}.'
+          Type: CNAME
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - pop3.stackmail.com.
+
         - Name: !Sub 'autodiscover.${NomeDaZona}.'
           Type: CNAME
           TTL: !Ref TtlPadrao
@@ -141,6 +164,30 @@ Resources:
           TTL: !Ref TtlPadrao
           ResourceRecords:
             - ftp.us.stackcp.com.
+
+  Certificado:
+    Type: AWS::CertificateManager::Certificate
+    # Entra so depois da delegacao ter convergido. Com HostedZoneId o
+    # CloudFormation cria o CNAME de validacao nesta zona, e ele fica: e por
+    # ele que o ACM revalida a cada renovacao -- mas se o mundo ainda lesse a
+    # StackDNS, ninguem enxergaria esse CNAME e o stack ficaria em
+    # CREATE_IN_PROGRESS ate o timeout.
+    #
+    # SANs explicitos, NUNCA wildcard: wildcard amplia o raio de uma
+    # chave comprometida e esconde o inventario de nomes.
+    Properties:
+      DomainName: !Ref NomeDaZona
+      SubjectAlternativeNames:
+        - !Sub 'www.${NomeDaZona}'
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref NomeDaZona
+          HostedZoneId: !Ref Zona
+        - DomainName: !Sub 'www.${NomeDaZona}'
+          HostedZoneId: !Ref Zona
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
 
 Outputs:
   NameServers:
@@ -154,3 +201,10 @@ Outputs:
   IdDaZona:
     Description: Entrada de aws route53 list-resource-record-sets --hosted-zone-id.
     Value: !Ref Zona
+
+  ArnDoCertificado:
+    Description: >-
+      Consumido por B5 como PARAMETRO do stack do site, nao por ImportValue:
+      o certificado e us-east-1 e a distribuicao e sa-east-1, e o
+      CloudFormation nao importa valor entre regioes.
+    Value: !Ref Certificado

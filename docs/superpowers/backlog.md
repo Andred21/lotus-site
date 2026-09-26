@@ -97,17 +97,23 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Entrega junto:** ampliar o filtro do `AWS::Budgets::Budget` para o Route 53. Hoje ele filtra S3
   e CloudFront; assim que a zona existir, o teto de US$ 30 para de medir parte da conta.
 - **Depende de:** `B0` não; depende de **acesso ao painel do registrador** (`D-44`).
-- **Débitos que toca:** `D-44`, `D-45`, `D-46`.
+- **Débitos que toca:** `D-44`, `D-45`, `D-46`, `D-47`, `D-49`, `D-50`, `D-51`, `D-52`.
 - **Evidência exigida:** a zona nova respondendo nos nameservers da AWS **antes** da troca
-  (`dig @ns-xxx.awsdns-yy.com`); cada registro do inventário conferido antes e depois; MX do Google
-  intacto e recebimento testado com mensagem real; certificado em `ISSUED`; `curl -sI` do apex e do
-  `www` batendo na distribuição.
-- **Bloqueio externo:** acesso ao StackCP/BlueHosting, e o export BIND da zona.
+  (consulta direta aos nameservers da AWS via `pnpm infra:conferir-zona`); cada registro do
+  inventário conferido antes e depois; MX do Google intacto e recebimento testado com mensagem
+  real; certificado em `ISSUED`; `curl -sI` do apex e do `www` batendo na distribuição.
+- **Bloqueio externo:** nenhum desde 2026-09-20. O acesso ao StackCP voltou (`D-44`) e o export
+  BIND deixou de ser necessário (`D-45`).
 - **Inventário medido da zona:** `docs/infra/zona-dns-lotusotec.md`.
-- **Entregue em 2026-09-20 (parcial):** zona criada no Route 53 pelo stack `lotus-dns`, conferida
-  contra a StackDNS registro a registro, catraca offline dentro do `pnpm check`, e filtro do
-  Budget ampliado para Route 53. **Não** entregue: delegação, certificado, HTTPS, alias. Ver
-  `D-47`.
+- **Entregue em 2026-09-20 (primeira rodada):** zona criada no Route 53 pelo stack `lotus-dns`,
+  conferida contra a StackDNS registro a registro, catraca offline dentro do `pnpm check`, e filtro
+  do Budget ampliado para Route 53. **Não** entregue: delegação, certificado, HTTPS, alias.
+- **Entregue em 2026-09-26 (segunda rodada):** inventário fechado a partir do painel do StackCP, que
+  revelou `pop3` e o wildcard duplo; delegação trocada e convergida; saída de e-mail provada com
+  mensagem real e `SPF: PASS`; certificado ACM `ISSUED` para `lotusotec.cl` e `www.lotusotec.cl`,
+  válido até 2027-04-11. **Não** entregue: HTTPS servido e alias da distribuição — são `B5`, e é o
+  que resta de `D-47`. A entrada de e-mail em `contacto@` segue pendente de confirmação humana
+  (PENDÊNCIAS).
 
 ## B2 · `4.1.7+7.1.3+7.1.4` — contato por SES + Lambda
 
@@ -170,6 +176,11 @@ um por vez, porque o harness admite um `active_work_item` só.
 ## B7 · `7.2.7` — desativar o WordPress
 
 - **Escopo:** parar de servir produção pelo WordPress, preservando conteúdo e backup final.
+- **Decidir sobre os quatro nomes do StackMail** — `pop3`, `imap`, `smtp` e `autodiscover` apontam
+  para a StackMail. Foram copiados para o Route 53 por fidelidade, porque a regra do bloco da
+  delegação era não mudar resposta nenhuma. A StackMail ainda envia — a mensagem de saída da prova
+  de 2026-09-26 saiu dela, ver `D-50` —, e quem mais usa esses nomes só aparece desligando-os. Por
+  isso a decisão anda junto com o desligamento do WordPress.
 - **Depende de:** `B6` mais aceite explícito do João, depois de estabilização.
 
 ## B8 · `recaptura-baseline` — `D-30` e a conferência humana de paridade
@@ -217,15 +228,18 @@ O que não avança por conta nossa.
 
 1. ~~**Acesso ao painel de DNS.**~~ Recuperado; confirmado por João em 2026-09-20. Ver `D-44`,
    fechado.
-2. **Export BIND da zona**, a pedir ao suporte da BlueHosting. **É o que falta para a troca de
-   nameservers acontecer.** A enumeração por DNS não enxerga registro que ninguém adivinhou, e o
-   wildcard (`D-45`) faz qualquer palpite responder.
+2. ~~**Export BIND da zona.**~~ Deixou de ser necessário: os prints do painel do StackCP, de
+   2026-09-20, fecharam o inventário com a mesma autoridade. Ver `D-45`, fechado.
 3. **Production access do SES.** Prazo externo. Pedir no início de `B1` para não travar `B2`.
 4. **Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
    da Sprint 2 e nunca feita. Nenhum gate a substitui — e hoje está travada por `D-30`.
 5. **Autorização de escrita no Notion.** Concedida em 2026-09-09 para registrar as decisões
    daquele bloco. **Não vale para esta rodada**: a EAP `7.2.1` não foi marcada no Notion, e o
    aceite parcial está declarado em `D-47`.
+6. **Confirmar a entrada de e-mail em `contacto@lotusotec.cl`.** Uma mensagem de fora chegando e a
+   resposta voltando. João confirma com o dono da caixa; o resultado entra em
+   `docs/infra/delegacao-2026-09-26.md`, secção "Entrada", em commit próprio. Contexto em `D-50`.
+7. **Decidir a renovação do certificado do WordPress** antes de 2026-10-11. Ver `D-51`.
 
 ---
 
@@ -472,6 +486,119 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `infra/lotus-site.yaml` com desenho próprio.
   **Gatilho:** primeiro 404 de asset observado em produção, ou o bloco que puder redesenhar a
   retenção da raiz. Levantado na review do bloco `7.1.1+7.1.2+7.1.5`.
+- **D-46 · o domínio não publica DMARC nem DKIM** — medido em 2026-09-09:
+  `_dmarc.lotusotec.cl` e `google._domainkey.lotusotec.cl` não têm registro TXT; o `A` que
+  aparece nos dois é o wildcard de `D-45`, não configuração. O que existe é só o SPF do apex,
+  `v=spf1 include:_spf.google.com include:spf.stackmail.com -all`. O e-mail corporativo sai hoje
+  sem assinatura e sem política de alinhamento. Não é regressão causada por nós — já era assim —,
+  mas `B2` acrescenta um remetente novo (SES) ao mesmo domínio, e sem DMARC não há como observar o
+  efeito disso na entregabilidade. O `include:spf.stackmail.com` também precisa de decisão: o MX é
+  Google, e esse include pode ser resíduo do provedor antigo ou caminho de envio ainda em uso.
+  O `include:spf.stackmail.com` atravessou a troca de nameservers intacto, por fidelidade e não por
+  decisão de mantê-lo: mexer nele durante a delegação misturaria duas mudanças numa janela em que
+  metade do mundo lê cada lado. E ele não é inerte: a mensagem de saída da prova de 2026-09-26
+  passou com `SPF: PASS` pelo IP `185.151.28.66`, que está em `ip4:185.151.28.0/24` de
+  `spf.stackmail.com` e fora de `_spf.google.com` (medido em 2026-09-26). O include é funcional —
+  uma caixa da StackMail, criada por João para a prova, envia com `SPF: PASS` por ele —; se alguém
+  da empresa usa esse caminho não foi medido, e isso pesa na decisão de `B2`.
+  **Gatilho:** `B2`.
+
+- **D-47 · `7.2.1` fechou parcial: sem HTTPS servido** — o critério de
+  aceite da EAP no Notion pede domínio resolvendo e HTTPS válido. O bloco de 2026-09-20 entregou
+  só a zona: criada no Route 53, conferida registro a registro contra a StackDNS e travada por
+  catraca, mas **não delegada**. Sem delegação não há validação DNS-01, sem ela não há
+  certificado, e sem certificado não há HTTPS. A EAP **não** foi marcada como concluída, e não
+  havia autorização de escrita no Notion nesta rodada de qualquer forma.
+  **Encolhido em 2026-09-26.** Delegação trocada, saída de e-mail provada e certificado `ISSUED`. O
+  que resta é uma linha: **o HTTPS não é servido**. Nada apresenta o certificado a um navegador
+  enquanto a distribuição não tiver `Aliases` e `ViewerCertificate`, e o ARN precisa atravessar de
+  `us-east-1` para `sa-east-1` como parâmetro, porque CloudFormation não importa valor entre regiões.
+  **Prazo:** `B5` precisa ligar o certificado à distribuição antes de 2027-04-11. Até lá ele não
+  renova sozinho (`RenewalEligibility: INELIGIBLE`, porque não está em uso); se o prazo passar, o
+  certificado expira e é preciso emitir outro. A EAP continua **não** marcada no Notion.
+  **Gatilho:** `B5`.
+- **D-49 · a zona não publica `CAA`** — sem `CAA`, qualquer autoridade certificadora do mundo pode
+  emitir certificado para `lotusotec.cl`. A `CAA` precisa listar **toda** CA que emite para algum
+  nome da zona: hoje são duas, `amazon.com` para o ACM e `letsencrypt.org` para o wildcard que a
+  20i mantém no WordPress (`D-51`). Uma `CAA` só com `amazon.com` bloquearia a renovação do
+  WordPress. Uma `CAA` errada bloqueia também a renovação do ACM, que depois que `B5` o puser em
+  uso é automática e silenciosa, e com certificado de 198 dias acontece duas vezes por ano — a
+  falha apareceria como site fora do ar meses depois, sem ninguém ter tocado em nada. Merece bloco
+  com prova própria: publicar, medir, e só então confiar. `issuewild ";"` só depois de `B7`, quando
+  o wildcard deixar de existir.
+  **Gatilho:** depois de `D-51` decidido; a forma final, em `B7`.
+- **D-50 · caixa criada na StackMail envia mas nunca recebe** — o `MX` de `lotusotec.cl` aponta
+  para o Google Workspace; a StackMail só aparece no SPF. Uma caixa criada no StackCP — caso de
+  `jvandreoli@lotusotec.cl`, em 2026-09-26 — manda mensagem com `SPF: PASS`, mas o que chega de fora
+  para ela volta com `550 5.1.1`, porque o Google não a conhece. Já era assim antes da delegação: a
+  StackDNS servia o mesmo `MX`. Não é regressão de `B1`. O efeito é alguém criar caixa no painel e
+  achar que tem e-mail. O mesmo vale para `ana@lotusotec.cl`, dado de teste em cinco arquivos de
+  `src/`: a sonda `RCPT` de 2026-09-26 respondeu `550 5.1.1`. Nenhum código de produção envia para
+  ele, mas o endereço parece real e não é.
+  **Gatilho:** `B7`, junto da decisão sobre os nomes do StackMail; o dado de teste, no próximo bloco
+  que tocar esses testes.
+
+- **D-51 · a delegação corta a renovação do certificado do WordPress** — o WordPress serve em
+  `lotusotec.cl`, `www` e `sistema` um certificado Let's Encrypt **wildcard** (`*.lotusotec.cl`,
+  emissor `Let's Encrypt YR1`), válido até **2026-11-10T20:37:55Z** (medido em 2026-09-26 com
+  `openssl s_client`). Wildcard só se emite por validação DNS, e a 20i, que opera o StackCP, só
+  emite o SSL grátis com os nameservers dela como autoritativos: o desafio é um TXT que ela grava na
+  zona que controla, sem alternativa por HTTP nem por registro externo (docs.20i.com, "Can I use the
+  free SSL if my site doesn't use the 20i nameservers?"). Desde 2026-09-26 quem responde por
+  `lotusotec.cl` é o Route 53, então a renovação — que clientes ACME costumam fazer 30 dias antes do
+  vencimento, por volta de 2026-10-11 — não tem onde publicar o desafio. Se nada mudar, **o HTTPS do
+  site em produção expira em 2026-11-10**. A cópia fiel da zona não tinha como ver isso:
+  `_acme-challenge` é registro efêmero, e não existe em nenhum dos dois lados fora da hora da
+  emissão. Saídas, a decidir por João: (1) confirmar com a BlueHosting/20i o que acontece na
+  renovação; (2) o certificado pago da 20i ("Simple SSL"), que ela oferece para domínio fora dos
+  nameservers dela; (3) devolver a delegação à StackDNS antes da janela e refazer a troca junto com
+  `B5` — a zona da StackDNS continua de pé, e nada serve o certificado do ACM até lá; (4) antecipar
+  a parte TLS de `B5`, improvável a tempo porque `B5` depende de `B4`, `B3` e `B2`. `sistema` é
+  servido pelo mesmo certificado, e o destino dele em `B5` precisa levar isto em conta.
+  Verificação:
+
+  ```bash
+  echo | openssl s_client -connect lotusotec.cl:443 -servername lotusotec.cl 2>/dev/null \
+    | openssl x509 -noout -issuer -dates
+  ```
+
+  **Gatilho:** agora. Decisão antes de 2026-10-11; prazo duro 2026-11-10.
+
+- **D-52 · `delete-stack` do `lotus-dns` esvaziaria a zona viva** — `Zona` tem
+  `DeletionPolicy: Retain`, mas `Registros` não: um `delete-stack` apaga MX, SPF e todo o resto e
+  deixa a zona retida vazia, com o e-mail da empresa fora do ar. E o stack não tem termination
+  protection (medido em 2026-09-26: `EnableTerminationProtection: false`). Duas correções: João liga
+  a proteção, que é escrita na conta e não depende de deploy,
+
+  ```bash
+  AWS_PROFILE=lotus aws cloudformation update-termination-protection \
+    --enable-termination-protection --region us-east-1 --stack-name lotus-dns
+  ```
+
+  e `Registros` ganha `DeletionPolicy`/`UpdateReplacePolicy: Retain`, com asserção na catraca, no
+  próximo bloco que fizer deploy do `lotus-dns`.
+  **Gatilho:** a proteção, agora, por João; a política, antes do próximo deploy do `lotus-dns`.
+
+- **D-53 · o bloco `7.2.1` (delegação e certificado) não teve segunda lente** — Claude executou
+  `b64bb94..cb06414` e também fez a review formal de `/revisar-site`: a cota da conta Codex estava
+  esgotada em 2026-09-26. As reviews por task durante a execução foram de subagentes Claude, a
+  mesma família do executor. Desvio declarado em `reviewer_exception`, autorizado por João em
+  2026-09-26. Mesma classe de `D-27` e `D-32`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..cb06414`, ou decisão de
+  João de dispensá-la.
+
+## Fechados
+
+- **D-48 · o runbook descreve duas formas de emitir o certificado** — a secção 6.6 passou a
+  descrever o recurso `AWS::CertificateManager::Certificate` no stack `lotus-dns` como caminho
+  padrão, e manteve `aws acm request-certificate` como fallback declarado. Duas descrições da
+  mesma coisa divergem com o tempo, e um certificado emitido pela CLI não é gerenciado pelo
+  stack: o próximo deploy tentaria criar outro. Enquanto as duas convivem, **a do template
+  vence**.
+  **Gatilho:** ao emitir o certificado, no bloco da delegação.
+  **Fechado em 2026-09-26.** O certificado saiu pelo template (commit `60dd2c2`), e a secção 6.6 do
+  runbook agora diz que esse é o caminho em uso e que o fallback por CLI nunca foi executado. A
+  regra de precedência ficou escrita no próprio runbook.
 - **D-45 · a zona tem wildcard** — `*.lotusotec.cl` responde `A 185.146.167.195`, o mesmo IP do
   apex. Medido em 2026-09-09 por DNS-over-HTTPS: `zzz-nao-existe-19283.lotusotec.cl` e
   `outro-teste-aleatorio-77.lotusotec.cl` respondem esse IP. Duas consequências. **Primeira:**
@@ -485,34 +612,9 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   remover está tomada e provada no template; o que continua aberto é a outra metade, a que só o
   export BIND resolve: **quais outros nomes existem**. Por isso a delegação não foi trocada.
   **Gatilho:** export BIND na mão de João.
-- **D-46 · o domínio não publica DMARC nem DKIM** — medido em 2026-09-09:
-  `_dmarc.lotusotec.cl` e `google._domainkey.lotusotec.cl` não têm registro TXT; o `A` que
-  aparece nos dois é o wildcard de `D-45`, não configuração. O que existe é só o SPF do apex,
-  `v=spf1 include:_spf.google.com include:spf.stackmail.com -all`. O e-mail corporativo sai hoje
-  sem assinatura e sem política de alinhamento. Não é regressão causada por nós — já era assim —,
-  mas `B2` acrescenta um remetente novo (SES) ao mesmo domínio, e sem DMARC não há como observar o
-  efeito disso na entregabilidade. O `include:spf.stackmail.com` também precisa de decisão: o MX é
-  Google, e esse include pode ser resíduo do provedor antigo ou caminho de envio ainda em uso.
-  **Gatilho:** `B2`.
-
-- **D-47 · `7.2.1` fechou parcial: sem delegação, sem certificado, sem HTTPS** — o critério de
-  aceite da EAP no Notion pede domínio resolvendo e HTTPS válido. O bloco de 2026-09-20 entregou
-  só a zona: criada no Route 53, conferida registro a registro contra a StackDNS e travada por
-  catraca, mas **não delegada**. Sem delegação não há validação DNS-01, sem ela não há
-  certificado, e sem certificado não há HTTPS. A EAP **não** foi marcada como concluída, e não
-  havia autorização de escrita no Notion nesta rodada de qualquer forma. O que falta, em ordem:
-  export BIND, troca de nameservers, `Certificate` no stack `lotus-dns`, alias do CloudFront
-  (`B5`).
-  **Gatilho:** export BIND na mão de João.
-- **D-48 · o runbook descreve duas formas de emitir o certificado** — a secção 6.6 passou a
-  descrever o recurso `AWS::CertificateManager::Certificate` no stack `lotus-dns` como caminho
-  padrão, e manteve `aws acm request-certificate` como fallback declarado. Duas descrições da
-  mesma coisa divergem com o tempo, e um certificado emitido pela CLI não é gerenciado pelo
-  stack: o próximo deploy tentaria criar outro. Enquanto as duas convivem, **a do template
-  vence**.
-  **Gatilho:** ao emitir o certificado, no bloco da delegação.
-
-## Fechados
+  **Fechado em 2026-09-26.** Os prints do painel fecharam a outra metade — quais nomes existem —, e a
+  delegação trocada provou o resto: os dois nomes inventados não resolvem mais em lado nenhum. O
+  wildcard não atravessou, e o que ele escondia (`pop3`) entrou na cópia antes da troca.
 
 - **D-44 · o acesso ao painel de DNS foi perdido** — o domínio é comprado na BlueHosting e a zona
   é gerenciada em `https://www.stackcp.com/` (Stack Control Panel). João informou em 2026-09-09

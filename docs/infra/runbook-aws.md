@@ -172,14 +172,14 @@ muda de dono é a zona; na BlueHosting fica a tela de nameservers e a renovaçã
 1. ~~Recuperar o acesso ao painel~~ — **feito**. João confirmou em 2026-09-20 que tem acesso à
    tela de nameservers (`D-44` fechado). É declaração, não medição nossa: quem executar a troca
    comprova na hora.
-2. **Pedir o export BIND da zona** ao suporte da BlueHosting. **Ainda pendente, e é ele que
-   autoriza a troca.** Com wildcard na zona (`D-45`), enumerar por DNS devolve resposta para
-   qualquer palpite: não há como afirmar que a cópia está completa sem o export, e um registro
-   esquecido só aparece depois da troca, como falha intermitente, para parte do mundo.
+2. ~~Pedir o export BIND da zona~~ — **deixou de ser necessário.** Com wildcard na zona (`D-45`),
+   enumerar por DNS devolvia resposta para qualquer palpite; os prints do painel do StackCP, de
+   2026-09-20, listam o que existe e fecharam o inventário com a mesma autoridade (`D-45`
+   fechado).
 
-A EAP `7.2.1` cobre da criação da zona até o HTTPS válido. O bloco de 2026-09-20 entregou só o
-primeiro pedaço: a zona existe, está conferida e **não** está delegada. A ordem do que falta é
-export BIND, troca de nameservers (6.4), certificado (6.6) e alias do CloudFront (`B5`).
+A EAP `7.2.1` cobre da criação da zona até o HTTPS válido. O bloco de 2026-09-20 criou e conferiu
+a zona; a rodada de 2026-09-26 trocou a delegação (6.4) e emitiu o certificado (6.6). Falta o alias
+do CloudFront, que é `B5` (`D-47`).
 
 Em paralelo, e num lugar diferente: abrir o pedido de **production access do SES** no suporte da
 **AWS** — não no da BlueHosting. Ele tem espera e trava `B2` se ficar para depois.
@@ -187,7 +187,15 @@ Em paralelo, e num lugar diferente: abrir o pedido de **production access do SES
 ### 6.1 Criar e popular a zona
 
 A zona é um stack, `infra/lotus-dns.yaml`, e não uma sequência de `change-resource-record-sets`.
-Editar registros à mão funciona e **é desfeito pelo próximo deploy**: o template é a fonte.
+Editar registros à mão fica fora do template e vira drift, que o CloudFormation **não corrige
+sozinho** — não é desfeito pelo próximo deploy: pode conviver com ele, sem aviso. Antes de qualquer
+deploy na zona viva:
+
+```bash
+AWS_PROFILE=lotus aws cloudformation detect-stack-drift --region us-east-1 --stack-name lotus-dns
+```
+
+O template continua sendo a fonte.
 
 ```bash
 export AWS_PROFILE=lotus
@@ -212,8 +220,9 @@ Três regras que o template já aplica e que edição manual não deve desfazer:
 
 - **O MX do Google entra idêntico.** É o e-mail da empresa.
 - **O wildcard `*` não entra.** `www` e `sistema`, que hoje só respondem por causa dele, nascem
-  explícitos. Se o export BIND revelar outro nome nessa situação, ele vira registro explícito no
-  template, um a um — não um wildcard de volta.
+  explícitos. O inventário do painel revelou mais um nessa situação, `pop3`, que entrou como
+  registro explícito; nome que aparecer depois segue o mesmo caminho, um a um — não um wildcard de
+  volta.
 - **O apontamento para o CloudFront não entra agora.** `B1` move a zona sem mudar o que ela
   responde; apontar o site é `B5`.
 
@@ -226,20 +235,37 @@ for violada no template.
 pnpm infra:conferir-zona
 ```
 
-Pergunta direto aos quatro nameservers da zona nova — consulta comum devolveria o lado antigo,
-porque a delegação ainda aponta para a StackDNS —, compara com esse lado atual por
-DNS-over-HTTPS, grava `docs/infra/conferencia-zona-<data>.md` e sai 1 na primeira divergência não
-esperada.
+Pergunta direto aos quatro nameservers da zona nova — no modo padrão, antes da troca, consulta
+comum devolveria o lado antigo, porque a delegação ainda aponta para a StackDNS —, compara com
+esse lado atual por DNS-over-HTTPS, grava `docs/infra/conferencia-zona-<data>.md` e sai 1 na
+primeira divergência não esperada.
 
-A única divergência esperada: nome inventado não resolve na AWS e resolve na StackDNS. É a prova
-de que o wildcard não atravessou.
+No modo padrão, antes da troca, a única divergência esperada é: nome inventado não resolve na AWS
+e resolve na StackDNS. É a prova de que o wildcard não atravessou. Depois da troca, os vereditos se
+invertem — use `--pos-delegacao`, logo abaixo.
 
 Se UDP/53 não sair da máquina, o lado AWS cai para `route53 list-resource-record-sets` e o
 relatório **declara a troca no cabeçalho**: configuração escrita não é resposta servida.
 
 Diferença aqui é barata; diferença depois do passo 6.4 é serviço fora do ar para parte do mundo.
 
+Depois da troca, a mesma conferência roda com `--pos-delegacao`:
+
+```bash
+pnpm infra:conferir-zona --pos-delegacao \
+  --saida "docs/infra/conferencia-zona-$(date -u +%F)-pos-delegacao.md"
+```
+
+O modo inverte os dois vereditos que a delegação inverte: a linha `NS` passa a esperar os
+nameservers do próprio stack, e o nome inventado passa a ter de não resolver em lado nenhum — os
+dois lados são a mesma zona agora, e a assimetria de antes deixou de ser possível.
+
 ### 6.4 Trocar os nameservers
+
+**Feito em 2026-09-26.** Evidência em `docs/infra/delegacao-2026-09-26.md`: print do painel antes,
+whois do NIC Chile depois, convergência medida e prova de saída de e-mail com `SPF: PASS`. A prova
+de entrada — mensagem de fora chegando em `contacto@` — está pendente de confirmação com o dono da
+caixa. A zona da StackDNS continua de pé — é o rollback, e desligá-la é `B7`.
 
 No painel do registrador, substituir `ns1..ns4.stackdns.com` pelos quatro `ns-*.awsdns-*`.
 
@@ -254,8 +280,10 @@ Não peça remoção da zona antiga enquanto a convergência não terminar.
 Resolução correta não prova entrega. Depois da convergência:
 
 ```bash
-dig MX lotusotec.cl +short          # os cinco do Google, sem sobra e sem falta
-dig TXT lotusotec.cl +short         # o SPF
+curl -s 'https://dns.google/resolve?name=lotusotec.cl&type=MX' \
+  | python3 -c 'import sys,json; d=json.load(sys.stdin); print("\n".join(sorted(a["data"] for a in d.get("Answer",[]) if a["type"]==15)))'
+curl -s 'https://dns.google/resolve?name=lotusotec.cl&type=TXT' \
+  | python3 -c 'import sys,json; d=json.load(sys.stdin); print("\n".join(a["data"] for a in d.get("Answer",[]) if a["type"]==16))'
 ```
 
 E então **enviar uma mensagem de fora para uma caixa `@lotusotec.cl` e confirmar que chegou**. Essa
@@ -263,12 +291,21 @@ E então **enviar uma mensagem de fora para uma caixa `@lotusotec.cl` e confirma
 
 ### 6.6 Certificado no ACM
 
+**Emitido em 2026-09-26**, pelo recurso do template (commit `60dd2c2`). `Status: ISSUED`, para
+`lotusotec.cl` e `www.lotusotec.cl`, válido até 2027-04-11 — 198 dias, o teto que o ACM aplica a
+certificado público desde 2026-02-18 (anúncio da AWS,
+<https://aws.amazon.com/about-aws/whats-new/2026/02/aws-certificate-manager-updates-default>). O
+ARN sai no output `ArnDoCertificado` e é consumido por `B5` como parâmetro,
+não por `ImportValue`. A renovação só fica automática quando o certificado estiver em uso:
+`RenewalEligibility` é `INELIGIBLE` até `B5` ligá-lo à distribuição.
+
 **Só depois de 6.4.** A validação DNS-01 precisa que o mundo leia a zona da AWS; com a delegação
 ainda na StackDNS, o CNAME de validação existe e ninguém o enxerga.
 
 Caminho padrão: um `AWS::CertificateManager::Certificate` no stack `lotus-dns`, com
-`DomainValidationOptions.HostedZoneId` apontando para a própria zona — o ACM cria e remove o CNAME
-de validação sozinho, e a renovação é automática e silenciosa.
+`DomainValidationOptions.HostedZoneId` apontando para a própria zona — o CloudFormation cria o
+CNAME de validação sozinho, e ele fica na zona, não é removido depois. A renovação só é automática e
+silenciosa quando o certificado estiver em uso (`RenewalEligibility: INELIGIBLE` até `B5`).
 
 ```yaml
 Certificado:
@@ -294,9 +331,14 @@ Três armadilhas, todas de ordem:
    pedido.
 2. **Com `HostedZoneId`, o stack fica em `CREATE_IN_PROGRESS` até validar.** Zona não delegada
    significa stack travado até o timeout, e depois rollback.
-3. **`CAA` restringindo emissão a `amazon.com` entra depois do primeiro `ISSUED`, nunca antes.**
-   CAA errado bloqueia a própria renovação. A zona não tem CAA hoje (medido em 2026-09-09), e é
+3. **`CAA` nunca antes do primeiro `ISSUED`, e nunca só com `amazon.com` enquanto o WordPress
+   existir.** CAA errado bloqueia a renovação sem aviso: a do ACM e a do certificado Let's Encrypt
+   que o WordPress serve (`D-49`, `D-51`). A zona não tem CAA hoje (medido em 2026-09-09), e é
    por isso que o ACM emite sem obstáculo.
+
+**O caminho acima é o que está em uso.** O que vem abaixo é fallback declarado, nunca executado até
+aqui, e um certificado emitido por ele **não** seria gerenciado pelo stack — o próximo deploy
+tentaria criar outro. Se as duas descrições divergirem, a do template vence (`D-48`).
 
 Fallback declarado, para o caso de o recurso do template travar e ser preciso emitir à mão:
 
@@ -313,14 +355,12 @@ aws acm describe-certificate --region us-east-1 --certificate-arn <arn> \
 aws acm wait certificate-validated --region us-east-1 --certificate-arn <arn>
 ```
 
-Um certificado emitido por este caminho **não** é gerenciado pelo stack, e o próximo deploy
-tentaria criar outro. Se as duas descrições divergirem, a do template vence (`D-48`).
-
 ### 6.7 Subdomínios
 
-Com a zona no Route 53 não há limite de um subdomínio. `sistema.lotusotec.cl` já nasce no template
-como `A` para o WordPress — hoje ele só resolve por causa do wildcard, e a troca o apagaria se ele
-não estivesse declarado.
+Com a zona no Route 53 não há limite de um subdomínio. `sistema.lotusotec.cl` e `www.lotusotec.cl`
+já nascem no template como `A` **e** `AAAA` para o WordPress. Nenhum dos dois é registro no painel
+antigo — o inventário fechado de 2026-09-20 prova isso —, e os dois só resolviam por causa do
+wildcard, que não atravessou.
 
 Subdomínio novo é uma entrada a mais em `RecordSets` **e** uma linha a mais no inventário de
 `scripts/infra/lib/zona.mjs`, senão a catraca reprova. Não é `change-resource-record-sets` à mão.
@@ -345,7 +385,10 @@ aws budgets describe-budget --region us-east-1 --account-id 760144413534 \
 ### 6.9 Desmontar a zona (leia antes de pensar em fazer)
 
 `delete-stack` de `lotus-dns` **não apaga a zona**: `DeletionPolicy: Retain` a deixa para trás, de
-propósito. Apagá-la é um ato manual e separado:
+propósito. Mas apaga os registros. `Registros` não tem `DeletionPolicy`, então `delete-stack`
+remove MX, SPF e o resto e deixa a zona retida vazia — e-mail fora do ar; recuperar exige import de
+recurso. Hoje o stack não tem termination protection (medido: `false`). Ver `D-52`. Apagar a zona
+em si é um ato manual e separado:
 
 ```bash
 aws route53 delete-hosted-zone --id <IdDaZona>

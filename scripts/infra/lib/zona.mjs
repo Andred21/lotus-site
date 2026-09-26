@@ -14,15 +14,22 @@
  */
 
 /**
- * Inventário medido em 2026-09-09 por DNS-over-HTTPS contra `dns.google` e
- * registrado em `docs/infra/zona-dns-lotusotec.md`. Nomes com ponto final,
+ * Inventário fechado da zona, transcrito do painel do StackCP em 2026-09-20
+ * e registrado em `docs/infra/zona-dns-lotusotec.md`. Nomes com ponto final,
  * como o Route 53 os guarda.
  *
- * Nove destes são registro provado: respondem coisa diferente do que o
- * wildcard responderia. `www` e `sistema` não — hoje eles só resolvem porque
- * o wildcard existe, e por DNS não há como distinguir registro de wildcard
- * falando. Entram aqui porque a spec §3 D5 decidiu declará-los explícitos: a
- * troca de delegação apagaria os dois se eles não estivessem no template.
+ * A fonte deixou de ser a sondagem por DNS de 2026-09-09, que não podia
+ * enxergar nome que ninguém adivinhasse: com wildcard na zona, todo palpite
+ * responde. Foi essa cegueira que escondeu `pop3` — `pop` foi sondado,
+ * devolveu o IP do apex e foi lido como wildcard falando; `pop3` nunca foi
+ * perguntado.
+ *
+ * `www` e `sistema` continuam aqui, e agora por prova em vez de precaução: o
+ * painel mostra que nenhum dos dois é registro do outro lado. Eles só
+ * resolvem hoje por causa do wildcard, que não atravessa — sem estas linhas,
+ * a troca de delegação apagaria os dois. O `AAAA` dos dois existe pelo mesmo
+ * motivo: o wildcard do painel tem `A` **e** `AAAA`, então cliente
+ * dual-stack perderia IPv6 na troca.
  * @type {readonly RegistroEsperado[]}
  */
 export const INVENTARIO = Object.freeze([
@@ -47,7 +54,13 @@ export const INVENTARIO = Object.freeze([
     ],
   },
   { nome: 'www.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
+  { nome: 'www.lotusotec.cl.', tipo: 'AAAA', valores: ['2a07:7800::195'] },
   { nome: 'sistema.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
+  {
+    nome: 'sistema.lotusotec.cl.',
+    tipo: 'AAAA',
+    valores: ['2a07:7800::195'],
+  },
   {
     nome: 'mail.lotusotec.cl.',
     tipo: 'CNAME',
@@ -64,6 +77,11 @@ export const INVENTARIO = Object.freeze([
     valores: ['imap.stackmail.com.'],
   },
   {
+    nome: 'pop3.lotusotec.cl.',
+    tipo: 'CNAME',
+    valores: ['pop3.stackmail.com.'],
+  },
+  {
     nome: 'autodiscover.lotusotec.cl.',
     tipo: 'CNAME',
     valores: ['autodiscover.stackmail.com.'],
@@ -76,10 +94,12 @@ export const INVENTARIO = Object.freeze([
 ])
 
 /**
- * Nomes que só respondem hoje porque o wildcard existe (`D-45`, medido em
- * 2026-09-09). A zona nova não os declara, então os dois lados divergirem
- * neles é a prova de que o wildcard não atravessou — e é a única divergência
- * esperada da conferência.
+ * Nomes que só respondiam, antes de 2026-09-26, porque o wildcard existia na
+ * StackDNS (`D-45`, medido em 2026-09-09). No modo padrão (antes da troca),
+ * os dois lados divergirem neles é a prova de que o wildcard não
+ * atravessou — a única divergência esperada da conferência. Desde a troca,
+ * no modo `--pos-delegacao`, o esperado é não resolver em lado nenhum
+ * (`wildcardAusente`).
  * @type {readonly string[]}
  */
 export const NOMES_INVENTADOS = Object.freeze([
@@ -88,9 +108,12 @@ export const NOMES_INVENTADOS = Object.freeze([
 ])
 
 /**
- * A delegação que o registro `.cl` aponta hoje, medida em 2026-09-09. Conjunto
- * exato, e não substring: `every` sobre lista vazia devolve `true`, e uma
- * resposta DoH sem `Answer` passaria por delegação intacta.
+ * A delegação que o registro `.cl` apontava antes de 2026-09-26, medida em
+ * 2026-09-09. Conjunto exato, e não substring: `every` sobre lista vazia
+ * devolve `true`, e uma resposta DoH sem `Answer` passaria por delegação
+ * intacta. Desde a troca, `delegacaoEsperada` só usa esta lista no modo
+ * padrão (o "antes"); no modo `--pos-delegacao` o esperado são os
+ * nameservers do próprio stack, não esta constante.
  * @type {readonly string[]}
  */
 export const NS_DA_STACKDNS = Object.freeze([
@@ -191,8 +214,11 @@ export function lerRegistros(texto) {
   /** @type {RegistroLido | undefined} */
   let atual
   for (const linha of texto.slice(de).split('\n').slice(1)) {
-    // Chave de topo na coluna zero: a lista acabou.
-    if (/^\S/.test(linha)) break
+    // A lista acabou: ou uma chave de topo na coluna zero (`Outputs:`), ou o
+    // proximo recurso dentro de `Resources:`, que entra com dois espacos. Os
+    // itens de RecordSets vivem a partir da coluna oito, entao qualquer
+    // conteudo em indentacao menor ja esta fora da lista.
+    if (/^ {0,6}\S/.test(linha)) break
     const abertura = linha.match(/^\s*- Name:\s*(.+)$/)
     if (abertura) {
       atual = {
@@ -266,4 +292,38 @@ export function mesmoConjunto(a, b) {
     esquerda.length === direita.length &&
     esquerda.every((valor, i) => valor === direita[i])
   )
+}
+
+/**
+ * Veredito da linha de nome inventado, que a delegação inverte.
+ *
+ * Antes da troca os dois lados são zonas diferentes, e a prova de que o
+ * wildcard não atravessou é a assimetria: vazio na AWS, IP na StackDNS.
+ * Depois da troca os dois lados são a MESMA zona lida por caminhos
+ * diferentes, e essa assimetria deixa de ser possível — o único desfecho
+ * correto passa a ser vazio dos dois lados. Manter a regra antiga daria
+ * vermelho justamente quando tudo estivesse certo.
+ *
+ * Resolver na AWS reprova nos dois casos: é o wildcard tendo atravessado.
+ * @param {string[]} naAws
+ * @param {string[]} naStack
+ * @param {boolean} posDelegacao
+ */
+export function wildcardAusente(naAws, naStack, posDelegacao) {
+  if (naAws.length > 0) return false
+  return posDelegacao ? naStack.length === 0 : naStack.length > 0
+}
+
+/**
+ * Qual delegação o relatório espera encontrar. Depois da troca ela é a do
+ * próprio stack, e não uma lista fixa: uma hosted zone recriada ganha
+ * nameservers novos, e uma constante aqui viraria mentira silenciosa na
+ * primeira vez que isso acontecesse.
+ * @param {string[]} nomesDeServidor
+ * @param {boolean} posDelegacao
+ * @returns {string[]}
+ */
+export function delegacaoEsperada(nomesDeServidor, posDelegacao) {
+  if (!posDelegacao) return [...NS_DA_STACKDNS]
+  return nomesDeServidor.map((nome) => `${nome.replace(/\.$/, '')}.`)
 }

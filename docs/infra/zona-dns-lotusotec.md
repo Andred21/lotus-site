@@ -1,23 +1,35 @@
 # Inventário da zona DNS de `lotusotec.cl`
 
-> Medição, não configuração. Este arquivo registra o que a zona **responde hoje**, com data e
-> método, para servir de base de conferência antes e depois da migração para o Route 53
-> (`ADR-SITE-006`, bloco `B1`).
+> Inventário e medição, não configuração. Este arquivo registra **quais registros existem** na zona
+> e **o que eles respondem**, com data e método, para servir de base de conferência antes e depois
+> da migração para o Route 53 (`ADR-SITE-006`, bloco `B1`).
 >
-> Ele **não** substitui o export BIND. A secção "O que esta medição não pode saber" explica por quê.
+> Ele **substitui** o export BIND que se esperava do suporte: a secção "Fonte" explica de onde vem
+> cada uma das duas autoridades, e "O limite desta transcrição" diz onde elas param.
 
-## Método
+## Fonte
 
-Medido em **2026-09-09** por DNS-over-HTTPS contra `dns.google`, porque não há `dig` nesta máquina.
-Reproduzir uma linha:
+Duas fontes, com autoridades diferentes.
+
+**O inventário fechado** veio do painel do StackCP em **2026-09-20**: João abriu a tela de
+gerenciamento de DNS de `lotusotec.cl` e capturou a lista inteira, do cabeçalho até a linha vazia
+de inserção, em dois prints que se sobrepõem em `smtp` — então não há corte no meio. Essa lista tem
+a mesma autoridade do export BIND que se esperava do suporte, e o torna desnecessário: o problema
+do wildcard (`D-45`) só existe para quem sonda a zona de fora.
+
+**Os valores servidos** foram medidos em **2026-09-09** por DNS-over-HTTPS contra `dns.google`,
+porque não há `dig` nesta máquina. Reproduzir uma linha:
 
 ```bash
 curl -s 'https://dns.google/resolve?name=lotusotec.cl&type=MX' | python3 -m json.tool
 ```
 
-`type` aceita `A`, `AAAA`, `MX`, `TXT`, `NS`, `SOA`, `CNAME`, `CAA`.
+O painel diz **quais registros existem**; a medição diz **o que eles respondem**. As duas concordam
+em tudo que as duas enxergam. O TTL de 3600 vem da medição.
 
 ## Delegação
+
+Antes de 2026-09-26, a delegação de `lotusotec.cl` era a da StackDNS:
 
 ```text
 SOA  ns1.stackdns.com. hostmaster.stackdns.com. 1753989299 1800 900 1209600 300
@@ -25,66 +37,76 @@ NS   ns1.stackdns.com.   ns2.stackdns.com.   ns3.stackdns.com.   ns4.stackdns.co
 ```
 
 O painel é o Stack Control Panel (`https://www.stackcp.com/`), revenda da BlueHosting, onde o
-domínio foi comprado. João confirmou em 2026-09-20 que recuperou o acesso (`D-44` fechado); o
-export BIND continua pendente, e é ele que autoriza a troca.
+domínio foi comprado. João recuperou o acesso em 2026-09-20 (`D-44` fechado). **Desde 2026-09-26 a
+delegação é a do Route 53** — ver [`delegacao-2026-09-26.md`](delegacao-2026-09-26.md).
 
-## Apex
+## Inventário fechado — o que o painel lista
 
-| Tipo   | TTL  | Valor                                                           |
-| ------ | ---- | --------------------------------------------------------------- |
-| `A`    | 3600 | `185.146.167.195`                                               |
-| `AAAA` | 3600 | `2a07:7800::195`                                                |
-| `MX`   | 3600 | `1 ASPMX.L.GOOGLE.COM.`                                         |
-| `MX`   | 3600 | `5 ALT1.ASPMX.L.GOOGLE.COM.`                                    |
-| `MX`   | 3600 | `5 ALT2.ASPMX.L.GOOGLE.COM.`                                    |
-| `MX`   | 3600 | `10 ALT3.ASPMX.L.GOOGLE.COM.`                                   |
-| `MX`   | 3600 | `10 ALT4.ASPMX.L.GOOGLE.COM.`                                   |
-| `TXT`  | 3600 | `v=spf1 include:_spf.google.com include:spf.stackmail.com -all` |
-| `CAA`  | —    | **não existe**                                                  |
+Transcrito dos prints de 2026-09-20. Esta é a lista **completa**: nome que não está aqui não existe
+na zona.
+
+| Nome no painel   | Tipo    | Valor                                                           |
+| ---------------- | ------- | --------------------------------------------------------------- |
+| `lotusotec.cl`   | `A`     | `185.146.167.195`                                               |
+| `lotusotec.cl`   | `AAAA`  | `2a07:7800::195`                                                |
+| `*.lotusotec.cl` | `A`     | `185.146.167.195`                                               |
+| `*.lotusotec.cl` | `AAAA`  | `2a07:7800::195`                                                |
+| `lotusotec.cl`   | `MX`    | `1 ASPMX.L.GOOGLE.COM.`                                         |
+| `lotusotec.cl`   | `MX`    | `5 ALT1.ASPMX.L.GOOGLE.COM.`                                    |
+| `lotusotec.cl`   | `MX`    | `5 ALT2.ASPMX.L.GOOGLE.COM.`                                    |
+| `lotusotec.cl`   | `MX`    | `10 ALT3.ASPMX.L.GOOGLE.COM.`                                   |
+| `lotusotec.cl`   | `MX`    | `10 ALT4.ASPMX.L.GOOGLE.COM.`                                   |
+| `lotusotec.cl`   | `TXT`   | `v=spf1 include:_spf.google.com include:spf.stackmail.com -all` |
+| `mail`           | `CNAME` | `ghs.googlehosted.com.`                                         |
+| `smtp`           | `CNAME` | `smtp.stackmail.com.`                                           |
+| `imap`           | `CNAME` | `imap.stackmail.com.`                                           |
+| `pop3`           | `CNAME` | `pop3.stackmail.com.`                                           |
+| `autodiscover`   | `CNAME` | `autodiscover.stackmail.com.`                                   |
+| `ftp`            | `CNAME` | `ftp.us.stackcp.com.`                                           |
+
+Mais três CNAME cujo nome contém `://` e `/`, tratados abaixo.
 
 `185.146.167.195` é o WordPress na BlueHosting. Os cinco MX são Google Workspace: é o e-mail
 corporativo, e é o registro que mais exige conferência antes e depois da troca de nameserver.
 
-Ausência de `CAA` é boa notícia: um CAA restritivo bloquearia a emissão do certificado pelo ACM.
-
-## Wildcard
-
-```text
-*.lotusotec.cl.  A  185.146.167.195
-```
-
-Confirmado por dois nomes inventados, `zzz-nao-existe-19283` e `outro-teste-aleatorio-77`: os dois
-respondem esse IP. É `D-45`.
-
-## Subdomínios provadamente explícitos
-
-Só estes cinco respondem algo **diferente** do wildcard, o que prova que existem como registro:
-
-| Nome           | Tipo    | Valor                         | Serve                 |
-| -------------- | ------- | ----------------------------- | --------------------- |
-| `mail`         | `CNAME` | `ghs.googlehosted.com.`       | Google                |
-| `smtp`         | `CNAME` | `smtp.stackmail.com.`         | provedor antigo       |
-| `imap`         | `CNAME` | `imap.stackmail.com.`         | provedor antigo       |
-| `autodiscover` | `CNAME` | `autodiscover.stackmail.com.` | descoberta de cliente |
-| `ftp`          | `CNAME` | `ftp.us.stackcp.com.`         | painel                |
-
 **`mail.lotusotec.cl` já está ocupado.** O MAIL FROM do SES não pode usar esse nome; a
 `ADR-SITE-005` reserva `ses.lotusotec.cl`.
 
-## Nomes indistinguíveis do wildcard
+### `pop3`, e o que a sondagem não podia saber
 
-Respondem `A 185.146.167.195`, que é exatamente o que o wildcard responderia. **Não é possível
-dizer, por DNS, se existem como registro ou se são o wildcard falando**: `www`, `webmail`, `pop`,
-`cpanel`, `cpcalendars`, `cpcontacts`, `autoconfig`, `sistema`, `app`, `admin`, `api`, `portal`,
-`aula`, `aulas`, `cursos`, `blog`, `dev`, `test`, `staging`, `intranet`, `crm`, `erp`, `lotus`,
-`m`, `shop`, `tienda`, `calendar`, `drive`, `docs`, `_acme-challenge`.
+A medição de 2026-09-09 perguntou por `pop`, recebeu o IP do apex e concluiu que `pop` não existia
+e era o wildcard respondendo. A conclusão estava certa sobre `pop` — ele não está no painel — e
+cega para `pop3`, que ninguém perguntou. É exatamente a falha que o export BIND existia para pegar,
+e é a prova concreta de que enumerar subdomínio por palpite não fecha inventário.
 
-Um contraste vale registrar: `smtp` e `imap` respondem CNAME para o `stackmail`, mas `pop` responde
-o IP do apex. A leitura mais provável é que `pop` **não** está configurado e é o wildcard
-respondendo — mas é leitura, não medição.
+### `www` e `sistema` não são registro
 
-`sistema.lotusotec.cl` está nessa lista: hoje ele resolve, para o WordPress, só porque o wildcard
-existe.
+Nenhum dos dois aparece no painel. Hoje eles resolvem só porque o wildcard existe. A cópia no Route
+53 os declara explicitamente **porque** o wildcard não atravessa: sem essas linhas, a troca de
+delegação apagaria os dois.
+
+### O wildcard é duplo
+
+```text
+*.lotusotec.cl.  A     185.146.167.195
+*.lotusotec.cl.  AAAA  2a07:7800::195
+```
+
+O inventário de 2026-09-09 só registrou o `A`, porque só o `A` tinha sido perguntado. A consequência
+prática é que `www` e `sistema` respondem IPv6 hoje, e por isso os dois ganharam `AAAA` na cópia.
+
+### Os três atalhos do painel, descartados de propósito
+
+| Nome no painel                                 | Valor                     |
+| ---------------------------------------------- | ------------------------- |
+| `http://phpmyadmin.stackcp.com/.lotusotec.cl`  | `phpmyadmin.stackcp.com.` |
+| `https://webbuilder.stackcp.com/.lotusotec.cl` | `webbuilder.stackcp.com.` |
+| `https://www.stackcp.com/.lotusotec.cl`        | `cp.stackcp.com.`         |
+
+Nome de host não pode conter `://` nem `/`. São atalhos da interface do StackCP gravados na tabela
+de DNS, não registros que algum resolvedor consulte. O Route 53 só os aceitaria com escape octal, e
+nada os consultaria mesmo assim. **Não migram**, e o descarte está escrito aqui para que a próxima
+conferência não os leia como registro perdido. Morrem junto com o painel, em `B7`.
 
 ## Ausências medidas
 
@@ -97,32 +119,48 @@ existe.
 
 As duas primeiras são `D-46`. O `include:spf.stackmail.com` do SPF precisa de decisão junto: o MX é
 Google, então esse include ou é resíduo do provedor antigo ou é caminho de envio ainda em uso — e
-a diferença importa quando o SES entrar como remetente novo.
+a diferença importa quando o SES entrar como remetente novo (`B2`).
 
-## O que esta medição não pode saber
+Ausência de `CAA` é boa notícia agora e dívida depois: um CAA restritivo bloquearia a emissão do
+certificado pelo ACM, mas não ter nenhum significa que qualquer CA do mundo pode emitir para este
+domínio. Publicar `CAA` é bloco próprio (`D-49`), e o primeiro `ISSUED` não basta: enquanto o
+WordPress existir, ela precisa liberar `amazon.com` e `letsencrypt.org`, ou derruba a renovação do
+certificado dele (`D-51`).
 
-**Quais registros existem sem que alguém pergunte pelo nome exato.** Com wildcard na zona, todo
-palpite responde; sem wildcard, um nome não perguntado é simplesmente invisível. Transferência de
-zona (`AXFR`) é recusada por qualquer servidor autoritativo sério, e a StackDNS não é exceção.
+## O limite desta transcrição
 
-Por isso o **export BIND pedido ao suporte da BlueHosting é condição de `B1`**, não zelo: é a única
-forma de afirmar "a cópia está completa" sem mentir. Enquanto ele não chegar, este arquivo é o piso
-da conferência, não o teto.
+Ela é manual. Se um dia aparecer divergência entre a zona do Route 53 e o painel, a primeira
+hipótese é erro de digitação aqui, não registro perdido lá.
 
 ## Cópia no Route 53
 
 Desde 2026-09-20 a zona existe também no Route 53, criada pelo stack `lotus-dns`
-(`infra/lotus-dns.yaml`, `us-east-1`), **sem delegação**: o registro `.cl` continua apontando para
-`ns1..ns4.stackdns.com`, então este arquivo continua descrevendo o que o mundo lê.
+(`infra/lotus-dns.yaml`, `us-east-1`). A delegação foi trocada em 2026-09-26 — ver
+[`delegacao-2026-09-26.md`](delegacao-2026-09-26.md) — e desde então é o Route 53 quem responde
+pela zona.
 
-A cópia tem duas diferenças deliberadas em relação ao que está medido acima:
+A cópia tem três diferenças deliberadas em relação ao painel:
 
-- **não tem wildcard** — `www` e `sistema` viraram registro explícito no lugar dele;
-- **não declara `NS` nem `SOA`** do apex, que a própria zona gera.
+- **não tem wildcard** — `www` e `sistema` viraram registro explícito no lugar dele, com `A` e
+  `AAAA`;
+- **não declara `NS` nem `SOA`** do apex, que a própria zona gera;
+- **não tem os três atalhos do StackCP**, cujos nomes não são nomes de host.
 
-Conferência registro a registro em `conferencia-zona-2026-09-21.md`, gerada por
-`pnpm infra:conferir-zona`. A catraca `scripts/infra/zona.test.mjs` impede o template de divergir
-desta medição sem reprovar `pnpm check`.
+Três conferências, cada uma provando uma coisa diferente:
+
+- `conferencia-zona-2026-09-21.md` — primeira rodada, 2026-09-20: a comparação inicial, registro a
+  registro, contra a StackDNS;
+- `conferencia-zona-2026-09-22-pre-delegacao.md` — conferência pré-troca desta rodada, quatro dias
+  antes de a delegação mudar;
+- `conferencia-zona-2026-09-26-pos-delegacao.md` — conferência pós-delegação, gerada por
+  `pnpm infra:conferir-zona --pos-delegacao` depois de a troca convergir.
+
+A catraca `scripts/infra/zona.test.mjs` impede o template de divergir desta medição sem reprovar
+`pnpm check`.
+
+Registros efêmeros de automação — o `_acme-challenge` que a 20i grava para renovar o certificado do
+WordPress — não aparecem no painel nem na medição, não atravessaram, e isso tem consequência:
+`D-51`.
 
 Houve uma corrida anterior, em 2026-09-20, com os mesmos números. Ela saiu de um script cujas
 guardas davam verde falso — nome inventado que voltasse a resolver na AWS contava como "sim", e
@@ -146,3 +184,43 @@ pnpm infra:conferir-zona
 
 Resolução correta **não** prova e-mail funcionando. O MX pode estar certo e a entrega falhar por
 outro motivo; a prova de `B1` é mensagem recebida.
+
+## Certificado
+
+Desde 2026-09-26, o stack `lotus-dns` também declara o certificado ACM da zona, em `us-east-1`:
+
+| Campo                     | Valor                  |
+| ------------------------- | ---------------------- |
+| `DomainName`              | `lotusotec.cl`         |
+| `SubjectAlternativeNames` | `www.lotusotec.cl`     |
+| `ValidationMethod`        | `DNS`                  |
+| `Status`                  | `ISSUED`               |
+| `NotAfter`                | `2027-04-11T23:59:59Z` |
+| `RenewalEligibility`      | `INELIGIBLE`           |
+
+A validação é DNS-01 com `HostedZoneId` apontando para a própria zona: o CloudFormation cria
+sozinho um CNAME de validação por nome (`_….lotusotec.cl` e `_….www.lotusotec.cl`, apontando para
+`acm-validations.aws`), e eles **ficam** na zona — é por eles que o ACM revalida a cada renovação.
+Não entram no inventário, que é o que a StackDNS servia; a conferência só pergunta pelas linhas do
+inventário, então não os acusa.
+
+A validade é de 198 dias: é o teto que o ACM aplica a certificado público desde 2026-02-18
+(anúncio da AWS,
+<https://aws.amazon.com/about-aws/whats-new/2026/02/aws-certificate-manager-updates-default>), para
+caber nos 200 dias do CA/Browser Forum. O plano esperava cerca de treze meses, o número de antes.
+
+**A renovação ainda não é automática.** O ACM só renova sozinho certificado associado a outro
+serviço da AWS, ou exportado; este não está em uso (`InUseBy` vazio), daí `INELIGIBLE`. Passa a
+`ELIGIBLE` quando `B5` o ligar à distribuição. Se `B5` não acontecer antes de 2027-04-11, o
+certificado expira sem renovar e o caminho é emitir outro — sem efeito no ar, porque nada o serve
+até lá.
+
+Em uso, a renovação é silenciosa, que é justamente o motivo de a `CAA` ser assunto de bloco próprio:
+um `CAA` errado bloqueia a renovação sem aviso.
+
+O ARN sai no output `ArnDoCertificado`. Ele é consumido por `B5` como **parâmetro** do stack do
+site, não por `ImportValue`: o certificado é `us-east-1`, a distribuição é `sa-east-1`, e
+CloudFormation não importa valor entre regiões.
+
+**O certificado existe; ele ainda não é servido.** Nada o apresenta a um navegador enquanto a
+distribuição não tiver `Aliases` e `ViewerCertificate` — isso é `B5`.
