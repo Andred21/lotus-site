@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: executing
+workflow_state: ready_for_review
 work_class: architectural
 active_work_item: 7.2.1
 active_notion_eap: 7.2.1
@@ -9,8 +9,8 @@ active_title: Configurar domínio, DNS, HTTPS e redirects necessários
 active_branch: feat/7-2-1-delegacao-certificado
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: continue_active_plan
+next_owner: codex
+next_action: review_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-20-7.2.1-delegacao-certificado-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 15
 last_completed_work_item: 7.2.1
-state_basis_commit: 6e34229
-updated_at: 2026-09-26T06:35:26Z
+state_basis_commit: 60dd2c2
+updated_at: 2026-09-26T07:14:18Z
 ---
 
 # Estado operacional — Lotus Site

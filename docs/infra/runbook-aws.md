@@ -239,7 +239,23 @@ relatório **declara a troca no cabeçalho**: configuração escrita não é res
 
 Diferença aqui é barata; diferença depois do passo 6.4 é serviço fora do ar para parte do mundo.
 
+Depois da troca, a mesma conferência roda com `--pos-delegacao`:
+
+```bash
+pnpm infra:conferir-zona --pos-delegacao \
+  --saida "docs/infra/conferencia-zona-$(date +%F)-pos-delegacao.md"
+```
+
+O modo inverte os dois vereditos que a delegação inverte: a linha `NS` passa a esperar os
+nameservers do próprio stack, e o nome inventado passa a ter de não resolver em lado nenhum — os
+dois lados são a mesma zona agora, e a assimetria de antes deixou de ser possível.
+
 ### 6.4 Trocar os nameservers
+
+**Feito em 2026-09-26.** Evidência em `docs/infra/delegacao-2026-09-26.md`: print do painel antes,
+whois do NIC Chile depois, convergência medida e prova de saída de e-mail com `SPF: PASS`. A prova
+de entrada — mensagem de fora chegando em `contacto@` — está pendente de confirmação com o dono da
+caixa. A zona da StackDNS continua de pé — é o rollback, e desligá-la é `B7`.
 
 No painel do registrador, substituir `ns1..ns4.stackdns.com` pelos quatro `ns-*.awsdns-*`.
 
@@ -254,8 +270,10 @@ Não peça remoção da zona antiga enquanto a convergência não terminar.
 Resolução correta não prova entrega. Depois da convergência:
 
 ```bash
-dig MX lotusotec.cl +short          # os cinco do Google, sem sobra e sem falta
-dig TXT lotusotec.cl +short         # o SPF
+curl -s 'https://dns.google/resolve?name=lotusotec.cl&type=MX' \
+  | python3 -c 'import sys,json; d=json.load(sys.stdin); print("\n".join(sorted(a["data"] for a in d.get("Answer",[]) if a["type"]==15)))'
+curl -s 'https://dns.google/resolve?name=lotusotec.cl&type=TXT' \
+  | python3 -c 'import sys,json; d=json.load(sys.stdin); print("\n".join(a["data"] for a in d.get("Answer",[]) if a["type"]==16))'
 ```
 
 E então **enviar uma mensagem de fora para uma caixa `@lotusotec.cl` e confirmar que chegou**. Essa
@@ -263,12 +281,19 @@ E então **enviar uma mensagem de fora para uma caixa `@lotusotec.cl` e confirma
 
 ### 6.6 Certificado no ACM
 
+**Emitido em 2026-09-26**, pelo recurso do template (commit `60dd2c2`). `Status: ISSUED`, para
+`lotusotec.cl` e `www.lotusotec.cl`, válido até 2027-04-11 — 198 dias, o teto do ACM para
+certificado público. O ARN sai no output `ArnDoCertificado` e é consumido por `B5` como parâmetro,
+não por `ImportValue`. A renovação só fica automática quando o certificado estiver em uso:
+`RenewalEligibility` é `INELIGIBLE` até `B5` ligá-lo à distribuição.
+
 **Só depois de 6.4.** A validação DNS-01 precisa que o mundo leia a zona da AWS; com a delegação
 ainda na StackDNS, o CNAME de validação existe e ninguém o enxerga.
 
 Caminho padrão: um `AWS::CertificateManager::Certificate` no stack `lotus-dns`, com
-`DomainValidationOptions.HostedZoneId` apontando para a própria zona — o ACM cria e remove o CNAME
-de validação sozinho, e a renovação é automática e silenciosa.
+`DomainValidationOptions.HostedZoneId` apontando para a própria zona — o ACM cria o CNAME de
+validação sozinho, e ele fica na zona, não é removido depois. A renovação só é automática e
+silenciosa quando o certificado estiver em uso (`RenewalEligibility: INELIGIBLE` até `B5`).
 
 ```yaml
 Certificado:
@@ -298,6 +323,10 @@ Três armadilhas, todas de ordem:
    CAA errado bloqueia a própria renovação. A zona não tem CAA hoje (medido em 2026-09-09), e é
    por isso que o ACM emite sem obstáculo.
 
+**O caminho acima é o que está em uso.** O que vem abaixo é fallback declarado, nunca executado até
+aqui, e um certificado emitido por ele **não** seria gerenciado pelo stack — o próximo deploy
+tentaria criar outro. Se as duas descrições divergirem, a do template vence (`D-48`).
+
 Fallback declarado, para o caso de o recurso do template travar e ser preciso emitir à mão:
 
 ```bash
@@ -313,14 +342,12 @@ aws acm describe-certificate --region us-east-1 --certificate-arn <arn> \
 aws acm wait certificate-validated --region us-east-1 --certificate-arn <arn>
 ```
 
-Um certificado emitido por este caminho **não** é gerenciado pelo stack, e o próximo deploy
-tentaria criar outro. Se as duas descrições divergirem, a do template vence (`D-48`).
-
 ### 6.7 Subdomínios
 
-Com a zona no Route 53 não há limite de um subdomínio. `sistema.lotusotec.cl` já nasce no template
-como `A` para o WordPress — hoje ele só resolve por causa do wildcard, e a troca o apagaria se ele
-não estivesse declarado.
+Com a zona no Route 53 não há limite de um subdomínio. `sistema.lotusotec.cl` e `www.lotusotec.cl`
+já nascem no template como `A` **e** `AAAA` para o WordPress. Nenhum dos dois é registro no painel
+antigo — o inventário fechado de 2026-09-20 prova isso —, e os dois só resolviam por causa do
+wildcard, que não atravessou.
 
 Subdomínio novo é uma entrada a mais em `RecordSets` **e** uma linha a mais no inventário de
 `scripts/infra/lib/zona.mjs`, senão a catraca reprova. Não é `change-resource-record-sets` à mão.
