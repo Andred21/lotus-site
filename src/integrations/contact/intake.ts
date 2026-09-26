@@ -21,18 +21,20 @@ export type ContactSender = (
   message: ContactMessage,
 ) => Promise<ContactSendOutcome>
 
-/**
- * Implementação nula: sem site key do Turnstile ou sem `crypto.subtle` (só
- * existe em contexto seguro), o envio falha de forma visível em vez de
- * simular sucesso (D7 da spec do bloco 4.1.1-4.1.10; D1 e D6 da spec do
- * bloco B2). Não é código descartável — é o caminho real de um build
- * publicado sem `VITE_TURNSTILE_SITE_KEY`, e de `pnpm dev` aberto por
- * endereço que não seja `localhost`.
- */
-export const unavailableContactSender: ContactSender = () =>
-  Promise.resolve({ status: 'failed' })
-
 export type ContactIntake = (formData: FormData) => Promise<ContactSubmitResult>
+
+/**
+ * Intake nulo: sem site key do Turnstile ou sem `crypto.subtle` (só existe em
+ * contexto seguro), o envio falha de forma visível em vez de simular sucesso
+ * (D7 da spec do bloco 4.1.1-4.1.10; D1 e D6 da spec do bloco B2). Não é
+ * código descartável — é o caminho real de um build publicado sem
+ * `VITE_TURNSTILE_SITE_KEY`, e de `pnpm dev` aberto por endereço que não seja
+ * `localhost`. É intake, não porta: sem widget não existe token, e validar
+ * pelo schema devolveria "Confirme que no es un robot." para um captcha que
+ * nunca apareceu na tela.
+ */
+export const unavailableContactIntake: ContactIntake = () =>
+  Promise.resolve({ status: 'failed' })
 
 /**
  * Lê o payload cru do formulário. Campo ausente ou não-textual vira string

@@ -78,7 +78,7 @@ describe('App — fiação do contato', () => {
 
   it('sem site key configurada, o envio falha e nenhuma requisição sai', async () => {
     // D7 da spec: build sem `VITE_TURNSTILE_SITE_KEY` recebe
-    // `unavailableContactSender`. O ambiente de teste não define a chave, e a
+    // `unavailableContactIntake`. O ambiente de teste não define a chave, e a
     // asserção abaixo trava isso: chave presente faz o teste falhar alto em
     // vez de exercitar silenciosamente o outro caminho.
     expect(import.meta.env.VITE_TURNSTILE_SITE_KEY).toBeFalsy()
@@ -98,15 +98,10 @@ describe('App — fiação do contato', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
 
-    // Sem site key não há widget, então o input oculto do token nunca existe
-    // no FormData: o schema recusa por falta de captcha antes mesmo de
-    // `unavailableContactSender` entrar em jogo — D7 falha ainda mais cedo,
-    // no cliente. Como o captcha conta como erro de campo (precisão 2 do
-    // Passo 5 do brief da Task 6), o status é "invalid", não o genérico.
-    expect(await screen.findByText('Confirme que no es un robot.')).toBeTruthy()
-    expect(screen.getByRole('status').textContent).toBe(
-      site.contacto.form.feedback.invalid,
-    )
+    expect(
+      await screen.findByText(site.contacto.form.feedback.error),
+    ).toBeTruthy()
+    expect(screen.queryByText('Confirme que no es un robot.')).toBeNull()
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 })

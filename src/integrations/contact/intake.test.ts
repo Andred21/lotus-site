@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   createContactIntake,
-  unavailableContactSender,
+  unavailableContactIntake,
   type ContactSender,
 } from './intake'
 
@@ -155,20 +155,16 @@ describe('createContactIntake', () => {
   })
 })
 
-describe('unavailableContactSender', () => {
-  it('falha sem tocar a rede quando não há provedor configurado', async () => {
+describe('unavailableContactIntake', () => {
+  it('falha sem validar e sem tocar a rede quando não há captcha', async () => {
     const fetchSpy = vi.fn()
     vi.stubGlobal('fetch', fetchSpy)
+    const semToken = formDataOf({ ...VALID })
+    semToken.delete('cf-turnstile-response')
 
-    const outcome = await unavailableContactSender({
-      nombre: 'Ana Pérez',
-      email: 'ana@lotusotec.cl',
-      empresa: '',
-      mensaje: 'Necesito información.',
-      captcha: 'token-de-teste',
+    expect(await unavailableContactIntake(semToken)).toEqual({
+      status: 'failed',
     })
-
-    expect(outcome).toEqual({ status: 'failed' })
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 })

@@ -7,7 +7,7 @@ import { Destaques } from '../components/sections/Destaques'
 import { QuienesSomos } from '../components/sections/QuienesSomos'
 import {
   createContactIntake,
-  unavailableContactSender,
+  unavailableContactIntake,
 } from '../integrations/contact/intake'
 import { createApiContactoSender } from '../integrations/contact/api-contacto'
 import { createTurnstileController } from '../integrations/contact/turnstile'
@@ -23,10 +23,9 @@ const captcha =
   siteKey && globalThis.crypto?.subtle
     ? createTurnstileController(siteKey)
     : undefined
-const contactSender = captcha
-  ? createApiContactoSender()
-  : unavailableContactSender
-const submitContact = createContactIntake(contactSender)
+const submitContact = captcha
+  ? createContactIntake(createApiContactoSender())
+  : unavailableContactIntake
 
 export function App() {
   return (
