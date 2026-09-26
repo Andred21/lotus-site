@@ -496,7 +496,9 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   O `include:spf.stackmail.com` atravessou a troca de nameservers intacto, por fidelidade e não por
   decisão de mantê-lo: mexer nele durante a delegação misturaria duas mudanças numa janela em que
   metade do mundo lê cada lado. E ele não é resíduo: a mensagem de saída da prova de 2026-09-26
-  passou com `SPF: PASS` por esse include, então a StackMail é caminho de envio em uso (`D-50`).
+  passou com `SPF: PASS` pelo IP `185.151.28.66`, que está em `ip4:185.151.28.0/24` de
+  `spf.stackmail.com` e fora de `_spf.google.com` (medido em 2026-09-26). A StackMail é caminho de
+  envio em uso (`D-50`).
   **Gatilho:** `B2`.
 
 - **D-47 · `7.2.1` fechou parcial: sem HTTPS servido** — o critério de

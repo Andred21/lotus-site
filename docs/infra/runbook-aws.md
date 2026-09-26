@@ -172,14 +172,14 @@ muda de dono é a zona; na BlueHosting fica a tela de nameservers e a renovaçã
 1. ~~Recuperar o acesso ao painel~~ — **feito**. João confirmou em 2026-09-20 que tem acesso à
    tela de nameservers (`D-44` fechado). É declaração, não medição nossa: quem executar a troca
    comprova na hora.
-2. **Pedir o export BIND da zona** ao suporte da BlueHosting. **Ainda pendente, e é ele que
-   autoriza a troca.** Com wildcard na zona (`D-45`), enumerar por DNS devolve resposta para
-   qualquer palpite: não há como afirmar que a cópia está completa sem o export, e um registro
-   esquecido só aparece depois da troca, como falha intermitente, para parte do mundo.
+2. ~~Pedir o export BIND da zona~~ — **deixou de ser necessário.** Com wildcard na zona (`D-45`),
+   enumerar por DNS devolvia resposta para qualquer palpite; os prints do painel do StackCP, de
+   2026-09-20, listam o que existe e fecharam o inventário com a mesma autoridade (`D-45`
+   fechado).
 
-A EAP `7.2.1` cobre da criação da zona até o HTTPS válido. O bloco de 2026-09-20 entregou só o
-primeiro pedaço: a zona existe, está conferida e **não** está delegada. A ordem do que falta é
-export BIND, troca de nameservers (6.4), certificado (6.6) e alias do CloudFront (`B5`).
+A EAP `7.2.1` cobre da criação da zona até o HTTPS válido. O bloco de 2026-09-20 criou e conferiu
+a zona; a rodada de 2026-09-26 trocou a delegação (6.4) e emitiu o certificado (6.6). Falta o alias
+do CloudFront, que é `B5` (`D-47`).
 
 Em paralelo, e num lugar diferente: abrir o pedido de **production access do SES** no suporte da
 **AWS** — não no da BlueHosting. Ele tem espera e trava `B2` se ficar para depois.
@@ -212,8 +212,9 @@ Três regras que o template já aplica e que edição manual não deve desfazer:
 
 - **O MX do Google entra idêntico.** É o e-mail da empresa.
 - **O wildcard `*` não entra.** `www` e `sistema`, que hoje só respondem por causa dele, nascem
-  explícitos. Se o export BIND revelar outro nome nessa situação, ele vira registro explícito no
-  template, um a um — não um wildcard de volta.
+  explícitos. O inventário do painel revelou mais um nessa situação, `pop3`, que entrou como
+  registro explícito; nome que aparecer depois segue o mesmo caminho, um a um — não um wildcard de
+  volta.
 - **O apontamento para o CloudFront não entra agora.** `B1` move a zona sem mudar o que ela
   responde; apontar o site é `B5`.
 
