@@ -102,16 +102,23 @@ describe('createApiContactoSender', () => {
 
   it('aborta o envio que passa do limite e propaga a rejeição', async () => {
     vi.useFakeTimers()
-    const fetchSpy = vi.fn<typeof fetch>(
-      (_input, init) =>
-        new Promise<Response>((_resolve, reject) => {
-          init?.signal?.addEventListener('abort', () => {
-            reject(
-              new DOMException('The user aborted a request.', 'AbortError'),
-            )
-          })
-        }),
-    )
+    // O `fetch` só é chamado depois do `setTimeout` do limite, e o hash antes
+    // dele sai de `crypto.subtle.digest`, que completa num macrotask real, fora
+    // do relógio falso — sob carga, mais tarde. Esperar a chamada garante que
+    // o timer já existe quando o relógio avança, sem depender de quanto o
+    // digest demora.
+    let avisarChamada!: () => void
+    const chamado = new Promise<void>((resolve) => {
+      avisarChamada = resolve
+    })
+    const fetchSpy = vi.fn<typeof fetch>((_input, init) => {
+      avisarChamada()
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => {
+          reject(new DOMException('The user aborted a request.', 'AbortError'))
+        })
+      })
+    })
     vi.stubGlobal('fetch', fetchSpy)
 
     const pendente = createApiContactoSender()(MESSAGE)
@@ -119,14 +126,7 @@ describe('createApiContactoSender', () => {
       'The user aborted a request.',
     )
 
-    // Desvio do literal do brief: `sha256Hex` ainda está pendente (a
-    // primeira `await` da função sob teste) quando este `it` chega aqui, e
-    // `crypto.subtle.digest` do Node completa por um macrotask real, fora do
-    // relógio falso. Um avanço de 0 ms dá essa volta ao loop de eventos para
-    // o hash resolver e o `setTimeout` real (agora sim sob o relógio falso)
-    // ser registrado; sem isso `advanceTimersByTimeAsync` não encontra timer
-    // nenhum para avançar e o teste trava até o timeout do Vitest.
-    await vi.advanceTimersByTimeAsync(0)
+    await chamado
     await vi.advanceTimersByTimeAsync(CONTACT_SEND_TIMEOUT_MS)
     await rejeicao
   })
