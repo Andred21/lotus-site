@@ -442,3 +442,97 @@ O `|| break` existe para o laço não girar para sempre quando a deleção falha
 abaixo é que diz se ele terminou o serviço. O laço existe porque o `rb` recusa bucket não vazio, e num bucket versionado "vazio" quer dizer sem
 versão **e** sem delete marker. Varrer só `Versions[]` deixa os marcadores para trás e o `rb` falha
 depois de o procedimento já ter anunciado remoção completa.
+
+## 8. Contato — SES, Lambda e Turnstile (`B2`)
+
+Stack `lotus-contato`, em `sa-east-1`. Spec em
+`docs/superpowers/specs/2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda-design.md`. A ordem
+importa: a identidade nasce primeiro, sozinha, porque os tokens DKIM só existem depois dela e a
+verificação leva tempo depois de os CNAME estarem na zona.
+
+### 8.0 O que só o João faz, antes de qualquer `deploy`
+
+**Widget Turnstile.** Conta Cloudflare (só Turnstile; o DNS não muda). Widget com os hostnames
+`lotusotec.cl`, `www.lotusotec.cl` e `dhpoztt69jydz.cloudfront.net`, modo **Managed**. A **site key**
+é pública e vai para a variável de repositório `VITE_TURNSTILE_SITE_KEY` (8.4). A **secret key** vai
+para o SSM, e só para lá.
+
+**Parâmetro SSM.** Nome fixo, tipo `SecureString`, chave gerenciada `aws/ssm`. O valor é digitado no
+prompt do `read -s` e não fica no histórico do shell:
+
+```bash
+export AWS_PROFILE=lotus
+read -r -s -p 'secret key do Turnstile: ' SEGREDO; echo
+aws ssm put-parameter --region sa-east-1 \
+  --name /lotus-site/contato/turnstile-secret \
+  --type SecureString --value "$SEGREDO" \
+  --description 'Secret key do widget Turnstile do formulario de contato'
+unset SEGREDO
+aws ssm describe-parameters --region sa-east-1 \
+  --parameter-filters Key=Name,Values=/lotus-site/contato/turnstile-secret \
+  --query 'Parameters[].{Nome:Name,Tipo:Type}' --output table
+```
+
+`describe-parameters` mostra nome e tipo, nunca o valor. **Nunca** rode `get-parameter
+--with-decryption` num terminal compartilhado ou numa sessão com o agente. Trocar o segredo é
+`put-parameter --overwrite` com o mesmo nome; a função lê o valor a cada cold start.
+
+### 8.1 Primeira volta: só a identidade
+
+```bash
+export AWS_PROFILE=lotus
+
+aws cloudformation validate-template --region sa-east-1 \
+  --template-body file://infra/lotus-contato.yaml
+
+aws cloudformation deploy --region sa-east-1 \
+  --stack-name lotus-contato \
+  --template-file infra/lotus-contato.yaml \
+  --tags Projeto=lotus-site \
+  --no-execute-changeset
+```
+
+Leia o change set (o comando imprime o `describe-change-set`). Na primeira volta ele tem **uma**
+linha: `Add AWS::SES::EmailIdentity`. Depois:
+
+```bash
+aws cloudformation execute-change-set --region sa-east-1 --change-set-name <arn impresso acima>
+aws cloudformation wait stack-create-complete --region sa-east-1 --stack-name lotus-contato
+aws cloudformation describe-stacks --region sa-east-1 --stack-name lotus-contato \
+  --query 'Stacks[0].Outputs' --output table
+```
+
+A identidade nasce **pendente**. Os seis outputs `DkimNome1..3`/`DkimValor1..3` vão para a zona.
+
+### 8.2 DKIM, MAIL FROM e DMARC na zona
+
+Os seis registros entram em `infra/lotus-dns.yaml` **e** no `INVENTARIO` de
+`scripts/infra/lib/zona.mjs`, como a secção 6.7 exige de todo nome novo. Os três tokens DKIM são
+`Default` dos parâmetros `TokenDkim1..3` do template. Depois:
+
+```bash
+aws cloudformation deploy --region us-east-1 \
+  --stack-name lotus-dns \
+  --template-file infra/lotus-dns.yaml \
+  --tags Projeto=lotus-site \
+  --no-execute-changeset
+```
+
+Change set esperado: **uma** linha, `Modify AWS::Route53::RecordSetGroup` sem `Replacement`.
+Execute, espere `stack-update-complete`, e confira:
+
+```bash
+export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use
+pnpm infra:conferir-zona --pos-delegacao
+```
+
+A identidade fica verificada quando os três campos abaixo responderem `true`, `SUCCESS`,
+`SUCCESS`. Pode levar de minutos a algumas horas depois de os CNAME propagarem:
+
+```bash
+aws sesv2 get-email-identity --region sa-east-1 --email-identity lotusotec.cl \
+  --query '{Verificada:VerifiedForSendingStatus,Dkim:DkimAttributes.Status,MailFrom:MailFromAttributes.MailFromDomainStatus}'
+```
+
+Enquanto `Dkim` estiver em `PENDING`, nenhum `deploy` do `lotus-site` faz sentido: a função enviaria
+sem assinatura e a mensagem cairia em spam.

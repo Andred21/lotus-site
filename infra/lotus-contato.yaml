@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Contato do lotus-site: identidade SES de lotusotec.cl com Easy DKIM e MAIL
+  FROM em subdominio proprio (ADR-SITE-005, spec do bloco B2). A funcao que
+  recebe o formulario por /api/contacto entra neste mesmo stack no bloco.
+  Stack separado do lotus-site porque a identidade tem ciclo de vida proprio e
+  os tokens DKIM precisam existir antes de a zona publica-los. Regiao
+  sa-east-1, a mesma do bucket e da distribuicao (spec D2): o MX do MAIL FROM
+  e o de sa-east-1.
+
+Parameters:
+  Dominio:
+    Type: String
+    Default: lotusotec.cl
+    Description: Dominio remetente. E a mesma zona do stack lotus-dns.
+    AllowedPattern: '^[a-z0-9][a-z0-9.-]*[a-z0-9]$'
+
+  Destinatario:
+    Type: String
+    Default: contacto@lotusotec.cl
+    Description: >-
+      Caixa que recebe o formulario. E do dominio verificado, por isso o
+      sandbox do SES basta (spec D3).
+    AllowedPattern: '^[^@]+@[^@]+$'
+
+  Remitente:
+    Type: String
+    Default: sitio@lotusotec.cl
+    Description: >-
+      Endereco From. Nao precisa existir como caixa: o Reply-To e o e-mail do
+      visitante (spec D9).
+    AllowedPattern: '^[^@]+@[^@]+$'
+
+  NomeDoRemetente:
+    Type: String
+    Default: Sitio Lotus OTEC
+    Description: Nome exibido no From.
+
+Resources:
+  # ── remetente ──────────────────────────────────────────────────────────────
+  IdentidadeDeEnvio:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref Dominio
+      # Easy DKIM: a AWS gera o par de chaves e publica a chave publica em
+      # <token>.dkim.amazonses.com; a zona so precisa de tres CNAME.
+      DkimAttributes:
+        SigningEnabled: true
+      DkimSigningAttributes:
+        NextSigningKeyLength: RSA_2048_BIT
+      # MAIL FROM em subdominio proprio: o SPF passa alinhado a lotusotec.cl em
+      # vez de a amazonses.com, que e o que o DMARC vai medir (spec D11).
+      # USE_DEFAULT_VALUE: se o MX de ses.lotusotec.cl sumir, o SES volta ao
+      # MAIL FROM padrao em vez de recusar o envio.
+      MailFromAttributes:
+        MailFromDomain: !Sub 'ses.${Dominio}'
+        BehaviorOnMxFailure: USE_DEFAULT_VALUE
+
+Outputs:
+  # Os tres pares vao para infra/lotus-dns.yaml como Default dos parametros
+  # TokenDkim1..3. O token e o prefixo comum ao nome e ao valor.
+  DkimNome1:
+    Value: !GetAtt IdentidadeDeEnvio.DkimDNSTokenName1
+  DkimValor1:
+    Value: !GetAtt IdentidadeDeEnvio.DkimDNSTokenValue1
+  DkimNome2:
+    Value: !GetAtt IdentidadeDeEnvio.DkimDNSTokenName2
+  DkimValor2:
+    Value: !GetAtt IdentidadeDeEnvio.DkimDNSTokenValue2
+  DkimNome3:
+    Value: !GetAtt IdentidadeDeEnvio.DkimDNSTokenName3
+  DkimValor3:
+    Value: !GetAtt IdentidadeDeEnvio.DkimDNSTokenValue3
