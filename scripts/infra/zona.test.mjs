@@ -46,6 +46,38 @@ describe('leitura textual do template', () => {
     // arquivo ficar verde por vacuidade.
     expect(lerRegistros(TEMPLATE)).toHaveLength(INVENTARIO.length)
   })
+
+  it('para a lista de RecordSets no próximo recurso de topo', () => {
+    // Com o Certificado no arquivo, um leitor que só para na coluna zero
+    // entraria no bloco dele e somaria o SAN aos valores do último
+    // RecordSet. A catraca reprovaria o ftp, apontando para o lugar errado.
+    const fixture = [
+      '',
+      'Parameters:',
+      '  NomeDaZona:',
+      '    Default: exemplo.cl',
+      'Resources:',
+      '  Registros:',
+      '    Properties:',
+      '      RecordSets:',
+      "        - Name: !Sub 'ftp.${NomeDaZona}.'",
+      '          Type: CNAME',
+      '          TTL: 3600',
+      '          ResourceRecords:',
+      '            - ftp.exemplo.',
+      '  Certificado:',
+      '    Properties:',
+      '      SubjectAlternativeNames:',
+      "        - !Sub 'www.${NomeDaZona}'",
+      'Outputs:',
+      '  Nada:',
+      '    Value: x',
+    ].join('\n')
+    const lidos = lerRegistros(fixture)
+    expect(lidos).toHaveLength(1)
+    expect(lidos[0]?.nome).toBe('ftp.exemplo.cl.')
+    expect(lidos[0]?.valores).toEqual(['ftp.exemplo.'])
+  })
 })
 
 describe('infra/lotus-dns.yaml contra o inventário medido', () => {
@@ -97,11 +129,29 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     expect(TEMPLATE).not.toMatch(/AliasTarget/)
   })
 
-  it('não declara certificado', () => {
-    // Pedido pendente do ACM morre em 72h, e com HostedZoneId o stack fica em
-    // CREATE_IN_PROGRESS até validar — com a zona ainda não delegada, isso é
-    // stack travado até o timeout. Spec §3 D6.
-    expect(TEMPLATE).not.toMatch(/AWS::CertificateManager::Certificate/)
+  it('declara o certificado da zona, com SAN explícito e sem wildcard', () => {
+    // A proibição anterior existia enquanto a zona não estava delegada:
+    // pedido pendente do ACM morre em 72h, e com HostedZoneId o stack fica em
+    // CREATE_IN_PROGRESS até validar. A delegação convergiu, então o que a
+    // catraca precisa travar agora é a forma do certificado.
+    const de = TEMPLATE.indexOf('\n  Certificado:')
+    expect(de, 'template sem o recurso Certificado').toBeGreaterThan(-1)
+    const bloco = TEMPLATE.slice(de, TEMPLATE.indexOf('\nOutputs:'))
+    expect(bloco).toMatch(/Type: AWS::CertificateManager::Certificate/)
+    expect(bloco).toMatch(/ValidationMethod: DNS/)
+    expect(bloco).toMatch(/- !Sub 'www\.\$\{NomeDaZona\}'/)
+    // Os dois nomes validam na própria zona: sem isto o ACM não cria o CNAME
+    // de validação e alguém teria de criá-lo à mão, fora do stack.
+    expect(bloco.match(/HostedZoneId: !Ref Zona/g)).toHaveLength(2)
+    // Wildcard amplia o raio de uma chave comprometida e esconde o inventário
+    // de nomes. Spec §4.
+    expect(bloco).not.toMatch(/\*/)
+  })
+
+  it('exporta o ARN do certificado para o bloco do site', () => {
+    // B5 consome isto como parâmetro: CloudFormation não importa valor entre
+    // regiões, e a distribuição é sa-east-1.
+    expect(TEMPLATE).toMatch(/ArnDoCertificado:/)
   })
 
   it('protege a zona contra delete-stack', () => {

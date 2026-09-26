@@ -209,8 +209,11 @@ export function lerRegistros(texto) {
   /** @type {RegistroLido | undefined} */
   let atual
   for (const linha of texto.slice(de).split('\n').slice(1)) {
-    // Chave de topo na coluna zero: a lista acabou.
-    if (/^\S/.test(linha)) break
+    // A lista acabou: ou uma chave de topo na coluna zero (`Outputs:`), ou o
+    // proximo recurso dentro de `Resources:`, que entra com dois espacos. Os
+    // itens de RecordSets vivem a partir da coluna oito, entao qualquer
+    // conteudo em indentacao menor ja esta fora da lista.
+    if (/^ {0,6}\S/.test(linha)) break
     const abertura = linha.match(/^\s*- Name:\s*(.+)$/)
     if (abertura) {
       atual = {

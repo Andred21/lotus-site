@@ -166,3 +166,41 @@ pnpm infra:conferir-zona
 
 Resolução correta **não** prova e-mail funcionando. O MX pode estar certo e a entrega falhar por
 outro motivo; a prova de `B1` é mensagem recebida.
+
+## Certificado
+
+Desde 2026-09-26, o stack `lotus-dns` também declara o certificado ACM da zona, em `us-east-1`:
+
+| Campo                     | Valor                  |
+| ------------------------- | ---------------------- |
+| `DomainName`              | `lotusotec.cl`         |
+| `SubjectAlternativeNames` | `www.lotusotec.cl`     |
+| `ValidationMethod`        | `DNS`                  |
+| `Status`                  | `ISSUED`               |
+| `NotAfter`                | `2027-04-11T23:59:59Z` |
+| `RenewalEligibility`      | `INELIGIBLE`           |
+
+A validação é DNS-01 com `HostedZoneId` apontando para a própria zona: o CloudFormation cria
+sozinho um CNAME de validação por nome (`_….lotusotec.cl` e `_….www.lotusotec.cl`, apontando para
+`acm-validations.aws`), e eles **ficam** na zona — é por eles que o ACM revalida a cada renovação.
+Não entram no inventário, que é o que a StackDNS servia; a conferência só pergunta pelas linhas do
+inventário, então não os acusa.
+
+A validade é de 198 dias: é o teto que o ACM aplica a certificado público desde 2026-02-18, para
+caber nos 200 dias do CA/Browser Forum. O plano esperava cerca de treze meses, o número de antes.
+
+**A renovação ainda não é automática.** O ACM só renova sozinho certificado associado a outro
+serviço da AWS, ou exportado; este não está em uso (`InUseBy` vazio), daí `INELIGIBLE`. Passa a
+`ELIGIBLE` quando `B5` o ligar à distribuição. Se `B5` não acontecer antes de 2027-04-11, o
+certificado expira sem renovar e o caminho é emitir outro — sem efeito no ar, porque nada o serve
+até lá.
+
+Em uso, a renovação é silenciosa, que é justamente o motivo de a `CAA` ser assunto de bloco próprio:
+um `CAA` errado bloqueia a renovação sem aviso.
+
+O ARN sai no output `ArnDoCertificado`. Ele é consumido por `B5` como **parâmetro** do stack do
+site, não por `ImportValue`: o certificado é `us-east-1`, a distribuição é `sa-east-1`, e
+CloudFormation não importa valor entre regiões.
+
+**O certificado existe; ele ainda não é servido.** Nada o apresenta a um navegador enquanto a
+distribuição não tiver `Aliases` e `ViewerCertificate` — isso é `B5`.
