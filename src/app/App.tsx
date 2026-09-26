@@ -9,14 +9,13 @@ import {
   createContactIntake,
   unavailableContactSender,
 } from '../integrations/contact/intake'
-import { createWeb3FormsSender } from '../integrations/contact/web3forms'
+import { createApiContactoSender } from '../integrations/contact/api-contacto'
 
-// Única ligação entre componente e integração no repositório. Sem chave
-// configurada o envio falha de forma visível, sem simular sucesso (D7 da
-// spec); a seção já publica contacto@lotusotec.cl como saída alternativa.
-const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
-const contactSender = accessKey
-  ? createWeb3FormsSender(accessKey)
+// Fiação provisória até a Task 6: sem site key não há widget nem token, e o
+// envio cai no caminho de D7.
+const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
+const contactSender = siteKey
+  ? createApiContactoSender()
   : unavailableContactSender
 const submitContact = createContactIntake(contactSender)
 

@@ -77,11 +77,11 @@ describe('App — fiação do contato', () => {
   })
 
   it('sem chave configurada, o envio falha e nenhuma requisição sai', async () => {
-    // D7 da spec: build sem `VITE_WEB3FORMS_ACCESS_KEY` recebe
+    // D7 da spec: build sem `VITE_TURNSTILE_SITE_KEY` recebe
     // `unavailableContactSender`. O ambiente de teste não define a chave, e a
     // asserção abaixo trava isso: chave presente faz o teste falhar alto em
     // vez de exercitar silenciosamente o outro caminho.
-    expect(import.meta.env.VITE_WEB3FORMS_ACCESS_KEY).toBeFalsy()
+    expect(import.meta.env.VITE_TURNSTILE_SITE_KEY).toBeFalsy()
 
     const fetchSpy = vi.fn<typeof fetch>()
     vi.stubGlobal('fetch', fetchSpy)
