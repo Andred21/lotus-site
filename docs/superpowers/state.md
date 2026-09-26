@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 work_class: architectural
 active_work_item: 7.2.1
 active_notion_eap: 7.2.1
@@ -9,20 +9,20 @@ active_title: Configurar domínio, DNS, HTTPS e redirects necessários
 active_branch: feat/7-2-1-delegacao-certificado
 bounded_design: null
 authorized_paths: null
-next_owner: codex
-next_action: review_active_work_item
+next_owner: claude
+next_action: close_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-20-7.2.1-delegacao-certificado-design.md
 active_plan: docs/superpowers/plans/2026-09-20-7.2.1-delegacao-certificado.md
 executor: claude
-reviewer: codex
-reviewer_exception: null
+reviewer: claude
+reviewer_exception: 'Autorizado por João em 2026-09-26: cota da conta Codex esgotada, Claude executou e revisa o bloco. Sem segunda lente independente; débito D-53.'
 blocker: null
 supervised_cycles_completed: 15
 last_completed_work_item: 7.2.1
-state_basis_commit: 60dd2c2
-updated_at: 2026-09-26T07:14:18Z
+state_basis_commit: 3803a1f
+updated_at: 2026-09-26T08:12:14Z
 ---
 
 # Estado operacional — Lotus Site

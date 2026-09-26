@@ -579,6 +579,14 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   próximo bloco que fizer deploy do `lotus-dns`.
   **Gatilho:** a proteção, agora, por João; a política, antes do próximo deploy do `lotus-dns`.
 
+- **D-53 · o bloco `7.2.1` (delegação e certificado) não teve segunda lente** — Claude executou
+  `b64bb94..cb06414` e também fez a review formal de `/revisar-site`: a cota da conta Codex estava
+  esgotada em 2026-09-26. As reviews por task durante a execução foram de subagentes Claude, a
+  mesma família do executor. Desvio declarado em `reviewer_exception`, autorizado por João em
+  2026-09-26. Mesma classe de `D-27` e `D-32`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..cb06414`, ou decisão de
+  João de dispensá-la.
+
 ## Fechados
 
 - **D-48 · o runbook descreve duas formas de emitir o certificado** — a secção 6.6 passou a
