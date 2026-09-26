@@ -45,7 +45,7 @@ export type ContactSubmitResult =
   | { status: 'invalid'; fieldErrors: ContactFieldErrors }
   | { status: 'failed' }
 
-/** Mensajes en es-CL, o idioma publicado del site. */
+/** Mensagens em es-CL, o idioma publicado do site. */
 const MESSAGES = {
   nombreCorto: 'Ingrese su nombre completo.',
   nombreLargo: `El nombre no puede superar los ${CONTACT_LIMITS.nombre.max} caracteres.`,
