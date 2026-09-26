@@ -7,6 +7,7 @@ const MESSAGE: ContactMessage = {
   email: 'ana@lotusotec.cl',
   empresa: 'Lotus',
   mensaje: 'Necesito información sobre el curso de alta tensión.',
+  captcha: 'token-de-teste',
 }
 
 // `vi.fn<typeof fetch>` importa: sem o tipo, `mock.calls[0]` é a tupla vazia

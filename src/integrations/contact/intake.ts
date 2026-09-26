@@ -22,10 +22,12 @@ export type ContactSender = (
 ) => Promise<ContactSendOutcome>
 
 /**
- * Implementação nula: sem chave configurada, o envio falha de forma visível
- * em vez de simular sucesso (D7 da spec do bloco 4.1.1-4.1.10). Não é código
- * descartável — é o caminho real de um build publicado sem
- * `VITE_WEB3FORMS_ACCESS_KEY`.
+ * Implementação nula: sem site key do Turnstile ou sem `crypto.subtle` (só
+ * existe em contexto seguro), o envio falha de forma visível em vez de
+ * simular sucesso (D7 da spec do bloco 4.1.1-4.1.10; D1 e D6 da spec do
+ * bloco B2). Não é código descartável — é o caminho real de um build
+ * publicado sem `VITE_TURNSTILE_SITE_KEY`, e de `pnpm dev` aberto por
+ * endereço que não seja `localhost`.
  */
 export const unavailableContactSender: ContactSender = () =>
   Promise.resolve({ status: 'failed' })
@@ -50,6 +52,9 @@ function readContactFormData(formData: FormData): ContactFormInput {
     empresa: read('empresa'),
     mensaje: read('mensaje'),
     botcheck: read('botcheck'),
+    // O widget do Turnstile escreve o token num input oculto com este nome
+    // dentro do formulário; o schema o vê como `captcha`.
+    captcha: read('cf-turnstile-response'),
   }
 }
 

@@ -11,6 +11,7 @@ const VALID = {
   empresa: 'Lotus',
   mensaje: 'Necesito información sobre el curso de alta tensión.',
   botcheck: '',
+  'cf-turnstile-response': 'token-de-teste',
 }
 
 function formDataOf(entries: Record<string, string>) {
@@ -43,6 +44,7 @@ describe('createContactIntake', () => {
       email: 'ana@lotusotec.cl',
       empresa: 'Lotus',
       mensaje: 'Necesito información sobre el curso de alta tensión.',
+      captcha: 'token-de-teste',
     })
   })
 
@@ -139,6 +141,18 @@ describe('createContactIntake', () => {
     expect(result.fieldErrors.nombre).toBe('Ingrese su nombre completo.')
     expect(send).not.toHaveBeenCalled()
   })
+
+  it('lê o token do campo que o widget preenche, e sem ele não chama a porta', async () => {
+    const send = fakeSender()
+    const intake = createContactIntake(send)
+
+    const semToken = formDataOf({ ...VALID, 'cf-turnstile-response': '' })
+    const result = await intake(semToken)
+
+    if (result.status !== 'invalid') throw new Error('esperava invalid')
+    expect(result.fieldErrors.captcha).toBe('Confirme que no es un robot.')
+    expect(send).not.toHaveBeenCalled()
+  })
 })
 
 describe('unavailableContactSender', () => {
@@ -151,6 +165,7 @@ describe('unavailableContactSender', () => {
       email: 'ana@lotusotec.cl',
       empresa: '',
       mensaje: 'Necesito información.',
+      captcha: 'token-de-teste',
     })
 
     expect(outcome).toEqual({ status: 'failed' })
