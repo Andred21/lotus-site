@@ -303,8 +303,8 @@ não por `ImportValue`. A renovação só fica automática quando o certificado 
 ainda na StackDNS, o CNAME de validação existe e ninguém o enxerga.
 
 Caminho padrão: um `AWS::CertificateManager::Certificate` no stack `lotus-dns`, com
-`DomainValidationOptions.HostedZoneId` apontando para a própria zona — o ACM cria o CNAME de
-validação sozinho, e ele fica na zona, não é removido depois. A renovação só é automática e
+`DomainValidationOptions.HostedZoneId` apontando para a própria zona — o CloudFormation cria o
+CNAME de validação sozinho, e ele fica na zona, não é removido depois. A renovação só é automática e
 silenciosa quando o certificado estiver em uso (`RenewalEligibility: INELIGIBLE` até `B5`).
 
 ```yaml
