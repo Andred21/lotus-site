@@ -1,10 +1,13 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { A11Y_EXCEPTIONS } from './a11y-exceptions'
+import {
+  API_CONTACTO,
+  fingirApiContacto,
+  fingirTurnstile,
+  preencherContato,
+} from './contato-falso'
 
-const ENDPOINT = 'https://api.web3forms.com/**'
-const SUCCESS =
-  'Gracias. Recibimos su mensaje y le contactaremos a la brevedad.'
 const INVALID = 'Revise los campos marcados y vuelva a enviar.'
 
 const BLOCKING = new Set(['critical', 'serious'])
@@ -36,23 +39,18 @@ async function fillInvalid(page: Page) {
 }
 
 async function submitValid(page: Page) {
-  await page.route(ENDPOINT, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ success: true, message: 'Email sent' }),
-    })
-  })
-  await page.getByLabel('Nombre Completo').fill('Ana Pérez')
-  await page.getByLabel('Correo Electrónico').fill('ana@lotusotec.cl')
-  await page.getByLabel('Empresa').fill('Lotus')
-  await page
-    .getByLabel('Mensaje')
-    .fill('Necesito información sobre el curso de alta tensión.')
+  await fingirApiContacto(page, { status: 200, ok: true })
+  await preencherContato(page)
   await page.getByRole('button', { name: 'Enviar' }).click()
-  await expect(page.getByRole('status')).toHaveText(SUCCESS)
-  await page.unroute(ENDPOINT)
+  await expect(page.getByRole('status')).toHaveText(
+    'Gracias. Recibimos su mensaje y le contactaremos a la brevedad.',
+  )
+  await page.unroute(API_CONTACTO)
 }
+
+test.beforeEach(async ({ page }) => {
+  await fingirTurnstile(page)
+})
 
 // D9: os cinco estados auditados. Cada um parte de uma navegação nova.
 const STATES: readonly State[] = [

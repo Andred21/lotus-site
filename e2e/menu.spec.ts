@@ -1,6 +1,13 @@
 import { expect, test } from '@playwright/test'
+import { fingirTurnstile } from './contato-falso'
 
 test.use({ viewport: { width: 375, height: 812 } })
+
+// Toda navegação para `/` pode chegar a 400px de #Contacto e disparar o
+// carregamento do Turnstile; o script falso impede a requisição real.
+test.beforeEach(async ({ page }) => {
+  await fingirTurnstile(page)
+})
 
 test('menu mobile abre, fecha e não prende o scroll', async ({ page }) => {
   await page.goto('/')

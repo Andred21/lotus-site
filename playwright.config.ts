@@ -64,10 +64,11 @@ export default defineConfig({
       url: baseURL,
       reuseExistingServer: false,
       timeout: 120_000,
-      // Chave falsa: o E2E precisa do adapter Web3Forms montado para poder
-      // interceptar a rota. Nenhum envio real sai — todo teste que submete
-      // intercepta `api.web3forms.com` (D6 da spec: não há conta nesta rodada).
-      env: { VITE_WEB3FORMS_ACCESS_KEY: 'e2e-fake-access-key' },
+      // Site key de TESTE da Cloudflare (`1x00000000000000000000AA`, spec
+      // D6), pública por definição: é o que liga o adapter e o widget no E2E.
+      // Nenhuma requisição real sai — o script do Turnstile e `/api/contacto`
+      // são servidos por `page.route` em `e2e/contato-falso.ts`.
+      env: { VITE_TURNSTILE_SITE_KEY: '1x00000000000000000000AA' },
     },
     {
       command: `pnpm build && pnpm preview --port ${PREVIEW_PORT} --strictPort`,
@@ -76,7 +77,7 @@ export default defineConfig({
       timeout: 180_000,
       // A chave entra no build: no Vite a variável é resolvida em tempo de
       // compilação, não em runtime.
-      env: { VITE_WEB3FORMS_ACCESS_KEY: 'e2e-fake-access-key' },
+      env: { VITE_TURNSTILE_SITE_KEY: '1x00000000000000000000AA' },
     },
   ],
 })
