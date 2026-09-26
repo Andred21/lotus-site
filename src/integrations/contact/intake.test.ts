@@ -75,7 +75,7 @@ describe('createContactIntake', () => {
 
   it('converte exceção da porta em failed, sem vazar o erro', async () => {
     const send = vi.fn<ContactSender>(() =>
-      Promise.reject(new Error('web3forms: 503 Service Unavailable')),
+      Promise.reject(new Error('api/contacto: 502 Bad Gateway')),
     )
 
     expect(await createContactIntake(send)(formDataOf(VALID))).toEqual({

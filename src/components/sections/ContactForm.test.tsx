@@ -8,16 +8,55 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { site } from '../../content/site'
 import { CONTACT_LIMITS } from '../../lib/contact-fields'
+import type { CaptchaController } from '../../lib/captcha'
 import type { ContactSubmitResult } from '../../lib/contact-schema'
 import { ContactForm, type ContactSubmitHandler } from './ContactForm'
 
 // vitest.config.ts não registra setup global e o bloco não pode tocá-lo.
 // `fireEvent` em vez de `@testing-library/user-event`: o pacote não está
 // instalado e o bloco não adiciona dependência.
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 function handlerOf(outcome: Awaited<ReturnType<ContactSubmitHandler>>) {
   return vi.fn<ContactSubmitHandler>(() => Promise.resolve(outcome))
+}
+
+function captchaOf() {
+  return {
+    mount: vi.fn<CaptchaController['mount']>(() => Promise.resolve()),
+    reset: vi.fn<CaptchaController['reset']>(),
+  }
+}
+
+// jsdom não tem IntersectionObserver (medido em 2026-09-26). O stub guarda o
+// callback e o alvo para o teste disparar a interseção quando quiser.
+function stubIntersectionObserver() {
+  const observados: Element[] = []
+  const callbacks: Array<(entries: { isIntersecting: boolean }[]) => void> = []
+  const disconnect = vi.fn()
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+        callbacks.push(callback)
+      }
+      observe(target: Element) {
+        observados.push(target)
+      }
+      disconnect = disconnect
+      unobserve() {}
+    },
+  )
+  return {
+    observados,
+    disconnect,
+    intersectar: () => {
+      for (const callback of callbacks) callback([{ isIntersecting: true }])
+    },
+  }
 }
 
 describe('ContactForm', () => {
@@ -146,7 +185,7 @@ describe('ContactForm — estados de envio', () => {
       'value',
       'Necesito información sobre el curso.',
     )
-    expect(screen.queryByText(/web3forms/i)).toBeNull()
+    expect(screen.queryByText(/api\/contacto/i)).toBeNull()
   })
 
   it('não reserva espaço antes da primeira interação', async () => {
@@ -237,6 +276,92 @@ describe('ContactForm — anti-spam', () => {
     )
     expect(screen.getByLabelText('Mensaje').getAttribute('maxlength')).toBe(
       String(CONTACT_LIMITS.mensaje.max),
+    )
+  })
+})
+
+describe('ContactForm — captcha', () => {
+  it('sem controlador, não observa nada e não renderiza erro de captcha', () => {
+    const { container } = render(
+      <ContactForm onSubmit={handlerOf({ status: 'failed' })} />,
+    )
+
+    expect(container.querySelector('[data-captcha]')).toBeTruthy()
+    expect(screen.queryByText('Confirme que no es un robot.')).toBeNull()
+  })
+
+  it('monta o widget só quando o formulário se aproxima da viewport', async () => {
+    const io = stubIntersectionObserver()
+    const captcha = captchaOf()
+    const { container } = render(
+      <ContactForm
+        onSubmit={handlerOf({ status: 'failed' })}
+        captcha={captcha}
+      />,
+    )
+
+    const alvo = container.querySelector('[data-captcha]')
+    expect(io.observados).toEqual([alvo])
+    expect(captcha.mount).not.toHaveBeenCalled()
+
+    io.intersectar()
+
+    expect(captcha.mount).toHaveBeenCalledTimes(1)
+    expect(captcha.mount).toHaveBeenCalledWith(alvo)
+    expect(io.disconnect).toHaveBeenCalled()
+    // O container fica dentro do <form>, antes do botão: é onde o widget
+    // escreve o input oculto, e o FormData precisa vê-lo.
+    expect(alvo?.closest('form')).toBeTruthy()
+    expect(
+      alvo?.compareDocumentPosition(
+        screen.getByRole('button', { name: 'Enviar' }),
+      ),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  it('reseta o widget depois de qualquer resultado, inclusive sucesso', async () => {
+    stubIntersectionObserver()
+    for (const outcome of [
+      { status: 'sent' as const },
+      { status: 'failed' as const },
+      { status: 'invalid' as const, fieldErrors: {} },
+    ]) {
+      const captcha = captchaOf()
+      render(<ContactForm onSubmit={handlerOf(outcome)} captcha={captcha} />)
+
+      fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+      await waitFor(() => expect(captcha.reset).toHaveBeenCalledTimes(1))
+      cleanup()
+    }
+  })
+
+  it('reseta o widget também quando o handler rejeita', async () => {
+    stubIntersectionObserver()
+    const captcha = captchaOf()
+    const onSubmit = vi.fn<ContactSubmitHandler>(() =>
+      Promise.reject(new Error('boom')),
+    )
+    render(<ContactForm onSubmit={onSubmit} captcha={captcha} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    await waitFor(() => expect(captcha.reset).toHaveBeenCalledTimes(1))
+  })
+
+  it('mostra o erro do captcha junto do widget e pede revisão dos campos', async () => {
+    stubIntersectionObserver()
+    const onSubmit = handlerOf({
+      status: 'invalid',
+      fieldErrors: { captcha: 'Confirme que no es un robot.' },
+    })
+    render(<ContactForm onSubmit={onSubmit} captcha={captchaOf()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    expect(await screen.findByText('Confirme que no es un robot.')).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toBe(
+      site.contacto.form.feedback.invalid,
     )
   })
 })
