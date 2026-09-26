@@ -1,9 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   Contato do lotus-site: identidade SES de lotusotec.cl com Easy DKIM e MAIL
-  FROM em subdominio proprio (ADR-SITE-005, spec do bloco B2). A funcao que
-  recebe o formulario por /api/contacto entra neste mesmo stack no bloco.
-  Stack separado do lotus-site porque a identidade tem ciclo de vida proprio e
+  FROM em subdominio proprio (ADR-SITE-005, spec do bloco B2), e a funcao
+  Lambda que recebe o formulario por /api/contacto, com a Function URL que o
+  CloudFront chama por OAC. Stack separado do lotus-site porque a identidade
+  tem ciclo de vida proprio e
   os tokens DKIM precisam existir antes de a zona publica-los. Regiao
   sa-east-1, a mesma do bucket e da distribuicao (spec D2): o MX do MAIL FROM
   e o de sa-east-1.
@@ -36,6 +37,14 @@ Parameters:
     Default: Sitio Lotus OTEC
     Description: Nome exibido no From.
 
+  NomeDaFuncao:
+    Type: String
+    Default: lotus-site-contato
+    Description: >-
+      Nome fixo: o CI publica o codigo por update-function-code e precisa de
+      um nome que nao mude entre deploys do stack.
+    AllowedPattern: '^[a-zA-Z0-9-_]{1,64}$'
+
 Resources:
   # ── remetente ──────────────────────────────────────────────────────────────
   IdentidadeDeEnvio:
@@ -56,6 +65,96 @@ Resources:
         MailFromDomain: !Sub 'ses.${Dominio}'
         BehaviorOnMxFailure: USE_DEFAULT_VALUE
 
+  # ── a funcao ───────────────────────────────────────────────────────────────
+  # Log group explicito, com retencao: sem ele a Lambda cria um sem expiracao
+  # na primeira execucao, e a role precisaria de logs:CreateLogGroup em `*`.
+  Registros:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${NomeDaFuncao}'
+      RetentionInDays: 30
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  PapelDaFuncao:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Assumida so pela funcao de contato. Envia pela identidade e escreve no proprio log.
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: enviar-contato
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # So esta identidade, e so com este From: a role nao consegue
+              # enviar como outro endereco do dominio.
+              - Sid: EnviarPelaIdentidade
+                Effect: Allow
+                Action: ses:SendEmail
+                Resource: !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${Dominio}'
+                Condition:
+                  StringEquals:
+                    ses:FromAddress: !Ref Remitente
+              - Sid: EscreverNoProprioLog
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt Registros.Arn
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  Funcao:
+    Type: AWS::Lambda::Function
+    DependsOn: Registros
+    Properties:
+      FunctionName: !Ref NomeDaFuncao
+      Description: Recebe o formulario de contato por /api/contacto e envia por SES.
+      Runtime: nodejs24.x
+      Architectures: [arm64]
+      MemorySize: 128
+      Timeout: 10
+      Handler: index.handler
+      Role: !GetAtt PapelDaFuncao.Arn
+      LoggingConfig:
+        LogGroup: !Ref Registros
+      Environment:
+        Variables:
+          CONTATO_PARA: !Ref Destinatario
+          CONTATO_DE: !Sub '${NomeDoRemetente} <${Remitente}>'
+      # Placeholder: responde 503 ate o CI publicar o bundle real por
+      # update-function-code. Como esta propriedade nunca muda, o
+      # CloudFormation nao sobrescreve o codigo publicado (spec D8). CommonJS
+      # porque ZipFile inline vira index.js; o bundle do CI e index.mjs, e o
+      # runtime resolve index.handler em qualquer dos dois.
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({
+            statusCode: 503,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ ok: false }),
+          });
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  # AWS_IAM: so quem assina com SigV4 chama, e quem assina e o OAC da
+  # distribuicao. Chamada direta a URL responde 403 (prova negativa da spec §7).
+  UrlDaFuncao:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt Funcao.Arn
+      AuthType: AWS_IAM
+      InvokeMode: BUFFERED
+
 Outputs:
   # Os tres pares vao para infra/lotus-dns.yaml como Default dos parametros
   # TokenDkim1..3. O token e o prefixo comum ao nome e ao valor.
@@ -71,3 +170,18 @@ Outputs:
     Value: !GetAtt IdentidadeDeEnvio.DkimDNSTokenName3
   DkimValor3:
     Value: !GetAtt IdentidadeDeEnvio.DkimDNSTokenValue3
+
+  DominioDaUrlDaFuncao:
+    Description: >-
+      Parametro DominioDaFuncaoDeContato do stack lotus-site. A URL vem como
+      https://<id>.lambda-url.sa-east-1.on.aws/ e a origin do CloudFront quer
+      so o host.
+    Value: !Select [2, !Split ['/', !GetAtt UrlDaFuncao.FunctionUrl]]
+
+  ArnDaFuncao:
+    Description: Parametro ArnDaFuncaoDeContato do stack lotus-site.
+    Value: !GetAtt Funcao.Arn
+
+  NomeDaFuncao:
+    Description: Variavel de repositorio AWS_CONTACT_FUNCTION no corporativo.
+    Value: !Ref Funcao
