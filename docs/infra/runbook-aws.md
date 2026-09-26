@@ -331,8 +331,9 @@ Três armadilhas, todas de ordem:
    pedido.
 2. **Com `HostedZoneId`, o stack fica em `CREATE_IN_PROGRESS` até validar.** Zona não delegada
    significa stack travado até o timeout, e depois rollback.
-3. **`CAA` restringindo emissão a `amazon.com` entra depois do primeiro `ISSUED`, nunca antes.**
-   CAA errado bloqueia a própria renovação. A zona não tem CAA hoje (medido em 2026-09-09), e é
+3. **`CAA` nunca antes do primeiro `ISSUED`, e nunca só com `amazon.com` enquanto o WordPress
+   existir.** CAA errado bloqueia a renovação sem aviso: a do ACM e a do certificado Let's Encrypt
+   que o WordPress serve (`D-49`, `D-51`). A zona não tem CAA hoje (medido em 2026-09-09), e é
    por isso que o ACM emite sem obstáculo.
 
 **O caminho acima é o que está em uso.** O que vem abaixo é fallback declarado, nunca executado até

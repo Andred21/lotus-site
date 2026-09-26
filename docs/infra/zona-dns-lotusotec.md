@@ -123,7 +123,9 @@ a diferença importa quando o SES entrar como remetente novo (`B2`).
 
 Ausência de `CAA` é boa notícia agora e dívida depois: um CAA restritivo bloquearia a emissão do
 certificado pelo ACM, mas não ter nenhum significa que qualquer CA do mundo pode emitir para este
-domínio. Publicar `CAA` é bloco próprio, **depois** do primeiro `ISSUED`.
+domínio. Publicar `CAA` é bloco próprio (`D-49`), e o primeiro `ISSUED` não basta: enquanto o
+WordPress existir, ela precisa liberar `amazon.com` e `letsencrypt.org`, ou derruba a renovação do
+certificado dele (`D-51`).
 
 ## O limite desta transcrição
 
