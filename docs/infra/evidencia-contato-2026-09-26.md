@@ -17,16 +17,33 @@ SES segue em sandbox: `get-account` devolveu `{"Envios24h": 1.0, "Max24h": 200.0
 false}`, medido depois da mensagem real — suficiente porque o destinatário é do domínio verificado
 (`D3` da spec).
 
-## G5 pendente com João
+## G5 — variáveis de repositório no corporativo
 
-As variáveis de repositório `AWS_CONTACT_FUNCTION` e `VITE_TURNSTILE_SITE_KEY`, em
-`Gatika-CL/lotus-site`, **não têm criação registrada** (runbook §8.4). São obrigatórias antes do
-merge: sem `VITE_TURNSTILE_SITE_KEY` o `deploy` recusa o build (commit `a22e5f7`); sem
-`AWS_CONTACT_FUNCTION` o `deploy` publica o site e pula a função, com aviso — a função no ar
-continua a publicada à mão a partir de `d5260cb`, e nenhuma mudança posterior em `lambda/contato/`
-chega a ela. A saída de `gh variable list --repo Gatika-CL/lotus-site`, só com os
-nomes das variáveis (nunca o valor da site key), entra nesta evidência, em commit próprio, antes de
-`/fechar-site`.
+As variáveis de repositório `AWS_CONTACT_FUNCTION` e `VITE_TURNSTILE_SITE_KEY` existem em
+`Gatika-CL/lotus-site` (runbook §8.4). São obrigatórias antes do merge: sem
+`VITE_TURNSTILE_SITE_KEY` o `deploy` recusa o build (commit `a22e5f7`); sem `AWS_CONTACT_FUNCTION`
+o `deploy` publica o site e pula a função, com aviso, e nenhuma mudança posterior em
+`lambda/contato/` chegaria a ela.
+
+Conferido na review em 2026-09-27. `gh variable list --repo Gatika-CL/lotus-site`, só a coluna do
+nome:
+
+```text
+AWS_BUCKET
+AWS_CLOUDFRONT_ID
+AWS_CONTACT_FUNCTION
+AWS_DEPLOY_ROLE_ARN
+ESPELHO_FONTE
+VITE_TURNSTILE_SITE_KEY
+```
+
+Os valores foram comparados sem impressão: `AWS_CONTACT_FUNCTION` é igual ao output `NomeDaFuncao`
+(`lotus-site-contato`) e `VITE_TURNSTILE_SITE_KEY` é igual à site key usada no build publicado à
+mão (cabeçalho desta evidência). `updatedAt`: `2026-09-26T21:32:36Z` e `2026-09-26T21:33:17Z`.
+
+A função no ar segue a publicada à mão a partir de `d5260cb`. Depois dele, `lambda/contato/handler.ts`
+mudou (`git diff --stat d5260cb..b30cc62 -- lambda/`: 7 linhas no handler, mais testes); o código
+novo chega à função no primeiro `deploy` do CI depois do merge e do espelho.
 
 ## Task 10 — segunda volta
 
