@@ -104,7 +104,7 @@ não foram observados e não são afirmados aqui.
 
 ## `4.1.7` — mensagem real
 
-- Enviada em 26/09/2026, às 18:39 hora do Chile (21:39 UTC), por João, pelo formulário em
+- Enviada em 2026-09-26, às 18:39 hora do Chile (21:39 UTC), por João, pelo formulário em
   `https://dhpoztt69jydz.cloudfront.net/#Contacto`; a tela mostrou a mensagem de sucesso ("Gracias.
   Recibimos su mensaje…").
 - Log da função: `2026-09-26T21:39:42.119Z {"requestId":"bfaa3d83-0bf6-4b13-b806-adc938a254b5","desfecho":"enviado"}`.
@@ -159,8 +159,7 @@ nada em dist-lambda
 CONTEXT.md  (corrigido na Task 12 por decisão de João de 2026-09-27)
 ```
 
-O restante do resultado do item 4 só devolveu arquivos de `docs/` (as duas ADR, o histórico, a
-spec, o plano deste bloco, os context packets, o bounded design e o backlog).
+O restante do resultado do item 4 só devolveu arquivos de `docs/` — ADR-SITE-002, ADR-SITE-003, ADR-SITE-004 e ADR-SITE-005, o histórico (`docs/superpowers/historico/progress.md`), specs, planos, context packets, bounded design, backlog e o relatório de homologação (`docs/qa/homologacao-2026-08-29.md`).
 
 João, no terminal dele, com a secret key **inteira** digitada num `read -s` (não os oito primeiros
 caracteres do plano):
