@@ -7,8 +7,9 @@ antes.
 
 O módulo `src/integrations/contact/intake.ts`. Recebe a submissão crua do formulário como
 `FormData`, normaliza, valida pelo schema de `src/lib/contact-schema.ts` e entrega à porta.
-Devolve `sent`, `invalid` com erro por campo, ou `failed` genérico. É o único executor do schema
-no repositório e não conhece o provedor.
+Devolve `sent`, `invalid` com erro por campo, ou `failed` genérico. Executa o schema junto da
+função (`lambda/contato/handler.ts` também o executa — `src/lib/contact-schema.ts` documenta os
+dois executores) e não conhece o provedor.
 
 ## Porta
 

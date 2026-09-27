@@ -48,7 +48,11 @@ export type ContactHandlerDeps = {
   log: (entry: { requestId: string; desfecho: Desfecho }) => void
 }
 
-/** Teto do corpo (spec §4). O maior payload válido tem pouco mais de 2 KB. */
+/**
+ * Teto do corpo (spec §4). O maior payload válido, no teto de cada campo do
+ * schema, mede 14525 bytes (~14,2 KB; medido em `handler.test.ts`) — folga de
+ * 1859 bytes até este teto.
+ */
 export const MAX_BODY_BYTES = 16 * 1024
 
 const STATUS: Record<Desfecho, number> = {

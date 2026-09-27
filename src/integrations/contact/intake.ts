@@ -65,7 +65,8 @@ function readContactFormData(formData: FormData): ContactFormInput {
  * Action da EAP (D1 da spec do bloco 4.1.1-4.1.10): tudo passa por aqui antes
  * de qualquer rede. Lê o formulário, normaliza e valida pelo schema de
  * `src/lib/`, e só então delega à porta — não conhece o provedor (aceites da
- * 4.1.3 e da 4.1.4). É o único executor do schema no repositório.
+ * 4.1.3 e da 4.1.4). Executa o schema junto da função (`lambda/contato/handler.ts`);
+ * `src/lib/contact-schema.ts` documenta os dois executores.
  */
 export function createContactIntake(send: ContactSender): ContactIntake {
   return async (formData) => {

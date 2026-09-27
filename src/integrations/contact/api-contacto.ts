@@ -23,11 +23,13 @@ export async function sha256Hex(text: string): Promise<string> {
 }
 
 /**
- * Adapter de `/api/contacto`: o único `fetch` do repositório (ADR-SITE-005).
- * Serializa o corpo uma vez e manda o hash desse texto exato: o OAC do
- * CloudFront assina a requisição à Function URL e a Lambda recusa payload
- * sem `x-amz-content-sha256` (spec D1). Mensagem de erro da função morre
- * aqui: quem chama recebe `sent` ou `failed`, nada mais.
+ * Adapter de `/api/contacto`: o único adapter e o único `fetch` de `src/`
+ * (ADR-SITE-005) — a função em `lambda/contato/` também tem um `fetch`, para
+ * o `siteverify` do Cloudflare; não é o único do repositório, só de `src/`
+ * (ver `CONTEXT.md`). Serializa o corpo uma vez e manda o hash desse texto
+ * exato: o OAC do CloudFront assina a requisição à Function URL e a Lambda
+ * recusa payload sem `x-amz-content-sha256` (spec D1). Mensagem de erro da
+ * função morre aqui: quem chama recebe `sent` ou `failed`, nada mais.
  */
 export function createApiContactoSender(): ContactSender {
   return async (message: ContactMessage) => {
