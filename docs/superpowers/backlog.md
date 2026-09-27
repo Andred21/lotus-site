@@ -588,17 +588,31 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   2026-09-26. Mesma classe de `D-27` e `D-32`.
   **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..cb06414`, ou decisão de
   João de dispensá-la.
-- **D-54 · sem rate limit dedicado em `/api/contacto`** — decisão de João em 2026-09-26 (D5 da spec
-  de `B2`): CloudFront Function não guarda estado, então a única opção era o WAF, a ~US$ 6/mês
-  fixos. A defesa atual é honeypot, Turnstile, revalidação pelo schema na função, o teto do SES
-  sandbox (200/dia, 1/s) e o teto de concorrência da conta (10). Pior caso: 200 mensagens de spam
-  por dia na caixa, a centavos.
+- **D-54 · sem rate limit dedicado em `/api/contacto`, e o honeypot não cobre o endpoint** —
+  decisão de João em 2026-09-26 (D5 da spec de `B2`): CloudFront Function não guarda estado, então
+  a única opção era o WAF, a ~US$ 6/mês fixos. O honeypot `botcheck` só existe no navegador: o
+  adapter (`src/integrations/contact/api-contacto.ts`) não manda o campo, e a função
+  (`lambda/contato/handler.ts`) trata a ausência como `''` — ele defende o formulário contra bot
+  simples, não o endpoint `/api/contacto` contra quem manda POST direto. A defesa real do endpoint
+  é Turnstile, revalidação pelo schema na função, o teto do SES sandbox (200/dia, 1/s) e o teto de
+  concorrência da conta (10). Pior caso não é só spam: esgotar a cota do SES sandbox (200 por 24 h,
+  janela móvel) ou a concorrência de 10 da conta **bloqueia mensagens legítimas** — é
+  indisponibilidade, não só um custo de centavos.
   **Gatilho:** primeiro abuso medido nos logs da função (`desfecho` repetido de um mesmo período),
-  ou pedido de production access do SES — o que vier antes.
-- **D-55 · o runtime `nodejs24.x` da função tem fim de suporte** — a AWS descontinua runtimes de
-  Node em ciclo; quando `nodejs24.x` entrar em deprecação, `update-function-code` continua mas
-  `deploy` do stack passa a reprovar.
-  **Gatilho:** aviso da AWS de descontinuação de `nodejs24.x`, ou a próxima troca de Node do
+  ou pedido de production access do SES — o que vier antes. Sensor sugerido: um metric filter do
+  CloudWatch com alarme para `desfecho` diferente de `enviado`, em vez de depender de alguém ler o
+  log.
+- **D-55 · o runtime `nodejs24.x` da função tem fim de suporte, em três datas, não uma** — a AWS
+  publica um cronograma de descontinuação de runtime em três datas, não uma: deprecação, bloqueio
+  de criação de função nova e bloqueio de atualização de função existente. Depois da deprecação,
+  `update-function-code` (o que o CI faz) continua funcionando; só depois do bloqueio de
+  atualização ele passa a reprovar — e só depois do bloqueio de criação que recriar o stack do zero
+  reprova. Para `nodejs24.x`, medido em 2026-09-27 na tabela "Supported runtimes" de
+  <https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html>: deprecação **30 de abril de
+  2028**, bloqueio de criação **1º de junho de 2028**, bloqueio de atualização **1º de julho de
+  2028**.
+  **Gatilho:** aviso da AWS de descontinuação de `nodejs24.x` (a política manda avisar por e-mail e
+  pelo Health Dashboard pelo menos 180 dias antes da deprecação), ou a próxima troca de Node do
   `.nvmrc` — o que vier antes. A troca é `Runtime` no template e `target` em
   `vite.lambda.config.ts`.
 - **D-56 · `Message-ID` e `Authentication-Results` da mensagem real de `B2` não foram coletados** —

@@ -158,8 +158,11 @@ O corpo acima não é reescrito. O que o bloco mediu e decidiu dentro dele, com 
   identidade verificada, e o destinatário é do domínio verificado. A PENDÊNCIA 3 sai.
 - **D5 — sem WAF; sem rate limit dedicado.** A opção "CloudFront Function contando por IP"
   desta ADR **não existe**: CloudFront Function não guarda estado entre requisições. Sobra o WAF,
-  a ~US$ 6/mês; João decidiu não criar agora. Defesa: honeypot, Turnstile, schema na função, teto
-  do sandbox (200/dia, 1/s), teto de concorrência da conta (10). Débito `D-54`.
+  a ~US$ 6/mês; João decidiu não criar agora. Defesa do endpoint: Turnstile, schema na função, teto
+  do sandbox (200/dia, 1/s), teto de concorrência da conta (10) — o honeypot é só do formulário no
+  navegador, a função nem recebe o campo `botcheck`. Pior caso inclui indisponibilidade: esgotar a
+  cota do SES sandbox ou a concorrência da conta bloqueia mensagem legítima, não só deixa passar
+  spam. Débito `D-54`.
 - **D6 — Turnstile como captcha.** Não previsto aqui. Cloudflare Turnstile em modo
   `interaction-only`, carregado só quando `#Contacto` se aproxima; site key pública no bundle,
   secret key no SSM (`/lotus-site/contato/turnstile-secret`), verificação na função antes de
