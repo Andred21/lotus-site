@@ -20,10 +20,11 @@ false}`, medido depois da mensagem real — suficiente porque o destinatário é
 ## G5 pendente com João
 
 As variáveis de repositório `AWS_CONTACT_FUNCTION` e `VITE_TURNSTILE_SITE_KEY`, em
-`Gatika-CL/lotus-site`, **não foram criadas**. Runbook §8.4. São obrigatórias antes do merge: sem
-`VITE_TURNSTILE_SITE_KEY` o `deploy` recusa o build (commit `fix(7.1.3)` do bloco de correções da
-review); sem `AWS_CONTACT_FUNCTION` o `deploy` publica o site e pula a função, com aviso, e o
-placeholder `503` fica no ar. A saída de `gh variable list --repo Gatika-CL/lotus-site`, só com os
+`Gatika-CL/lotus-site`, **não têm criação registrada** (runbook §8.4). São obrigatórias antes do
+merge: sem `VITE_TURNSTILE_SITE_KEY` o `deploy` recusa o build (commit `a22e5f7`); sem
+`AWS_CONTACT_FUNCTION` o `deploy` publica o site e pula a função, com aviso — a função no ar
+continua a publicada à mão a partir de `d5260cb`, e nenhuma mudança posterior em `lambda/contato/`
+chega a ela. A saída de `gh variable list --repo Gatika-CL/lotus-site`, só com os
 nomes das variáveis (nunca o valor da site key), entra nesta evidência, em commit próprio, antes de
 `/fechar-site`.
 
