@@ -19,6 +19,9 @@ entrega. A feature depende da porta, nunca do adapter.
 ## Adapter
 
 A implementação concreta de uma porta contra um provedor externo.
-`createWeb3FormsSender` em `src/integrations/contact/web3forms.ts` é o único do repositório, e o
-único lugar com `fetch`. Detalhe do provedor — código HTTP, corpo da resposta, mensagem de erro —
-morre dentro dele: quem chama recebe `sent` ou `failed`, nada mais.
+`createApiContactoSender` em `src/integrations/contact/api-contacto.ts` é o único adapter de
+`src/` e o único lugar de `src/` com `fetch`: faz `POST` para `/api/contacto`, mesma origem,
+servida pela distribuição do CloudFront à Lambda. (A Lambda em `lambda/contato/` também tem um
+`fetch`, para o `siteverify` do Cloudflare — não é o único `fetch` do repositório, só de `src/`.)
+Detalhe do provedor — código HTTP, corpo da resposta, mensagem de erro — morre dentro dele: quem
+chama recebe `sent` ou `failed`, nada mais.

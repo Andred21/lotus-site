@@ -133,9 +133,10 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Evidência exigida:** mensagem real chegando na caixa do Google Workspace; `/api/contacto`
   respondendo pela distribuição e a URL da função recusando chamada direta; nenhum segredo no
   bundle (`7.1.3` fecha por construção: a credencial é a role da função).
-- **Bloqueio externo:** production access do SES. Conta nova nasce em sandbox — 200 mensagens/dia e
-  só destinatário verificado —, e sair disso é ticket de suporte com espera. **Pedir no início de
-  `B1`, não aqui.**
+- **Bloqueio externo:** nenhum. Production access do SES não é necessário (D3 da spec).
+- **Entregue em 2026-09-26:** identidade SES verificada com Easy DKIM e MAIL FROM; seis registros
+  na zona; função `lotus-site-contato` atrás de `/api/contacto` por OAC; Turnstile; mensagem real
+  recebida em `contacto@` (evidência em `docs/infra/evidencia-contato-2026-09-26.md`).
 
 ## B3 · `7.2.2` — headers e hardening HTTP
 
@@ -143,6 +144,9 @@ um por vez, porque o harness admite um `active_work_item` só.
   `Referrer-Policy`, `Permissions-Policy` e `frame-ancestors` na `ResponseHeadersPolicy` de
   `infra/lotus-site.yaml`, que hoje declara só o `X-Robots-Tag`.
 - **Depende de `B2`:** a CSP precisa saber quem o formulário chama.
+- **O que a CSP precisa saber, medido em `B2`:** `connect-src 'self'` (o formulário chama
+  `/api/contacto` na mesma origem) e `challenges.cloudflare.com` em `script-src` e `frame-src` (o
+  Turnstile).
 - **Depende de `B1`:** HSTS só depois do domínio próprio servindo HTTPS estável — HSTS num domínio
   que ainda vai mudar é armadilha, não hardening.
 - **Evidência exigida:** `curl -sI` mostrando cada cabeçalho; `pnpm e2e` verde com a CSP ligada,
@@ -230,7 +234,9 @@ O que não avança por conta nossa.
    fechado.
 2. ~~**Export BIND da zona.**~~ Deixou de ser necessário: os prints do painel do StackCP, de
    2026-09-20, fecharam o inventário com a mesma autoridade. Ver `D-45`, fechado.
-3. **Production access do SES.** Prazo externo. Pedir no início de `B1` para não travar `B2`.
+3. ~~**Production access do SES.**~~ Não é necessário: sandbox só restringe destinatário a
+   identidade verificada, e `contacto@` é do domínio verificado (D3 da spec de `B2`, 2026-09-26).
+   Volta a ser necessário se o formulário um dia escrever a outro domínio.
 4. **Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
    da Sprint 2 e nunca feita. Nenhum gate a substitui — e hoje está travada por `D-30`.
 5. **Autorização de escrita no Notion.** Concedida em 2026-09-09 para registrar as decisões
@@ -313,14 +319,6 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   evitou o defeito por construção (par de seletor explícito referência/clone, `medirNo` reprova
   seletor que casa com zero ou mais de um nó) sem corrigir `extract-styles.mjs`. `D-16` continua
   aberto.
-- **D-17 · envio real do formulário não provado** — não existe conta nem access key do Web3Forms
-  nesta rodada (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
-  `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
-  no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
-  chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
-  **Reafirmado em 2026-08-29** (D5 da spec do bloco `6.1.1-6.3.1`): a homologação `6.3.1` também
-  fecha com o formulário como parcial declarado.
-  **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
 - **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
   `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
   markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
@@ -501,6 +499,10 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `spf.stackmail.com` e fora de `_spf.google.com` (medido em 2026-09-26). O include é funcional —
   uma caixa da StackMail, criada por João para a prova, envia com `SPF: PASS` por ele —; se alguém
   da empresa usa esse caminho não foi medido, e isso pesa na decisão de `B2`.
+  **Encolhido em 2026-09-26 (`B2`):** `_dmarc.lotusotec.cl` publica
+  `v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl`; o relatório agregado passa a chegar em
+  `contacto@`. Ficam em aberto o DKIM do Google Workspace (`google._domainkey`) e o
+  `include:spf.stackmail.com`.
   **Gatilho:** `B2`.
 
 - **D-47 · `7.2.1` fechou parcial: sem HTTPS servido** — o critério de
@@ -586,6 +588,30 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   2026-09-26. Mesma classe de `D-27` e `D-32`.
   **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..cb06414`, ou decisão de
   João de dispensá-la.
+- **D-54 · sem rate limit dedicado em `/api/contacto`** — decisão de João em 2026-09-26 (D5 da spec
+  de `B2`): CloudFront Function não guarda estado, então a única opção era o WAF, a ~US$ 6/mês
+  fixos. A defesa atual é honeypot, Turnstile, revalidação pelo schema na função, o teto do SES
+  sandbox (200/dia, 1/s) e o teto de concorrência da conta (10). Pior caso: 200 mensagens de spam
+  por dia na caixa, a centavos.
+  **Gatilho:** primeiro abuso medido nos logs da função (`desfecho` repetido de um mesmo período),
+  ou pedido de production access do SES — o que vier antes.
+- **D-55 · o runtime `nodejs24.x` da função tem fim de suporte** — a AWS descontinua runtimes de
+  Node em ciclo; quando `nodejs24.x` entrar em deprecação, `update-function-code` continua mas
+  `deploy` do stack passa a reprovar.
+  **Gatilho:** aviso da AWS de descontinuação de `nodejs24.x`, ou a próxima troca de Node do
+  `.nvmrc` — o que vier antes. A troca é `Runtime` no template e `target` em
+  `vite.lambda.config.ts`.
+- **D-56 · headers da mensagem real de `B2` não foram coletados** — a mensagem real (2026-09-26,
+  18h39 hora do Chile) chegou com `Message-ID`, `Authentication-Results`, `From` e `Reply-To` não
+  coletados: o destinatário da caixa só tinha o app do Gmail no celular no momento, que não tem
+  "Mostrar original". João aceitou a prova parcial como exceção declarada em 2026-09-27. O que fica
+  sem observar: `dkim=pass header.d=lotusotec.cl` e `spf=pass smtp.mailfrom=ses.lotusotec.cl` na
+  mensagem recebida — o lado do SES está provado (identidade `SUCCESS`/`SUCCESS`/`True` e as duas
+  notificações do AWS Health na evidência).
+  **Gatilho:** a próxima vez que João ou o destinatário abrir `contacto@lotusotec.cl` no Gmail
+  web — abrir aquela mensagem → "Mostrar original" → colar `Message-ID` e `Authentication-Results`
+  na evidência, em commit próprio; ou a próxima mensagem real, o que vier primeiro. `dkim=fail` ou
+  `spf=fail` ali é bug, não observação.
 
 ## Fechados
 
@@ -762,3 +788,15 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   o que está no ar. O commit vermelho `3cd9619` fica no histórico do corporativo de propósito.
   Continuam abertos, e este bloco não os toca: `D-35` (preview/produção), `D-37` (rollback sem
   botão) e `D-43` (janela entre invalidação e limpeza).
+- **D-17 · envio real do formulário não provado** — não existia conta nem access key do Web3Forms
+  (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
+  `src/integrations/contact/web3forms.ts` estava provado contra a API documentada — `fetch`
+  duplicado no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas
+  nenhuma mensagem chegava a uma caixa de entrada real, e o aceite da `4.1.7` fechava como parcial
+  declarado. Reafirmado em 2026-08-29 (D5 da spec do bloco `6.1.1-6.3.1`).
+  **Fechado em 2026-09-26.** Por substituição: o Web3Forms saiu (`ADR-SITE-005`) e a mensagem real
+  chegou em `contacto@lotusotec.cl` pelo SES, enviada pelo formulário servido pela distribuição —
+  `docs/infra/evidencia-contato-2026-09-26.md`: log da função `desfecho: enviado`, request id
+  `bfaa3d83-0bf6-4b13-b806-adc938a254b5`, 2026-09-26 21:39 UTC, chegada na caixa de `contacto@`
+  confirmada pelo destinatário da caixa. `Message-ID` e `Authentication-Results` não foram
+  coletados — exceção declarada, ver `D-56`.

@@ -134,3 +134,24 @@ feita na `ADR-SITE-002` e não mudou.
 - **A prova de aceite muda de natureza.** Deixa de ser "interceptei a chamada e ela tinha o formato
   certo" e passa a ser "a mensagem chegou na caixa". É a diferença entre `4.1.7` parcial e `4.1.7`
   fechada.
+
+## Emenda E1 — 2026-09-26, bloco `4.1.7+7.1.3+7.1.4`
+
+O corpo acima não é reescrito. O que o bloco mediu e decidiu dentro dele, com o detalhe na spec
+[`2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda-design.md`](../superpowers/specs/2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda-design.md):
+
+- **D1 — o POST pelo OAC exige hash do corpo calculado no navegador.** A documentação do
+  CloudFront exige `x-amz-content-sha256` em `POST` a Function URL por OAC; a Lambda não aceita
+  payload sem hash. O adapter calcula o SHA-256 com `crypto.subtle`, que só existe em contexto
+  seguro — sem ele, `unavailableContactIntake`. A ADR não previa isso. Duas
+  `AWS::Lambda::Permission` (`InvokeFunctionUrl` e `InvokeFunction`) são exigidas.
+- **D3 — production access do SES não é necessário.** Sandbox só restringe destinatário a
+  identidade verificada, e o destinatário é do domínio verificado. A PENDÊNCIA 3 sai.
+- **D5 — sem WAF; sem rate limit dedicado.** A opção "CloudFront Function contando por IP"
+  desta ADR **não existe**: CloudFront Function não guarda estado entre requisições. Sobra o WAF,
+  a ~US$ 6/mês; João decidiu não criar agora. Defesa: honeypot, Turnstile, schema na função, teto
+  do sandbox (200/dia, 1/s), teto de concorrência da conta (10). Débito `D-54`.
+- **D6 — Turnstile como captcha.** Não previsto aqui. Cloudflare Turnstile em modo
+  `interaction-only`, carregado só quando `#Contacto` se aproxima; site key pública no bundle,
+  secret key no SSM (`/lotus-site/contato/turnstile-secret`), verificação na função antes de
+  qualquer envio. Divergência intencional em relação ao WordPress, na matriz de paridade.
