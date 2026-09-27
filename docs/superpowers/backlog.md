@@ -628,6 +628,59 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   web — abrir aquela mensagem → "Mostrar original" → colar `Message-ID` e `Authentication-Results`
   na evidência, em commit próprio; ou a próxima mensagem real, o que vier primeiro. `dkim=fail` ou
   `spf=fail` ali é bug, não observação.
+- **D-57 · o `siteverify` não tem timeout, e o timeout da função é igual ao do navegador** —
+  achado M-4 da review final de 2026-09-27. `lambda/contato/turnstile.ts:31-35` chama o `fetch` do
+  `siteverify` sem `signal`; `infra/lotus-contato.yaml:139` fixa `Timeout: 10` na função, o mesmo
+  teto que `src/integrations/contact/api-contacto.ts:9` usa no navegador
+  (`CONTACT_SEND_TIMEOUT_MS = 10_000`). Um `siteverify` lento (∼9 s) seguido de SES bem-sucedido
+  termina depois de o navegador já ter abortado: o visitante vê "no pudimos enviar" para uma
+  mensagem que foi entregue, e reenvia — mensagem duplicada. Correção sugerida:
+  `signal: AbortSignal.timeout(4000)` no `siteverify` (vira `unavailable`), com o timeout do
+  navegador estritamente acima do da função (por exemplo 15 s).
+  **Gatilho:** primeira duplicata observada, ou próximo bloco que tocar `lambda/contato/turnstile.ts`.
+- **D-58 · o log descarta por inteiro o motivo da falha** — achado M-5 da review final de
+  2026-09-27. `lambda/contato/handler.ts:136-154` e `index.ts:34` só logam `requestId` e
+  `desfecho`: `captcha-indisponivel` não distingue SSM, status HTTP da Cloudflare e rede;
+  `ses-falhou` não diz qual erro do SES houve. O incidente do segredo inválido (evidência de
+  2026-09-26) precisou de CloudTrail e `curl` manual para ser diagnosticado. Correção sugerida:
+  acrescentar ao log um campo `motivo` só com códigos sem PII — `error.name` do SDK
+  (`MessageRejected`, `ThrottlingException`, `ParameterNotFound`), o status HTTP e os
+  `error-codes` do `siteverify`; nunca `error.message`, que no SES pode conter endereço de e-mail.
+  **Gatilho:** próximo incidente que precisar de diagnóstico manual, ou próximo bloco que tocar
+  `lambda/contato/handler.ts`.
+- **D-59 · a classificação do verificador do Turnstile depende só do status HTTP** — resto do M-6
+  da review final de 2026-09-27 (o teste do HTTP 400 já entrou no commit `fix(4.1.7)` de
+  `turnstile.test.ts`, desta rodada de correções). `lambda/contato/turnstile.ts:36-40`: uma
+  resposta `200` com `success:false` e `error-codes` `invalid-input-secret`,
+  `missing-input-secret` ou `internal-error` viraria `rejected` (403), mascarando configuração
+  errada como visitante recusado, quando deveria ser `unavailable` (502) como o caso já testado do
+  `400`. Correção sugerida: classificar esses três códigos como `unavailable` qualquer que seja o
+  status. Opcional: conferir `hostname` na resposta contra uma lista permitida, como defesa em
+  profundidade.
+  **Gatilho:** próximo bloco que tocar `lambda/contato/turnstile.ts`, ou configuração errada do
+  segredo observada em produção.
+- **D-60 · o captcha tem becos sem saída na interface** — achado M-7 da review final de
+  2026-09-27, três pontos em `src/components/sections/ContactForm.tsx:82-95`, `:118` e
+  `src/integrations/contact/turnstile.ts:57-61`: o `IntersectionObserver` desconecta na primeira
+  interseção e engole a falha de montagem, e o "a próxima montagem tenta de novo" do controlador é
+  código morto porque não há segunda montagem; com `challenges.cloudflare.com` bloqueado (bloqueador
+  de anúncio, proxy corporativo) o visitante recebe "Confirme que no es un robot." sem widget com
+  que interagir, sem saída; o `captcha?.reset()` depois de qualquer resultado que não seja `sent`
+  descarta um token que nunca foi usado, e um reenvio rápido cai no erro de captcha enquanto o
+  token novo é gerado. Correção sugerida: tentar `mount` de novo no submit quando não há token; se
+  a montagem rejeitou, devolver `failed` em vez do erro de campo; resetar só depois de `sent` ou
+  `failed`.
+  **Gatilho:** próximo bloco que tocar `ContactForm.tsx` ou `src/integrations/contact/turnstile.ts`,
+  ou reclamação real de visitante que não conseguiu enviar.
+- **D-61 · `nombre` e `empresa` aceitam CR/LF no servidor** — achado M-9 da review final de
+  2026-09-27. `src/lib/contact-schema.ts:62-69` não recusa `\r`/`\n` em `nombre` nem `empresa`, e
+  `lambda/contato/ses.ts:18-29` (`formatContactEmail`) monta o corpo do e-mail rotulando cada campo
+  numa linha própria: um POST direto com token válido pode pôr `"\nCorreo: gerente@cliente.cl"` em
+  `nombre` e forjar uma linha rotulada no corpo, enquanto o `Reply-To` continua apontando para o
+  e-mail real do remetente. **Não há injeção de cabeçalho**: o assunto é constante e o `Reply-To` é
+  e-mail validado pelo zod. Correção sugerida: recusar `[\r\n]` em `nombre` e `empresa` no schema
+  compartilhado, ou colapsar espaço em branco antes de formatar o corpo.
+  **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `lambda/contato/ses.ts`.
 
 ## Fechados
 
