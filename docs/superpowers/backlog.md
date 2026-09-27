@@ -601,13 +601,15 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   **Gatilho:** aviso da AWS de descontinuação de `nodejs24.x`, ou a próxima troca de Node do
   `.nvmrc` — o que vier antes. A troca é `Runtime` no template e `target` em
   `vite.lambda.config.ts`.
-- **D-56 · headers da mensagem real de `B2` não foram coletados** — a mensagem real (2026-09-26,
-  18h39 hora do Chile) chegou com `Message-ID`, `Authentication-Results`, `From` e `Reply-To` não
-  coletados: o destinatário da caixa só tinha o app do Gmail no celular no momento, que não tem
-  "Mostrar original". João aceitou a prova parcial como exceção declarada em 2026-09-27. O que fica
-  sem observar: `dkim=pass header.d=lotusotec.cl` e `spf=pass smtp.mailfrom=ses.lotusotec.cl` na
-  mensagem recebida — o lado do SES está provado (identidade `SUCCESS`/`SUCCESS`/`True` e as duas
-  notificações do AWS Health na evidência).
+- **D-56 · `Message-ID` e `Authentication-Results` da mensagem real de `B2` não foram coletados** —
+  a mensagem real (2026-09-26, 18h39 hora do Chile) chegou sem o `Message-ID` e sem a linha
+  `Authentication-Results` guardados: o destinatário da caixa só tinha o app do Gmail no celular no
+  momento, que não tem "Mostrar original". O nome de exibição do remetente ("Sitio Lotus OTEC") foi
+  visto no próprio app, e o `Reply-To` ficou provado por comportamento — a resposta do destinatário
+  chegou no endereço digitado no formulário. João aceitou a prova parcial como exceção declarada em
+  2026-09-27. O que fica sem observar: `dkim=pass header.d=lotusotec.cl` e
+  `spf=pass smtp.mailfrom=ses.lotusotec.cl` na mensagem recebida — o lado do SES está provado
+  (identidade `SUCCESS`/`SUCCESS`/`True` e as duas notificações do AWS Health na evidência).
   **Gatilho:** a próxima vez que João ou o destinatário abrir `contacto@lotusotec.cl` no Gmail
   web — abrir aquela mensagem → "Mostrar original" → colar `Message-ID` e `Authentication-Results`
   na evidência, em commit próprio; ou a próxima mensagem real, o que vier primeiro. `dkim=fail` ou
@@ -788,12 +790,14 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   o que está no ar. O commit vermelho `3cd9619` fica no histórico do corporativo de propósito.
   Continuam abertos, e este bloco não os toca: `D-35` (preview/produção), `D-37` (rollback sem
   botão) e `D-43` (janela entre invalidação e limpeza).
-- **D-17 · envio real do formulário não provado** — não existia conta nem access key do Web3Forms
-  (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
-  `src/integrations/contact/web3forms.ts` estava provado contra a API documentada — `fetch`
-  duplicado no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas
-  nenhuma mensagem chegava a uma caixa de entrada real, e o aceite da `4.1.7` fechava como parcial
-  declarado. Reafirmado em 2026-08-29 (D5 da spec do bloco `6.1.1-6.3.1`).
+- **D-17 · envio real do formulário não provado** — não existe conta nem access key do Web3Forms
+  nesta rodada (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
+  `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
+  no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
+  chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
+  **Reafirmado em 2026-08-29** (D5 da spec do bloco `6.1.1-6.3.1`): a homologação `6.3.1` também
+  fecha com o formulário como parcial declarado.
+  **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
   **Fechado em 2026-09-26.** Por substituição: o Web3Forms saiu (`ADR-SITE-005`) e a mensagem real
   chegou em `contacto@lotusotec.cl` pelo SES, enviada pelo formulário servido pela distribuição —
   `docs/infra/evidencia-contato-2026-09-26.md`: log da função `desfecho: enviado`, request id
