@@ -62,6 +62,15 @@ describe('createTurnstileVerifier', () => {
     )
   })
 
+  it('HTTP 400 com invalid-input-secret é unavailable (observado ao vivo no incidente do segredo v1)', async () => {
+    const resposta = jsonResponse(
+      { success: false, 'error-codes': ['invalid-input-secret'] },
+      400,
+    )
+
+    expect(await verificador(resposta).verify('t')).toBe('unavailable')
+  })
+
   it('segredo indisponível é unavailable, e a Cloudflare nem é chamada', async () => {
     const { fetchSpy, verify } = verificador(
       jsonResponse({ success: true }),
