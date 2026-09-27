@@ -121,26 +121,28 @@ describe('createHandler — antes do captcha', () => {
 
   it('payload válido no máximo do schema não dá 413', async () => {
     const d = deps()
-    // Cada campo no teto de contact-fields.ts/contact-schema.ts. `mensaje`
-    // usa `\u0001` -- caractere de controle que o schema aceita (nenhuma
-    // regra o recusa) e que o JSON escapa em 6 bytes ASCII (`\`, `u`, quatro
-    // hex): a forma mais longa de escrever 1 caractere, e por isso o pior
-    // caso real de tamanho. `email` no teto de 254 com um local-part de 64
-    // (RFC 5321) mais domínio para completar. `captcha` não tem teto no
-    // schema; 2048 é o tamanho documentado do token do Turnstile, usado aqui
-    // como estimativa do pior caso real (M-8 da review de 2026-09-27).
+    // Cada campo no teto de contact-fields.ts/contact-schema.ts. `nombre`,
+    // `empresa` e `mensaje` usam `\u0001` -- caractere de controle que o
+    // schema aceita nos três (nenhuma regra o recusa) e que o JSON escapa em
+    // 6 bytes ASCII (`\`, `u`, quatro hex): a forma mais longa de escrever 1
+    // caractere, e por isso o pior caso real de tamanho. `email` no teto de
+    // 254 com um local-part de 64 (RFC 5321) mais domínio para completar.
+    // `captcha` não tem teto no schema; 2048 é o tamanho documentado do token
+    // do Turnstile, usado aqui como estimativa do pior caso real (M-8 da
+    // review de 2026-09-27).
     const emailMaximo = `${'a'.repeat(64)}@${'b'.repeat(186)}.co`
     const payload = {
-      nombre: 'a'.repeat(80),
+      nombre: '\u0001'.repeat(80),
       email: emailMaximo,
-      empresa: 'a'.repeat(80),
+      empresa: '\u0001'.repeat(80),
       mensaje: '\u0001'.repeat(2000),
       captcha: 'a'.repeat(2048),
     }
     const corpo = JSON.stringify(payload)
 
-    // Medido: 14525 bytes -- ver o relatório do commit E. Abaixo do teto de
-    // 16 KB (16384 bytes), com folga de pouco menos de 2 KB.
+    // Medido: 15325 bytes. Abaixo do teto de 16 KB (16384 bytes), com folga
+    // de 1059 bytes.
+    expect(Buffer.byteLength(corpo, 'utf8')).toBe(15325)
     expect(Buffer.byteLength(corpo, 'utf8')).toBeLessThan(MAX_BODY_BYTES)
 
     const resposta = await createHandler(d)(evento({ body: corpo }))

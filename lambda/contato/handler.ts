@@ -49,9 +49,10 @@ export type ContactHandlerDeps = {
 }
 
 /**
- * Teto do corpo (spec §4). O maior payload válido, no teto de cada campo do
- * schema, mede 14525 bytes (~14,2 KB; medido em `handler.test.ts`) — folga de
- * 1859 bytes até este teto.
+ * Teto do corpo (spec §4). O maior payload válido, com cada campo no teto do
+ * schema, no escape JSON mais longo, e o token do Turnstile nos 2048
+ * documentados, mede 15325 bytes (medido em `handler.test.ts`) — folga de
+ * 1059 bytes até este teto.
  */
 export const MAX_BODY_BYTES = 16 * 1024
 
