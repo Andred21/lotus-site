@@ -199,6 +199,22 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
+      # Site key ausente vira bundle publicado sem Turnstile: o intake cai em
+      # unavailableContactIntake e o formulário de produção passa a falhar
+      # sempre, sem nenhum aviso no run. Build sem chave é caminho legítimo só
+      # em PR (comentário do passo Build, abaixo); no deploy ela é sempre
+      # defeito. Por isso este passo FALHA -- e não só avisa, como o passo da
+      # função faz para AWS_CONTACT_FUNCTION ausente -- porque aqui não há
+      # placeholder que sirva de rede de segurança.
+      - name: Recusar deploy sem a site key do Turnstile
+        env:
+          SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+        run: |
+          if [ -z "$SITE_KEY" ]; then
+            echo "::error::VITE_TURNSTILE_SITE_KEY não está definida como variável de repositório. Sem ela o formulário de produção falha sempre, em silêncio. Defina a variável antes deste deploy."
+            exit 1
+          fi
+
       # O mesmo `pnpm build` que roda em PR, com uma diferenca declarada: a
       # site key do Turnstile, configuracao PUBLICA que entra no bundle (spec
       # D6). Em PR ela nao existe e o formulario cai no caminho de envio

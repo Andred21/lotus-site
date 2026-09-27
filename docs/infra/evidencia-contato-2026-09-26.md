@@ -17,6 +17,16 @@ SES segue em sandbox: `get-account` devolveu `{"Envios24h": 1.0, "Max24h": 200.0
 false}`, medido depois da mensagem real — suficiente porque o destinatário é do domínio verificado
 (`D3` da spec).
 
+## G5 pendente com João
+
+As variáveis de repositório `AWS_CONTACT_FUNCTION` e `VITE_TURNSTILE_SITE_KEY`, em
+`Gatika-CL/lotus-site`, **não foram criadas**. Runbook §8.4. São obrigatórias antes do merge: sem
+`VITE_TURNSTILE_SITE_KEY` o `deploy` recusa o build (commit `fix(7.1.3)` do bloco de correções da
+review); sem `AWS_CONTACT_FUNCTION` o `deploy` publica o site e pula a função, com aviso, e o
+placeholder `503` fica no ar. A saída de `gh variable list --repo Gatika-CL/lotus-site`, só com os
+nomes das variáveis (nunca o valor da site key), entra nesta evidência, em commit próprio, antes de
+`/fechar-site`.
+
 ## Task 10 — segunda volta
 
 Sem commit próprio — fica registrado aqui porque é o único rastro desta segunda volta pela infra,
@@ -117,7 +127,7 @@ não foram observados e não são afirmados aqui.
 - `Message-ID`, `Date`, `From`, `Reply-To` e a linha `Authentication-Results` da mensagem real:
   **não coletados.** O destinatário só tinha o app de e-mail do celular no momento, sem a opção
   "Mostrar original". João aceitou a prova parcial como exceção declarada em 2026-09-27; vira
-  débito `D-56` (registrado na Task 12; o revisor Codex será avisado).
+  débito `D-56` (registrado na Task 12).
 
 Provas negativas (2026-09-26, ~21:53 UTC):
 
