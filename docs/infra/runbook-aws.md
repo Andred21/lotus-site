@@ -63,7 +63,15 @@ tê-lo criado —, o deploy falha com `EntityAlreadyExists`. Nesse caso não cri
 recurso existente ou pule este stack; o provedor é um por conta e o stack do site não depende do
 export dele.
 
+Com `B2`, existe um terceiro stack, `lotus-contato` (§8): ele entra **antes** do `lotus-site`,
+porque este consome os outputs daquele (`DominioDaFuncaoDeContato`, `ArnDaFuncaoDeContato`) como
+parâmetro.
+
 ## 3. Stack do site
+
+Desde `B2`, `lotus-site.yaml` também exige `DominioDaFuncaoDeContato` e `ArnDaFuncaoDeContato`, sem
+`Default`: um create do zero, como o comando abaixo, sem os dois parâmetros, reprova com "must have
+values" — eles vêm dos outputs do `lotus-contato` (§8.3), que por isso precisa existir primeiro.
 
 ```bash
 aws cloudformation validate-template \
@@ -401,6 +409,10 @@ vez.
 
 ## 7. Desmonte
 
+Com `B2`, o stack `lotus-contato` (§8) também existe: derrube este (`lotus-site`) primeiro — a
+ordem inversa da 8.5.5 — e só depois `lotus-contato`, senão `ControleDeAcessoDaFuncao` e
+`PermissaoDeUrl` ficam órfãos.
+
 ```bash
 aws cloudformation delete-stack --stack-name lotus-site
 aws cloudformation wait stack-delete-complete --stack-name lotus-site
@@ -476,6 +488,12 @@ aws ssm describe-parameters --region sa-east-1 \
 `describe-parameters` mostra nome e tipo, nunca o valor. **Nunca** rode `get-parameter
 --with-decryption` num terminal compartilhado ou numa sessão com o agente. Trocar o segredo é
 `put-parameter --overwrite` com o mesmo nome; a função lê o valor a cada cold start.
+
+Trocar o parâmetro não basta: instância quente continua servindo com o valor antigo em memória (o
+leitor cacheia por cold start, spec D7) — foi o desvio 3 da evidência de 2026-09-26, que só passou a
+recusar token inválido depois de um segundo `update-function-code`. Depois de qualquer
+`put-parameter --overwrite`, force o cold start reexecutando a §8.5 com o **mesmo** zip (mesmo
+`CodeSha256`, nenhuma mudança de código) — é o procedimento já provado.
 
 ### 8.1 Primeira volta: só a identidade
 
@@ -570,8 +588,10 @@ aws cloudformation deploy --region sa-east-1 \
 ```
 
 Change set esperado: `Add` para `ControleDeAcessoDaFuncao`, `PermissaoDeUrl` e
-`PermissaoDeInvocacao`; `Modify` sem `Replacement` para `Distribuicao`, `PapelDeDeploy` e `Teto`.
-`Balde` e `PoliticaDoBalde` **não** aparecem. Execute e espere a distribuição propagar:
+`PermissaoDeInvocacao`; `Modify` sem `Replacement` para `Distribuicao` e `PapelDeDeploy`; `Teto`
+aparece `Replacement: Conditional` (`CostFilters` mudou) e é atualizado no lugar, mesmo
+`PhysicalId` `lotus-site-teto` — medido em `docs/infra/evidencia-contato-2026-09-26.md`. `Balde` e
+`PoliticaDoBalde` **não** aparecem. Execute e espere a distribuição propagar:
 
 ```bash
 aws cloudformation wait stack-update-complete --region sa-east-1 --stack-name lotus-site
