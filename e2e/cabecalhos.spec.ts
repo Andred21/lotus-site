@@ -24,12 +24,19 @@ const NOMES_ESPERADOS = [
 const SUCCESS =
   'Gracias. Recibimos su mensaje y le contactaremos a la brevedad.'
 
-// A sonda `allowsEval` do zod (`Function('')` dentro de try/catch) roda
-// quando `contactSchema = z.object({...})` é construído em
-// `src/lib/contact-schema.ts`, ou seja, na carga do bundle — não no envio do
-// formulário. A CSP a recusa: o zod cai no caminho sem eval, sem erro de
-// console, e o envio (quando ocorre) chega ao sucesso. Tolerada só ela, pelo
-// nome; tirar a sonda (`z.config({ jitless: true })` em `src/`) é o `D-62`.
+// A sonda `allowsEval` do zod é um getter cacheado (`node_modules/.pnpm/
+// zod@4.4.3/node_modules/zod/v4/core/util.js:145-163`), lido uma única vez
+// no construtor de `$ZodObjectJIT` (`schemas.js:971-972`) quando
+// `contactSchema = z.object({...})` é montado em `src/lib/contact-schema.ts`
+// — ou seja, na carga do bundle, não no envio do formulário. Por ser
+// cacheado, dispara exatamente uma vez por carregamento de página. A CSP a
+// recusa: o zod cai no caminho sem eval, sem erro de console, e o envio
+// (quando ocorre) chega ao sucesso. A jornada abaixo faz um único
+// `page.goto`, então a lista de violações tem que ser exatamente esta sonda,
+// uma vez — nem zero (a sonda sumiu, ou parou de rodar) nem mais de uma
+// (outro eval entrou, ou a jornada passou a recarregar a página); qualquer
+// uma dessas mudanças precisa revisitar esta tolerância. Tirar a sonda
+// (`z.config({ jitless: true })` em `src/`) é o `D-62`.
 const SONDA_DO_ZOD = 'script-src: eval'
 
 type JanelaVigiada = { violacoesDeCsp: string[]; furoDeCsp?: boolean }
@@ -94,9 +101,10 @@ test('a jornada completa e o envio do formulário passam sob a CSP', async ({
   await page.getByRole('button', { name: 'Enviar' }).click()
   await expect(page.getByRole('status')).toHaveText(SUCCESS)
 
-  expect(
-    (await violacoes(page)).filter((linha) => linha !== SONDA_DO_ZOD),
-  ).toEqual([])
+  // Só a sonda do zod, exatamente uma vez — nunca zero (some, precisa
+  // revisitar), nunca mais de uma (outro eval, ou mais de uma carga de
+  // página nesta jornada).
+  expect(await violacoes(page)).toEqual([SONDA_DO_ZOD])
   expect(errosDeConsole).toEqual([])
 })
 
