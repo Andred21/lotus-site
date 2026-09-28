@@ -133,9 +133,10 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Evidência exigida:** mensagem real chegando na caixa do Google Workspace; `/api/contacto`
   respondendo pela distribuição e a URL da função recusando chamada direta; nenhum segredo no
   bundle (`7.1.3` fecha por construção: a credencial é a role da função).
-- **Bloqueio externo:** production access do SES. Conta nova nasce em sandbox — 200 mensagens/dia e
-  só destinatário verificado —, e sair disso é ticket de suporte com espera. **Pedir no início de
-  `B1`, não aqui.**
+- **Bloqueio externo:** nenhum. Production access do SES não é necessário (D3 da spec).
+- **Entregue em 2026-09-26:** identidade SES verificada com Easy DKIM e MAIL FROM; seis registros
+  na zona; função `lotus-site-contato` atrás de `/api/contacto` por OAC; Turnstile; mensagem real
+  recebida em `contacto@` (evidência em `docs/infra/evidencia-contato-2026-09-26.md`).
 
 ## B3 · `7.2.2` — headers e hardening HTTP
 
@@ -143,6 +144,9 @@ um por vez, porque o harness admite um `active_work_item` só.
   `Referrer-Policy`, `Permissions-Policy` e `frame-ancestors` na `ResponseHeadersPolicy` de
   `infra/lotus-site.yaml`, que hoje declara só o `X-Robots-Tag`.
 - **Depende de `B2`:** a CSP precisa saber quem o formulário chama.
+- **O que a CSP precisa saber, medido em `B2`:** `connect-src 'self'` (o formulário chama
+  `/api/contacto` na mesma origem) e `challenges.cloudflare.com` em `script-src` e `frame-src` (o
+  Turnstile).
 - **Depende de `B1`:** HSTS só depois do domínio próprio servindo HTTPS estável — HSTS num domínio
   que ainda vai mudar é armadilha, não hardening.
 - **Evidência exigida:** `curl -sI` mostrando cada cabeçalho; `pnpm e2e` verde com a CSP ligada,
@@ -230,7 +234,9 @@ O que não avança por conta nossa.
    fechado.
 2. ~~**Export BIND da zona.**~~ Deixou de ser necessário: os prints do painel do StackCP, de
    2026-09-20, fecharam o inventário com a mesma autoridade. Ver `D-45`, fechado.
-3. **Production access do SES.** Prazo externo. Pedir no início de `B1` para não travar `B2`.
+3. ~~**Production access do SES.**~~ Não é necessário: sandbox só restringe destinatário a
+   identidade verificada, e `contacto@` é do domínio verificado (D3 da spec de `B2`, 2026-09-26).
+   Volta a ser necessário se o formulário um dia escrever a outro domínio.
 4. **Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
    da Sprint 2 e nunca feita. Nenhum gate a substitui — e hoje está travada por `D-30`.
 5. **Autorização de escrita no Notion.** Concedida em 2026-09-09 para registrar as decisões
@@ -313,14 +319,6 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   evitou o defeito por construção (par de seletor explícito referência/clone, `medirNo` reprova
   seletor que casa com zero ou mais de um nó) sem corrigir `extract-styles.mjs`. `D-16` continua
   aberto.
-- **D-17 · envio real do formulário não provado** — não existe conta nem access key do Web3Forms
-  nesta rodada (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
-  `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
-  no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
-  chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
-  **Reafirmado em 2026-08-29** (D5 da spec do bloco `6.1.1-6.3.1`): a homologação `6.3.1` também
-  fecha com o formulário como parcial declarado.
-  **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
 - **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
   `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
   markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
@@ -501,6 +499,10 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `spf.stackmail.com` e fora de `_spf.google.com` (medido em 2026-09-26). O include é funcional —
   uma caixa da StackMail, criada por João para a prova, envia com `SPF: PASS` por ele —; se alguém
   da empresa usa esse caminho não foi medido, e isso pesa na decisão de `B2`.
+  **Encolhido em 2026-09-26 (`B2`):** `_dmarc.lotusotec.cl` publica
+  `v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl`; o relatório agregado passa a chegar em
+  `contacto@`. Ficam em aberto o DKIM do Google Workspace (`google._domainkey`) e o
+  `include:spf.stackmail.com`.
   **Gatilho:** `B2`.
 
 - **D-47 · `7.2.1` fechou parcial: sem HTTPS servido** — o critério de
@@ -586,6 +588,99 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   2026-09-26. Mesma classe de `D-27` e `D-32`.
   **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..cb06414`, ou decisão de
   João de dispensá-la.
+- **D-54 · sem rate limit dedicado em `/api/contacto`, e o honeypot não cobre o endpoint** —
+  decisão de João em 2026-09-26 (D5 da spec de `B2`): CloudFront Function não guarda estado, então
+  a única opção era o WAF, a ~US$ 6/mês fixos. O honeypot `botcheck` só existe no navegador: o
+  adapter (`src/integrations/contact/api-contacto.ts`) não manda o campo, e a função
+  (`lambda/contato/handler.ts`) trata a ausência como `''` — ele defende o formulário contra bot
+  simples, não o endpoint `/api/contacto` contra quem manda POST direto. A defesa real do endpoint
+  é Turnstile, revalidação pelo schema na função, o teto do SES sandbox (200/dia, 1/s) e o teto de
+  concorrência da conta (10). Pior caso não é só spam: esgotar a cota do SES sandbox (200 por 24 h,
+  janela móvel) ou a concorrência de 10 da conta **bloqueia mensagens legítimas** — é
+  indisponibilidade, não só um custo de centavos.
+  **Gatilho:** primeiro abuso medido nos logs da função (`desfecho` repetido de um mesmo período),
+  ou pedido de production access do SES — o que vier antes. Sensor sugerido: um metric filter do
+  CloudWatch com alarme para `desfecho` diferente de `enviado`, em vez de depender de alguém ler o
+  log.
+- **D-55 · o runtime `nodejs24.x` da função tem fim de suporte, em três datas, não uma** — a AWS
+  publica um cronograma de descontinuação de runtime em três datas, não uma: deprecação, bloqueio
+  de criação de função nova e bloqueio de atualização de função existente. Depois da deprecação,
+  `update-function-code` (o que o CI faz) continua funcionando; só depois do bloqueio de
+  atualização ele passa a reprovar — e só depois do bloqueio de criação que recriar o stack do zero
+  reprova. Para `nodejs24.x`, medido em 2026-09-27 na tabela "Supported runtimes" de
+  <https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html>: deprecação **30 de abril de
+  2028**, bloqueio de criação **1º de junho de 2028**, bloqueio de atualização **1º de julho de
+  2028**.
+  **Gatilho:** aviso da AWS de descontinuação de `nodejs24.x` (a política manda avisar por e-mail e
+  pelo Health Dashboard pelo menos 180 dias antes da deprecação), ou a próxima troca de Node do
+  `.nvmrc` — o que vier antes. A troca é `Runtime` no template e `target` em
+  `vite.lambda.config.ts`.
+- **D-56 · `Message-ID` e `Authentication-Results` da mensagem real de `B2` não foram coletados** —
+  a mensagem real (2026-09-26, 18h39 hora do Chile) chegou sem o `Message-ID` e sem a linha
+  `Authentication-Results` guardados: o destinatário da caixa só tinha o app do Gmail no celular no
+  momento, que não tem "Mostrar original". O nome de exibição do remetente ("Sitio Lotus OTEC") foi
+  visto no próprio app, e o `Reply-To` ficou provado por comportamento — a resposta do destinatário
+  chegou no endereço digitado no formulário. João aceitou a prova parcial como exceção declarada em
+  2026-09-27. O que fica sem observar: `dkim=pass header.d=lotusotec.cl` e
+  `spf=pass smtp.mailfrom=ses.lotusotec.cl` na mensagem recebida — o lado do SES está provado
+  (identidade `SUCCESS`/`SUCCESS`/`True` e as duas notificações do AWS Health na evidência).
+  **Gatilho:** a próxima vez que João ou o destinatário abrir `contacto@lotusotec.cl` no Gmail
+  web — abrir aquela mensagem → "Mostrar original" → colar `Message-ID` e `Authentication-Results`
+  na evidência, em commit próprio; ou a próxima mensagem real, o que vier primeiro. `dkim=fail` ou
+  `spf=fail` ali é bug, não observação.
+- **D-57 · o `siteverify` não tem timeout, e o timeout da função é igual ao do navegador** —
+  achado M-4 da review final de 2026-09-27. `lambda/contato/turnstile.ts:31-35` chama o `fetch` do
+  `siteverify` sem `signal`; `infra/lotus-contato.yaml:139` fixa `Timeout: 10` na função, o mesmo
+  teto que `src/integrations/contact/api-contacto.ts:9` usa no navegador
+  (`CONTACT_SEND_TIMEOUT_MS = 10_000`). Um `siteverify` lento (∼9 s) seguido de SES bem-sucedido
+  termina depois de o navegador já ter abortado: o visitante vê "no pudimos enviar" para uma
+  mensagem que foi entregue, e reenvia — mensagem duplicada. Correção sugerida:
+  `signal: AbortSignal.timeout(4000)` no `siteverify` (vira `unavailable`), com o timeout do
+  navegador estritamente acima do da função (por exemplo 15 s).
+  **Gatilho:** primeira duplicata observada, ou próximo bloco que tocar `lambda/contato/turnstile.ts`.
+- **D-58 · o log descarta por inteiro o motivo da falha** — achado M-5 da review final de
+  2026-09-27. `lambda/contato/handler.ts:136-154` e `index.ts:34` só logam `requestId` e
+  `desfecho`: `captcha-indisponivel` não distingue SSM, status HTTP da Cloudflare e rede;
+  `ses-falhou` não diz qual erro do SES houve. O incidente do segredo inválido (evidência de
+  2026-09-26) precisou de CloudTrail e `curl` manual para ser diagnosticado. Correção sugerida:
+  acrescentar ao log um campo `motivo` só com códigos sem PII — `error.name` do SDK
+  (`MessageRejected`, `ThrottlingException`, `ParameterNotFound`), o status HTTP e os
+  `error-codes` do `siteverify`; nunca `error.message`, que no SES pode conter endereço de e-mail.
+  **Gatilho:** próximo incidente que precisar de diagnóstico manual, ou próximo bloco que tocar
+  `lambda/contato/handler.ts`.
+- **D-59 · a classificação do verificador do Turnstile depende só do status HTTP** — resto do M-6
+  da review final de 2026-09-27 (o teste do HTTP 400 já entrou no commit `fix(4.1.7)` de
+  `turnstile.test.ts`, desta rodada de correções). `lambda/contato/turnstile.ts:36-40`: uma
+  resposta `200` com `success:false` e `error-codes` `invalid-input-secret`,
+  `missing-input-secret` ou `internal-error` viraria `rejected` (403), mascarando configuração
+  errada como visitante recusado, quando deveria ser `unavailable` (502) como o caso já testado do
+  `400`. Correção sugerida: classificar esses três códigos como `unavailable` qualquer que seja o
+  status. Opcional: conferir `hostname` na resposta contra uma lista permitida, como defesa em
+  profundidade.
+  **Gatilho:** próximo bloco que tocar `lambda/contato/turnstile.ts`, ou configuração errada do
+  segredo observada em produção.
+- **D-60 · o captcha tem becos sem saída na interface** — achado M-7 da review final de
+  2026-09-27, três pontos em `src/components/sections/ContactForm.tsx:82-95`, `:118` e
+  `src/integrations/contact/turnstile.ts:57-61`: o `IntersectionObserver` desconecta na primeira
+  interseção e engole a falha de montagem, e o "a próxima montagem tenta de novo" do controlador é
+  código morto porque não há segunda montagem; com `challenges.cloudflare.com` bloqueado (bloqueador
+  de anúncio, proxy corporativo) o visitante recebe "Confirme que no es un robot." sem widget com
+  que interagir, sem saída; o `captcha?.reset()` depois de qualquer resultado que não seja `sent`
+  descarta um token que nunca foi usado, e um reenvio rápido cai no erro de captcha enquanto o
+  token novo é gerado. Correção sugerida: tentar `mount` de novo no submit quando não há token; se
+  a montagem rejeitou, devolver `failed` em vez do erro de campo; resetar só depois de `sent` ou
+  `failed`.
+  **Gatilho:** próximo bloco que tocar `ContactForm.tsx` ou `src/integrations/contact/turnstile.ts`,
+  ou reclamação real de visitante que não conseguiu enviar.
+- **D-61 · `nombre` e `empresa` aceitam CR/LF no servidor** — achado M-9 da review final de
+  2026-09-27. `src/lib/contact-schema.ts:62-69` não recusa `\r`/`\n` em `nombre` nem `empresa`, e
+  `lambda/contato/ses.ts:18-29` (`formatContactEmail`) monta o corpo do e-mail rotulando cada campo
+  numa linha própria: um POST direto com token válido pode pôr `"\nCorreo: gerente@cliente.cl"` em
+  `nombre` e forjar uma linha rotulada no corpo, enquanto o `Reply-To` continua apontando para o
+  e-mail real do remetente. **Não há injeção de cabeçalho**: o assunto é constante e o `Reply-To` é
+  e-mail validado pelo zod. Correção sugerida: recusar `[\r\n]` em `nombre` e `empresa` no schema
+  compartilhado, ou colapsar espaço em branco antes de formatar o corpo.
+  **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `lambda/contato/ses.ts`.
 
 ## Fechados
 
@@ -762,3 +857,17 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   o que está no ar. O commit vermelho `3cd9619` fica no histórico do corporativo de propósito.
   Continuam abertos, e este bloco não os toca: `D-35` (preview/produção), `D-37` (rollback sem
   botão) e `D-43` (janela entre invalidação e limpeza).
+- **D-17 · envio real do formulário não provado** — não existe conta nem access key do Web3Forms
+  nesta rodada (decisão de João em 2026-08-27, D6 da spec do bloco `4.1.1-4.1.10`). O adapter
+  `src/integrations/contact/web3forms.ts` está provado contra a API documentada — `fetch` duplicado
+  no teste unitário e `page.route` interceptando `api.web3forms.com` no E2E —, mas nenhuma mensagem
+  chegou a uma caixa de entrada real, e o aceite da `4.1.7` fecha como **parcial declarado**.
+  **Reafirmado em 2026-08-29** (D5 da spec do bloco `6.1.1-6.3.1`): a homologação `6.3.1` também
+  fecha com o formulário como parcial declarado.
+  **Gatilho:** quando João criar a conta, antes de `7.1.4` e do go-live.
+  **Fechado em 2026-09-26.** Por substituição: o Web3Forms saiu (`ADR-SITE-005`) e a mensagem real
+  chegou em `contacto@lotusotec.cl` pelo SES, enviada pelo formulário servido pela distribuição —
+  `docs/infra/evidencia-contato-2026-09-26.md`: log da função `desfecho: enviado`, request id
+  `bfaa3d83-0bf6-4b13-b806-adc938a254b5`, 2026-09-26 21:39 UTC, chegada na caixa de `contacto@`
+  confirmada pelo destinatário da caixa. `Message-ID` e `Authentication-Results` não foram
+  coletados — exceção declarada, ver `D-56`.

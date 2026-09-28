@@ -134,3 +134,47 @@ feita na `ADR-SITE-002` e não mudou.
 - **A prova de aceite muda de natureza.** Deixa de ser "interceptei a chamada e ela tinha o formato
   certo" e passa a ser "a mensagem chegou na caixa". É a diferença entre `4.1.7` parcial e `4.1.7`
   fechada.
+
+## Emenda E1 — 2026-09-26, bloco `4.1.7+7.1.3+7.1.4`
+
+O corpo acima não é reescrito. O que o bloco mediu e decidiu dentro dele, com o detalhe na spec
+[`2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda-design.md`](../superpowers/specs/2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda-design.md):
+
+- **D1 — o POST pelo OAC exige hash do corpo calculado no navegador.** A documentação do
+  CloudFront exige `x-amz-content-sha256` em `POST` a Function URL por OAC; a Lambda não aceita
+  payload sem hash. O adapter calcula o SHA-256 com `crypto.subtle`, que só existe em contexto
+  seguro — sem ele, `unavailableContactIntake`. A ADR não previa isso. Duas
+  `AWS::Lambda::Permission` (`InvokeFunctionUrl` e `InvokeFunction`) são exigidas. Isso também
+  revoga "`unavailableContactSender` continua fazendo sentido e deve continuar existindo" (≈
+  127-131): esse intake nulo foi removido em `ca00638` (2026-09-26), por decisão de João, e trocado
+  por `unavailableContactIntake` (`src/integrations/contact/intake.ts`) — mesmo papel, nome novo
+  porque a peça passou a viver do lado do intake, não de um adapter (`ContactSender`). Não deve ser
+  restaurado sob o nome antigo.
+- **D2 — a região do SES fecha em `sa-east-1`, revogando "Região a confirmar" (≈ linha 90).**
+  `aws sesv2 get-account --region sa-east-1` respondeu `SendingEnabled: true` em 2026-09-26 (spec
+  D2): função, identidade SES, bucket e distribuição ficam todos na mesma região, e o MX do MAIL
+  FROM é o de lá.
+- **D3 — production access do SES não é necessário.** Sandbox só restringe destinatário a
+  identidade verificada, e o destinatário é do domínio verificado. A PENDÊNCIA 3 sai.
+- **D5 — sem WAF; sem rate limit dedicado.** A opção "CloudFront Function contando por IP"
+  desta ADR **não existe**: CloudFront Function não guarda estado entre requisições. Sobra o WAF,
+  a ~US$ 6/mês; João decidiu não criar agora. Defesa do endpoint: Turnstile, schema na função, teto
+  do sandbox (200/dia, 1/s), teto de concorrência da conta (10) — o honeypot é só do formulário no
+  navegador, a função nem recebe o campo `botcheck`. Pior caso inclui indisponibilidade: esgotar a
+  cota do SES sandbox ou a concorrência da conta bloqueia mensagem legítima, não só deixa passar
+  spam. Débito `D-54`.
+- **D6 — Turnstile como captcha.** Não previsto aqui. Cloudflare Turnstile em modo
+  `interaction-only`, carregado só quando `#Contacto` se aproxima; site key pública no bundle,
+  secret key no SSM (`/lotus-site/contato/turnstile-secret`), verificação na função antes de
+  qualquer envio. Divergência intencional em relação ao WordPress, na matriz de paridade.
+- **D7 — existe um segredo, revogando "`7.1.3` fecha por construção… Não sobra segredo nenhum" (≈
+  127-131).** A secret key do Turnstile mora no SSM Parameter Store, `SecureString`
+  `/lotus-site/contato/turnstile-secret`, chave gerenciada `alias/aws/ssm`. A função lê o valor uma
+  vez por cold start e o guarda em memória; ele nunca passa pelo repositório, pelo template, pelo
+  bundle nem pelo log.
+- **Escopo real da role, revogando "A role da função pode `ses:SendEmail` e nada mais" (≈ linha
+  72).** `infra/lotus-contato.yaml` dá à `PapelDaFuncao` três permissões, não uma: `ses:SendEmail`
+  no ARN da identidade `lotusotec.cl`, com `Condition.StringEquals` em `ses:FromAddress`;
+  `ssm:GetParameter` no ARN do parâmetro `/lotus-site/contato/turnstile-secret`; e
+  `logs:CreateLogStream`/`logs:PutLogEvents` no ARN explícito do log group `Registros`, sem
+  curinga.

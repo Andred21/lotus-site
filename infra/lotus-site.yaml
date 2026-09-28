@@ -2,7 +2,8 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   Ambiente do lotus-site: bucket S3 privado, distribuicao CloudFront com Origin
   Access Control, role de deploy assumida por OIDC pelo GitHub Actions do
-  repositorio corporativo, e budget proprio. Nao encosta em DNS nem em
+  repositorio corporativo, e budget proprio, e a segunda origin em /api/* para
+  a funcao de contato do stack lotus-contato. Nao encosta em DNS nem em
   certificado -- o endereco publicado e o dominio do CloudFront. Depende do
   stack lotus-oidc-github ja implantado.
 
@@ -39,7 +40,21 @@ Parameters:
     Type: Number
     Default: 30
     MinValue: 1
-    Description: Teto mensal em USD somando S3, CloudFront e Route 53.
+    Description: Teto mensal em USD somando S3, CloudFront, Route 53, SES, Lambda e CloudWatch.
+
+  DominioDaFuncaoDeContato:
+    Type: String
+    Description: >-
+      Output DominioDaUrlDaFuncao do stack lotus-contato: o host da Function
+      URL, sem esquema nem barra. Segunda origin da distribuicao, em /api/*.
+    AllowedPattern: '^[a-z0-9-]+\.lambda-url\.[a-z0-9-]+\.on\.aws$'
+
+  ArnDaFuncaoDeContato:
+    Type: String
+    Description: >-
+      Output ArnDaFuncao do stack lotus-contato. As duas AWS::Lambda::Permission
+      e a policy da role de deploy apontam para ele.
+    AllowedPattern: '^arn:aws:lambda:[a-z0-9-]+:[0-9]{12}:function:[a-zA-Z0-9-_]+$'
 
 Resources:
   # ── armazenamento ──────────────────────────────────────────────────────────
@@ -81,6 +96,20 @@ Resources:
         Name: !Sub '${AWS::StackName}-oac'
         Description: Assina com SigV4 as requisicoes do CloudFront ao bucket privado.
         OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # OAC do tipo lambda: o CloudFront assina com SigV4 cada chamada a Function
+  # URL, que so aceita chamada assinada (AuthType AWS_IAM). POST exige que o
+  # navegador mande x-amz-content-sha256 com o hash do corpo -- o adapter em
+  # src/integrations/contact/api-contacto.ts faz isso (spec D1).
+  ControleDeAcessoDaFuncao:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-oac-contato'
+        Description: Assina com SigV4 as requisicoes do CloudFront a Function URL do contato.
+        OriginAccessControlOriginType: lambda
         SigningBehavior: always
         SigningProtocol: sigv4
 
@@ -127,6 +156,12 @@ Resources:
             OriginAccessControlId: !GetAtt ControleDeAcesso.Id
             S3OriginConfig:
               OriginAccessIdentity: ''
+          - Id: funcao-de-contato
+            DomainName: !Ref DominioDaFuncaoDeContato
+            OriginAccessControlId: !GetAtt ControleDeAcessoDaFuncao.Id
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
         DefaultCacheBehavior:
           TargetOriginId: balde
           ViewerProtocolPolicy: redirect-to-https
@@ -138,6 +173,23 @@ Resources:
           # index.html.
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
           ResponseHeadersPolicyId: !Ref PoliticaDeCabecalhos
+        CacheBehaviors:
+          # /api/* vai para a funcao. CachingDisabled: resposta de formulario
+          # nunca e cacheada. AllViewerExceptHostHeader: o corpo, o
+          # content-type e o x-amz-content-sha256 chegam a funcao; o Host nao,
+          # porque a Function URL so responde ao proprio host. https-only em
+          # vez de redirect: um POST redirecionado perde o corpo.
+          - PathPattern: /api/*
+            TargetOriginId: funcao-de-contato
+            ViewerProtocolPolicy: https-only
+            Compress: false
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+            CachedMethods: [GET, HEAD]
+            # Managed-CachingDisabled
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            # Managed-AllViewerExceptHostHeader
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+            ResponseHeadersPolicyId: !Ref PoliticaDeCabecalhos
         # Sem CustomErrorResponses de proposito: nao existe rota de cliente
         # para salvar (#Somos e #Cursos sao fragmentos, resolvidos no
         # navegador, que nunca chegam ate aqui). Mapear 404 para index.html com
@@ -178,6 +230,27 @@ Resources:
             Condition:
               StringEquals:
                 AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
+
+  # As DUAS permissoes que a documentacao do CloudFront exige para OAC de
+  # Function URL (spec D1), presas a esta distribuicao por SourceArn. Vivem
+  # aqui, e nao no lotus-contato, porque e o ARN da distribuicao que muda de
+  # lado.
+  PermissaoDeUrl:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ArnDaFuncaoDeContato
+      Action: lambda:InvokeFunctionUrl
+      Principal: cloudfront.amazonaws.com
+      SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
+      FunctionUrlAuthType: AWS_IAM
+
+  PermissaoDeInvocacao:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ArnDaFuncaoDeContato
+      Action: lambda:InvokeFunction
+      Principal: cloudfront.amazonaws.com
+      SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
 
   # ── quem publica ───────────────────────────────────────────────────────────
   PapelDeDeploy:
@@ -239,6 +312,15 @@ Resources:
                   - cloudfront:CreateInvalidation
                   - cloudfront:GetInvalidation
                 Resource: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribuicao}'
+              # GetFunction e obrigatorio junto de UpdateFunctionCode: `aws
+              # lambda wait function-updated-v2` faz polling com ela. Ambas
+              # presas a esta funcao.
+              - Sid: PublicarAFuncaoDeContato
+                Effect: Allow
+                Action:
+                  - lambda:UpdateFunctionCode
+                  - lambda:GetFunction
+                Resource: !Ref ArnDaFuncaoDeContato
       Tags:
         - Key: Projeto
           Value: lotus-site
@@ -263,11 +345,19 @@ Resources:
         # antes de nos, passa a ser contada tambem. E o comportamento correto
         # -- o teto existe para a conta -- mas a primeira fatura filtrada
         # parece erro se isto nao estiver escrito.
+        #
+        # SES, Lambda e CloudWatch entram em B2, com a funcao de contato. Os
+        # nomes de SES e Lambda sao os padrao do Cost Explorer, nao medidos
+        # nesta conta: so aparecem em get-dimension-values depois da primeira
+        # cobranca. Conferidos na primeira fatura (evidencia do bloco).
         CostFilters:
           Service:
             - Amazon Simple Storage Service
             - Amazon CloudFront
             - Amazon Route 53
+            - Amazon Simple Email Service
+            - AWS Lambda
+            - AmazonCloudWatch
       NotificationsWithSubscribers:
         - Notification:
             NotificationType: FORECASTED

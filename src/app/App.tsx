@@ -7,18 +7,25 @@ import { Destaques } from '../components/sections/Destaques'
 import { QuienesSomos } from '../components/sections/QuienesSomos'
 import {
   createContactIntake,
-  unavailableContactSender,
+  unavailableContactIntake,
 } from '../integrations/contact/intake'
-import { createWeb3FormsSender } from '../integrations/contact/web3forms'
+import { createApiContactoSender } from '../integrations/contact/api-contacto'
+import { createTurnstileController } from '../integrations/contact/turnstile'
 
-// Única ligação entre componente e integração no repositório. Sem chave
-// configurada o envio falha de forma visível, sem simular sucesso (D7 da
-// spec); a seção já publica contacto@lotusotec.cl como saída alternativa.
-const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
-const contactSender = accessKey
-  ? createWeb3FormsSender(accessKey)
-  : unavailableContactSender
-const submitContact = createContactIntake(contactSender)
+// Única ligação entre componente e integração no repositório. O adapter só
+// existe com as duas coisas de que precisa: a site key pública do Turnstile
+// (spec D6) e `crypto.subtle`, que calcula o hash exigido pelo OAC (spec D1)
+// e só existe em contexto seguro — HTTPS ou localhost. Sem uma delas o envio
+// falha de forma visível, sem simular sucesso (D7 do bloco 4.1.1-4.1.10); a
+// seção já publica contacto@lotusotec.cl como saída alternativa.
+const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
+const captcha =
+  siteKey && globalThis.crypto?.subtle
+    ? createTurnstileController(siteKey)
+    : undefined
+const submitContact = captcha
+  ? createContactIntake(createApiContactoSender())
+  : unavailableContactIntake
 
 export function App() {
   return (
@@ -31,7 +38,7 @@ export function App() {
           <Destaques />
         </section>
         <Cursos />
-        <Contacto onSubmit={submitContact} />
+        <Contacto onSubmit={submitContact} captcha={captcha} />
       </main>
       <Footer />
     </>

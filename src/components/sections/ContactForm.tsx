@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { site } from '../../content/site'
 import { cn } from '../../lib/cn'
+import type { CaptchaController } from '../../lib/captcha'
 import {
   CONTACT_LIMITS,
   isRequiredContactField,
@@ -12,9 +13,9 @@ import type {
 
 /**
  * A união do resultado vem de `src/lib/`, não de `src/integrations/`:
- * `eslint.config.js:63-77` proíbe o componente de importar integração,
- * inclusive tipo, e `lib` é o módulo que os dois lados podem ver. A ligação
- * entre formulário e intake acontece em `src/app/App.tsx`, o único lugar
+ * `eslint.config.js` proíbe o componente de importar integração, inclusive
+ * tipo, e `lib` é o módulo que os dois lados podem ver. A ligação entre
+ * formulário, intake e captcha acontece em `src/app/App.tsx`, o único lugar
  * autorizado a conhecer os dois lados.
  */
 export type ContactSubmitHandler = (
@@ -23,12 +24,19 @@ export type ContactSubmitHandler = (
 
 type ContactFormProps = {
   onSubmit: ContactSubmitHandler
+  /** Ausente quando não há site key ou contexto seguro: o envio cai em `failed`. */
+  captcha?: CaptchaController
 }
 
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error'
 
 const FIELD_CLASS =
   'text-field font-sans text-accent-ink shadow-field h-[51px] w-full bg-transparent p-4'
+
+/* Distância em que o script do Turnstile passa a ser carregado: perto o
+   bastante para estar pronto quando o visitante chegar ao formulário, longe o
+   bastante para o carregamento inicial não pagar por ele (spec D6). */
+const CAPTCHA_ROOT_MARGIN = '400px'
 
 /* O mesmo limite que o schema aplica, aplicado antes na caixa de texto: o
    browser corta o excesso e o payload excessivo não chega a virar requisição. */
@@ -53,10 +61,11 @@ const AUTOCOMPLETE = {
  * para que a mensagem exibida seja sempre a do schema, em es-CL; `required`
  * continua no HTML e é o que a tecnologia assistiva anuncia.
  */
-export function ContactForm({ onSubmit }: ContactFormProps) {
+export function ContactForm({ onSubmit, captcha }: ContactFormProps) {
   const [status, setStatus] = useState<SubmitStatus>('idle')
   const [fieldErrors, setFieldErrors] = useState<ContactFieldErrors>({})
   const statusRef = useRef<HTMLParagraphElement>(null)
+  const captchaRef = useRef<HTMLDivElement>(null)
 
   // Sincroniza foco com o DOM já pintado: o resultado precisa estar escrito
   // no bloco de status antes de o foco chegar nele.
@@ -65,6 +74,25 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
       statusRef.current?.focus()
     }
   }, [status])
+
+  // Sincroniza com um sistema externo (o script da Cloudflare): o widget só
+  // é montado quando o formulário chega a 400px da viewport. Falha de
+  // montagem é engolida de propósito — sem token o schema recusa o envio com
+  // a mensagem do captcha, que é a saída visível.
+  useEffect(() => {
+    const container = captchaRef.current
+    if (!captcha || !container) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+        observer.disconnect()
+        captcha.mount(container).catch(() => undefined)
+      },
+      { rootMargin: CAPTCHA_ROOT_MARGIN },
+    )
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [captcha])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -79,9 +107,15 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
     try {
       result = await onSubmit(new FormData(form))
     } catch {
+      captcha?.reset()
       setStatus('error')
       return
     }
+
+    // Token do Turnstile é de uso único e expira em 300 s: depois de qualquer
+    // resultado — inclusive sucesso, que o consome no siteverify — o widget
+    // gera outro para a próxima tentativa.
+    captcha?.reset()
 
     if (result.status === 'sent') {
       setStatus('success')
@@ -97,13 +131,13 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
 
   // Derivado do estado, nunca guardado: erro de campo e erro geral são a
   // mesma submissão vista de dois ângulos.
-  // Só erro de campo renderizado vira "revise los campos marcados": o
-  // honeypot não aparece na tela, então falha nele cai na mensagem geral e o
-  // bot não descobre qual campo o denunciou.
+  // Só erro renderizado vira "revise los campos marcados": o honeypot não
+  // aparece na tela, então falha nele cai na mensagem geral e o bot não
+  // descobre qual campo o denunciou. O captcha aparece, então conta.
   const feedback = site.contacto.form.feedback
-  const hasFieldErrors = site.contacto.form.fields.some(
-    (field) => fieldErrors[field.name],
-  )
+  const hasFieldErrors =
+    site.contacto.form.fields.some((field) => fieldErrors[field.name]) ||
+    Boolean(fieldErrors.captcha)
   const statusMessage =
     status === 'submitting'
       ? feedback.submitting
@@ -192,6 +226,21 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
         aria-hidden="true"
         className="hidden"
       />
+
+      {/* Container do Turnstile, dentro do <form> para o input oculto do
+          token entrar no FormData. Sem margem própria: em interaction-only o
+          widget não ocupa espaço, e o baseline visual não se move. */}
+      <div>
+        <div ref={captchaRef} data-captcha="" />
+        {fieldErrors.captcha ? (
+          <span
+            id="captcha-error"
+            className="mb-4 block font-sans text-field text-danger"
+          >
+            {fieldErrors.captcha}
+          </span>
+        ) : null}
+      </div>
 
       <p className="text-right">
         <button

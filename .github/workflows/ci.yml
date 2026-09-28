@@ -199,10 +199,29 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
-      # O mesmo `pnpm build` que roda em PR: sem flag de ambiente e sem
-      # variável que mude o bundle. É isso que "reproduz build de produção"
-      # quer dizer.
+      # Site key ausente vira bundle publicado sem Turnstile: o intake cai em
+      # unavailableContactIntake e o formulário de produção passa a falhar
+      # sempre, sem nenhum aviso no run. Build sem chave é caminho legítimo só
+      # em PR (comentário do passo Build, abaixo); no deploy ela é sempre
+      # defeito. Por isso este passo FALHA -- e não só avisa, como o passo da
+      # função faz para AWS_CONTACT_FUNCTION ausente -- porque aqui não há
+      # placeholder que sirva de rede de segurança.
+      - name: Recusar deploy sem a site key do Turnstile
+        env:
+          SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+        run: |
+          if [ -z "$SITE_KEY" ]; then
+            echo "::error::VITE_TURNSTILE_SITE_KEY não está definida como variável de repositório. Sem ela o formulário de produção falha sempre, em silêncio. Defina a variável antes deste deploy."
+            exit 1
+          fi
+
+      # O mesmo `pnpm build` que roda em PR, com uma diferenca declarada: a
+      # site key do Turnstile, configuracao PUBLICA que entra no bundle (spec
+      # D6). Em PR ela nao existe e o formulario cai no caminho de envio
+      # indisponivel; no deploy ela vem da variavel de repositorio.
       - name: Build
+        env:
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
         run: pnpm build
 
       - name: Assumir a role por OIDC
@@ -210,6 +229,27 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: sa-east-1
+
+      # A funcao vai ANTES do site: o site novo depende dela, e o antigo nao
+      # (spec D8). O nome chega por variavel de repositorio; ausente, o passo
+      # e pulado com aviso -- a mesma logica que impede o repositorio pessoal
+      # de publicar. So index.mjs entra no zip.
+      - name: Publicar a função de contato
+        if: vars.AWS_CONTACT_FUNCTION != ''
+        env:
+          FUNCAO: ${{ vars.AWS_CONTACT_FUNCTION }}
+        run: |
+          pnpm build:lambda
+          (cd dist-lambda/contato && zip -q -X ../contato.zip index.mjs)
+          aws lambda update-function-code --function-name "$FUNCAO" \
+            --zip-file fileb://dist-lambda/contato.zip \
+            --query '{Funcao:FunctionName,Sha:CodeSha256,Tamanho:CodeSize}' --output table
+          aws lambda wait function-updated-v2 --function-name "$FUNCAO"
+          echo "função $FUNCAO publicada"
+
+      - name: Função de contato não publicada
+        if: vars.AWS_CONTACT_FUNCTION == ''
+        run: echo "::warning::AWS_CONTACT_FUNCTION não está definida; a função de contato não foi publicada e o placeholder 503 continua no ar."
 
       # Todo asset do Vite tem hash no nome: URL nova a cada conteúdo novo,
       # então pode ser cacheado para sempre e nunca precisa de invalidação.

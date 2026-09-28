@@ -21,16 +21,20 @@ export type ContactSender = (
   message: ContactMessage,
 ) => Promise<ContactSendOutcome>
 
-/**
- * Implementação nula: sem chave configurada, o envio falha de forma visível
- * em vez de simular sucesso (D7 da spec do bloco 4.1.1-4.1.10). Não é código
- * descartável — é o caminho real de um build publicado sem
- * `VITE_WEB3FORMS_ACCESS_KEY`.
- */
-export const unavailableContactSender: ContactSender = () =>
-  Promise.resolve({ status: 'failed' })
-
 export type ContactIntake = (formData: FormData) => Promise<ContactSubmitResult>
+
+/**
+ * Intake nulo: sem site key do Turnstile ou sem `crypto.subtle` (só existe em
+ * contexto seguro), o envio falha de forma visível em vez de simular sucesso
+ * (D7 da spec do bloco 4.1.1-4.1.10; D1 e D6 da spec do bloco B2). Não é
+ * código descartável — é o caminho real de um build publicado sem
+ * `VITE_TURNSTILE_SITE_KEY`, e de `pnpm dev` aberto por endereço que não seja
+ * `localhost`. É intake, não porta: sem widget não existe token, e validar
+ * pelo schema devolveria "Confirme que no es un robot." para um captcha que
+ * nunca apareceu na tela.
+ */
+export const unavailableContactIntake: ContactIntake = () =>
+  Promise.resolve({ status: 'failed' })
 
 /**
  * Lê o payload cru do formulário. Campo ausente ou não-textual vira string
@@ -50,6 +54,9 @@ function readContactFormData(formData: FormData): ContactFormInput {
     empresa: read('empresa'),
     mensaje: read('mensaje'),
     botcheck: read('botcheck'),
+    // O widget do Turnstile escreve o token num input oculto com este nome
+    // dentro do formulário; o schema o vê como `captcha`.
+    captcha: read('cf-turnstile-response'),
   }
 }
 
@@ -58,7 +65,8 @@ function readContactFormData(formData: FormData): ContactFormInput {
  * Action da EAP (D1 da spec do bloco 4.1.1-4.1.10): tudo passa por aqui antes
  * de qualquer rede. Lê o formulário, normaliza e valida pelo schema de
  * `src/lib/`, e só então delega à porta — não conhece o provedor (aceites da
- * 4.1.3 e da 4.1.4). É o único executor do schema no repositório.
+ * 4.1.3 e da 4.1.4). Executa o schema junto da função (`lambda/contato/handler.ts`);
+ * `src/lib/contact-schema.ts` documenta os dois executores.
  */
 export function createContactIntake(send: ContactSender): ContactIntake {
   return async (formData) => {

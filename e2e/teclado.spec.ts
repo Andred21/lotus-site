@@ -1,12 +1,20 @@
 import { expect, test, type Page } from '@playwright/test'
+import {
+  TOKEN_FALSO,
+  fingirApiContacto,
+  fingirTurnstile,
+} from './contato-falso'
 
 // 1440: o menu desktop só existe acima de --breakpoint-desktop (1000px) e o
 // botão do menu mobile é `desktop:hidden` — fora da ordem de tabulação.
 test.use({ viewport: { width: 1440, height: 900 } })
 
-const ENDPOINT = 'https://api.web3forms.com/**'
 const SUCCESS =
   'Gracias. Recibimos su mensaje y le contactaremos a la brevedad.'
+
+test.beforeEach(async ({ page }) => {
+  await fingirTurnstile(page)
+})
 
 type Stop = { key: string; outlineStyle: string; outlineWidth: string }
 
@@ -32,8 +40,8 @@ function activeStop(page: Page): Promise<Stop> {
 }
 
 // Ordem do DOM: logo, menu, dois CTAs, mailto, quatro campos, botão. O bloco
-// de status (`tabIndex={-1}`) e o honeypot (`hidden`, `tabIndex={-1}`) não
-// param o Tab.
+// de status (`tabIndex={-1}`), o honeypot (`hidden`, `tabIndex={-1}`) e o
+// input oculto do Turnstile (`type=hidden`) não param o Tab.
 const EXPECTED_ORDER = [
   'a:LOTUS',
   'a:Inicio',
@@ -84,13 +92,7 @@ test('Tab percorre a home inteira na ordem do DOM, com foco visível em cada par
 test('o formulário é enviado sem mouse e o foco vai ao bloco de status', async ({
   page,
 }) => {
-  await page.route(ENDPOINT, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ success: true, message: 'Email sent' }),
-    })
-  })
+  await fingirApiContacto(page, { status: 200, ok: true })
 
   await page.goto('/')
   await page.getByLabel('Nombre Completo').focus()
@@ -105,6 +107,9 @@ test('o formulário é enviado sem mouse e o foco vai ao bloco de status', async
   )
   await page.keyboard.press('Tab')
   await expect(page.getByRole('button', { name: 'Enviar' })).toBeFocused()
+  await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(
+    TOKEN_FALSO,
+  )
   await page.keyboard.press('Enter')
 
   const status = page.getByRole('status')

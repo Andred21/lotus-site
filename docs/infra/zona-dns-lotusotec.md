@@ -168,6 +168,24 @@ resposta `NS` vazia passava por delegação intacta —, então foi removida em 
 esta: evidência que não sabe reprovar acaba lida como se soubesse. Ela continua no histórico, no
 commit `537b8dd`.
 
+## Registros do SES (bloco `B2`)
+
+Seis registros entraram em 2026-09-26, pelo stack `lotus-dns`, para autenticar o remetente
+`sitio@lotusotec.cl` do formulário de contato (`ADR-SITE-005`, spec do bloco
+`4.1.7+7.1.3+7.1.4`). Nenhum deles é lido pelo e-mail do Google Workspace.
+
+| Nome                                                       | Tipo    | Valor                                                 | Para quê                                              |
+| ---------------------------------------------------------- | ------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| `whkczrifauntvx6dy3r5uwx4g7w2p4p2._domainkey.lotusotec.cl` | `CNAME` | `whkczrifauntvx6dy3r5uwx4g7w2p4p2.dkim.amazonses.com` | Easy DKIM, chave 1                                    |
+| `veys5msb7mgj6vstojj4pmsnfs5htq5g._domainkey.lotusotec.cl` | `CNAME` | `veys5msb7mgj6vstojj4pmsnfs5htq5g.dkim.amazonses.com` | Easy DKIM, chave 2                                    |
+| `ilecjqmzurmfbtcete7ip5sdurjx6irz._domainkey.lotusotec.cl` | `CNAME` | `ilecjqmzurmfbtcete7ip5sdurjx6irz.dkim.amazonses.com` | Easy DKIM, chave 3                                    |
+| `ses.lotusotec.cl`                                         | `MX`    | `10 feedback-smtp.sa-east-1.amazonses.com`            | MAIL FROM: recebe bounces do SES                      |
+| `ses.lotusotec.cl`                                         | `TXT`   | `v=spf1 include:amazonses.com ~all`                   | SPF do MAIL FROM, alinhado ao domínio                 |
+| `_dmarc.lotusotec.cl`                                      | `TXT`   | `v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl`  | relatório agregado, sem mudar entrega (`D-46`, parte) |
+
+Os três tokens são `Default` dos parâmetros `TokenDkim1..3` do template e vieram dos outputs do
+stack `lotus-contato` (`sa-east-1`). Recriar a identidade SES troca os três.
+
 ## Conferência antes e depois da troca
 
 A zona nova precisa responder **igual** à atual antes de a delegação mudar, porque durante a

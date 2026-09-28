@@ -2,11 +2,12 @@ import { z } from 'zod'
 import { CONTACT_LIMITS } from './contact-fields'
 
 /**
- * Contrato de dados do contato. A regra de validação existe uma vez, aqui:
- * só `src/integrations/contact/intake.ts` executa este schema, e nenhum
- * componente importa Zod (D3 da spec, hoje catraca de `eslint.config.js`). O
- * honeypot entra na entrada e some da saída — quem envia nunca vê o campo de
- * armadilha.
+ * Contrato de dados do contato. A regra de validação existe uma vez, aqui, e
+ * tem dois executores: `src/integrations/contact/intake.ts` no navegador e
+ * `lambda/contato/handler.ts` na função (spec D8 do bloco B2) — cliente e
+ * servidor recusam exatamente a mesma coisa. Nenhum componente importa Zod
+ * (catraca de `eslint.config.js`). O honeypot entra na entrada e some da
+ * saída; o token do captcha entra e fica, porque é a função quem o consome.
  */
 export type ContactFormInput = {
   nombre: string
@@ -14,6 +15,7 @@ export type ContactFormInput = {
   empresa: string
   mensaje: string
   botcheck: string
+  captcha: string
 }
 
 export type ContactMessage = {
@@ -21,6 +23,7 @@ export type ContactMessage = {
   email: string
   empresa: string
   mensaje: string
+  captcha: string
 }
 
 export type ContactFieldErrors = Partial<Record<keyof ContactFormInput, string>>
@@ -52,6 +55,7 @@ const MESSAGES = {
   mensajeCorto: `Escriba su mensaje con al menos ${CONTACT_LIMITS.mensaje.min} caracteres.`,
   mensajeLargo: `El mensaje no puede superar los ${CONTACT_LIMITS.mensaje.max} caracteres.`,
   honeypot: 'No pudimos validar el envío.',
+  captcha: 'Confirme que no es un robot.',
 } as const
 
 const contactSchema = z.object({
@@ -68,6 +72,9 @@ const contactSchema = z.object({
     .min(CONTACT_LIMITS.mensaje.min, MESSAGES.mensajeCorto)
     .max(CONTACT_LIMITS.mensaje.max, MESSAGES.mensajeLargo),
   botcheck: z.literal('', MESSAGES.honeypot),
+  // Token do Turnstile. Só presença é checada aqui: quem diz se ele vale é
+  // o siteverify da Cloudflare, na função.
+  captcha: z.string().min(1, MESSAGES.captcha),
 })
 
 /** Normaliza antes de validar: o limite vale sobre o valor já aparado. */
@@ -80,6 +87,7 @@ export function normalizeContactInput(
     empresa: input.empresa.trim(),
     mensaje: input.mensaje.trim(),
     botcheck: input.botcheck.trim(),
+    captcha: input.captcha.trim(),
   }
 }
 
@@ -89,7 +97,8 @@ function isFieldName(value: string): value is keyof ContactFormInput {
     value === 'email' ||
     value === 'empresa' ||
     value === 'mensaje' ||
-    value === 'botcheck'
+    value === 'botcheck' ||
+    value === 'captcha'
   )
 }
 
@@ -107,6 +116,7 @@ export function parseContactMessage(
         email: parsed.data.email,
         empresa: parsed.data.empresa,
         mensaje: parsed.data.mensaje,
+        captcha: parsed.data.captcha,
       },
     }
   }

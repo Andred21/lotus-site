@@ -1,9 +1,11 @@
+import type { CaptchaController } from '../../lib/captcha'
 import { site } from '../../content/site'
 import { Row } from '../layout/Row'
 import { ContactForm, type ContactSubmitHandler } from './ContactForm'
 
 type ContactoProps = {
   onSubmit: ContactSubmitHandler
+  captcha?: CaptchaController
 }
 
 /**
@@ -11,7 +13,7 @@ type ContactoProps = {
  * repassa ao formulário, sem conhecer serviço, provedor ou rede — a fronteira
  * é catraca de `pnpm lint`.
  */
-export function Contacto({ onSubmit }: ContactoProps) {
+export function Contacto({ onSubmit, captcha }: ContactoProps) {
   return (
     <section
       id="Contacto"
@@ -43,7 +45,7 @@ export function Contacto({ onSubmit }: ContactoProps) {
       </Row>
 
       <Row className="bg-surface px-6 py-6.75">
-        <ContactForm onSubmit={onSubmit} />
+        <ContactForm onSubmit={onSubmit} captcha={captcha} />
       </Row>
     </section>
   )

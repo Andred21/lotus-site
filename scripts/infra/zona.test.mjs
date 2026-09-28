@@ -25,6 +25,11 @@ describe('leitura textual do template', () => {
     expect(parametros.get('IpDoWordPress')).toBe('185.146.167.195')
     expect(parametros.get('Ipv6DoWordPress')).toBe('2a07:7800::195')
     expect(parametros.get('TtlPadrao')).toBe('3600')
+    // Os tres tokens DKIM sao Default de parametro, como os IPs: sem Default
+    // `resolver` lanca e a catraca nao consegue ler os CNAME.
+    for (const nome of ['TokenDkim1', 'TokenDkim2', 'TokenDkim3']) {
+      expect(parametros.get(nome)).toMatch(/^[a-z0-9]{20,64}$/)
+    }
   })
 
   it('resolve !Ref e !Sub contra os defaults', () => {
@@ -98,8 +103,12 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
   }
 
   it('mantém os cinco MX do Google, com as prioridades medidas', () => {
-    const mx = registros.find((registro) => registro.tipo === 'MX')
-    const doInventario = INVENTARIO.find((registro) => registro.tipo === 'MX')
+    const mx = registros.find(
+      (registro) => registro.tipo === 'MX' && registro.nome === 'lotusotec.cl.',
+    )
+    const doInventario = INVENTARIO.find(
+      (registro) => registro.tipo === 'MX' && registro.nome === 'lotusotec.cl.',
+    )
     expect(mx?.valores).toHaveLength(5)
     expect((mx?.valores ?? []).map(normalizar).sort()).toEqual(
       (doInventario?.valores ?? []).map(normalizar).sort(),
@@ -167,6 +176,50 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     // vazia passaria.
     expect(registros.map((registro) => registro.ttl)).toEqual(
       INVENTARIO.map(() => 3600),
+    )
+  })
+
+  it('publica o DMARC em p=none, com relatorio em contacto@', () => {
+    // p=none nao muda a entrega de nenhuma mensagem; e o que a ADR-SITE-005
+    // pediu para enxergar o efeito do remetente novo (spec D11). Endurecer
+    // para quarantine ou reject e decisao, nao edicao.
+    const dmarc = registros.find(
+      (registro) => registro.nome === '_dmarc.lotusotec.cl.',
+    )
+    expect(dmarc?.tipo).toBe('TXT')
+    expect(normalizar(dmarc?.valores[0] ?? '')).toBe(
+      'v=dmarc1; p=none; rua=mailto:contacto@lotusotec.cl',
+    )
+  })
+
+  it('aponta os tres CNAME do DKIM para o SES, e para mais nada', () => {
+    const dkim = registros.filter((registro) =>
+      registro.nome.endsWith('._domainkey.lotusotec.cl.'),
+    )
+    expect(dkim).toHaveLength(3)
+    for (const registro of dkim) {
+      expect(registro.tipo).toBe('CNAME')
+      expect(registro.valores).toHaveLength(1)
+      expect(registro.valores[0]).toMatch(/^[a-z0-9]+\.dkim\.amazonses\.com\.$/)
+    }
+  })
+
+  it('o MAIL FROM tem MX do SES em sa-east-1 e SPF proprio', () => {
+    // A regiao esta no nome do MX: mudar a regiao do stack lotus-contato sem
+    // mudar esta linha deixaria o MAIL FROM apontando para o lugar errado.
+    const mx = registros.find(
+      (registro) =>
+        registro.nome === 'ses.lotusotec.cl.' && registro.tipo === 'MX',
+    )
+    const txt = registros.find(
+      (registro) =>
+        registro.nome === 'ses.lotusotec.cl.' && registro.tipo === 'TXT',
+    )
+    expect((mx?.valores ?? []).map(normalizar)).toEqual([
+      '10 feedback-smtp.sa-east-1.amazonses.com.',
+    ])
+    expect(normalizar(txt?.valores[0] ?? '')).toBe(
+      'v=spf1 include:amazonses.com ~all',
     )
   })
 })

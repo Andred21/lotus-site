@@ -15,6 +15,7 @@ const VALID: ContactFormInput = {
   empresa: 'Lotus',
   mensaje: 'Necesito información sobre el curso de alta tensión.',
   botcheck: '',
+  captcha: 'token-de-teste',
 }
 
 describe('normalizeContactInput', () => {
@@ -27,6 +28,7 @@ describe('normalizeContactInput', () => {
       empresa: 'Lotus',
       mensaje: 'Necesito información sobre el curso de alta tensión.',
       botcheck: '',
+      captcha: 'token-de-teste',
     })
   })
 })
@@ -44,6 +46,7 @@ describe('parseContactMessage', () => {
       email: 'ana@lotusotec.cl',
       empresa: 'Lotus',
       mensaje: 'Hola, quiero información.',
+      captcha: 'token-de-teste',
     })
     expect('botcheck' in result.value).toBe(false)
   })
@@ -114,5 +117,16 @@ describe('parseContactMessage', () => {
 
     if (result.ok) throw new Error('esperava rejeição do honeypot')
     expect(result.fieldErrors.botcheck).toBe('No pudimos validar el envío.')
+  })
+
+  it('exige o token do captcha, com a mensagem em es-CL', () => {
+    const result = parseContactMessage({ ...VALID, captcha: '' })
+
+    if (result.ok) throw new Error('esperava rejeição sem captcha')
+    expect(result.fieldErrors.captcha).toBe('Confirme que no es un robot.')
+  })
+
+  it('não deixa espaço em branco valer como token', () => {
+    expect(parseContactMessage({ ...VALID, captcha: '   ' }).ok).toBe(false)
   })
 })

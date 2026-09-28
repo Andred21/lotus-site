@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   createContactIntake,
-  unavailableContactSender,
+  unavailableContactIntake,
   type ContactSender,
 } from './intake'
 
@@ -11,6 +11,7 @@ const VALID = {
   empresa: 'Lotus',
   mensaje: 'Necesito información sobre el curso de alta tensión.',
   botcheck: '',
+  'cf-turnstile-response': 'token-de-teste',
 }
 
 function formDataOf(entries: Record<string, string>) {
@@ -43,6 +44,7 @@ describe('createContactIntake', () => {
       email: 'ana@lotusotec.cl',
       empresa: 'Lotus',
       mensaje: 'Necesito información sobre el curso de alta tensión.',
+      captcha: 'token-de-teste',
     })
   })
 
@@ -73,7 +75,7 @@ describe('createContactIntake', () => {
 
   it('converte exceção da porta em failed, sem vazar o erro', async () => {
     const send = vi.fn<ContactSender>(() =>
-      Promise.reject(new Error('web3forms: 503 Service Unavailable')),
+      Promise.reject(new Error('api/contacto: 502 Bad Gateway')),
     )
 
     expect(await createContactIntake(send)(formDataOf(VALID))).toEqual({
@@ -139,21 +141,30 @@ describe('createContactIntake', () => {
     expect(result.fieldErrors.nombre).toBe('Ingrese su nombre completo.')
     expect(send).not.toHaveBeenCalled()
   })
+
+  it('lê o token do campo que o widget preenche, e sem ele não chama a porta', async () => {
+    const send = fakeSender()
+    const intake = createContactIntake(send)
+
+    const semToken = formDataOf({ ...VALID, 'cf-turnstile-response': '' })
+    const result = await intake(semToken)
+
+    if (result.status !== 'invalid') throw new Error('esperava invalid')
+    expect(result.fieldErrors.captcha).toBe('Confirme que no es un robot.')
+    expect(send).not.toHaveBeenCalled()
+  })
 })
 
-describe('unavailableContactSender', () => {
-  it('falha sem tocar a rede quando não há provedor configurado', async () => {
+describe('unavailableContactIntake', () => {
+  it('falha sem validar e sem tocar a rede quando não há captcha', async () => {
     const fetchSpy = vi.fn()
     vi.stubGlobal('fetch', fetchSpy)
+    const semToken = formDataOf({ ...VALID })
+    semToken.delete('cf-turnstile-response')
 
-    const outcome = await unavailableContactSender({
-      nombre: 'Ana Pérez',
-      email: 'ana@lotusotec.cl',
-      empresa: '',
-      mensaje: 'Necesito información.',
+    expect(await unavailableContactIntake(semToken)).toEqual({
+      status: 'failed',
     })
-
-    expect(outcome).toEqual({ status: 'failed' })
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 })

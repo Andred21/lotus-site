@@ -63,7 +63,15 @@ tê-lo criado —, o deploy falha com `EntityAlreadyExists`. Nesse caso não cri
 recurso existente ou pule este stack; o provedor é um por conta e o stack do site não depende do
 export dele.
 
+Com `B2`, existe um terceiro stack, `lotus-contato` (§8): ele entra **antes** do `lotus-site`,
+porque este consome os outputs daquele (`DominioDaFuncaoDeContato`, `ArnDaFuncaoDeContato`) como
+parâmetro.
+
 ## 3. Stack do site
+
+Desde `B2`, `lotus-site.yaml` também exige `DominioDaFuncaoDeContato` e `ArnDaFuncaoDeContato`, sem
+`Default`: um create do zero, como o comando abaixo, sem os dois parâmetros, reprova com "must have
+values" — eles vêm dos outputs do `lotus-contato` (§8.3), que por isso precisa existir primeiro.
 
 ```bash
 aws cloudformation validate-template \
@@ -401,6 +409,10 @@ vez.
 
 ## 7. Desmonte
 
+Com `B2`, o stack `lotus-contato` (§8) também existe: derrube este (`lotus-site`) primeiro — a
+ordem inversa da 8.5.5 — e só depois `lotus-contato`, senão `ControleDeAcessoDaFuncao` e
+`PermissaoDeUrl` ficam órfãos.
+
 ```bash
 aws cloudformation delete-stack --stack-name lotus-site
 aws cloudformation wait stack-delete-complete --stack-name lotus-site
@@ -442,3 +454,190 @@ O `|| break` existe para o laço não girar para sempre quando a deleção falha
 abaixo é que diz se ele terminou o serviço. O laço existe porque o `rb` recusa bucket não vazio, e num bucket versionado "vazio" quer dizer sem
 versão **e** sem delete marker. Varrer só `Versions[]` deixa os marcadores para trás e o `rb` falha
 depois de o procedimento já ter anunciado remoção completa.
+
+## 8. Contato — SES, Lambda e Turnstile (`B2`)
+
+Stack `lotus-contato`, em `sa-east-1`. Spec em
+`docs/superpowers/specs/2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda-design.md`. A ordem
+importa: a identidade nasce primeiro, sozinha, porque os tokens DKIM só existem depois dela e a
+verificação leva tempo depois de os CNAME estarem na zona.
+
+### 8.0 O que só o João faz, antes de qualquer `deploy`
+
+**Widget Turnstile.** Conta Cloudflare (só Turnstile; o DNS não muda). Widget com os hostnames
+`lotusotec.cl`, `www.lotusotec.cl` e `dhpoztt69jydz.cloudfront.net`, modo **Managed**. A **site key**
+é pública e vai para a variável de repositório `VITE_TURNSTILE_SITE_KEY` (8.4). A **secret key** vai
+para o SSM, e só para lá.
+
+**Parâmetro SSM.** Nome fixo, tipo `SecureString`, chave gerenciada `aws/ssm`. O valor é digitado no
+prompt do `read -s` e não fica no histórico do shell:
+
+```bash
+export AWS_PROFILE=lotus
+read -r -s -p 'secret key do Turnstile: ' SEGREDO; echo
+aws ssm put-parameter --region sa-east-1 \
+  --name /lotus-site/contato/turnstile-secret \
+  --type SecureString --value "$SEGREDO" \
+  --description 'Secret key do widget Turnstile do formulario de contato'
+unset SEGREDO
+aws ssm describe-parameters --region sa-east-1 \
+  --parameter-filters Key=Name,Values=/lotus-site/contato/turnstile-secret \
+  --query 'Parameters[].{Nome:Name,Tipo:Type}' --output table
+```
+
+`describe-parameters` mostra nome e tipo, nunca o valor. **Nunca** rode `get-parameter
+--with-decryption` num terminal compartilhado ou numa sessão com o agente. Trocar o segredo é
+`put-parameter --overwrite` com o mesmo nome; a função lê o valor a cada cold start.
+
+Trocar o parâmetro não basta: instância quente continua servindo com o valor antigo em memória (o
+leitor cacheia por cold start, spec D7) — foi o desvio 3 da evidência de 2026-09-26, que só passou a
+recusar token inválido depois de um segundo `update-function-code`. Depois de qualquer
+`put-parameter --overwrite`, force o cold start reexecutando a §8.5 com o **mesmo** zip (mesmo
+`CodeSha256`, nenhuma mudança de código) — é o procedimento já provado.
+
+### 8.1 Primeira volta: só a identidade
+
+```bash
+export AWS_PROFILE=lotus
+
+aws cloudformation validate-template --region sa-east-1 \
+  --template-body file://infra/lotus-contato.yaml
+
+aws cloudformation deploy --region sa-east-1 \
+  --stack-name lotus-contato \
+  --template-file infra/lotus-contato.yaml \
+  --tags Projeto=lotus-site \
+  --no-execute-changeset
+```
+
+Leia o change set (o comando imprime o `describe-change-set`). Na primeira volta ele tem **uma**
+linha: `Add AWS::SES::EmailIdentity`. Depois:
+
+```bash
+aws cloudformation execute-change-set --region sa-east-1 --change-set-name <arn impresso acima>
+aws cloudformation wait stack-create-complete --region sa-east-1 --stack-name lotus-contato
+aws cloudformation describe-stacks --region sa-east-1 --stack-name lotus-contato \
+  --query 'Stacks[0].Outputs' --output table
+```
+
+A identidade nasce **pendente**. Os seis outputs `DkimNome1..3`/`DkimValor1..3` vão para a zona.
+
+### 8.2 DKIM, MAIL FROM e DMARC na zona
+
+Os seis registros entram em `infra/lotus-dns.yaml` **e** no `INVENTARIO` de
+`scripts/infra/lib/zona.mjs`, como a secção 6.7 exige de todo nome novo. Os três tokens DKIM são
+`Default` dos parâmetros `TokenDkim1..3` do template. Depois:
+
+```bash
+aws cloudformation deploy --region us-east-1 \
+  --stack-name lotus-dns \
+  --template-file infra/lotus-dns.yaml \
+  --tags Projeto=lotus-site \
+  --no-execute-changeset
+```
+
+Change set esperado: **uma** linha, `Modify AWS::Route53::RecordSetGroup` sem `Replacement`.
+Execute, espere `stack-update-complete`, e confira:
+
+```bash
+export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use
+pnpm infra:conferir-zona --pos-delegacao
+```
+
+A identidade fica verificada quando os três campos abaixo responderem `true`, `SUCCESS`,
+`SUCCESS`. Pode levar de minutos a algumas horas depois de os CNAME propagarem:
+
+```bash
+aws sesv2 get-email-identity --region sa-east-1 --email-identity lotusotec.cl \
+  --query '{Verificada:VerifiedForSendingStatus,Dkim:DkimAttributes.Status,MailFrom:MailFromAttributes.MailFromDomainStatus}'
+```
+
+Enquanto `Dkim` estiver em `PENDING`, nenhum `deploy` do `lotus-site` faz sentido: a função enviaria
+sem assinatura e a mensagem cairia em spam.
+
+### 8.3 Segunda volta: a função, e o `lotus-site`
+
+Pré-condições: identidade verificada (8.2) **e** parâmetro SSM criado (8.0). Sem o parâmetro a
+função sobe, mas todo envio responde `502`.
+
+```bash
+export AWS_PROFILE=lotus
+
+aws cloudformation deploy --region sa-east-1 \
+  --stack-name lotus-contato \
+  --template-file infra/lotus-contato.yaml \
+  --capabilities CAPABILITY_IAM \
+  --tags Projeto=lotus-site \
+  --no-execute-changeset
+```
+
+Change set esperado: `Add` para `Registros`, `PapelDaFuncao`, `Funcao` e `UrlDaFuncao`; **nenhuma**
+linha para `IdentidadeDeEnvio`. Execute, espere `stack-update-complete`, leia os outputs
+`DominioDaUrlDaFuncao`, `ArnDaFuncao` e `NomeDaFuncao`. Depois o site:
+
+```bash
+aws cloudformation deploy --region sa-east-1 \
+  --stack-name lotus-site \
+  --template-file infra/lotus-site.yaml \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides \
+    EmailDeAlerta=<seu-email> \
+    DominioDaFuncaoDeContato=<output DominioDaUrlDaFuncao> \
+    ArnDaFuncaoDeContato=<output ArnDaFuncao> \
+  --no-execute-changeset
+```
+
+Change set esperado: `Add` para `ControleDeAcessoDaFuncao`, `PermissaoDeUrl` e
+`PermissaoDeInvocacao`; `Modify` sem `Replacement` para `Distribuicao` e `PapelDeDeploy`; `Teto`
+aparece `Replacement: Conditional` (`CostFilters` mudou) e é atualizado no lugar, mesmo
+`PhysicalId` `lotus-site-teto` — medido em `docs/infra/evidencia-contato-2026-09-26.md`. `Balde` e
+`PoliticaDoBalde` **não** aparecem. Execute e espere a distribuição propagar:
+
+```bash
+aws cloudformation wait stack-update-complete --region sa-east-1 --stack-name lotus-site
+aws cloudfront wait distribution-deployed --id E1R7SPH4OLUIEQ
+```
+
+### 8.4 Variáveis de repositório
+
+Duas linhas a mais na tabela da secção 4, em `Gatika-CL/lotus-site` → Settings → Secrets and
+variables → Actions → **Variables**:
+
+| Variável                  | Vem de                                                  |
+| ------------------------- | ------------------------------------------------------- |
+| `AWS_CONTACT_FUNCTION`    | Output `NomeDaFuncao` do `lotus-contato`                |
+| `VITE_TURNSTILE_SITE_KEY` | Site key do widget Turnstile (pública; entra no bundle) |
+
+Sem `AWS_CONTACT_FUNCTION` o job `deploy` publica o site e **pula** a função, com aviso; o
+placeholder `503` fica no ar e o formulário mostra "no pudimos enviar".
+
+### 8.5 Publicar a função à mão, e rollback
+
+O CI faz isto a cada push em `main` do corporativo. Para publicar fora do CI — na prova de aceite
+do bloco, ou num rollback — o mesmo comando, com a mesma role ou o profile `lotus`:
+
+```bash
+export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use
+pnpm build:lambda
+(cd dist-lambda/contato && zip -q -X ../contato.zip index.mjs)
+AWS_PROFILE=lotus aws lambda update-function-code --region sa-east-1 \
+  --function-name lotus-site-contato --zip-file fileb://dist-lambda/contato.zip \
+  --query '{Sha:CodeSha256,Tamanho:CodeSize}'
+AWS_PROFILE=lotus aws lambda wait function-updated-v2 --region sa-east-1 \
+  --function-name lotus-site-contato
+```
+
+Rollback (`ADR-SITE-005`, spec §8), do mais leve ao mais pesado:
+
+1. **Função:** `git checkout <sha-anterior> -- lambda src/lib` e os comandos acima; ou o
+   placeholder, com `aws lambda update-function-code --zip-file` de um zip contendo só o
+   `index.js` inline do template.
+2. **Site:** o rollback da `ADR-SITE-004` não muda; um release anterior não chama `/api/contacto`.
+3. **Behavior `/api/*`:** remover do `lotus-site.yaml` e reimplantar. O bucket não é tocado.
+4. **DNS:** remover os seis registros de `lotus-dns.yaml` e do `INVENTARIO`. Nenhum deles é lido
+   pelo e-mail do Google.
+5. **Identidade:** `delete-stack lotus-contato` só depois de o site parar de chamar a função —
+   senão o `Add` das permissões no `lotus-site` fica órfão.
+
+Logs da função: `aws logs tail /aws/lambda/lotus-site-contato --region sa-east-1 --since 1h`. Cada
+linha é `{"requestId","desfecho"}` e nada mais: nome, e-mail, empresa e mensagem não são logados.

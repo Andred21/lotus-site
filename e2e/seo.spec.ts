@@ -1,6 +1,13 @@
 import { expect, test } from '@playwright/test'
+import { fingirTurnstile } from './contato-falso'
 
 const CANONICAL = 'https://lotusotec.cl/'
+
+// Toda navegação para `/` pode chegar a 400px de #Contacto e disparar o
+// carregamento do Turnstile; o script falso impede a requisição real.
+test.beforeEach(async ({ page }) => {
+  await fingirTurnstile(page)
+})
 
 // O dev server devolve index.html (200) para qualquer path desconhecido, então
 // status sozinho não prova nada: o corpo é o que se compara.
