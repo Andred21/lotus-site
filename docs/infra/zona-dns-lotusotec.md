@@ -186,6 +186,20 @@ Seis registros entraram em 2026-09-26, pelo stack `lotus-dns`, para autenticar o
 Os três tokens são `Default` dos parâmetros `TokenDkim1..3` do template e vieram dos outputs do
 stack `lotus-contato` (`sa-east-1`). Recriar a identidade SES troca os três.
 
+## Registro da intranet do Lotus (item 32 do repo `lotus-infra`)
+
+Um registro entrou pelo stack `lotus-dns`, na data da conferência abaixo, para a intranet do Lotus
+(EC2 em `sa-east-1`, EIP fixo). O nome é `app`, por decisão de João em 2026-09-27 (ADR-14 do
+`lotus-infra`, emenda); `sistema` **não** é a intranet e segue no WordPress até `B5`/`8.2.1`.
+
+| Nome               | Tipo | Valor           | Para quê                                  |
+| ------------------ | ---- | --------------- | ----------------------------------------- |
+| `app.lotusotec.cl` | `A`  | `18.230.53.197` | intranet do Lotus; TLS pelo Let's Encrypt |
+
+Sem `AAAA`: o EIP não tem IPv6. O certificado de `app` é emitido e renovado pelo Let's Encrypt
+(HTTP-01, no nginx da EC2) — o que restringe a `CAA` da zona (`D-49`): quando existir, lista
+`letsencrypt.org` além de `amazon.com`.
+
 ## Conferência antes e depois da troca
 
 A zona nova precisa responder **igual** à atual antes de a delegação mudar, porque durante a
