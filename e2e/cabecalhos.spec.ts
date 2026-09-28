@@ -27,7 +27,7 @@ const SUCCESS =
 // A sonda `allowsEval` do zod (`Function('')` dentro de try/catch) roda na
 // validação do formulário e a CSP a recusa: o zod cai no caminho sem eval,
 // sem erro de console, e o envio chega ao sucesso. Tolerada só ela, pelo
-// nome; tirar a sonda (`z.config({ jitless: true })` em `src/`) é o `D-60`.
+// nome; tirar a sonda (`z.config({ jitless: true })` em `src/`) é o `D-62`.
 const SONDA_DO_ZOD = 'script-src: eval'
 
 type JanelaVigiada = { violacoesDeCsp: string[]; furoDeCsp?: boolean }
