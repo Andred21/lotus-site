@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import {
   CABECALHOS,
   REMOVIDOS,
@@ -140,5 +141,48 @@ describe('lerPoliticaDoTemplate sobre fixtures', () => {
     expect(() => lerPoliticaDoTemplate('Resources: {}')).toThrow(
       'template sem o recurso PoliticaDeCabecalhos',
     )
+  })
+})
+
+const TEMPLATE = readFileSync('infra/lotus-site.yaml', 'utf8')
+
+describe('catraca: template ≡ módulo', () => {
+  const politica = lerPoliticaDoTemplate(TEMPLATE)
+  // Nome de cabeçalho é comparado sem caixa (HTTP não distingue; o template
+  // escreve `x-amz-version-id` ao lado de `Permissions-Policy`). Valor é
+  // comparado exato.
+  const doTemplate = new Map(
+    Object.entries(politica.cabecalhos).map(([nome, valor]) => [
+      nome.toLowerCase(),
+      valor,
+    ]),
+  )
+  const doModulo = new Map(
+    Object.entries(CABECALHOS).map(([nome, valor]) => [
+      nome.toLowerCase(),
+      valor,
+    ]),
+  )
+
+  it('todo cabeçalho do módulo está no template, com o mesmo valor', () => {
+    for (const [nome, valor] of doModulo) {
+      expect(doTemplate.get(nome), `cabeçalho ${nome}`).toBe(valor)
+    }
+  })
+
+  it('o template não emite cabeçalho fora do módulo', () => {
+    expect([...doTemplate.keys()].sort()).toEqual([...doModulo.keys()].sort())
+  })
+
+  it('os removidos batem, sem caixa', () => {
+    /** @param {readonly string[]} lista */
+    const chaves = (lista) => lista.map((nome) => nome.toLowerCase()).sort()
+    expect(chaves(politica.removidos)).toEqual(chaves(REMOVIDOS))
+  })
+
+  it('o Comment cabe nos 128 caracteres do CloudFront', () => {
+    // Medido em 2026-09-04: com 286 o stack reprovou em CREATE_FAILED.
+    expect(politica.comentario.length).toBeGreaterThan(0)
+    expect(politica.comentario.length).toBeLessThanOrEqual(128)
   })
 })
