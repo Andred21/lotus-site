@@ -24,9 +24,11 @@ const NOMES_ESPERADOS = [
 const SUCCESS =
   'Gracias. Recibimos su mensaje y le contactaremos a la brevedad.'
 
-// A sonda `allowsEval` do zod (`Function('')` dentro de try/catch) roda na
-// validação do formulário e a CSP a recusa: o zod cai no caminho sem eval,
-// sem erro de console, e o envio chega ao sucesso. Tolerada só ela, pelo
+// A sonda `allowsEval` do zod (`Function('')` dentro de try/catch) roda
+// quando `contactSchema = z.object({...})` é construído em
+// `src/lib/contact-schema.ts`, ou seja, na carga do bundle — não no envio do
+// formulário. A CSP a recusa: o zod cai no caminho sem eval, sem erro de
+// console, e o envio (quando ocorre) chega ao sucesso. Tolerada só ela, pelo
 // nome; tirar a sonda (`z.config({ jitless: true })` em `src/`) é o `D-62`.
 const SONDA_DO_ZOD = 'script-src: eval'
 
