@@ -690,6 +690,20 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   e-mail validado pelo zod. Correção sugerida: recusar `[\r\n]` em `nombre` e `empresa` no schema
   compartilhado, ou colapsar espaço em branco antes de formatar o corpo.
   **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `lambda/contato/ses.ts`.
+- **D-62 · o CI pessoal não compila a árvore que o espelho publica** — o `check` do corporativo
+  roda sobre a árvore filtrada por `.espelho-exclusoes`; o CI pessoal e a máquina local, sobre a
+  árvore inteira, e `scripts/espelhar-corporativo.sh` só confere que o CI pessoal está verde. A
+  diferença não é só de arquivos: sete arquivos de `scripts/qa/` e `scripts/inventario/` trazem
+  `/// <reference lib="dom" />`, e a diretiva carrega o DOM para o programa inteiro de
+  `tsconfig.node.json`. Os scripts de Node enxergam tipos do navegador aqui e não lá. Já custou um
+  deploy: o espelho `e8812b2` reprovou com `TS2322` em `scripts/infra/conferir-zona.mjs`, e o CI
+  do corporativo ficou sem publicar de 2026-09-26 a 2026-09-28, até o PR #20 corrigir aquele caso.
+  Saídas, decisão de João: (a) um job no CI pessoal que monta a árvore filtrada com a mesma volta do
+  script e roda `pnpm check` nela; (b) tirar os arquivos com DOM de `tsconfig.node.json` para um
+  projeto próprio, e os scripts de Node deixam de ver o DOM nos dois lados; (c) o script de espelho
+  rodar `pnpm check` na árvore filtrada antes do push.
+  **Gatilho:** próximo bloco que tocar `.github/workflows/ci.yml`, `scripts/espelhar-corporativo.sh`
+  ou `tsconfig.node.json`; ou a próxima reprovação do corporativo que só aparece na árvore filtrada.
 
 ## Fechados
 
