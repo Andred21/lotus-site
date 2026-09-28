@@ -162,8 +162,11 @@ um por vez, porque o harness admite um `active_work_item` só.
 
 ## B5 · `7.2.5` — cutover de `lotusotec.cl`
 
-- **Escopo:** apex e `www` apontando para a distribuição; remoção do `X-Robots-Tag`; decisão de
-  `D-39` (`PriceClass_100` não tem borda na América do Sul, e o visitante é chileno).
+- **Escopo:** apex e `www` apontando para a distribuição; remoção do `X-Robots-Tag` — desde `B3`
+  ele é um item de `CustomHeadersConfig` em `infra/lotus-site.yaml` **e** uma entrada em
+  `scripts/infra/lib/cabecalhos.mjs`, e a catraca `scripts/infra/cabecalhos.test.mjs` obriga os
+  dois a saírem juntos; decisão de `D-39` (`PriceClass_100` não tem borda na América do Sul, e o
+  visitante é chileno).
 - **Depende de:** `B4`.
 - **Fecha:** `D-22` — Rich Results Test e depuradores sociais passam a ter URL pública.
 - **Evidência exigida:** `lotusotec.cl` entregando o clone por HTTPS; nenhum recurso essencial
@@ -689,6 +692,33 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   rodar `pnpm check` na árvore filtrada antes do push.
   **Gatilho:** próximo bloco que tocar `.github/workflows/ci.yml`, `scripts/espelhar-corporativo.sh`
   ou `tsconfig.node.json`; ou a próxima reprovação do corporativo que só aparece na árvore filtrada.
+- **D-63 · a sonda `allowsEval` do zod viola a CSP ao carregar o bundle, a cada visita de página** —
+  medido em 2026-09-27 neste bloco e remedido em 2026-09-28 contra a distribuição
+  (`dhpoztt69jydz.cloudfront.net`): o zod 4.4.3 lê o getter `allowsEval.value`
+  (`node_modules/zod/v4/core/schemas.js:971-972`) dentro do construtor `$ZodObjectJIT`, que roda
+  quando um `z.object` é construído — não quando um schema faz parse. `src/lib/contact-schema.ts`
+  monta `contactSchema = z.object({...})` no topo do módulo, fora de qualquer função, então a leitura
+  acontece na carga do bundle, em toda visita de página, antes de qualquer interação com o
+  formulário. A leitura dispara a sonda de capacidade em si (`new Function("")` dentro de try/catch,
+  em `node_modules/zod/v4/core/util.js:145-163`), empacotada em `dist/assets/index-*.js`. Sob a CSP
+  de `7.2.2` (sem `'unsafe-eval'`), essa sonda gera uma violação `securitypolicyviolation`
+  `script-src: eval` só de a página carregar — confirmado em 2026-09-28 com Chromium real contra a
+  distribuição, sem preencher nem enviar o formulário. O lançamento é engolido: o zod cai no caminho
+  sem eval, sem erro de console, e o envio (quando ocorre) chega ao sucesso normalmente. Não há
+  endpoint de report, então nada é reportado fora do navegador. Não
+  corrigido em `B3` porque a correção limpa fica em `src/` e muda o bundle, o que o escopo negativo
+  do plano de `7.2.2` proíbe (nada em `src/`, sem `s3 sync`); `'unsafe-eval'` foi rejeitado. João
+  decidiu em 2026-09-27: o E2E `e2e/cabecalhos.spec.ts` tolera só essa violação, pelo nome
+  (`SONDA_DO_ZOD`). Correção sugerida: `z.config({ jitless: true })` do zod, executado antes de
+  `contactSchema = z.object({...})` ser construído (o zod pula a sonda sob `jitless`:
+  `node_modules/zod/v4/core/util.js:148-150`), e então remover `SONDA_DO_ZOD` e seu filtro em
+  `e2e/cabecalhos.spec.ts` para o teste de jornada voltar a exigir zero violações.
+  **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `src/integrations/contact/`,
+  ou o próximo deploy do bundle depois de `B3`.
+  **Remedido em 2026-09-28** contra a distribuição, com Chromium real: a violação ocorre à carga da
+  página, não ao enviar o formulário (texto do débito corrigido nesta data).
+  **Renumerado em 2026-09-28**, no fechamento de `7.2.2`: nasceu como `D-62` nos commits `fa5c7a7`
+  e `bf394b3`, mas `main` publicou antes outro `D-62` (CI pessoal e árvore espelhada).
 
 ## Fechados
 

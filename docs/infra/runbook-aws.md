@@ -163,9 +163,14 @@ sai no ar, mas arquivos que saíram do build continuam na raiz do bucket.
 
 ## 5. Prova de aceite
 
-Ver a secção correspondente do plano do bloco. Em resumo: a home responde 200 com
-`X-Robots-Tag`, um caminho inventado responde 404, o bucket responde 403 quando acessado direto, e
-os quatro bloqueios de acesso público estão ligados.
+Ver a secção correspondente do plano do bloco. Em resumo: toda resposta da distribuição — `/`, um
+asset, `/api/*` e um caminho inventado (404) — traz os cabeçalhos de `7.2.2`
+(`Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options`,
+`X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` e `X-Robots-Tag`) e **não** traz
+`Server` do S3, `x-amz-version-id` nem `x-amz-server-side-encryption` (`Server: CloudFront` é o
+CloudFront repondo o próprio); o bucket responde 403 quando acessado direto, e os quatro bloqueios
+de acesso público estão ligados. Os valores canônicos moram em `scripts/infra/lib/cabecalhos.mjs`,
+e a catraca `scripts/infra/cabecalhos.test.mjs` reprova divergência com o template.
 
 ## 6. Route 53 — mover a zona de `lotusotec.cl`
 
