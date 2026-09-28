@@ -1,16 +1,16 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
+workflow_state: planning
 work_class: null
-active_work_item: null
-active_notion_eap: null
-active_title: null
-active_branch: null
+active_work_item: 7.2.3+7.2.4
+active_notion_eap: 7.2.3+7.2.4
+active_title: Backup e rollback do WordPress antes do corte; smoke test completo em produção (bloco `B4`)
+active_branch: feat/7-2-3-7-2-4-backup-smoke-test
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+next_owner: claude
+next_action: continue_planning
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: f797db1
-updated_at: 2026-09-28T03:59:00Z
+state_basis_commit: 5b17981
+updated_at: 2026-09-28T04:17:51Z
 ---
 
 # Estado operacional — Lotus Site
