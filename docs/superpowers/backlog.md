@@ -162,8 +162,11 @@ um por vez, porque o harness admite um `active_work_item` só.
 
 ## B5 · `7.2.5` — cutover de `lotusotec.cl`
 
-- **Escopo:** apex e `www` apontando para a distribuição; remoção do `X-Robots-Tag`; decisão de
-  `D-39` (`PriceClass_100` não tem borda na América do Sul, e o visitante é chileno).
+- **Escopo:** apex e `www` apontando para a distribuição; remoção do `X-Robots-Tag` — desde `B3`
+  ele é um item de `CustomHeadersConfig` em `infra/lotus-site.yaml` **e** uma entrada em
+  `scripts/infra/lib/cabecalhos.mjs`, e a catraca `scripts/infra/cabecalhos.test.mjs` obriga os
+  dois a saírem juntos; decisão de `D-39` (`PriceClass_100` não tem borda na América do Sul, e o
+  visitante é chileno).
 - **Depende de:** `B4`.
 - **Fecha:** `D-22` — Rich Results Test e depuradores sociais passam a ter URL pública.
 - **Evidência exigida:** `lotusotec.cl` entregando o clone por HTTPS; nenhum recurso essencial
@@ -684,6 +687,22 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   e-mail validado pelo zod. Correção sugerida: recusar `[\r\n]` em `nombre` e `empresa` no schema
   compartilhado, ou colapsar espaço em branco antes de formatar o corpo.
   **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `lambda/contato/ses.ts`.
+- **D-62 · a sonda `allowsEval` do zod viola a CSP no envio do formulário** — medido em 2026-09-27
+  neste bloco: o zod 4.4.3 roda uma sonda de capacidade `allowsEval` (`new Function("")` dentro de
+  try/catch, em `node_modules/zod/v4/core/util.js:145-162`) na primeira vez que um schema de objeto
+  faz parse; ela é empacotada em `dist/assets/index-*.js`. Sob a CSP de `7.2.2` (sem
+  `'unsafe-eval'`), enviar o formulário de contato gera uma violação `securitypolicyviolation`
+  `script-src: eval`. O lançamento é engolido: o zod cai no caminho sem eval, sem erro de console, e
+  o envio chega ao sucesso. Não há endpoint de report, então nada é reportado fora do navegador. Não
+  corrigido em `B3` porque a correção limpa fica em `src/` e muda o bundle, o que o escopo negativo
+  do plano de `7.2.2` proíbe (nada em `src/`, sem `s3 sync`); `'unsafe-eval'` foi rejeitado. João
+  decidiu em 2026-09-27: o E2E `e2e/cabecalhos.spec.ts` tolera só essa violação, pelo nome
+  (`SONDA_DO_ZOD`). Correção sugerida: `z.config({ jitless: true })` do zod, executado antes de
+  qualquer parse de schema (o zod pula a sonda sob `jitless`:
+  `node_modules/zod/v4/core/util.js:148-150`), e então remover `SONDA_DO_ZOD` e seu filtro em
+  `e2e/cabecalhos.spec.ts` para o teste de jornada voltar a exigir zero violações.
+  **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `src/integrations/contact/`,
+  ou o próximo deploy do bundle depois de `B3`.
 
 ## Fechados
 
