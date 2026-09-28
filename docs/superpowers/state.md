@@ -1,8 +1,8 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: planning
-work_class: null
+workflow_state: ready_for_execution
+work_class: architectural
 active_work_item: 7.2.2
 active_notion_eap: 7.2.2
 active_title: Aplicar headers e hardening HTTP adequados ao site
@@ -10,19 +10,19 @@ active_branch: feat/7-2-2-headers-hardening
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: continue_planning
+next_action: execute_active_work_item
 resume_state: null
 context_packet: null
-active_spec: null
-active_plan: null
-executor: null
-reviewer: null
+active_spec: docs/superpowers/specs/2026-09-27-7.2.2-headers-hardening-design.md
+active_plan: docs/superpowers/plans/2026-09-27-7.2.2-headers-hardening.md
+executor: claude
+reviewer: codex
 reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 17
 last_completed_work_item: 4.1.7+7.1.3+7.1.4
-state_basis_commit: 581f6c1
-updated_at: 2026-09-28T01:24:01Z
+state_basis_commit: 87c9377
+updated_at: 2026-09-28T02:06:42Z
 ---
 
 # Estado operacional — Lotus Site
