@@ -687,7 +687,7 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   e-mail validado pelo zod. Correção sugerida: recusar `[\r\n]` em `nombre` e `empresa` no schema
   compartilhado, ou colapsar espaço em branco antes de formatar o corpo.
   **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `lambda/contato/ses.ts`.
-- **D-62 · a sonda `allowsEval` do zod viola a CSP ao carregar o bundle, a cada visita de página** —
+- **D-63 · a sonda `allowsEval` do zod viola a CSP ao carregar o bundle, a cada visita de página** —
   medido em 2026-09-27 neste bloco e remedido em 2026-09-28 contra a distribuição
   (`dhpoztt69jydz.cloudfront.net`): o zod 4.4.3 lê o getter `allowsEval.value`
   (`node_modules/zod/v4/core/schemas.js:971-972`) dentro do construtor `$ZodObjectJIT`, que roda
@@ -712,6 +712,8 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   ou o próximo deploy do bundle depois de `B3`.
   **Remedido em 2026-09-28** contra a distribuição, com Chromium real: a violação ocorre à carga da
   página, não ao enviar o formulário (texto do débito corrigido nesta data).
+  **Renumerado em 2026-09-28**, no fechamento de `7.2.2`: nasceu como `D-62` nos commits `fa5c7a7`
+  e `bf394b3`, mas `main` publicou antes outro `D-62` (CI pessoal e árvore espelhada).
 
 ## Fechados
 

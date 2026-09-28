@@ -186,12 +186,12 @@ Leitura direta do JSON:
   `script-src: eval`, com `sourceFile` apontando para o próprio bundle do site
   (`assets/index-WBMd0hPu.js`), não para `challenges.cloudflare.com`. `frame-src`/`connect-src`
   para a Cloudflare não aparecem violados em nenhuma execução.
-- **A única violação é a sonda do zod, tolerada por decisão (`D-62`).** Dispara à carga da página
+- **A única violação é a sonda do zod, tolerada por decisão (`D-63`).** Dispara à carga da página
   (sem preencher nem enviar o formulário), porque `contactSchema = z.object({...})` em
   `src/lib/contact-schema.ts` é construído no topo do módulo — o gatilho é a leitura de
   `allowsEval.value` no construtor `$ZodObjectJIT`
   (`node_modules/zod/v4/core/schemas.js:971-972`), que executa a sonda de capacidade
-  `new Function("")` (`node_modules/zod/v4/core/util.js:145-163`). Corrigido o texto de `D-62` e o
+  `new Function("")` (`node_modules/zod/v4/core/util.js:145-163`). Corrigido o texto de `D-63` e o
   comentário de `SONDA_DO_ZOD` em `e2e/cabecalhos.spec.ts` nesta mesma data (commit
   `bf394b3fecb62daf482eb406672ba6f845d7c81d`) para refletir esse gatilho; a decisão de tolerância é
   de João, 2026-09-27, e continua valendo.
@@ -208,7 +208,7 @@ Leitura direta do JSON:
   intermitentes e dependentes do desafio específico servido a cada carregamento.
 
 Resultado: frame do Turnstile carregado, zero violação contra origem da Cloudflare, zero erro de
-console na página do site e uma única violação, a sonda do zod tolerada pelo `D-62`.
+console na página do site e uma única violação, a sonda do zod tolerada pelo `D-63`.
 
 ## Exceção ratificada: console dentro do frame da Cloudflare
 

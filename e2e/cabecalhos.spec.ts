@@ -36,7 +36,7 @@ const SUCCESS =
 // uma vez — nem zero (a sonda sumiu, ou parou de rodar) nem mais de uma
 // (outro eval entrou, ou a jornada passou a recarregar a página); qualquer
 // uma dessas mudanças precisa revisitar esta tolerância. Tirar a sonda
-// (`z.config({ jitless: true })` em `src/`) é o `D-62`.
+// (`z.config({ jitless: true })` em `src/`) é o `D-63`.
 const SONDA_DO_ZOD = 'script-src: eval'
 
 type JanelaVigiada = { violacoesDeCsp: string[]; furoDeCsp?: boolean }
