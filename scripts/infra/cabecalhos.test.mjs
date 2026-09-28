@@ -144,6 +144,9 @@ describe('lerPoliticaDoTemplate sobre fixtures', () => {
   })
 })
 
+// Caminho a partir da raiz do repositório, como `zona.test.mjs`: sob o
+// Vitest, `import.meta.url` não é URL de esquema `file:` e `readFileSync` a
+// recusa.
 const TEMPLATE = readFileSync('infra/lotus-site.yaml', 'utf8')
 
 describe('catraca: template ≡ módulo', () => {
