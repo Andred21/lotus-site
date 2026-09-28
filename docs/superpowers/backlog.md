@@ -569,21 +569,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
 
   **Gatilho:** agora. Decisão antes de 2026-10-11; prazo duro 2026-11-10.
 
-- **D-52 · `delete-stack` do `lotus-dns` esvaziaria a zona viva** — `Zona` tem
-  `DeletionPolicy: Retain`, mas `Registros` não: um `delete-stack` apaga MX, SPF e todo o resto e
-  deixa a zona retida vazia, com o e-mail da empresa fora do ar. E o stack não tem termination
-  protection (medido em 2026-09-26: `EnableTerminationProtection: false`). Duas correções: João liga
-  a proteção, que é escrita na conta e não depende de deploy,
-
-  ```bash
-  AWS_PROFILE=lotus aws cloudformation update-termination-protection \
-    --enable-termination-protection --region us-east-1 --stack-name lotus-dns
-  ```
-
-  e `Registros` ganha `DeletionPolicy`/`UpdateReplacePolicy: Retain`, com asserção na catraca, no
-  próximo bloco que fizer deploy do `lotus-dns`.
-  **Gatilho:** a proteção, agora, por João; a política, antes do próximo deploy do `lotus-dns`.
-
 - **D-53 · o bloco `7.2.1` (delegação e certificado) não teve segunda lente** — Claude executou
   `b64bb94..cb06414` e também fez a review formal de `/revisar-site`: a cota da conta Codex estava
   esgotada em 2026-09-26. As reviews por task durante a execução foram de subagentes Claude, a
@@ -686,6 +671,27 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `lambda/contato/ses.ts`.
 
 ## Fechados
+
+- **D-52 · `delete-stack` do `lotus-dns` esvaziaria a zona viva** — `Zona` tem
+  `DeletionPolicy: Retain`, mas `Registros` não: um `delete-stack` apaga MX, SPF e todo o resto e
+  deixa a zona retida vazia, com o e-mail da empresa fora do ar. E o stack não tem termination
+  protection (medido em 2026-09-26: `EnableTerminationProtection: false`). Duas correções: João liga
+  a proteção, que é escrita na conta e não depende de deploy,
+
+  ```bash
+  AWS_PROFILE=lotus aws cloudformation update-termination-protection \
+    --enable-termination-protection --region us-east-1 --stack-name lotus-dns
+  ```
+
+  e `Registros` ganha `DeletionPolicy`/`UpdateReplacePolicy: Retain`, com asserção na catraca, no
+  próximo bloco que fizer deploy do `lotus-dns`.
+  **Gatilho:** a proteção, agora, por João; a política, antes do próximo deploy do `lotus-dns`.
+  **Fechado em 2026-09-28.** Proteção ligada por João (`describe-stacks`:
+  `EnableTerminationProtection: True`); `Registros` com `DeletionPolicy`/`UpdateReplacePolicy:
+Retain` e asserção em `scripts/infra/zona.test.mjs` (PR #21); deploy por change set de um recurso
+  (`Registros Modify, Replacement False`), `UPDATE_COMPLETE` em 2026-09-28T01:11:31Z, com a
+  proteção seguindo `True`. Conferência da zona em `docs/infra/conferencia-zona-2026-09-28.md`: o
+  registro novo `app` e os do SES intactos. Evidência no audit do item 32 do repo `lotus-infra`.
 
 - **D-48 · o runbook descreve duas formas de emitir o certificado** — a secção 6.6 passou a
   descrever o recurso `AWS::CertificateManager::Certificate` no stack `lotus-dns` como caminho
