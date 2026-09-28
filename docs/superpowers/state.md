@@ -1,28 +1,28 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_closure
-work_class: architectural
-active_work_item: 4.1.7+7.1.3+7.1.4
-active_notion_eap: 4.1.7+7.1.3+7.1.4
-active_title: contato por SES + Lambda
-active_branch: feat/4-1-7-7-1-3-7-1-4-contato-ses-lambda
+workflow_state: idle
+work_class: null
+active_work_item: null
+active_notion_eap: null
+active_title: null
+active_branch: null
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: close_active_work_item
+next_owner: joao
+next_action: select_work_item
 resume_state: null
 context_packet: null
-active_spec: docs/superpowers/specs/2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda-design.md
-active_plan: docs/superpowers/plans/2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda.md
-executor: claude
-reviewer: codex
+active_spec: null
+active_plan: null
+executor: null
+reviewer: null
 reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 16
-last_completed_work_item: 7.2.1
-state_basis_commit: 53c1db4
-updated_at: 2026-09-27T23:52:53Z
+supervised_cycles_completed: 17
+last_completed_work_item: 4.1.7+7.1.3+7.1.4
+state_basis_commit: 4ef571a
+updated_at: 2026-09-28T00:00:43Z
 ---
 
 # Estado operacional — Lotus Site
