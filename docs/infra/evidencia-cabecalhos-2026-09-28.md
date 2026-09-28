@@ -1,8 +1,9 @@
 # Evidência — cabeçalhos de segurança na distribuição (`7.2.2`)
 
 Medido em 2026-09-28, distribuição `dhpoztt69jydz.cloudfront.net`, stack `lotus-site` (sa-east-1),
-`UPDATE_COMPLETE` desde `2026-09-28T03:00:57Z` (`aws cloudformation describe-stacks --stack-name
-lotus-site --query "Stacks[0].{Status:StackStatus,Updated:LastUpdatedTime}"`), após o change set
+atualização iniciada em `2026-09-28T03:00:57Z` (`LastUpdatedTime` de `aws cloudformation
+describe-stacks --stack-name lotus-site`) e concluída em `2026-09-28T03:01:12Z` (evento
+`UPDATE_COMPLETE` do stack em `describe-stack-events`), após o change set
 `arn:aws:cloudformation:sa-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1790564379/b58c6973-dd47-485a-9422-afb989ac8487`
 (`CreationTime 2026-09-28T02:59:40Z`, `ExecutionStatus EXECUTE_COMPLETE`) executado por João.
 
@@ -208,6 +209,14 @@ Leitura direta do JSON:
 
 Resultado: frame do Turnstile carregado, zero violação contra origem da Cloudflare, zero erro de
 console na página do site e uma única violação, a sonda do zod tolerada pelo `D-62`.
+
+## Exceção ratificada: console dentro do frame da Cloudflare
+
+A spec §7 pede zero erro de console. As duas linhas `%c%d font-size:0;color:transparent NaN` saem
+de dentro do frame do Turnstile (`challenges.cloudflare.com`), código de terceiro fora do controle
+do site. João decidiu em 2026-09-28, na review de `7.2.2`: o critério "zero erro de console" vale
+para a página do site (`errosDeConsolePorOrigem.topo`, vazio), e o ruído dentro dos frames da
+Cloudflare fica registrado aqui como exceção nominal.
 
 ## Limites declarados (spec §7)
 
