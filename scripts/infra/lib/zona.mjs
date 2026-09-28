@@ -125,6 +125,9 @@ export const INVENTARIO = Object.freeze([
     tipo: 'TXT',
     valores: ['"v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl"'],
   },
+  // ── Intranet do Lotus (item 32 do repo lotus-infra) ─────────────────────
+  // Nasce no Route 53: nunca existiu no painel. Sem AAAA, o EIP não tem IPv6.
+  { nome: 'app.lotusotec.cl.', tipo: 'A', valores: ['18.230.53.197'] },
 ])
 
 /**
@@ -282,15 +285,17 @@ export function lerRegistros(texto) {
 }
 
 /**
- * As duas políticas do recurso da zona. Apagar a zona e recriá-la dá
- * nameservers novos, e são eles que o registrador aponta.
+ * As duas políticas de um recurso de `Resources:`. Para `Zona`, apagar e
+ * recriar dá nameservers novos, e são eles que o registrador aponta. Para
+ * `Registros`, um delete-stack sem Retain esvazia a zona viva (D-52).
  * @param {string} texto
+ * @param {string} recurso nome lógico, como está no template
  */
-export function lerPoliticasDaZona(texto) {
-  const de = texto.indexOf('\n  Zona:')
-  if (de === -1) throw new Error('template sem o recurso Zona')
+export function lerPoliticasDoRecurso(texto, recurso) {
+  const de = texto.indexOf(`\n  ${recurso}:`)
+  if (de === -1) throw new Error(`template sem o recurso ${recurso}`)
   const politicas = { deletionPolicy: '', updateReplacePolicy: '' }
-  // `slice(2)`: o corte comeca no `\n` que antecede `  Zona:`, entao a
+  // `slice(2)`: o corte comeca no `\n` que antecede `  <recurso>:`, entao a
   // primeira fatia e vazia e a segunda e o proprio cabecalho do recurso --
   // que o `break` abaixo tomaria pelo recurso seguinte.
   for (const linha of texto.slice(de).split('\n').slice(2)) {
@@ -302,6 +307,14 @@ export function lerPoliticasDaZona(texto) {
     if (substituir) politicas.updateReplacePolicy = substituir[1] ?? ''
   }
   return politicas
+}
+
+/**
+ * Mantida pelo nome: é a chamada que o teste e o `conferir-zona` já fazem.
+ * @param {string} texto
+ */
+export function lerPoliticasDaZona(texto) {
+  return lerPoliticasDoRecurso(texto, 'Zona')
 }
 
 /**

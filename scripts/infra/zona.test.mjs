@@ -5,6 +5,7 @@ import {
   delegacaoEsperada,
   lerParametros,
   lerPoliticasDaZona,
+  lerPoliticasDoRecurso,
   lerRegistros,
   mesmoConjunto,
   normalizar,
@@ -30,6 +31,7 @@ describe('leitura textual do template', () => {
     for (const nome of ['TokenDkim1', 'TokenDkim2', 'TokenDkim3']) {
       expect(parametros.get(nome)).toMatch(/^[a-z0-9]{20,64}$/)
     }
+    expect(parametros.get('IpDaIntranet')).toBe('18.230.53.197')
   })
 
   it('resolve !Ref e !Sub contra os defaults', () => {
@@ -168,6 +170,35 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
       deletionPolicy: 'Retain',
       updateReplacePolicy: 'Retain',
     })
+  })
+
+  it('protege os registros contra delete-stack (D-52)', () => {
+    // A zona já era Retain; os registros não. Um delete-stack apagaria MX,
+    // SPF e o resto e deixaria a zona retida vazia, com o e-mail fora do ar.
+    expect(lerPoliticasDoRecurso(TEMPLATE, 'Registros')).toEqual({
+      deletionPolicy: 'Retain',
+      updateReplacePolicy: 'Retain',
+    })
+  })
+
+  it('lerPoliticasDaZona continua sendo o recurso Zona', () => {
+    expect(lerPoliticasDaZona(TEMPLATE)).toEqual(
+      lerPoliticasDoRecurso(TEMPLATE, 'Zona'),
+    )
+  })
+
+  it('reprova recurso que não existe em vez de devolver políticas vazias', () => {
+    expect(() => lerPoliticasDoRecurso(TEMPLATE, 'NaoExiste')).toThrow(
+      /NaoExiste/,
+    )
+  })
+
+  it('app tem A para o EIP da intranet e NÃO tem AAAA — o EIP não tem IPv6', () => {
+    const app = registros.filter(
+      (registro) => registro.nome === 'app.lotusotec.cl.',
+    )
+    expect(app.map((registro) => registro.tipo)).toEqual(['A'])
+    expect(app[0]?.valores).toEqual(['18.230.53.197'])
   })
 
   it('usa o TTL medido da zona atual em todos os registros', () => {

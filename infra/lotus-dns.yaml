@@ -56,6 +56,15 @@ Parameters:
     Default: ilecjqmzurmfbtcete7ip5sdurjx6irz
     AllowedPattern: '^[a-z0-9]+$'
 
+  IpDaIntranet:
+    Type: String
+    Default: 18.230.53.197
+    Description: >-
+      EIP da EC2 do Lotus (intranet), sa-east-1. O nome e `app` por decisao
+      de Joao em 2026-09-27 (ADR-14 do repo lotus-infra, emenda). Sem AAAA:
+      o EIP nao tem IPv6.
+    AllowedPattern: '^\d{1,3}(\.\d{1,3}){3}$'
+
 Resources:
   Zona:
     Type: AWS::Route53::HostedZone
@@ -74,6 +83,12 @@ Resources:
 
   Registros:
     Type: AWS::Route53::RecordSetGroup
+    # D-52: a zona ja era Retain, os registros nao. Sem isto um delete-stack
+    # apaga MX, SPF e o resto e deixa a zona retida VAZIA, com o e-mail da
+    # empresa fora do ar. Termination protection ligada pelo Joao na mesma
+    # rodada; as duas protecoes, nao uma.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       HostedZoneId: !Ref Zona
       # NS e SOA do apex nao entram: a zona ja nasce com os dois, e declara-los
@@ -229,6 +244,16 @@ Resources:
           TTL: !Ref TtlPadrao
           ResourceRecords:
             - '"v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl"'
+
+        # ── Intranet do Lotus (item 32 do repo lotus-infra) ─────────────────────
+        # Nasce no Route 53, nunca existiu no painel. Sem AAAA: o EIP nao tem
+        # IPv6. `sistema` continua no WordPress ate B5/8.2.1 -- nao e a
+        # intranet, por decisao de Joao em 2026-09-27.
+        - Name: !Sub 'app.${NomeDaZona}.'
+          Type: A
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Ref IpDaIntranet
 
   Certificado:
     Type: AWS::CertificateManager::Certificate

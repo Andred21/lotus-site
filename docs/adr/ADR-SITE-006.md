@@ -137,3 +137,12 @@ entrega de `B1`, não item futuro.
 - O e-mail corporativo continua no Google Workspace por decisão de João em 2026-09-09. A migração
   da zona **não** é migração de e-mail, e o MX é o registro que mais exige conferência antes e
   depois da troca.
+
+## Emenda de 2026-09-27 — o nome da intranet é `app`, não `sistema`
+
+Este ADR pedia `sistema.lotusotec.cl` "para o Lotus". Em 2026-09-27 João decidiu, no planejamento do
+item 32 do repo `lotus-infra` (ADR-14 de lá, emenda da mesma data), que o nome público da intranet
+é **`app.lotusotec.cl`**. O registro `sistema` continua no template apontando para o WordPress, como
+cópia da zona antiga, e o destino dele é `B5`/`8.2.1` — não muda aqui, também porque é servido pelo
+certificado wildcard de `D-51`. O registro `app` é o primeiro da zona que nasce no Route 53 sem ter
+existido no painel.

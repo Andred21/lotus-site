@@ -523,11 +523,14 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   emitir certificado para `lotusotec.cl`. A `CAA` precisa listar **toda** CA que emite para algum
   nome da zona: hoje são duas, `amazon.com` para o ACM e `letsencrypt.org` para o wildcard que a
   20i mantém no WordPress (`D-51`). Uma `CAA` só com `amazon.com` bloquearia a renovação do
-  WordPress. Uma `CAA` errada bloqueia também a renovação do ACM, que depois que `B5` o puser em
-  uso é automática e silenciosa, e com certificado de 198 dias acontece duas vezes por ano — a
-  falha apareceria como site fora do ar meses depois, sem ninguém ter tocado em nada. Merece bloco
-  com prova própria: publicar, medir, e só então confiar. `issuewild ";"` só depois de `B7`, quando
-  o wildcard deixar de existir.
+  WordPress.
+  E bloquearia também a da **intranet do Lotus**: `app.lotusotec.cl` (item 32 do `lotus-infra`) é
+  emitido e renovado pelo Let's Encrypt por HTTP-01, então `letsencrypt.org` fica na `CAA` **mesmo
+  depois** que o wildcard do WordPress deixar de existir. Uma `CAA` errada bloqueia também a
+  renovação do ACM, que depois que `B5` o puser em uso é automática e silenciosa, e com certificado
+  de 198 dias acontece duas vezes por ano — a falha apareceria como site fora do ar meses depois,
+  sem ninguém ter tocado em nada. Merece bloco com prova própria: publicar, medir, e só então
+  confiar. `issuewild ";"` só depois de `B7`, quando o wildcard deixar de existir.
   **Gatilho:** depois de `D-51` decidido; a forma final, em `B7`.
 - **D-50 · caixa criada na StackMail envia mas nunca recebe** — o `MX` de `lotusotec.cl` aponta
   para o Google Workspace; a StackMail só aparece no SPF. Uma caixa criada no StackCP — caso de
