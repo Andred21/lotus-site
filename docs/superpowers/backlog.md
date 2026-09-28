@@ -631,6 +631,12 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   web — abrir aquela mensagem → "Mostrar original" → colar `Message-ID` e `Authentication-Results`
   na evidência, em commit próprio; ou a próxima mensagem real, o que vier primeiro. `dkim=fail` ou
   `spf=fail` ali é bug, não observação.
+  **Atualização em 2026-09-27:** a função passou a sair pelo CI (run `36364614503` do corporativo,
+  `CodeSha256` `FGWZyv2taK2bjNw2g/SccEewaqz2pMg76N3y67lXupY=`). As provas negativas se repetiram
+  sobre o código novo, mas o caminho `enviado` dele ainda não foi observado. O acesso à caixa pelo
+  Gmail web fica com o destinatário, fora do horário comercial, e João manteve o débito aberto. A
+  próxima mensagem real fecha as duas coisas de uma vez: `enviado` no log da função publicada pelo
+  CI e os dois cabeçalhos da mensagem.
 - **D-57 · o `siteverify` não tem timeout, e o timeout da função é igual ao do navegador** —
   achado M-4 da review final de 2026-09-27. `lambda/contato/turnstile.ts:31-35` chama o `fetch` do
   `siteverify` sem `signal`; `infra/lotus-contato.yaml:139` fixa `Timeout: 10` na função, o mesmo
@@ -684,6 +690,20 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   e-mail validado pelo zod. Correção sugerida: recusar `[\r\n]` em `nombre` e `empresa` no schema
   compartilhado, ou colapsar espaço em branco antes de formatar o corpo.
   **Gatilho:** próximo bloco que tocar `src/lib/contact-schema.ts` ou `lambda/contato/ses.ts`.
+- **D-62 · o CI pessoal não compila a árvore que o espelho publica** — o `check` do corporativo
+  roda sobre a árvore filtrada por `.espelho-exclusoes`; o CI pessoal e a máquina local, sobre a
+  árvore inteira, e `scripts/espelhar-corporativo.sh` só confere que o CI pessoal está verde. A
+  diferença não é só de arquivos: sete arquivos de `scripts/qa/` e `scripts/inventario/` trazem
+  `/// <reference lib="dom" />`, e a diretiva carrega o DOM para o programa inteiro de
+  `tsconfig.node.json`. Os scripts de Node enxergam tipos do navegador aqui e não lá. Já custou um
+  deploy: o espelho `e8812b2` reprovou com `TS2322` em `scripts/infra/conferir-zona.mjs`, e o CI
+  do corporativo ficou sem publicar de 2026-09-26 a 2026-09-28, até o PR #20 corrigir aquele caso.
+  Saídas, decisão de João: (a) um job no CI pessoal que monta a árvore filtrada com a mesma volta do
+  script e roda `pnpm check` nela; (b) tirar os arquivos com DOM de `tsconfig.node.json` para um
+  projeto próprio, e os scripts de Node deixam de ver o DOM nos dois lados; (c) o script de espelho
+  rodar `pnpm check` na árvore filtrada antes do push.
+  **Gatilho:** próximo bloco que tocar `.github/workflows/ci.yml`, `scripts/espelhar-corporativo.sh`
+  ou `tsconfig.node.json`; ou a próxima reprovação do corporativo que só aparece na árvore filtrada.
 
 ## Fechados
 
