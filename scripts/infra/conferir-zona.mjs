@@ -164,8 +164,9 @@ async function perguntarDoh(nome, tipo) {
       `dns.google respondeu ${resposta.status} para ${tipo} ${nome}`,
     )
   }
-  /** @type {{ Answer?: { type: number, data: string }[] }} */
-  const corpo = await resposta.json()
+  const corpo = /** @type {{ Answer?: { type: number, data: string }[] }} */ (
+    await resposta.json()
+  )
   const codigo = CODIGO_DOH[/** @type {keyof typeof CODIGO_DOH} */ (tipo)]
   return (corpo.Answer ?? [])
     .filter((registro) => registro.type === codigo)
