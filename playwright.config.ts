@@ -35,7 +35,11 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: ['**/producao.spec.ts', '**/regressao-visual.spec.ts'],
+      testIgnore: [
+        '**/producao.spec.ts',
+        '**/regressao-visual.spec.ts',
+        '**/cabecalhos.spec.ts',
+      ],
     },
     {
       name: 'firefox',
@@ -55,7 +59,11 @@ export default defineConfig({
     {
       name: 'producao',
       use: { ...devices['Desktop Chrome'], baseURL: previewURL },
-      testMatch: ['**/producao.spec.ts', '**/regressao-visual.spec.ts'],
+      testMatch: [
+        '**/producao.spec.ts',
+        '**/regressao-visual.spec.ts',
+        '**/cabecalhos.spec.ts',
+      ],
     },
   ],
   webServer: [
