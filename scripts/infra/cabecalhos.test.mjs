@@ -113,6 +113,58 @@ describe('lerPoliticaDoTemplate sobre fixtures', () => {
     ).toThrow('StrictTransportSecurity sem AccessControlMaxAgeSec')
   })
 
+  it('IncludeSubdomains ausente quebra com o nome do campo', () => {
+    expect(() =>
+      lerPoliticaDoTemplate(
+        MODELO.replace('            IncludeSubdomains: false\n', ''),
+      ),
+    ).toThrow('StrictTransportSecurity sem IncludeSubdomains')
+  })
+
+  it('Preload ausente quebra com o nome do campo', () => {
+    expect(() =>
+      lerPoliticaDoTemplate(MODELO.replace('            Preload: false\n', '')),
+    ).toThrow('StrictTransportSecurity sem Preload')
+  })
+
+  it('IncludeSubdomains ou Preload fora de true/false quebra com o valor', () => {
+    expect(() =>
+      lerPoliticaDoTemplate(
+        MODELO.replace('IncludeSubdomains: false', 'IncludeSubdomains: talvez'),
+      ),
+    ).toThrow('StrictTransportSecurity.IncludeSubdomains')
+    expect(() =>
+      lerPoliticaDoTemplate(
+        MODELO.replace('Preload: false', 'Preload: talvez'),
+      ),
+    ).toThrow('StrictTransportSecurity.Preload')
+  })
+
+  it('Type ausente quebra com o nome do campo', () => {
+    expect(() =>
+      lerPoliticaDoTemplate(
+        MODELO.replace(
+          '    Type: AWS::CloudFront::ResponseHeadersPolicy\n',
+          '',
+        ),
+      ),
+    ).toThrow('PoliticaDeCabecalhos sem Type')
+  })
+
+  it('Properties ausente quebra com o nome do campo', () => {
+    expect(() =>
+      lerPoliticaDoTemplate(MODELO.replace('    Properties:\n', '')),
+    ).toThrow('PoliticaDeCabecalhos sem Properties')
+  })
+
+  it('ResponseHeadersPolicyConfig ausente quebra com o nome do campo', () => {
+    expect(() =>
+      lerPoliticaDoTemplate(
+        MODELO.replace('      ResponseHeadersPolicyConfig:\n', ''),
+      ),
+    ).toThrow('Properties sem ResponseHeadersPolicyConfig')
+  })
+
   it('campo desconhecido dentro da política quebra com o nome do campo', () => {
     expect(() =>
       lerPoliticaDoTemplate(

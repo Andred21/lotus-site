@@ -140,8 +140,18 @@ function renderizarGrupo(grupo, campos) {
       const partes = [
         `max-age=${exigirCampo(campos, grupo, 'AccessControlMaxAgeSec')}`,
       ]
-      if (campos.IncludeSubdomains === 'true') partes.push('includeSubDomains')
-      if (campos.Preload === 'true') partes.push('preload')
+      const incluirSubdominios = exigirCampo(campos, grupo, 'IncludeSubdomains')
+      if (incluirSubdominios !== 'true' && incluirSubdominios !== 'false') {
+        throw new Error(
+          `${grupo}.IncludeSubdomains não é 'true' nem 'false': ${incluirSubdominios}`,
+        )
+      }
+      const preload = exigirCampo(campos, grupo, 'Preload')
+      if (preload !== 'true' && preload !== 'false') {
+        throw new Error(`${grupo}.Preload não é 'true' nem 'false': ${preload}`)
+      }
+      if (incluirSubdominios === 'true') partes.push('includeSubDomains')
+      if (preload === 'true') partes.push('preload')
       return ['Strict-Transport-Security', partes.join('; ')]
     }
     case 'ContentTypeOptions':
@@ -171,6 +181,9 @@ export function lerPoliticaDoTemplate(texto) {
   let nome = ''
   let secao = ''
   let grupo = ''
+  let vistoTipo = false
+  let vistoPropriedades = false
+  let vistoConfig = false
   /** @type {Record<string, string>} */
   let camposDoGrupo = {}
   /** @type {Record<string, string> | undefined} */
@@ -228,12 +241,15 @@ export function lerPoliticaDoTemplate(texto) {
       if (chave !== 'Type' && chave !== 'Properties') {
         throw new Error(`PoliticaDeCabecalhos com campo desconhecido: ${chave}`)
       }
+      if (chave === 'Type') vistoTipo = true
+      if (chave === 'Properties') vistoPropriedades = true
       continue
     }
     if ((m = linha.match(/^ {6}(\w+):/))) {
       if (m[1] !== 'ResponseHeadersPolicyConfig') {
         throw new Error(`Properties com campo desconhecido: ${m[1]}`)
       }
+      vistoConfig = true
       continue
     }
     if ((m = linha.match(/^ {8}(\w+):\s*(.*)$/))) {
@@ -285,6 +301,10 @@ export function lerPoliticaDoTemplate(texto) {
   fecharItem()
   fecharGrupo()
 
+  if (!vistoTipo) throw new Error('PoliticaDeCabecalhos sem Type')
+  if (!vistoPropriedades) throw new Error('PoliticaDeCabecalhos sem Properties')
+  if (!vistoConfig)
+    throw new Error('Properties sem ResponseHeadersPolicyConfig')
   if (!nome) throw new Error('ResponseHeadersPolicyConfig sem Name')
   if (!comentario) throw new Error('ResponseHeadersPolicyConfig sem Comment')
   return { cabecalhos, removidos, comentario }
