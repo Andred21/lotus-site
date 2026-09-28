@@ -631,6 +631,12 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   web — abrir aquela mensagem → "Mostrar original" → colar `Message-ID` e `Authentication-Results`
   na evidência, em commit próprio; ou a próxima mensagem real, o que vier primeiro. `dkim=fail` ou
   `spf=fail` ali é bug, não observação.
+  **Atualização em 2026-09-27:** a função passou a sair pelo CI (run `36364614503` do corporativo,
+  `CodeSha256` `FGWZyv2taK2bjNw2g/SccEewaqz2pMg76N3y67lXupY=`). As provas negativas se repetiram
+  sobre o código novo, mas o caminho `enviado` dele ainda não foi observado. O acesso à caixa pelo
+  Gmail web fica com o destinatário, fora do horário comercial, e João manteve o débito aberto. A
+  próxima mensagem real fecha as duas coisas de uma vez: `enviado` no log da função publicada pelo
+  CI e os dois cabeçalhos da mensagem.
 - **D-57 · o `siteverify` não tem timeout, e o timeout da função é igual ao do navegador** —
   achado M-4 da review final de 2026-09-27. `lambda/contato/turnstile.ts:31-35` chama o `fetch` do
   `siteverify` sem `signal`; `infra/lotus-contato.yaml:139` fixa `Timeout: 10` na função, o mesmo

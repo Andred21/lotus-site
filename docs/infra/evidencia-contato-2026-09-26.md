@@ -8,6 +8,9 @@ invalidação `ICZVCCLU10TQP9VACDXCHQX803`; bundle `assets/index-CHS0BG7Q.js`. `
 https://dhpoztt69jydz.cloudfront.net/` devolveu `x-robots-tag: noindex, nofollow` e a home em
 `200` — é homologação, não produção pública (`B5` não aconteceu).
 
+A partir de 2026-09-28 a função e o site saem pelo CI do corporativo, não mais à mão: ver "Primeiro
+deploy pelo CI".
+
 Cada escrita na conta foi autorizada por João naquele passo, em 2026-09-26 (spec §5):
 `execute-change-set` de `lotus-contato`; `execute-change-set` de `lotus-site`;
 `update-function-code` (publicação); `s3 sync` + `create-invalidation` (site); um segundo
@@ -217,6 +220,55 @@ AmazonCloudWatch
 
 Os três nomes batem exatamente com o `CostFilters` do `Teto`; nenhuma correção de filtro foi
 necessária.
+
+## Primeiro deploy pelo CI
+
+Passo 7 da spec §5, depois do merge do PR #19. O primeiro espelho a tentar (`e8812b2`, release do
+PR #18, run `36231279724`) reprovou no `check` com `TS2322` em `scripts/infra/conferir-zona.mjs`,
+erro que só existe na árvore filtrada, e o `deploy` foi pulado. A correção entrou pelo PR #20
+(`30541b0`); a causa e a prova estão no corpo dele, e a guarda que falta é o débito `D-62`.
+
+Espelho executado por João: `ca8f49b`, com `Source-Commit` `581f6c1` (já com #19, #20 e #21). Run
+`36364614503` do corporativo: `procedencia`, `check` e `deploy` em `success`. No log do `deploy`, a
+função sai antes do site:
+
+```text
+01:09:32Z  Publicar a função de contato (update-function-code + wait function-updated-v2)
+01:09:42Z  Publicar o release deste SHA (s3 sync)
+01:10:18Z  release publicado em s3://lotus-site-prod/releases/ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb/
+           commit de origem: 581f6c1650edc90454afb9cd171911d092b8ccf1
+```
+
+Função depois do deploy, lida em 2026-09-28T01:12Z:
+
+```text
+Sha         FGWZyv2taK2bjNw2g/SccEewaqz2pMg76N3y67lXupY=
+CodeSize    27436
+Modificado  2026-09-28T01:09:38.000+0000
+Estado      Active / Successful
+```
+
+O `CodeSha256` publicado à mão a partir de `d5260cb` (`AFRNNKeV…`) saiu de cena. Provas negativas
+repetidas sobre o código novo, com os comandos da Task 11 Step 4 (2026-09-28, ~01:11 UTC):
+
+```text
+url direta: 403
+sem hash: 403
+{"ok":false}
+token invalido: 403
+SentLast24Hours antes=0.0 depois=0.0
+{"ok":false}
+GET: 405
+```
+
+```text
+2026-09-28T01:11:43.230Z {"requestId":"b48f62ee-cc17-4e22-bb2f-45e8d9cde640","desfecho":"captcha-recusado"}
+2026-09-28T01:11:44.763Z {"requestId":"fbf72ee4-5261-49f3-9068-5351aefc809d","desfecho":"metodo"}
+```
+
+Nenhuma linha com `Prueba` no log. **O caminho positivo do código publicado pelo CI não foi
+observado:** nenhuma mensagem real passou por ele ainda. Fica com o `D-56`, cuja próxima mensagem
+real prova as duas coisas.
 
 ## Desvios do plano
 
