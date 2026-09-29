@@ -32,3 +32,10 @@ dist-lambda
 playwright-report/
 test-results/
 coverage/
+
+# Backups do WordPress (7.2.3, spec D3): nunca entram no repositório, que é
+# público. O que entra é o SHA-256, em docs/infra/evidencia-backup-rollback-*.md.
+*.sql
+*.sql.gz
+*wpvivid*
+backup*.zip

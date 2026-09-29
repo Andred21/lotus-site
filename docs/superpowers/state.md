@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.3+7.2.4
 active_notion_eap: 7.2.3+7.2.4
@@ -10,7 +10,7 @@ active_branch: feat/7-2-3-7-2-4-backup-smoke-test
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_plan
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: ebde789
-updated_at: 2026-09-29T23:33:59Z
+state_basis_commit: 536bd28
+updated_at: 2026-09-29T23:48:14Z
 ---
 
 # Estado operacional — Lotus Site
