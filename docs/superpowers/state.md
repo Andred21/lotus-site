@@ -13,7 +13,7 @@ next_owner: claude
 next_action: continue_planning
 resume_state: null
 context_packet: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md
 active_plan: null
 executor: null
 reviewer: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: 5b17981
-updated_at: 2026-09-28T04:17:51Z
+state_basis_commit: 543b927
+updated_at: 2026-09-29T22:45:11Z
 ---
 
 # Estado operacional — Lotus Site
