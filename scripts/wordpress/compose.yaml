@@ -1,0 +1,26 @@
+# Ensaio de restauração (7.2.3, spec §4.1). 443 só em 127.0.0.1: a cópia
+# restaurada carrega hash de senha e nunca fica acessível fora da máquina.
+# Credenciais do banco batem com CREDENCIAIS_DO_ENSAIO em lib/wp-config.mjs.
+name: lotus-ensaio-restauracao
+services:
+  web:
+    build: .
+    ports:
+      - '127.0.0.1:443:443'
+    volumes:
+      - ${ENSAIO_DOCROOT:?defina ENSAIO_DOCROOT com a cópia descompactada}:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mariadb:10.6
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_ROOT_PASSWORD: ensaio
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 5s
+      retries: 30
