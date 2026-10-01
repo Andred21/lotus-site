@@ -19,6 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
+    "smoke": "playwright test --config playwright.smoke.config.ts",
     "agent:check": "node scripts/validate-agent-workflow.mjs",
     "inventario:dom": "node scripts/inventario/extract-dom.mjs",
     "inventario:assets": "node scripts/inventario/fetch-assets.mjs",

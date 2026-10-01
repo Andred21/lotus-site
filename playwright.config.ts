@@ -23,6 +23,9 @@ const FLUXO_PRINCIPAL = [
 
 export default defineConfig({
   testDir: './e2e',
+  // `e2e/smoke/` é o smoke de produção (playwright.smoke.config.ts): rede
+  // real, fora de `pnpm e2e` e do CI.
+  testIgnore: ['**/smoke/**'],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
@@ -35,10 +38,13 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      // testIgnore de projeto substitui o de topo, não o soma: `smoke/` entra
+      // aqui de novo, senão este projeto o executa.
       testIgnore: [
         '**/producao.spec.ts',
         '**/regressao-visual.spec.ts',
         '**/cabecalhos.spec.ts',
+        '**/smoke/**',
       ],
     },
     {

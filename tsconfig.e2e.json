@@ -10,6 +10,9 @@
     "moduleDetection": "force",
     "noEmit": true,
     "skipLibCheck": true,
+    // O smoke importa CABECALHOS de scripts/infra/lib/cabecalhos.mjs (spec
+    // §4.5, item 8). Sem checkJs: o projeto node já o typecheca.
+    "allowJs": true,
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
