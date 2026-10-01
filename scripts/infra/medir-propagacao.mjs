@@ -15,7 +15,13 @@
 // resolvedores ANTES de cada troca, para ele existir como existiria no
 // corte (spec §4.4). Sem --nameservers, lê o output NameServers do stack
 // lotus-dns (us-east-1) com o AWS CLI. Sai 1 quando algum resolvedor não
-// convergiu dentro do limite.
+// convergiu dentro do limite (ou, com --aquecer, não respondeu).
+//
+// Erro de consulta de um resolvedor (ETIMEOUT, ESERVFAIL, ECONNREFUSED...) não
+// derruba a medição: conta como "ainda não convergiu" naquela rodada e entra
+// na coluna `erros de consulta` da linha dele. A troca que se mede é humana
+// e não se refaz de graça, então perder a tabela inteira por um timeout num
+// dos sete resolvedores seria jogar fora a única observação dela.
 import { execFileSync } from 'node:child_process'
 import { Resolver, resolve4 } from 'node:dns/promises'
 import { convergiu } from './lib/zona.mjs'
@@ -62,7 +68,13 @@ if (
   throw new Error('--esperado deve ser wordpress, cloudfront ou ausente')
 }
 const AQUECER = args.aquecer === 'true'
-const LIMITE_MS = Number(args.limite ?? 900) * 1000
+const LIMITE_S = Number(args.limite ?? 900)
+if (!Number.isFinite(LIMITE_S) || LIMITE_S <= 0) {
+  throw new Error(
+    `--limite deve ser um número positivo de segundos, recebi: ${args.limite}`,
+  )
+}
+const LIMITE_MS = LIMITE_S * 1000
 
 function nameserversDoStack() {
   const saida = execFileSync(
@@ -96,7 +108,16 @@ async function ipv4De(nome) {
 
 const nameservers = (
   args.nameservers ? args.nameservers.split(',') : nameserversDoStack()
-).map((nome) => nome.trim().replace(/\.$/, ''))
+)
+  .map((nome) => nome.trim().replace(/\.$/, ''))
+  .filter(Boolean)
+// Sem autoritativo, a tabela sairia só com os três públicos e poderia dar
+// verde sem nunca ter perguntado ao Route 53 (output vazio ou renomeado).
+if (nameservers.length === 0) {
+  throw new Error(
+    'lista de nameservers do Route 53 vazia: output NameServers do stack lotus-dns ausente ou --nameservers sem nomes',
+  )
+}
 
 /** @type {[string, string][]} */
 const resolvedores = [
@@ -136,7 +157,9 @@ async function consultar(resolvedor, tipo) {
   }
 }
 
-/** @param {string} ip */
+/** @typedef {{ A: Resposta, AAAA: Resposta }} Leitura */
+
+/** @param {string} ip @returns {Promise<Leitura>} */
 async function lerAmbos(ip) {
   const resolvedor = new Resolver({ timeout: 4_000, tries: 2 })
   resolvedor.setServers([ip])
@@ -146,11 +169,34 @@ async function lerAmbos(ip) {
   }
 }
 
-/** @param {{ A: Resposta, AAAA: Resposta }} r */
-const mostrar = (r) =>
-  `${r.A.valores.join(' ') || '—'} / ${r.AAAA.valores.join(' ') || '—'} (TTL ${r.A.ttl ?? '—'}/${r.AAAA.ttl ?? '—'})`
+// Códigos de falha do c-ares (ETIMEOUT, ESERVFAIL, ECONNREFUSED...): `E` e
+// maiúsculas. `ERR_*` e erro sem código são defeito do script, não do
+// resolvedor, e continuam derrubando a execução.
+const FALHA_DE_CONSULTA = /^E[A-Z]+$/
 
-/** @param {{ A: Resposta, AAAA: Resposta }} r */
+/**
+ * @param {string} ip
+ * @returns {Promise<{ leitura: Leitura } | { codigo: string }>}
+ */
+async function tentar(ip) {
+  try {
+    return { leitura: await lerAmbos(ip) }
+  } catch (erro) {
+    const codigo = /** @type {{ code?: unknown }} */ (erro).code
+    if (typeof codigo === 'string' && FALHA_DE_CONSULTA.test(codigo)) {
+      return { codigo }
+    }
+    throw erro
+  }
+}
+
+/** @param {Leitura | undefined} r */
+const mostrar = (r) =>
+  r
+    ? `${r.A.valores.join(' ') || '—'} / ${r.AAAA.valores.join(' ') || '—'} (TTL ${r.A.ttl ?? '—'}/${r.AAAA.ttl ?? '—'})`
+    : 'sem resposta'
+
+/** @param {Leitura} r */
 const bateu = (r) =>
   convergiu(ESPERADO, { A: r.A.valores, AAAA: r.AAAA.valores })
 
@@ -158,20 +204,43 @@ const inicio = Date.now()
 
 /** @param {[string, string]} par */
 async function medir([rotulo, ip]) {
-  const primeira = await lerAmbos(ip)
-  if (AQUECER)
-    return { linha: `| ${rotulo} | ${mostrar(primeira)} | — | — |`, ok: true }
+  let erros = 0
+  /** @type {string} */
+  let ultimoErro = ''
+
+  /** @returns {Promise<Leitura | undefined>} */
+  async function ler() {
+    const tentativa = await tentar(ip)
+    if ('codigo' in tentativa) {
+      erros++
+      ultimoErro = tentativa.codigo
+      return undefined
+    }
+    return tentativa.leitura
+  }
+  const colunaDeErros = () =>
+    erros === 0 ? '—' : `${erros} (último ${ultimoErro})`
+
+  const primeira = await ler()
+  if (AQUECER) {
+    return {
+      linha: `| ${rotulo} | ${mostrar(primeira)} | — | — | ${colunaDeErros()} |`,
+      ok: primeira !== undefined,
+    }
+  }
   let atual = primeira
-  let convergiuEm = bateu(atual) ? 0 : -1
+  let convergiuEm = atual && bateu(atual) ? 0 : -1
   while (convergiuEm < 0 && Date.now() - inicio < LIMITE_MS) {
     await new Promise((ok) => setTimeout(ok, INTERVALO_MS))
-    atual = await lerAmbos(ip)
-    if (bateu(atual)) convergiuEm = Math.round((Date.now() - inicio) / 1000)
+    // Rodada com erro: `atual` fica na última leitura que respondeu.
+    const lida = await ler()
+    if (!lida) continue
+    atual = lida
+    if (bateu(lida)) convergiuEm = Math.round((Date.now() - inicio) / 1000)
   }
-  const tempo =
-    convergiuEm < 0 ? `não em ${LIMITE_MS / 1000} s` : `${convergiuEm} s`
+  const tempo = convergiuEm < 0 ? `não em ${LIMITE_S} s` : `${convergiuEm} s`
   return {
-    linha: `| ${rotulo} | ${mostrar(primeira)} | ${tempo} | ${mostrar(atual)} |`,
+    linha: `| ${rotulo} | ${mostrar(primeira)} | ${tempo} | ${mostrar(atual)} | ${colunaDeErros()} |`,
     ok: convergiuEm >= 0,
   }
 }
@@ -182,8 +251,8 @@ console.log(
   `Nome \`${NOME}\`, esperado \`${ESPERADO}\`, ${AQUECER ? 'aquecimento' : 'medição'} iniciada em ${new Date(inicio).toISOString()}\n`,
 )
 console.log(
-  '| resolvedor | início: A / AAAA (TTL) | convergiu em | depois: A / AAAA (TTL) |',
+  '| resolvedor | início: A / AAAA (TTL) | convergiu em | depois: A / AAAA (TTL) | erros de consulta |',
 )
-console.log('| --- | --- | --- | --- |')
+console.log('| --- | --- | --- | --- | --- |')
 for (const { linha } of resultados) console.log(linha)
 process.exit(resultados.every((r) => r.ok) ? 0 : 1)
