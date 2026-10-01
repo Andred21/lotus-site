@@ -9,8 +9,8 @@
 // `aws cloudformation validate-template`, no runbook.
 
 /**
- * @typedef {{ nome: string, tipo: string, valores: string[] }} RegistroEsperado
- * @typedef {{ nome: string, tipo: string, ttl: number, valores: string[] }} RegistroLido
+ * @typedef {{ nome: string, tipo: string, valores: string[], alias?: boolean }} RegistroEsperado
+ * @typedef {{ nome: string, tipo: string, ttl: number, valores: string[], alias: boolean }} RegistroLido
  */
 
 /**
@@ -129,6 +129,31 @@ export const INVENTARIO = Object.freeze([
   // Nasce no Route 53: nunca existiu no painel. Sem AAAA, o EIP não tem IPv6.
   { nome: 'app.lotusotec.cl.', tipo: 'A', valores: ['18.230.53.197'] },
 ])
+
+/**
+ * O nome descartável do ensaio de rollback do corte (bloco `B4`, spec §4.4).
+ * É o único que a catraca deixa ser alias para o CloudFront antes de `B5`.
+ * Nasce, vira alias, volta e some dentro do bloco; ninguém o lê.
+ */
+export const NOME_DO_ENSAIO = 'ensaio-corte.lotusotec.cl.'
+
+/** @param {'A' | 'AAAA'} tipo */
+function valorDoApex(tipo) {
+  const valor = INVENTARIO.find(
+    (registro) => registro.nome === 'lotusotec.cl.' && registro.tipo === tipo,
+  )?.valores[0]
+  if (valor === undefined) throw new Error(`INVENTARIO sem ${tipo} do apex`)
+  return valor
+}
+
+/**
+ * Para onde o rollback do corte volta (spec D1): os endereços do WordPress,
+ * lidos do apex do inventário para não existirem em dois lugares.
+ */
+export const WORDPRESS = Object.freeze({
+  A: valorDoApex('A'),
+  AAAA: valorDoApex('AAAA'),
+})
 
 /**
  * Nomes que só respondiam, antes de 2026-09-26, porque o wildcard existia na
@@ -263,23 +288,50 @@ export function lerRegistros(texto) {
         tipo: '',
         ttl: 0,
         valores: [],
+        alias: false,
       }
       registros.push(atual)
       continue
     }
     if (!atual) continue
-    const tipo = linha.match(/^\s*Type:\s*(.+)$/)
-    if (tipo) {
-      atual.tipo = resolver(tipo[1] ?? '', parametros)
-      continue
-    }
-    const ttl = linha.match(/^\s*TTL:\s*(.+)$/)
-    if (ttl) {
-      atual.ttl = Number(resolver(ttl[1] ?? '', parametros))
-      continue
-    }
+    if (/^\s*(#|$)/.test(linha)) continue
     const valor = linha.match(/^\s*- (.+)$/)
-    if (valor) atual.valores.push(resolver(valor[1] ?? '', parametros))
+    if (valor) {
+      atual.valores.push(resolver(valor[1] ?? '', parametros))
+      continue
+    }
+    const campo = linha.match(/^\s*(\w+):\s*(.*)$/)
+    if (!campo) {
+      throw new Error(`linha não reconhecida em RecordSets: ${linha.trim()}`)
+    }
+    const chave = campo[1] ?? ''
+    const bruto = campo[2] ?? ''
+    // Conjunto fechado: campo fora dele é erro com o nome do campo, nunca
+    // registro lido pela metade. `AliasTarget` é o alias para o CloudFront
+    // (spec §4.4): o DNSName vira o valor, e não há TTL — a AWS fixa em 60 s.
+    switch (chave) {
+      case 'Type':
+        atual.tipo = resolver(bruto, parametros)
+        break
+      case 'TTL':
+        atual.ttl = Number(resolver(bruto, parametros))
+        break
+      case 'ResourceRecords':
+        break
+      case 'AliasTarget':
+        atual.alias = true
+        break
+      case 'DNSName':
+        atual.valores.push(resolver(bruto, parametros))
+        break
+      case 'HostedZoneId':
+      case 'EvaluateTargetHealth':
+        break
+      default:
+        throw new Error(
+          `RecordSet ${atual.nome} com campo desconhecido: ${chave}`,
+        )
+    }
   }
   return registros
 }
@@ -373,4 +425,35 @@ export function wildcardAusente(naAws, naStack, posDelegacao) {
 export function delegacaoEsperada(nomesDeServidor, posDelegacao) {
   if (!posDelegacao) return [...NS_DA_STACKDNS]
   return nomesDeServidor.map((nome) => `${nome.replace(/\.$/, '')}.`)
+}
+
+/**
+ * Veredito de uma consulta do `medir-propagacao.mjs` (spec §4.4): o
+ * resolvedor convergiu quando A **e** AAAA já dizem o esperado. Parcial —
+ * um tipo trocado e o outro não — não é convergência: o visitante
+ * dual-stack ainda pode cair no lado errado.
+ * @param {'wordpress' | 'cloudfront' | 'ausente'} esperado
+ * @param {{ A: string[], AAAA: string[] }} respostas vazio = sem resposta
+ */
+export function convergiu(esperado, respostas) {
+  const { A, AAAA } = respostas
+  switch (esperado) {
+    case 'wordpress':
+      return (
+        mesmoConjunto(A, [WORDPRESS.A]) && mesmoConjunto(AAAA, [WORDPRESS.AAAA])
+      )
+    case 'cloudfront':
+      // O IP do CloudFront varia por borda; o que se sabe é que não é o
+      // do WordPress e que há resposta nos dois tipos (IPV6Enabled).
+      return (
+        A.length > 0 &&
+        AAAA.length > 0 &&
+        !A.includes(WORDPRESS.A) &&
+        !AAAA.map(normalizar).includes(normalizar(WORDPRESS.AAAA))
+      )
+    case 'ausente':
+      return A.length === 0 && AAAA.length === 0
+    default:
+      throw new Error(`esperado desconhecido: ${String(esperado)}`)
+  }
 }
