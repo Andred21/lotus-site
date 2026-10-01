@@ -2,10 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
   Ambiente do lotus-site: bucket S3 privado, distribuicao CloudFront com Origin
   Access Control, role de deploy assumida por OIDC pelo GitHub Actions do
-  repositorio corporativo, e budget proprio, e a segunda origin em /api/* para
-  a funcao de contato do stack lotus-contato. Nao encosta em DNS nem em
-  certificado -- o endereco publicado e o dominio do CloudFront. Depende do
-  stack lotus-oidc-github ja implantado.
+  repositorio corporativo, budget proprio, a segunda origin em /api/* para a
+  funcao de contato do stack lotus-contato, e -- desde B4 -- o dominio proprio
+  na distribuicao (aliases, certificado do stack lotus-dns e redirect www ->
+  apex), para o smoke rodar no dominio real antes do corte. Nao encosta em DNS:
+  apex e www continuam no WordPress ate B5. Depende dos stacks
+  lotus-oidc-github, lotus-contato e lotus-dns ja implantados.
 
 Parameters:
   NomeDoBucket:
@@ -55,6 +57,15 @@ Parameters:
       Output ArnDaFuncao do stack lotus-contato. As duas AWS::Lambda::Permission
       e a policy da role de deploy apontam para ele.
     AllowedPattern: '^arn:aws:lambda:[a-z0-9-]+:[0-9]{12}:function:[a-zA-Z0-9-_]+$'
+
+  ArnDoCertificadoDoDominio:
+    Type: String
+    Description: >-
+      Output ArnDoCertificado do stack lotus-dns (us-east-1). Parametro, e nao
+      ImportValue: o CloudFormation nao importa valor entre regioes. O
+      AllowedPattern prende a regiao porque o CloudFront so aceita certificado
+      de us-east-1 -- melhor reprovar no change set do que no update.
+    AllowedPattern: '^arn:aws:acm:us-east-1:[0-9]{12}:certificate/[0-9a-f-]+$'
 
 Resources:
   # ── armazenamento ──────────────────────────────────────────────────────────
@@ -173,12 +184,68 @@ Resources:
             - Header: x-amz-server-side-encryption
             - Header: x-amz-version-id
 
+  # www -> apex por CloudFront Function no viewer-request do behavior padrao
+  # (7.2.4, spec D6). Medido em 2026-09-28: o WordPress responde
+  # https://www.lotusotec.cl/ com 301 para https://lotusotec.cl/, e o clone
+  # precisa do mesmo. So o behavior padrao: /api/* fica sem a funcao, porque o
+  # formulario e same-origin no apex e um POST redirecionado perde o corpo.
+  # http -> https e do ViewerProtocolPolicy e acontece ANTES da funcao, entao
+  # http://www faz dois saltos. Qualquer outro host -- o apex e o dominio do
+  # CloudFront -- segue intacto. A query volta como veio, chave repetida
+  # inclusa; nada e reencodado. A catraca scripts/infra/distribuicao.test.mjs
+  # extrai este codigo e o roda em node:vm; FunctionCode e a ultima
+  # propriedade porque o leitor textual assume isso.
+  RedirecionarWww:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub '${AWS::StackName}-redirecionar-www'
+      AutoPublish: true
+      FunctionConfig:
+        Comment: www.lotusotec.cl -> https://lotusotec.cl, 301, caminho e query preservados.
+        Runtime: cloudfront-js-2.0
+      FunctionCode: |
+        function handler(event) {
+          var request = event.request;
+          var host = request.headers.host ? request.headers.host.value : '';
+          if (host !== 'www.lotusotec.cl') {
+            return request;
+          }
+          var partes = [];
+          for (var chave in request.querystring) {
+            var parametro = request.querystring[chave];
+            var valores = parametro.multiValue
+              ? parametro.multiValue.map(function (item) {
+                  return item.value;
+                })
+              : [parametro.value];
+            for (var i = 0; i < valores.length; i++) {
+              partes.push(chave + '=' + valores[i]);
+            }
+          }
+          var query = partes.length ? '?' + partes.join('&') : '';
+          return {
+            statusCode: 301,
+            statusDescription: 'Moved Permanently',
+            headers: {
+              location: { value: 'https://lotusotec.cl' + request.uri + query },
+            },
+          };
+        }
+
+  # Aliases e certificado entram AQUI, em B4, e nao no corte (spec D5): com
+  # eles o smoke roda contra o dominio real -- certificado, Host e CSP sob a
+  # origem real -- antes de o DNS virar. Enquanto apex e www apontarem para o
+  # WordPress, nenhum visitante chega por aqui com esses nomes; o dominio do
+  # CloudFront continua servindo o site.
   Distribuicao:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
         Enabled: true
         Comment: lotus-site
+        Aliases:
+          - lotusotec.cl
+          - www.lotusotec.cl
         DefaultRootObject: index.html
         HttpVersion: http2and3
         IPV6Enabled: true
@@ -186,6 +253,12 @@ Resources:
         # visitante chileno e servido do hemisferio norte, com latencia maior.
         # Aceitavel para homologacao; revisar no corte de DNS (D-39).
         PriceClass: PriceClass_100
+        # sni-only: sem IP dedicado (US$ 600/mes). TLSv1.2_2021 e a politica
+        # recomendada; o smoke exige TLS >= 1.2 (spec §4.5 item 2).
+        ViewerCertificate:
+          AcmCertificateArn: !Ref ArnDoCertificadoDoDominio
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
         Origins:
           - Id: balde
             # RegionalDomainName e nao DomainName: o alias global responde 307
@@ -212,6 +285,9 @@ Resources:
           # index.html.
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
           ResponseHeadersPolicyId: !Ref PoliticaDeCabecalhos
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt RedirecionarWww.FunctionMetadata.FunctionARN
         CacheBehaviors:
           # /api/* vai para a funcao. CachingDisabled: resposta de formulario
           # nunca e cacheada. AllViewerExceptHostHeader: o corpo, o
