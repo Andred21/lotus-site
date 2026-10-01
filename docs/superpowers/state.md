@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: executing
+workflow_state: blocked
 work_class: architectural
 active_work_item: 7.2.3+7.2.4
 active_notion_eap: 7.2.3+7.2.4
@@ -9,20 +9,20 @@ active_title: Backup e rollback do WordPress antes do corte; smoke test completo
 active_branch: feat/7-2-3-7-2-4-backup-smoke-test
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: continue_active_plan
-resume_state: null
+next_owner: joao
+next_action: entregar_backup_stackcp_e_autorizar_estagio_1
+resume_state: executing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md
 active_plan: docs/superpowers/plans/2026-09-29-7.2.3-7.2.4-backup-rollback-smoke.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: null
+blocker: 'Portões humanos do plano. (1) Task 4: João baixa no StackCP de lotusotec.cl o backup dos arquivos (.zip/.tar.gz com wp-config.php) e o dump do banco (.sql/.sql.gz, estrutura e dados), grava fora do repositório, copia para a segunda mídia e responde com os dois caminhos e a descrição da mídia. (2) Task 6 Step 4: autorização explícita para executar o change set do estágio 1 do lotus-dns (arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1790897359/fd567112-6aa8-4c97-b388-612c3a206e6d; uma linha, Modify Registros False; só cria ensaio-corte A/AAAA no WordPress, TTL 3600). O template e o INVENTARIO do estágio 1 estão editados e não commitados (infra/lotus-dns.yaml, scripts/infra/lib/zona.mjs); o --aquecer roda logo antes do execute. Tasks 7–12 e 15–17 seguem com autorização própria a cada passo.'
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: 536bd28
-updated_at: 2026-09-29T23:48:14Z
+state_basis_commit: 0a4f4e9
+updated_at: 2026-10-01T23:36:51Z
 ---
 
 # Estado operacional — Lotus Site
