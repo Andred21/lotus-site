@@ -12,12 +12,17 @@ test('6 · formulário: Turnstile carrega; /api/contacto recusa GET, corpo vazio
   page,
   destino,
 }) => {
-  await page.goto('/')
+  // O waiter nasce antes do goto: um widget montado antes do `load` não
+  // pode passar sem ser visto. O catch vazio só marca a promessa como tratada
+  // (ela pode rejeitar enquanto o goto ainda falha); o `await` abaixo segue
+  // lançando a mensagem do waiter.
   const frame = page.waitForEvent('framenavigated', {
     predicate: (f) =>
       f.url().includes('challenges.cloudflare.com/cdn-cgi/challenge-platform'),
     timeout: 30_000,
   })
+  frame.catch(() => {})
+  await page.goto('/')
   await page.locator('#Contacto').scrollIntoViewIfNeeded()
   await frame
   await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveCount(

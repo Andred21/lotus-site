@@ -10,6 +10,9 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
+  // Acima dos 30 s do waiter do Turnstile (item 6): a falha sai com a mensagem
+  // dele, não com um timeout genérico do teste.
+  timeout: 90_000,
   forbidOnly: true,
   reporter: [['list']],
   use: {

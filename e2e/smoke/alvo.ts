@@ -23,7 +23,9 @@ function exigir(nome: string): string {
 }
 
 export const ALVO = new URL(exigir('SMOKE_URL'))
-export const VIA = process.env.SMOKE_VIA
+// SMOKE_VIA vazio vale como ausente: `VIA ?? ...` e `VIA ? ...` abaixo leem o
+// mesmo valor, sem um deles tratar '' como definido.
+export const VIA = process.env.SMOKE_VIA || undefined
 
 function shaDoUltimoCiVerde(): string {
   return execFileSync(
