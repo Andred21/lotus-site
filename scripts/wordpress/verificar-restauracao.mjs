@@ -2,10 +2,11 @@
 // resolução normal (o WordPress vivo) e forçada para 127.0.0.1 aceitando o
 // certificado autoassinado (a cópia restaurada pelo ensaio-restauracao.sh),
 // e aplica os critérios de §4.3 da spec. A resolução forçada é também a
-// garantia de que nada da cópia veio do site vivo (spec D4).
+// garantia de que nada da cópia veio do site vivo (spec D4). Cada URL que
+// falha na cópia num GET é pedida de novo ao vivo, anônima, para a emenda E1.
 //
 // Uso: node scripts/wordpress/verificar-restauracao.mjs   (sai 1 se reprovar)
-import { chromium } from '@playwright/test'
+import { chromium, request } from '@playwright/test'
 import { compararPaginas } from './lib/comparar.mjs'
 
 const HOME = 'https://lotusotec.cl/'
@@ -21,12 +22,16 @@ const PARA_LOCAL = 'MAP lotusotec.cl 127.0.0.1, MAP www.lotusotec.cl 127.0.0.1'
 async function lerHome(navegador, copia) {
   const contexto = await navegador.newContext({ ignoreHTTPSErrors: copia })
   const pagina = await contexto.newPage()
-  /** @type {string[]} */
+  /** @type {import('./lib/comparar.mjs').Falha[]} */
   const falhas = []
   pagina.on('response', (resposta) => {
     const host = new URL(resposta.url()).hostname
     if (NOMES.has(host) && resposta.status() >= 400) {
-      falhas.push(`${resposta.status()} ${resposta.url()}`)
+      falhas.push({
+        status: resposta.status(),
+        metodo: resposta.request().method(),
+        url: resposta.url(),
+      })
     }
   })
   // 'networkidle' nunca resolve no WordPress vivo: o api-fetch chama
@@ -52,6 +57,20 @@ async function lerHome(navegador, copia) {
   }
 }
 
+/**
+ * O que o WordPress vivo responde à URL num GET anônimo, sem seguir redirect
+ * — a resposta que falhou na cópia também era de um salto só. Nunca outro
+ * método: o ensaio não manda POST para produção.
+ * @param {string} url
+ */
+async function statusNoVivo(url) {
+  const api = await request.newContext()
+  const resposta = await api.get(url, { maxRedirects: 0 })
+  const status = resposta.status()
+  await api.dispose()
+  return status
+}
+
 /** @param {import('@playwright/test').Browser} navegador */
 async function statusDoLogin(navegador) {
   const contexto = await navegador.newContext({ ignoreHTTPSErrors: true })
@@ -73,7 +92,15 @@ const paginaCopia = { ...(await lerHome(local, true)), login: 0 }
 paginaCopia.login = await statusDoLogin(local)
 await local.close()
 
-const problemas = compararPaginas(paginaViva, paginaCopia)
+/** @type {Record<string, number>} */
+const vivoNaMesmaUrl = {}
+for (const falha of paginaCopia.falhas) {
+  if (falha.metodo === 'GET') {
+    vivoNaMesmaUrl[falha.url] = await statusNoVivo(falha.url)
+  }
+}
+
+const problemas = compararPaginas(paginaViva, paginaCopia, vivoNaMesmaUrl)
 console.log(
   JSON.stringify(
     {
@@ -89,6 +116,7 @@ console.log(
         login: paginaCopia.login,
         falhas: paginaCopia.falhas,
       },
+      vivoNaMesmaUrl,
       problemas,
     },
     null,

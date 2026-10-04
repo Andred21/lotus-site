@@ -13,6 +13,10 @@ const VIVO = {
   falhas: [],
 }
 const COPIA = { ...VIVO, login: 200 }
+const IMAGEM = 'https://lotusotec.cl/wp-content/uploads/x.png'
+const USERS_ME =
+  'https://lotusotec.cl/wp-json/wp/v2/users/me?context=edit&_locale=user'
+const AJAX = 'https://lotusotec.cl/wp-admin/admin-ajax.php'
 
 describe('compararPaginas (spec §4.3)', () => {
   it('cópia idêntica passa sem problemas', () => {
@@ -54,13 +58,43 @@ describe('compararPaginas (spec §4.3)', () => {
   it('resposta ≥ 400 na cópia e wp-login fora de 200 reprovam', () => {
     const problemas = compararPaginas(VIVO, {
       ...COPIA,
-      falhas: ['404 https://lotusotec.cl/wp-content/uploads/x.png'],
+      falhas: [{ status: 404, metodo: 'GET', url: IMAGEM }],
       login: 500,
     })
     expect(problemas).toEqual([
-      'resposta ≥ 400 na cópia: 404 https://lotusotec.cl/wp-content/uploads/x.png',
+      'resposta ≥ 400 na cópia: 404 GET https://lotusotec.cl/wp-content/uploads/x.png',
       'wp-login.php respondeu 500',
     ])
+  })
+
+  describe('falha que o vivo repete na mesma URL (emenda E1)', () => {
+    it('o vivo com o mesmo status perdoa a falha', () => {
+      const copia = {
+        ...COPIA,
+        falhas: [{ status: 401, metodo: 'GET', url: USERS_ME }],
+      }
+      expect(compararPaginas(VIVO, copia, { [USERS_ME]: 401 })).toEqual([])
+    })
+
+    it('o vivo com outro status reprova, com os dois lados', () => {
+      const copia = {
+        ...COPIA,
+        falhas: [{ status: 404, metodo: 'GET', url: IMAGEM }],
+      }
+      expect(compararPaginas(VIVO, copia, { [IMAGEM]: 200 })).toEqual([
+        'resposta ≥ 400 na cópia: 404 GET https://lotusotec.cl/wp-content/uploads/x.png (vivo: 200)',
+      ])
+    })
+
+    it('pedido que não é GET reprova mesmo com o vivo igual na URL', () => {
+      const copia = {
+        ...COPIA,
+        falhas: [{ status: 400, metodo: 'POST', url: AJAX }],
+      }
+      expect(compararPaginas(VIVO, copia, { [AJAX]: 400 })).toEqual([
+        'resposta ≥ 400 na cópia: 400 POST https://lotusotec.cl/wp-admin/admin-ajax.php',
+      ])
+    })
   })
 
   it('normalizarTexto e primeiraDiferenca', () => {

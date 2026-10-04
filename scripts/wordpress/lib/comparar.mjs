@@ -2,7 +2,8 @@
 // script Chromium só coleta as duas páginas e delega o veredito para cá.
 
 /**
- * @typedef {{ status: number, titulo: string, h1: string, texto: string, falhas: string[] }} Pagina
+ * @typedef {{ status: number, metodo: string, url: string }} Falha
+ * @typedef {{ status: number, titulo: string, h1: string, texto: string, falhas: Falha[] }} Pagina
  */
 
 /** @param {string} texto */
@@ -25,9 +26,12 @@ export function primeiraDiferenca(a, b) {
 /**
  * @param {Pagina} vivo o WordPress em produção, por resolução normal
  * @param {Pagina & { login: number }} copia a restauração, forçada para 127.0.0.1
+ * @param {Record<string, number>} [vivoNaMesmaUrl] status do vivo a um GET
+ *   anônimo de cada URL que falhou na cópia: falha que o vivo repete é do
+ *   site, não da restauração (emenda E1 da spec)
  * @returns {string[]} problemas; vazio quando a cópia passa
  */
-export function compararPaginas(vivo, copia) {
+export function compararPaginas(vivo, copia, vivoNaMesmaUrl = {}) {
   /** @type {string[]} */
   const problemas = []
   if (copia.status !== 200) {
@@ -51,7 +55,13 @@ export function compararPaginas(vivo, copia) {
     )
   }
   for (const falha of copia.falhas) {
-    problemas.push(`resposta ≥ 400 na cópia: ${falha}`)
+    const noVivo =
+      falha.metodo === 'GET' ? vivoNaMesmaUrl[falha.url] : undefined
+    if (noVivo === falha.status) continue
+    const lado = noVivo === undefined ? '' : ` (vivo: ${noVivo})`
+    problemas.push(
+      `resposta ≥ 400 na cópia: ${falha.status} ${falha.metodo} ${falha.url}${lado}`,
+    )
   }
   if (copia.login !== 200) {
     problemas.push(`wp-login.php respondeu ${copia.login}`)
