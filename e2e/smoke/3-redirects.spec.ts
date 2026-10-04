@@ -1,6 +1,15 @@
 import { DOMINIO, WWW, expect, test } from './alvo'
 import { pedir } from './rede'
 
+// Os pares crus da query, ordenados pela chave; os valores de uma mesma chave
+// ficam na ordem em que vieram (o sort é estável).
+function porChave(query: string): string[] {
+  const chave = (par: string) => par.split('=', 1)[0] ?? ''
+  return query
+    .split('&')
+    .sort((x, y) => (chave(x) < chave(y) ? -1 : chave(x) > chave(y) ? 1 : 0))
+}
+
 // Spec D6: http → https é do ViewerProtocolPolicy; www → apex é a função.
 // http://www faz dois saltos, aceitos e registrados na cadeia.
 test('3 · redirects: http → https, www → apex com caminho e query; cadeia registrada', async ({
@@ -27,9 +36,18 @@ test('3 · redirects: http → https, www → apex com caminho e query; cadeia r
     expect(http.status).toBe(301)
     expect(http.headers.location).toBe(`https://${DOMINIO}/`)
 
-    const www = await passo(`https://${WWW}/cursos/?a=1&a=2&b=x`)
+    // Caminho exato; da query, cada par cru (o `%26` não pode virar `&`) e a
+    // ordem dos valores de uma mesma chave. A ordem entre chaves diferentes,
+    // não: é a do objeto `querystring` que o CloudFront entrega à função, que
+    // não recebe a query crua — na borda, em 2026-10-04, `?a=1&b=x` saiu
+    // `?b=x&a=1`.
+    const query = 'a=1&a=2&b=x%26y'
+    const www = await passo(`https://${WWW}/cursos/?${query}`)
     expect(www.status).toBe(301)
-    expect(www.headers.location).toBe(`https://${DOMINIO}/cursos/?a=1&a=2&b=x`)
+    const [, caminho, volta] =
+      /^([^?]*)\?(.*)$/.exec(www.headers.location ?? '') ?? []
+    expect(caminho).toBe(`https://${DOMINIO}/cursos/`)
+    expect(porChave(volta ?? '')).toEqual(porChave(query))
 
     const httpWww = await passo(`http://${WWW}/x?y=1`)
     expect(httpWww.status).toBe(301)
