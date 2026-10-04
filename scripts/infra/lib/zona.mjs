@@ -128,18 +128,6 @@ export const INVENTARIO = Object.freeze([
   // ── Intranet do Lotus (item 32 do repo lotus-infra) ─────────────────────
   // Nasce no Route 53: nunca existiu no painel. Sem AAAA, o EIP não tem IPv6.
   { nome: 'app.lotusotec.cl.', tipo: 'A', valores: ['18.230.53.197'] },
-  // ── Ensaio do rollback do corte (bloco B4, spec §4.4) ───────────────────
-  // Existe só durante o ensaio; o estágio 5 remove estas duas linhas.
-  {
-    nome: 'ensaio-corte.lotusotec.cl.',
-    tipo: 'A',
-    valores: ['185.146.167.195'],
-  },
-  {
-    nome: 'ensaio-corte.lotusotec.cl.',
-    tipo: 'AAAA',
-    valores: ['2a07:7800::195'],
-  },
 ])
 
 /**

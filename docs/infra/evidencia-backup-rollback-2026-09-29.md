@@ -942,7 +942,187 @@ template de `2f2ab46` (WordPress); a zona tem o WordPress em `ResourceRecords`, 
 todos os resolvedores dão; os públicos guardam o WordPress com até 3600 s de TTL, das buscas do 4b e
 do aquecimento do 4c.
 
-_Task 11: estágio 5._
+### 3.7 Estágio 5 — removido
+
+- **Data e quem executou:** 2026-10-04, João, no terminal dele, como no 4b e no 4c: rodou o script
+  preparado para o estágio (`estagio-5.sh`, fora do repo), com saída 0.
+- **Template e inventário:** o `infra/lotus-dns.yaml` deste commit é o de `543b927`, o de antes do
+  ensaio, restaurado por `git checkout 543b927 -- infra/lotus-dns.yaml`. Em
+  `scripts/infra/lib/zona.mjs`, só saem do `INVENTARIO` o comentário e as duas entradas de
+  `ensaio-corte` (21 linhas, como antes do ensaio); o leitor de alias da Task 5 fica, com
+  `NOME_DO_ENSAIO`, `WORDPRESS` e `convergiu` exportados e testados. O corpo que
+  `get-template --change-set-name` devolve é igual ao arquivo, salvo duas linhas de comentário com
+  `?`.
+- **Change set:**
+  `arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791147529/036a6104-5121-4326-a315-50be4fe34afb`,
+  criado em 2026-10-04T20:58:50Z (o `deploy --no-execute-changeset` levou 7 s, de 20:58:48Z a
+  20:58:55Z); uma linha, `Modify` `Registros` `Substituicao: False`. Comparando `BeforeContext` com
+  `AfterContext` por `Name` e `Type` (23 registros antes, 21 depois), só saem
+  `ensaio-corte.lotusotec.cl.` `A` e `AAAA`, com o WordPress e TTL 3600; nenhum outro muda, apex e
+  `www` iguais. Os `Details` são dois `Remove`, com o registro inteiro no `BeforeValue` e os `Path`
+  `/Properties/RecordSets/18` e `/11` pela quinta vez (§3.2).
+- **Portões antes do `execute`, todos passaram:** o change set ainda `CREATE_COMPLETE` e
+  `AVAILABLE` às 21:06:00Z, com o corpo igual ao revisado; o stack em `UPDATE_COMPLETE` desde o 4c
+  (`LastUpdatedTime` 20:33:43Z), com o template guardado igual ao do 4c; zona
+  `Z08152592KZPTZ6NI1QNK`; drift `IN_SYNC`, detecção de 2026-10-04T21:06:07Z (só da `Zona`); a
+  API, às 21:06:14Z, com os dois registros de `ensaio-corte` em `ResourceRecords` do WordPress, TTL
+  3600 (a premissa do estágio 5, §3.6), e 27 conjuntos de registros na zona; a amostragem prévia
+  sem nenhuma resposta que não fosse o WordPress; o aquecimento com o WordPress nos sete
+  resolvedores. Não houve espera: o "antes" deste estágio é o WordPress, o único que os públicos dão
+  desde 20:00:40Z (§3.5).
+- **Os 27 conjuntos da zona:** os 23 do `Registros`, o NS e o SOA da zona e os dois CNAMEs de
+  validação do ACM, que o `Certificado` cria fora do grupo (`zona-dns-lotusotec.md`,
+  "Certificado"). Os dois CNAMEs não aparecem em nenhum change set do `Registros` nem no lote que
+  ele manda ao Route 53.
+- **Execução:** `execute-change-set` às 21:06:48Z (instante anotado logo antes da chamada); stack
+  `UPDATE_IN_PROGRESS` às 21:06:51Z; `Registros` `UPDATE_IN_PROGRESS` às 21:06:53Z e
+  `UPDATE_COMPLETE` às 21:07:54Z (66 s depois do `execute`); stack `UPDATE_COMPLETE` às 21:07:56Z,
+  visto pelo script às 21:08:01Z (consulta a cada 5 s). O change set terminou `EXECUTE_COMPLETE`,
+  sem `StatusReason`.
+- **O que o CloudFormation mandou ao Route 53:** pelo CloudTrail (`lookup-events`, lido depois,
+  fora do plano, como em §3.6), uma chamada só, às 21:06:53Z (`/change/C04254051NGO00OKPGMFD`,
+  `INSYNC`): `DELETE` dos 23 registros como o stack os guardava e `CREATE` dos 21 do template novo.
+  É o padrão de §3.6, com o grupo inteiro reescrito; aqui o `DELETE` de `ensaio-corte` levava o que
+  a zona tinha (o WordPress, TTL 3600).
+- **Depois, no CloudFormation e na zona:** a API, às 21:08:03Z, não tem nenhum registro de
+  `ensaio-corte` (`[]`), e a zona tem 25 conjuntos de registros, os 27 de antes menos os dois. O
+  template guardado no stack (`get-template --stack-name lotus-dns`, 21:08:06Z) é o corpo do change
+  set. Drift `IN_SYNC`, detecção de 2026-10-04T21:08:08Z, com `Registros` e `Certificado` em
+  `NOT_CHECKED`.
+- **Apex e `www` depois:** às 21:08:17Z, os quatro nameservers do Route 53 seguiam respondendo
+  `185.146.167.195` / `2a07:7800::195`, TTL 3600, para `lotusotec.cl` e `www.lotusotec.cl`.
+- **A zona contra o inventário:** às 21:22:51Z, fora do plano,
+  `pnpm infra:conferir-zona --pos-delegacao` (relatório fora do repo) deu os 21 registros do
+  inventário iguais nos quatro nameservers e só as três divergências que o modo espera (os dois
+  nomes inexistentes e o NS), com saída 0.
+
+O `describe-change-set --include-property-values`, lido às 20:59Z, antes do `execute`: do topo, só
+o nome, a criação e o estado; da mudança, tudo menos `BeforeContext` e `AfterContext` (comparados
+acima); e os dois `Details`, como a API devolveu:
+
+```text
+{"ChangeSetName":"awscli-cloudformation-package-deploy-1791147529","CreationTime":"2026-10-04T20:58:50.102000+00:00","ExecutionStatus":"AVAILABLE","Status":"CREATE_COMPLETE","StatusReason":null}
+{"Type":"Resource","ResourceChange":{"Action":"Modify","LogicalResourceId":"Registros","PhysicalResourceId":"lotus-dns-Registros-15YOOK2SDWXPR","ResourceType":"AWS::Route53::RecordSetGroup","Replacement":"False","Scope":["Properties"]}}
+{"Target":{"Attribute":"Properties","Name":"RecordSets","RequiresRecreation":"Never","Path":"/Properties/RecordSets/18","BeforeValue":"{\"Name\":\"ensaio-corte.lotusotec.cl.\",\"ResourceRecords\":[\"185.146.167.195\"],\"TTL\":3600,\"Type\":\"A\"}","AttributeChangeType":"Remove"},"Evaluation":"Static","ChangeSource":"DirectModification"}
+{"Target":{"Attribute":"Properties","Name":"RecordSets","RequiresRecreation":"Never","Path":"/Properties/RecordSets/11","BeforeValue":"{\"Name\":\"ensaio-corte.lotusotec.cl.\",\"ResourceRecords\":[\"2a07:7800::195\"],\"TTL\":3600,\"Type\":\"AAAA\"}","AttributeChangeType":"Remove"},"Evaluation":"Static","ChangeSource":"DirectModification"}
+```
+
+Eventos do stack desde o `execute` (`describe-stack-events`, em ordem de tempo):
+
+| Quando                           | Recurso     | Estado                                | Motivo         |
+| -------------------------------- | ----------- | ------------------------------------- | -------------- |
+| 2026-10-04T21:06:51.306000+00:00 | `lotus-dns` | `UPDATE_IN_PROGRESS`                  | User Initiated |
+| 2026-10-04T21:06:53.494000+00:00 | `Registros` | `UPDATE_IN_PROGRESS`                  | None           |
+| 2026-10-04T21:07:54.552000+00:00 | `Registros` | `UPDATE_COMPLETE`                     | None           |
+| 2026-10-04T21:07:55.721000+00:00 | `lotus-dns` | `UPDATE_COMPLETE_CLEANUP_IN_PROGRESS` | None           |
+| 2026-10-04T21:07:56.489000+00:00 | `lotus-dns` | `UPDATE_COMPLETE`                     | None           |
+
+Amostragem prévia (antes, fora do plano), `amostrar.mjs --novo wordpress --rodadas 6`; "antigas"
+conta toda resposta que não é o WordPress:
+
+Amostragem `ensaio-corte.lotusotec.cl`, novo `wordpress`, 6 rodadas de 2026-10-04T21:06:17.046Z a 2026-10-04T21:06:47.611Z; tempos em s desde 2026-10-04T21:06:17.030Z
+
+| resolvedor tipo                      | antigas | novas | erros | primeira nova em | última antiga em | TTL das antigas |
+| ------------------------------------ | ------- | ----- | ----- | ---------------- | ---------------- | --------------- |
+| route53 ns-904.awsdns-49.net A       | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-904.awsdns-49.net AAAA    | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-31.awsdns-03.com A        | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-31.awsdns-03.com AAAA     | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-1889.awsdns-44.co.uk A    | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-1889.awsdns-44.co.uk AAAA | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-1507.awsdns-60.org A      | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-1507.awsdns-60.org AAAA   | 0       | 6     | 0     | 0                | —                | —               |
+| google A                             | 0       | 6     | 0     | 0                | —                | —               |
+| google AAAA                          | 0       | 6     | 0     | 0                | —                | —               |
+| cloudflare A                         | 0       | 6     | 0     | 0                | —                | —               |
+| cloudflare AAAA                      | 0       | 6     | 0     | 0                | —                | —               |
+| quad9 A                              | 0       | 6     | 0     | 0                | —                | —               |
+| quad9 AAAA                           | 0       | 6     | 0     | 0                | —                | —               |
+
+Aquecimento (antes), `medir-propagacao.mjs --nome ensaio-corte.lotusotec.cl --esperado wordpress
+--aquecer`, saída 0:
+
+Nome `ensaio-corte.lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-04T21:06:48.687Z
+
+| resolvedor                      | início: A / AAAA (TTL)                           | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ------------------------------------------------ | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 3567/1623) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 3314/3573) | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 3313/3567) | —            | —                      | —                 |
+
+Medição (depois), `medir-propagacao.mjs --nome ensaio-corte.lotusotec.cl --esperado ausente
+--limite 3900`, saída 0:
+
+Nome `ensaio-corte.lotusotec.cl`, esperado `ausente`, medição iniciada em 2026-10-04T21:08:05.018Z
+
+| resolvedor                      | início: A / AAAA (TTL)                           | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ------------------------------------------------ | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | — / — (TTL —/—)                                  | 0 s          | — / — (TTL —/—)        | —                 |
+| route53 ns-31.awsdns-03.com     | — / — (TTL —/—)                                  | 0 s          | — / — (TTL —/—)        | —                 |
+| route53 ns-1889.awsdns-44.co.uk | — / — (TTL —/—)                                  | 0 s          | — / — (TTL —/—)        | —                 |
+| route53 ns-1507.awsdns-60.org   | — / — (TTL —/—)                                  | 0 s          | — / — (TTL —/—)        | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 3492/3502) | 21 s         | — / — (TTL —/—)        | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 3497/3498) | 3249 s       | — / — (TTL —/—)        | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 3238/3497) | 3305 s       | — / — (TTL —/—)        | —                 |
+
+A medição começou às 21:08:05Z, 77 s depois do `execute`, com os quatro nameservers do Route 53 já
+sem o registro: o `0 s` deles quer dizer que a remoção já tinha passado (pela amostragem abaixo, ela
+chegou de 7 a 12 s depois do `execute`). O Google deu a primeira resposta sem registro nos dois
+tipos aos 21 s; a Cloudflare e a Quad9, só aos 3249 s e aos 3305 s (22:02:14Z e 22:03:10Z), pouco
+depois de vencerem as entradas mais velhas do WordPress que elas tinham. Essas entradas vinham de
+uma rodada de teste do amostrador que Claude rodou às 21:02Z, fora do plano, ao preparar o script
+(`amostrar.mjs --novo ausente --rodadas 1`): ela as buscou com TTL 3600, e elas venceram por volta
+de 22:02Z. No início da medição, a Cloudflare deu as da amostragem prévia (3497/3498), que só
+venciam por volta de 22:06Z, e a Quad9, uma de cada busca (3238/3497): a resposta nova veio de outro
+cache do mesmo resolvedor, como em §3.2. Contado do `execute`, a primeira resposta sem registro do
+último dos públicos veio 3382 s (56 min) depois — e, como em §3.2 e §3.4, isso é piso, não o fim da
+propagação: uma entrada buscada no último instante em que o Route 53 ainda dava o registro, até
+12 s depois do `execute`, vale até 3612 s depois dele, por volta de 22:07Z.
+
+A amostragem fora do plano rodou desde o `execute`, como nos estágios 3, 4a e 4c: 60 rodadas, uma
+a cada 5 s, tempos contados do `execute`; "novas" são as respostas sem registro (NXDOMAIN ou sem
+dados), e "antigas", as que ainda trazem o WordPress:
+
+Amostragem `ensaio-corte.lotusotec.cl`, novo `ausente`, 60 rodadas de 2026-10-04T21:06:49.993Z a 2026-10-04T21:12:03.858Z; tempos em s desde 2026-10-04T21:06:48.000Z
+
+| resolvedor tipo                      | antigas | novas | erros | primeira nova em | última antiga em | TTL das antigas |
+| ------------------------------------ | ------- | ----- | ----- | ---------------- | ---------------- | --------------- |
+| route53 ns-904.awsdns-49.net A       | 2       | 58    | 0     | 12               | 7                | 3600…3600       |
+| route53 ns-904.awsdns-49.net AAAA    | 2       | 58    | 0     | 12               | 7                | 3600…3600       |
+| route53 ns-31.awsdns-03.com A        | 2       | 58    | 0     | 12               | 7                | 3600…3600       |
+| route53 ns-31.awsdns-03.com AAAA     | 2       | 58    | 0     | 12               | 7                | 3600…3600       |
+| route53 ns-1889.awsdns-44.co.uk A    | 2       | 58    | 0     | 12               | 7                | 3600…3600       |
+| route53 ns-1889.awsdns-44.co.uk AAAA | 2       | 58    | 0     | 12               | 7                | 3600…3600       |
+| route53 ns-1507.awsdns-60.org A      | 2       | 58    | 0     | 12               | 7                | 3600…3600       |
+| route53 ns-1507.awsdns-60.org AAAA   | 2       | 58    | 0     | 12               | 7                | 3600…3600       |
+| google A                             | 45      | 15    | 0     | 25               | 311              | 3600…1360       |
+| google AAAA                          | 29      | 31    | 0     | 20               | 311              | 3570…1335       |
+| cloudflare A                         | 60      | 0     | 0     | —                | 311              | 3566…3005       |
+| cloudflare AAAA                      | 60      | 0     | 0     | —                | 311              | 3572…3010       |
+| quad9 A                              | 47      | 13    | 0     | 35               | 306              | 3555…3009       |
+| quad9 AAAA                           | 60      | 0     | 0     | —                | 311              | 3600…3031       |
+
+- **Route 53:** os quatro nameservers ainda davam o WordPress nas duas primeiras rodadas (até 7 s)
+  e nenhum registro de 12 s em diante: a remoção chegou aos quatro de 7 a 12 s depois do
+  `execute`, como no 4a (de 8 a 13 s no estágio 3), 54 s antes do `UPDATE_COMPLETE` do
+  `Registros`.
+- **Públicos:** em 311 s, a Cloudflare (`A` e `AAAA`) e a Quad9 (`AAAA`) só deram o WordPress. O
+  Google deu a primeira resposta sem registro aos 25 s no `A` e aos 20 s no `AAAA`, e a Quad9 aos
+  35 s no `A`, mas o WordPress seguiu saindo até o fim (aos 311 s; no `A` da Quad9, aos 306 s): em
+  45 das 60 rodadas no `A` do Google, em 29 no `AAAA` e em 47 no `A` da Quad9. O TTL das antigas
+  mostra de onde elas vêm: na Cloudflare (de 3572 a 3005) e na Quad9 (de 3600 a 3009), das buscas
+  feitas de 21:02Z até as primeiras rodadas — a rodada de teste (acima), a amostragem prévia e as
+  rodadas antes da remoção; no Google (de 3600 a 1335), também de buscas de uns 38 min antes. É o
+  comportamento de §3.4 com os caches cheios: um nome que some continua respondendo, para parte das
+  consultas, até o TTL do registro antigo acabar.
+
+**Fim do ensaio:** o template e o inventário voltaram ao que eram antes dele, e a zona ficou sem
+`ensaio-corte`. Do ensaio, ficam no repositório o leitor de alias, o lote de emergência
+(`infra/rollback-corte.json`) e o medidor de propagação, da Task 5.
 
 ## 4. Desfecho e procedimento
 
