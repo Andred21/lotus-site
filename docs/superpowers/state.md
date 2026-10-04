@@ -10,7 +10,7 @@ active_branch: feat/7-2-3-7-2-4-backup-smoke-test
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: entregar_backup_stackcp_e_autorizar_estagio_1
+next_action: decidir_criterio_401_e_autorizar_estagio_1
 resume_state: executing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md
@@ -18,11 +18,11 @@ active_plan: docs/superpowers/plans/2026-09-29-7.2.3-7.2.4-backup-rollback-smoke
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: 'Portões humanos do plano. (1) Task 4: João baixa no StackCP de lotusotec.cl o backup dos arquivos (.zip/.tar.gz com wp-config.php) e o dump do banco (.sql/.sql.gz, estrutura e dados), grava fora do repositório, copia para a segunda mídia e responde com os dois caminhos e a descrição da mídia. (2) Task 6 Step 4: autorização explícita para executar o change set do estágio 1 do lotus-dns (arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1790897359/fd567112-6aa8-4c97-b388-612c3a206e6d; uma linha, Modify Registros False; só cria ensaio-corte A/AAAA no WordPress, TTL 3600). O template e o INVENTARIO do estágio 1 estão editados e não commitados (infra/lotus-dns.yaml, scripts/infra/lib/zona.mjs); o --aquecer roda logo antes do execute. Tasks 7–12 e 15–17 seguem com autorização própria a cada passo.'
+blocker: 'Portões humanos do plano. (1) Task 4, critério de spec §4.3: o ensaio (ENSAIO_DESATIVAR_MU_PLUGINS=wp-stack-cache) passou em home 200, title/H1/texto iguais e wp-login 200, e reprova só por 401 em https://lotusotec.cl/wp-json/wp/v2/users/me?context=edit&_locale=user; o vivo responde o mesmo 401 rest_not_logged_in a visitante anônimo (no Chromium do vivo a chamada nem acontece porque o rest-nonce fica pendurado). O critério literal é toda resposta da cópia < 400: João decide entre (A) contar só erro da cópia que difere do vivo na mesma URL, (B) exceção nominal para users/me 401, (C) manter o literal e registrar a Task 4 como reprovada. O PHP Fatal ainda não foi medido (o script para na primeira reprovação). §1 da evidência está preenchido e não commitado. (2) Task 6 Step 4: autorização explícita para executar o change set do estágio 1 do lotus-dns (arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1790897359/fd567112-6aa8-4c97-b388-612c3a206e6d; uma linha, Modify Registros False; só cria ensaio-corte A/AAAA no WordPress, TTL 3600). O template e o INVENTARIO do estágio 1 estão editados e não commitados (infra/lotus-dns.yaml, scripts/infra/lib/zona.mjs); o --aquecer roda logo antes do execute. Tasks 7–12 e 15–17 seguem com autorização própria a cada passo.'
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: 0a4f4e9
-updated_at: 2026-10-01T23:36:51Z
+state_basis_commit: f637a62
+updated_at: 2026-10-04T16:15:21Z
 ---
 
 # Estado operacional — Lotus Site
