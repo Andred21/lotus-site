@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: executing
+workflow_state: blocked
 work_class: architectural
 active_work_item: 7.2.3+7.2.4
 active_notion_eap: 7.2.3+7.2.4
@@ -9,20 +9,20 @@ active_title: Backup e rollback do WordPress antes do corte; smoke test completo
 active_branch: feat/7-2-3-7-2-4-backup-smoke-test
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: continue_active_plan
-resume_state: null
+next_owner: joao
+next_action: executar_estagio_5
+resume_state: executing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md
 active_plan: docs/superpowers/plans/2026-09-29-7.2.3-7.2.4-backup-rollback-smoke.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: null
+blocker: 'Portão humano do plano, Task 11 Step 3: executar o change set do estágio 5 do lotus-dns (arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791147529/036a6104-5121-4326-a315-50be4fe34afb; uma linha, Modify Registros False; o diff antes/depois por nome e tipo tira só ensaio-corte A/AAAA, de 23 para 21 registros; apex e www intactos; corpo igual ao template de 543b927, salvo duas linhas de comentário com ?). O 4c passou (desfecho 1, fc5733e): o stack está em UPDATE_COMPLETE com o template do WordPress, o mesmo que a zona tem. Como no 4b e no 4c, João roda o estagio-5.sh do scratchpad desta sessão, que confere change set, corpo, stack e template, zona, drift, a premissa na API, os 27 RRsets, amostragem e aquecimento antes do execute, e mede --esperado ausente --limite 3900 (até cerca de 70 min). Template de 543b927 e INVENTARIO sem ensaio-corte (21 linhas, 72 testes) não commitados; vão no commit da Task 11. Tasks 15–17 seguem com autorização própria a cada passo.'
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: e6d0f5c
-updated_at: 2026-10-04T20:45:44Z
+state_basis_commit: fc5733e
+updated_at: 2026-10-04T21:02:29Z
 ---
 
 # Estado operacional — Lotus Site
