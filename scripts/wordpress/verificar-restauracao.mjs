@@ -29,7 +29,16 @@ async function lerHome(navegador, copia) {
       falhas.push(`${resposta.status()} ${resposta.url()}`)
     }
   })
-  const resposta = await pagina.goto(HOME, { waitUntil: 'networkidle' })
+  // 'networkidle' nunca resolve no WordPress vivo: o api-fetch chama
+  // wp-admin/admin-ajax.php?action=rest-nonce, o host responde 400 e não
+  // fecha o stream HTTP/2 (a mesma requisição de scripts/inventario/lib/
+  // site.mjs). 'load' + 1 s vale igual para os dois lados; sem rolar a
+  // página, o contador do Divi fica parado em vez de pego no meio da animação.
+  const resposta = await pagina.goto(HOME, {
+    waitUntil: 'load',
+    timeout: 60_000,
+  })
+  await pagina.waitForTimeout(1000)
   const titulo = await pagina.title()
   const h1s = await pagina.locator('h1').allInnerTexts()
   const texto = await pagina.evaluate(() => document.body.innerText)
