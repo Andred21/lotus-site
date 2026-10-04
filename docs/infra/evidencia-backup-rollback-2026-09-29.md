@@ -186,7 +186,60 @@ pacote não foi exercitado; o ensaio só olha o WordPress.
 
 ## 3. Ensaio do rollback DNS em `ensaio-corte.lotusotec.cl` (spec §4.4)
 
-_Tasks 6–11: uma subsecção por estágio._
+### 3.1 Estágio 1 — nasce no WordPress
+
+- **Data e quem executou:** 2026-10-04, Claude, com a autorização explícita de João dada neste
+  passo ("autorizo executar o change set do estágio 1 (fd567112)").
+- **Template:** o `infra/lotus-dns.yaml` deste commit — base `d068959` mais os dois `RecordSet` de
+  `ensaio-corte` (`A` `185.146.167.195`, `AAAA` `2a07:7800::195`, TTL `TtlPadrao` = 3600). O corpo
+  que `get-template --change-set-name` devolve é igual ao arquivo, salvo três linhas de comentário
+  em que os caracteres fora do ASCII voltaram como `?`.
+- **Drift antes:** `IN_SYNC`, detecção de 2026-10-04T16:40:56Z.
+- **Change set:**
+  `arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1790897359/fd567112-6aa8-4c97-b388-612c3a206e6d`,
+  criado em 2026-10-01T23:29:20Z; uma linha, `Modify` `Registros` `Substituicao: False`.
+- **Execução:** `execute-change-set` às 16:41:52Z, logo depois do aquecimento; `Registros`
+  `UPDATE_COMPLETE` às 16:42:57Z; stack `UPDATE_COMPLETE` às 16:42:59Z.
+
+Aquecimento (antes), `medir-propagacao.mjs --nome ensaio-corte.lotusotec.cl --esperado ausente
+--aquecer`, saída 0:
+
+Nome `ensaio-corte.lotusotec.cl`, esperado `ausente`, aquecimento iniciada em 2026-10-04T16:41:52.809Z
+
+| resolvedor                      | início: A / AAAA (TTL) | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ---------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | — / — (TTL —/—)        | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | — / — (TTL —/—)        | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | — / — (TTL —/—)        | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | — / — (TTL —/—)        | —            | —                      | —                 |
+| google 8.8.8.8                  | — / — (TTL —/—)        | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | — / — (TTL —/—)        | —            | —                      | —                 |
+| quad9 9.9.9.9                   | — / — (TTL —/—)        | —            | —                      | —                 |
+
+Medição (depois), `medir-propagacao.mjs --nome ensaio-corte.lotusotec.cl --esperado wordpress`,
+saída 0:
+
+Nome `ensaio-corte.lotusotec.cl`, esperado `wordpress`, medição iniciada em 2026-10-04T16:43:01.377Z
+
+| resolvedor                      | início: A / AAAA (TTL)                           | convergiu em | depois: A / AAAA (TTL)                           | erros de consulta |
+| ------------------------------- | ------------------------------------------------ | ------------ | ------------------------------------------------ | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+
+Os quatro `route53` convergiram em `0 s`, como esperado. Os três públicos também: já davam o
+WordPress, com o TTL 3600 cheio, na primeira consulta da medição — 69 s depois do aquecimento que
+tinha recebido NXDOMAIN. O TTL negativo da zona não apareceu: o SOA tem TTL 900 e `minimum` 86400,
+então o NXDOMAIN valeria 900 s. A medição não distingue entre a consulta ter caído em outro cache
+do mesmo resolvedor (os três são anycast) e o resolvedor ter guardado o NXDOMAIN por menos de 69 s.
+Nos dois casos, uma consulta de aquecimento não garante que a seguinte encontre o cache que ela
+encheu: nos estágios seguintes, o tempo medido é um piso, e o teto é o TTL do registro antigo.
+
+_Tasks 7–11: uma subsecção por estágio._
 
 ## 4. Desfecho e procedimento
 

@@ -255,6 +255,23 @@ Resources:
           ResourceRecords:
             - !Ref IpDaIntranet
 
+        # ── Ensaio do rollback do corte (bloco B4, spec §4.4) ────────────────
+        # Nome descartavel que percorre, antes de apex e www, o caminho que B5
+        # vai usar e o caminho de emergencia: nasce no WordPress, vira alias
+        # para a distribuicao, volta pelos dois caminhos e some no estagio 5.
+        # Ninguem o le. A distribuicao responde 403 para ele: esperado.
+        - Name: !Sub 'ensaio-corte.${NomeDaZona}.'
+          Type: A
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Ref IpDoWordPress
+
+        - Name: !Sub 'ensaio-corte.${NomeDaZona}.'
+          Type: AAAA
+          TTL: !Ref TtlPadrao
+          ResourceRecords:
+            - !Ref Ipv6DoWordPress
+
   Certificado:
     Type: AWS::CertificateManager::Certificate
     # Entra so depois da delegacao ter convergido. Com HostedZoneId o
