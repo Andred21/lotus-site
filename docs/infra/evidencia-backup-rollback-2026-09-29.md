@@ -338,7 +338,137 @@ nova, não a última antiga. **O número do corte é o TTL do registro antigo:**
 apex e do `www` (TTL 3600 hoje), parte das consultas ainda leva ao WordPress por até 3600 s; os 5 a
 31 s medidos são o piso.
 
-_Tasks 8–11: uma subsecção por estágio._
+### 3.3 Estágio 3 — volta pelo caminho principal
+
+- **Data e quem executou:** 2026-10-04, Claude, com a autorização explícita de João dada neste
+  passo ("autorizo executar o change set do estágio 3 (2384c734)").
+- **Template:** o `infra/lotus-dns.yaml` deste commit é o de `2f2ab46` (estágio 1), restaurado por
+  `git checkout 2f2ab46 -- infra/lotus-dns.yaml scripts/infra/lib/zona.mjs`: sai o parâmetro
+  `DominioDaDistribuicao`, e os dois registros de `ensaio-corte` voltam de `AliasTarget` a `TTL`
+  `TtlPadrao` com o WordPress em `ResourceRecords`. O corpo que `get-template --change-set-name`
+  devolve é igual ao arquivo, salvo as mesmas três linhas de comentário com `?`.
+- **Change set:**
+  `arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791134961/2384c734-41ee-471b-bd82-69c867570811`,
+  criado em 2026-10-04T17:29:23Z (o `deploy --no-execute-changeset` levou 7 s, de 17:29:20Z a
+  17:29:27Z); uma linha, `Modify` `Registros` `Substituicao: False`. Comparando `BeforeContext` com
+  `AfterContext` por `Name` e `Type` (23 registros nos dois lados), só mudam
+  `ensaio-corte.lotusotec.cl.` `A` e `AAAA`, de `AliasTarget` para `ResourceRecords` com TTL 3600;
+  apex e `www` iguais. Os `Details` voltaram a apontar `/Properties/RecordSets/18` e `/11` (§3.2).
+- **Espera antes do `execute`:** o aquecimento do estágio 2 (17:17:22Z) guardou o WordPress, TTL
+  3600, nos caches públicos, e o Route 53 trocou até 17:18:28Z. Antes de 18:19Z o "antes" deste
+  estágio não seria só alias, e o tempo do rollback sairia misturado com a cauda do estágio 2. O
+  script só seguiu depois de 18:19Z (às 18:20:27Z), e a amostragem prévia (tabela abaixo) não achou
+  nenhuma resposta antiga: os sete resolvedores, em `A` e `AAAA`, só davam o alias.
+- **Drift antes:** `IN_SYNC`, detecção de 2026-10-04T18:20:28Z.
+- **Execução:** `execute-change-set` às 18:21:05Z, logo depois do aquecimento; stack
+  `UPDATE_IN_PROGRESS` às 18:21:07Z; `Registros` `UPDATE_IN_PROGRESS` às 18:21:10Z e
+  `UPDATE_COMPLETE` às 18:22:11Z (66 s depois do `execute`); stack `UPDATE_COMPLETE` às 18:22:13Z;
+  o `wait stack-update-complete`, que consulta a cada 30 s, voltou às 18:22:42Z. O
+  `LastUpdatedTime` do stack (18:21:07Z) marca o início da atualização, não o fim. A diferença dele
+  para o `CreationTime` do change set, que o plano manda anotar como custo do CloudFormation, aqui é
+  quase toda a espera deliberada até 18:19Z: o custo do CloudFormation são os 7 s da criação mais os
+  66 s do `execute` ao `UPDATE_COMPLETE`.
+- **Apex e `www` depois:** às 18:27:46Z, os quatro nameservers do Route 53 seguiam respondendo
+  `185.146.167.195` / `2a07:7800::195`, TTL 3600, para `lotusotec.cl` e `www.lotusotec.cl`.
+
+Amostragem prévia (antes, fora do plano), `amostrar.mjs --novo cloudfront --rodadas 6` — o script
+avulso de §3.2, agora também com os quatro `route53`; "antigas" conta toda resposta que não é o
+alias:
+
+Amostragem `ensaio-corte.lotusotec.cl`, novo `cloudfront`, 6 rodadas de 2026-10-04T18:20:29.201Z a 2026-10-04T18:21:00.419Z; tempos em s desde 2026-10-04T18:20:29.184Z
+
+| resolvedor tipo                      | antigas | novas | erros | primeira nova em | última antiga em | TTL das antigas |
+| ------------------------------------ | ------- | ----- | ----- | ---------------- | ---------------- | --------------- |
+| route53 ns-904.awsdns-49.net A       | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-904.awsdns-49.net AAAA    | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-31.awsdns-03.com A        | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-31.awsdns-03.com AAAA     | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-1889.awsdns-44.co.uk A    | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-1889.awsdns-44.co.uk AAAA | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-1507.awsdns-60.org A      | 0       | 6     | 0     | 0                | —                | —               |
+| route53 ns-1507.awsdns-60.org AAAA   | 0       | 6     | 0     | 0                | —                | —               |
+| google A                             | 0       | 6     | 0     | 0                | —                | —               |
+| google AAAA                          | 0       | 6     | 0     | 0                | —                | —               |
+| cloudflare A                         | 0       | 6     | 0     | 0                | —                | —               |
+| cloudflare AAAA                      | 0       | 6     | 0     | 0                | —                | —               |
+| quad9 A                              | 0       | 6     | 0     | 0                | —                | —               |
+| quad9 AAAA                           | 0       | 6     | 0     | 0                | —                | —               |
+
+Aquecimento (antes), `medir-propagacao.mjs --nome ensaio-corte.lotusotec.cl --esperado cloudfront
+--aquecer`, saída 0:
+
+Nome `ensaio-corte.lotusotec.cl`, esperado `cloudfront`, aquecimento iniciada em 2026-10-04T18:21:01.468Z
+
+| resolvedor                      | início: A / AAAA (TTL)                                                                                                                                                                                                                                                                                                                                              | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 3.166.165.85 3.166.165.111 3.166.165.48 3.166.165.187 / 2600:9000:27a4:a00:13:9e71:75c0:21 2600:9000:27a4:b600:13:9e71:75c0:21 2600:9000:27a4:2000:13:9e71:75c0:21 2600:9000:27a4:6a00:13:9e71:75c0:21 2600:9000:27a4:6400:13:9e71:75c0:21 2600:9000:27a4:7200:13:9e71:75c0:21 2600:9000:27a4:d600:13:9e71:75c0:21 2600:9000:27a4:dc00:13:9e71:75c0:21 (TTL 60/60)  | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 3.166.165.85 3.166.165.187 3.166.165.111 3.166.165.48 / 2600:9000:27a4:0:13:9e71:75c0:21 2600:9000:27a4:1c00:13:9e71:75c0:21 2600:9000:27a4:c00:13:9e71:75c0:21 2600:9000:27a4:fe00:13:9e71:75c0:21 2600:9000:27a4:2c00:13:9e71:75c0:21 2600:9000:27a4:3400:13:9e71:75c0:21 2600:9000:27a4:d800:13:9e71:75c0:21 2600:9000:27a4:3000:13:9e71:75c0:21 (TTL 60/60)     | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 3.166.165.111 3.166.165.85 3.166.165.48 3.166.165.187 / 2600:9000:27a4:4c00:13:9e71:75c0:21 2600:9000:27a4:d600:13:9e71:75c0:21 2600:9000:27a4:e00:13:9e71:75c0:21 2600:9000:27a4:ea00:13:9e71:75c0:21 2600:9000:27a4:4e00:13:9e71:75c0:21 2600:9000:27a4:5400:13:9e71:75c0:21 2600:9000:27a4:ba00:13:9e71:75c0:21 2600:9000:27a4:ae00:13:9e71:75c0:21 (TTL 33/60)  | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 3.166.165.85 3.166.165.111 3.166.165.48 3.166.165.187 / 2600:9000:27a4:b800:13:9e71:75c0:21 2600:9000:27a4:9e00:13:9e71:75c0:21 2600:9000:27a4:bc00:13:9e71:75c0:21 2600:9000:27a4:c200:13:9e71:75c0:21 2600:9000:27a4:da00:13:9e71:75c0:21 2600:9000:27a4:f600:13:9e71:75c0:21 2600:9000:27a4:9600:13:9e71:75c0:21 2600:9000:27a4:2800:13:9e71:75c0:21 (TTL 60/60) | —            | —                      | —                 |
+| google 8.8.8.8                  | 3.166.165.187 3.166.165.85 3.166.165.111 3.166.165.48 / 2600:9000:27a4:7200:13:9e71:75c0:21 2600:9000:27a4:b200:13:9e71:75c0:21 2600:9000:27a4:ec00:13:9e71:75c0:21 2600:9000:27a4:f000:13:9e71:75c0:21 2600:9000:27a4:5400:13:9e71:75c0:21 2600:9000:27a4:9000:13:9e71:75c0:21 2600:9000:27a4:1600:13:9e71:75c0:21 2600:9000:27a4:1000:13:9e71:75c0:21 (TTL 60/60) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 3.166.165.187 3.166.165.85 3.166.165.48 3.166.165.111 / 2600:9000:27a4:7e00:13:9e71:75c0:21 2600:9000:27a4:7200:13:9e71:75c0:21 2600:9000:27a4:6200:13:9e71:75c0:21 2600:9000:27a4:c000:13:9e71:75c0:21 2600:9000:27a4:8c00:13:9e71:75c0:21 2600:9000:27a4:6000:13:9e71:75c0:21 2600:9000:27a4:6c00:13:9e71:75c0:21 2600:9000:27a4:c00:13:9e71:75c0:21 (TTL 60/28)  | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 3.166.165.85 3.166.165.48 3.166.165.187 3.166.165.111 / 2600:9000:27a4:9400:13:9e71:75c0:21 2600:9000:27a4:2000:13:9e71:75c0:21 2600:9000:27a4:6600:13:9e71:75c0:21 2600:9000:27a4:1800:13:9e71:75c0:21 2600:9000:27a4:c400:13:9e71:75c0:21 2600:9000:27a4:1200:13:9e71:75c0:21 2600:9000:27a4:4e00:13:9e71:75c0:21 2600:9000:27a4:fe00:13:9e71:75c0:21 (TTL 49/49) | —            | —                      | —                 |
+
+Medição (depois), `medir-propagacao.mjs --nome ensaio-corte.lotusotec.cl --esperado wordpress
+--limite 300`, saída 0:
+
+Nome `ensaio-corte.lotusotec.cl`, esperado `wordpress`, medição iniciada em 2026-10-04T18:22:46.753Z
+
+| resolvedor                      | início: A / AAAA (TTL)                           | convergiu em | depois: A / AAAA (TTL)                           | erros de consulta |
+| ------------------------------- | ------------------------------------------------ | ------------ | ------------------------------------------------ | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 3527/3532) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3527/3532) | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 3527/3546) | 0 s          | 185.146.167.195 / 2a07:7800::195 (TTL 3527/3546) | —                 |
+
+Os sete convergiram em `0 s`, dentro do esperado (até 60 s mais os 5 s da sondagem). Mas a medição
+só começa depois do `wait`, 101 s depois do `execute`, e o TTL do alias é 60: quando ela começou, a
+cauda já tinha acabado. O TTL 3527 que a Cloudflare e a Quad9 mostram no `A` diz que elas buscaram
+o WordPress 73 s antes, por volta de 28 s depois do `execute` — a primeira resposta nova delas na
+amostragem abaixo. Para ver a cauda, a amostragem fora do plano rodou desde o `execute`, como
+fariam os visitantes durante o `wait`: 60 rodadas, uma a cada 5 s, tempos contados do `execute`:
+
+Amostragem `ensaio-corte.lotusotec.cl`, novo `wordpress`, 60 rodadas de 2026-10-04T18:21:06.776Z a 2026-10-04T18:26:16.104Z; tempos em s desde 2026-10-04T18:21:05.000Z
+
+| resolvedor tipo                      | antigas | novas | erros | primeira nova em | última antiga em | TTL das antigas |
+| ------------------------------------ | ------- | ----- | ----- | ---------------- | ---------------- | --------------- |
+| route53 ns-904.awsdns-49.net A       | 2       | 58    | 0     | 13               | 8                | 60…60           |
+| route53 ns-904.awsdns-49.net AAAA    | 2       | 58    | 0     | 13               | 8                | 60…60           |
+| route53 ns-31.awsdns-03.com A        | 2       | 58    | 0     | 13               | 8                | 60…60           |
+| route53 ns-31.awsdns-03.com AAAA     | 2       | 58    | 0     | 13               | 8                | 60…60           |
+| route53 ns-1889.awsdns-44.co.uk A    | 2       | 58    | 0     | 13               | 8                | 60…60           |
+| route53 ns-1889.awsdns-44.co.uk AAAA | 2       | 58    | 0     | 13               | 8                | 60…60           |
+| route53 ns-1507.awsdns-60.org A      | 2       | 58    | 0     | 13               | 8                | 60…22           |
+| route53 ns-1507.awsdns-60.org AAAA   | 2       | 58    | 0     | 13               | 8                | 60…60           |
+| google A                             | 8       | 52    | 0     | 33               | 43               | 60…2            |
+| google AAAA                          | 4       | 56    | 0     | 13               | 43               | 38…2            |
+| cloudflare A                         | 7       | 53    | 0     | 28               | 48               | 50…10           |
+| cloudflare AAAA                      | 6       | 54    | 0     | 33               | 28               | 23…3            |
+| quad9 A                              | 6       | 54    | 0     | 28               | 33               | 38…2            |
+| quad9 AAAA                           | 6       | 54    | 0     | 33               | 28               | 43…2            |
+
+- **Route 53:** os quatro nameservers ainda davam o alias nas duas primeiras rodadas (até 8 s) e o
+  WordPress de 13 s em diante. A troca chegou aos quatro de 8 a 13 s depois do `execute`, 53 s
+  antes do `UPDATE_COMPLETE` do `Registros`; o resto é o CloudFormation esperando a mudança ser dada
+  como propagada (`INSYNC`, que não foi lido aqui). O TTL que o próprio Route 53 dá ao alias nem
+  sempre é 60 (33 no aquecimento, 22 numa rodada) — provavelmente o que resta, no Route 53, do
+  registro da distribuição (não investigado); nunca passou de 60.
+- **Públicos:** a última resposta antiga (o alias) saiu de 28 a 48 s depois do `execute`, com o TTL
+  se esgotando (até 2 s); depois de 48 s, só o WordPress, sem erro de consulta. Nos três públicos
+  o alias ainda voltou depois da primeira resposta nova (outro cache do mesmo resolvedor, como no
+  estágio 2), mas aqui o registro antigo é o alias e a cauda acaba com o TTL dele: o teto é a troca
+  no Route 53 mais 60 s, cerca de 73 s.
+
+**Rollback pelo caminho principal:** com o change set já criado e lido, 48 s do `execute` até a
+última resposta antiga nos públicos (teto de cerca de 73 s: os 13 s do Route 53 mais os 60 s do TTL
+do alias). Criar o change set leva 7 s; no corte real, o que domina é o tempo de revisar e
+autorizar. O `UPDATE_COMPLETE` (66 s) e a volta do `wait` (97 s) chegam depois do DNS e não servem
+de relógio do rollback.
+
+_Tasks 9–11: uma subsecção por estágio._
 
 ## 4. Desfecho e procedimento
 
