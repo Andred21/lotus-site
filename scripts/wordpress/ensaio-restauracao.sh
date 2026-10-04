@@ -12,6 +12,10 @@
 # ENSAIO_DESATIVAR_PLUGINS="a,b" renomeia wp-content/plugins/<a> e <b> NA
 # CÓPIA antes de subir (spec §11: plugin de segurança bloqueando acesso
 # local). Registrar na evidência; nunca no host.
+#
+# ENSAIO_DESATIVAR_MU_PLUGINS="a,b" faz o mesmo com wp-content/mu-plugins/
+# <a>.php e <b>.php. O backup do StackCP traz wp-stack-cache.php, que exige
+# /usr/share/php/wp-stack-cache.php — biblioteca que só existe no host.
 set -euo pipefail
 
 AQUI=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -57,6 +61,14 @@ for plugin in ${ENSAIO_DESATIVAR_PLUGINS:+${ENSAIO_DESATIVAR_PLUGINS//,/ }}; do
   mv "$ENSAIO_DOCROOT/wp-content/plugins/$plugin" \
      "$ENSAIO_DOCROOT/wp-content/plugins/$plugin.desativado"
   echo "== plugin desativado na cópia: $plugin"
+done
+
+for mu in ${ENSAIO_DESATIVAR_MU_PLUGINS:+${ENSAIO_DESATIVAR_MU_PLUGINS//,/ }}; do
+  [ -f "$ENSAIO_DOCROOT/wp-content/mu-plugins/$mu.php" ] \
+    || { echo "mu-plugin não existe na cópia: $mu" >&2; exit 3; }
+  mv "$ENSAIO_DOCROOT/wp-content/mu-plugins/$mu.php" \
+     "$ENSAIO_DOCROOT/wp-content/mu-plugins/$mu.php.desativado"
+  echo "== mu-plugin desativado na cópia: $mu"
 done
 
 node "$AQUI/ajustar-wp-config.mjs" "$ENSAIO_DOCROOT/wp-config.php"
