@@ -10,7 +10,7 @@ active_branch: feat/7-2-3-7-2-4-backup-smoke-test
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: executar_change_set_lotus_site
+next_action: enviar_formulario_real
 resume_state: executing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md
@@ -18,11 +18,11 @@ active_plan: docs/superpowers/plans/2026-09-29-7.2.3-7.2.4-backup-rollback-smoke
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: 'Portão humano do plano, Task 15 Step 3: executar o change set do lotus-site em sa-east-1 (arn:aws:cloudformation:sa-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791152307/bef63f37-78c0-409e-97f3-a4675afa5382; duas linhas, RedirecionarWww Add e Distribuicao Modify False; na distribuição só entram Aliases lotusotec.cl e www.lotusotec.cl, ViewerCertificate do ACM db812e1a, sni-only, TLSv1.2_2021, e a FunctionAssociation viewer-request no behavior padrão; parâmetros iguais aos do stack, só ArnDoCertificadoDoDominio novo; corpo igual ao template de 5d0a41b, salvo comentários com ?). Muda a distribuição pública; o DNS não muda, apex e www seguem no WordPress. Como nos estágios 4b a 5, João roda o t15-deploy.sh do scratchpad desta sessão, que confere change set, corpo, mudanças, stack, certificado e distribuição antes do execute, espera UPDATE_COMPLETE e Deployed e faz a prova rápida do Step 4. Tasks 11 e 12 fechadas (c0a5428, 6f72841). Task 16 (envio real, D11) e 17 seguem com autorização própria.'
+blocker: 'Portão humano do plano, Task 16 Step 4 (spec D11): o envio real do formulário. Num navegador com lotusotec.cl e www.lotusotec.cl forçados para a distribuição (3.166.160.83, borda de dhpoztt69jydz.cloudfront.net, por --host-resolver-rules num perfil novo do Edge ou do Chrome), João abre https://lotusotec.cl/, confere o cadeado (certificado da Amazon), envia o formulário com a mensagem smoke 7.2.4 2026-10-04 e confirma a chegada em contacto@lotusotec.cl (assunto Nuevo mensaje desde el sitio de Lotus OTEC); responde com a hora do envio, a da chegada e o texto, sem o e-mail usado no campo. Task 15 fechada: change set bef63f37 executado por João, stack UPDATE_COMPLETE às 22:26:55Z, distribuição Deployed, apex 200 e www 301 pela distribuição, RenewalEligibility ELIGIBLE. Smoke verde nas duas formas (10 passed cada) depois da correção b23fe46: o item 3 exigia a ordem da URL entre chaves diferentes da query, que o CloudFront não entrega à função. Depois do envio: evidência de 7.2.4 (Step 5) e commit; Tasks 17 e 18.'
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: 6f72841
-updated_at: 2026-10-04T22:22:08Z
+state_basis_commit: b23fe46
+updated_at: 2026-10-04T22:38:19Z
 ---
 
 # Estado operacional — Lotus Site
