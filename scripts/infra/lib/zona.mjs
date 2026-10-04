@@ -133,14 +133,12 @@ export const INVENTARIO = Object.freeze([
   {
     nome: 'ensaio-corte.lotusotec.cl.',
     tipo: 'A',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
+    valores: ['185.146.167.195'],
   },
   {
     nome: 'ensaio-corte.lotusotec.cl.',
     tipo: 'AAAA',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
+    valores: ['2a07:7800::195'],
   },
 ])
 

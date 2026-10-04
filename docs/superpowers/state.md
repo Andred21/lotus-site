@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.3+7.2.4
 active_notion_eap: 7.2.3+7.2.4
@@ -9,20 +9,20 @@ active_title: Backup e rollback do WordPress antes do corte; smoke test completo
 active_branch: feat/7-2-3-7-2-4-backup-smoke-test
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: executar_estagio_4c
-resume_state: executing
+next_owner: claude
+next_action: continue_active_plan
+resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md
 active_plan: docs/superpowers/plans/2026-09-29-7.2.3-7.2.4-backup-rollback-smoke.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: 'Portão humano do plano, Task 10 Step 6: executar o change set de reconciliação do estágio 4c do lotus-dns (arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791145324/8cad4e7f-3f8d-4491-8278-a3552537738c; uma linha, Modify Registros False; o diff antes/depois por nome e tipo muda só ensaio-corte A/AAAA, de alias de dhpoztt69jydz.cloudfront.net para WordPress TTL 3600; apex e www intactos; corpo igual ao do change set do estágio 3). O stack acha que o nome é alias; a zona tem o WordPress desde o UPSERT do 4b (19:59:37Z). O modo auto negou ao Claude a execução do 4b, e João rodou o script no terminal dele; o 4c segue igual: João roda o estagio-4c.sh do scratchpad desta sessão, que confere change set, corpo, zona, drift, a premissa na API, amostragem e aquecimento antes do execute, e mede conforme o desfecho (1 passa, 2 no-op, 3 rollback). Template e INVENTARIO restaurados de 2f2ab46 e a §3.5 do 4b não commitados. O desfecho 3 abre novos portões (UPSERT de novo; reconciliação sem rollback); estágio 5 e Tasks 15–17 seguem com autorização própria a cada passo.'
+blocker: null
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: 2bf3cd5
-updated_at: 2026-10-04T20:25:36Z
+state_basis_commit: e6d0f5c
+updated_at: 2026-10-04T20:45:44Z
 ---
 
 # Estado operacional — Lotus Site
