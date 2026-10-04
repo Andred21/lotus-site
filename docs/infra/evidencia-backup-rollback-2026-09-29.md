@@ -1126,4 +1126,37 @@ Amostragem `ensaio-corte.lotusotec.cl`, novo `ausente`, 60 rodadas de 2026-10-04
 
 ## 4. Desfecho e procedimento
 
-_Task 12._
+Resumo por estágio. "Troca no Route 53" vem da amostragem desde o `execute` (ou o `UPSERT`);
+"Primeira nova" é o `convergiu em` da medição, contado do início dela, que começou depois da troca;
+"Última antiga" é a última resposta antiga dos públicos na amostragem, contada do `execute`.
+
+| Estágio   | Mudança                          | Troca no Route 53 | Medição começou | Primeira nova: Google / Cloudflare / Quad9 | Última antiga nos públicos                       | TTL da resposta nova |
+| --------- | -------------------------------- | ----------------- | --------------- | ------------------------------------------ | ------------------------------------------------ | -------------------- |
+| 1 (§3.1)  | nasce no WordPress               | —                 | 69 s depois     | 0 / 0 / 0 s                                | —                                                | 3600                 |
+| 2 (§3.2)  | WordPress → alias (o corte)      | —                 | 73 s depois     | 5 / 31 / 11 s                              | ainda saindo de 2 a 5 min depois da convergência | 29 a 60              |
+| 3 (§3.3)  | alias → WordPress, change set    | 8 a 13 s          | 101 s depois    | 0 / 0 / 0 s                                | 48 s                                             | 3527 a 3600          |
+| 4a (§3.4) | WordPress → alias                | 7 a 12 s          | 100 s depois    | 36 / 1718 / 1710 s                         | ainda saindo aos 307 s                           | 36 a 60              |
+| 4b (§3.5) | alias → WordPress, `UPSERT`      | 2 a 12 s          | 37 s depois     | 0 / 0 / 16 s                               | 63 s                                             | 3584 a 3600          |
+| 4c (§3.6) | reconciliação, sem troca na zona | nenhuma           | 76 s depois     | 0 / 0 / 0 s                                | nenhuma em 840 respostas                         | 1513 a 3600          |
+| 5 (§3.7)  | WordPress → sem registro         | 7 a 12 s          | 77 s depois     | 21 / 3249 / 3305 s                         | ainda saindo aos 311 s                           | —                    |
+
+Os quatro `route53` deram `0 s` em todas as medições: quando elas começaram, a troca já tinha
+chegado a eles.
+
+**Desfecho do 4c:** o 1 do plano. O change set com o template de antes do corte reconciliou o stack
+depois do `UPSERT`, sem efeito no DNS, mas não do jeito que o plano supunha: o CloudFormation apagou
+e recriou o grupo inteiro, e o Route 53 aceitou apagar um alias que a zona já não tinha, ao
+contrário do que a documentação dele diz (§3.6).
+
+**O que os números dizem:** as duas voltas — 48 s pelo change set, 63 s pelo `UPSERT` — são
+limitadas pelo TTL do alias, de no máximo 60 s, e a troca chega ao Route 53 em até 13 s. O corte e a
+remoção do nome são limitados pelo TTL do registro antigo, 3600 s hoje: com os caches cheios, até a
+primeira resposta nova espera por ele (30 min no 4a, 56 min no 5). O `convergiu em` da medição é o
+piso; o teto é o TTL.
+
+Procedimento: [`docs/infra/rollback-corte.md`](rollback-corte.md), escrito com estes números.
+
+Limites declarados (spec §7): restauração no host não exercitada; ensaio num nome descartável —
+apex e `www` só mudam em `B5`. Também não foram ensaiados o Route 53 recusando o lote de
+reconciliação e o `execute-change-set --disable-rollback` que o procedimento usa para esse caso
+(`rollback-corte.md`, §5).

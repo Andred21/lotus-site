@@ -217,6 +217,25 @@ pnpm infra:conferir-zona
 Resolução correta **não** prova e-mail funcionando. O MX pode estar certo e a entrega falhar por
 outro motivo; a prova de `B1` é mensagem recebida.
 
+### Ensaio do rollback do corte (`B4`, 2026-10-04)
+
+O mecanismo do corte e da volta foi ensaiado em `ensaio-corte.lotusotec.cl`, nome descartável que
+nasceu no WordPress, virou alias da distribuição, voltou por change set e por `UPSERT` direto e foi
+removido — sete estágios, em
+[`evidencia-backup-rollback-2026-09-29.md`](evidencia-backup-rollback-2026-09-29.md) §3. Medido:
+TTL do alias de no máximo 60 s; corte propagado nos resolvedores públicos em 5 a 31 s até a
+primeira resposta nova com os caches quase vazios e em 30 min com os caches cheios (56 min na
+remoção do nome), com respostas antigas até o TTL do WordPress (3600 s) acabar; volta pelo
+caminho principal em 48 s, pela emergência em 63 s (do `execute` ou do `UPSERT` até a última
+resposta antiga nos públicos); reconciliação do CloudFormation depois do `UPSERT`: passou, sem
+efeito no DNS. O procedimento está em [`rollback-corte.md`](rollback-corte.md). A zona terminou o
+ensaio sem o nome.
+
+Duas conferências não servem como estão depois do corte (`B5`): o `pnpm infra:conferir-zona` desta
+secção não trata alias e daria o apex e o `www` como divergentes, mesmo certos; e o drift do stack
+`lotus-dns` (`runbook-aws.md`) só compara a `Zona`, não os registros. Com o alias no ar, a leitura é
+registro a registro, nos nameservers ou pela API do Route 53 (evidência §3.4).
+
 ## Certificado
 
 Desde 2026-09-26, o stack `lotus-dns` também declara o certificado ACM da zona, em `us-east-1`:
