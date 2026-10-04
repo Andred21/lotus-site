@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.3+7.2.4
 active_notion_eap: 7.2.3+7.2.4
@@ -9,20 +9,20 @@ active_title: Backup e rollback do WordPress antes do corte; smoke test completo
 active_branch: feat/7-2-3-7-2-4-backup-smoke-test
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: autorizar_estagio_2
-resume_state: executing
+next_owner: claude
+next_action: continue_active_plan
+resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md
 active_plan: docs/superpowers/plans/2026-09-29-7.2.3-7.2.4-backup-rollback-smoke.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: 'Portão humano do plano, Task 7 Step 3: autorização explícita para executar o change set do estágio 2 do lotus-dns (arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791132431/5b7a58bc-54ad-4b3e-a857-e8800072dfca; uma linha, Modify Registros False; o diff completo antes/depois muda só ensaio-corte A/AAAA, de WordPress TTL 3600 para alias de dhpoztt69jydz.cloudfront.net; apex e www intactos). Template e INVENTARIO do estágio 2 editados e não commitados (infra/lotus-dns.yaml, scripts/infra/lib/zona.mjs); o --aquecer roda logo antes do execute e a medição leva até 3900 s. Tasks 8–11 e 15–17 seguem com autorização própria a cada passo.'
+blocker: null
 supervised_cycles_completed: 18
 last_completed_work_item: 7.2.2
-state_basis_commit: 2f2ab46
-updated_at: 2026-10-04T16:49:32Z
+state_basis_commit: 31bb469
+updated_at: 2026-10-04T17:16:45Z
 ---
 
 # Estado operacional — Lotus Site
