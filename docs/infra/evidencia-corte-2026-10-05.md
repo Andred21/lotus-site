@@ -120,8 +120,8 @@ Medição `2oYqGnWU4l2ZpxpKU00021G5d` de `dhpoztt69jydz.cloudfront.net`, criada 
 Antes e depois (segunda leitura): `firstByte` 431 → 161 ms e `total` 766 → 279 ms de mediana; borda
 `MIA50` nas 10 sondas antes, depois `SCL51` em 5, `EZE50` em 2, `LIM50` em 1 e `MIA50` em 2. A
 borda escolhida depende do resolvedor de cada sonda e não ficou toda em Santiago; registrado como
-veio (spec D4: o corte não espera por isso). As duas sondas em `MIA50` (6 e 7) resolveram IPs de
-Miami nas duas leituras.
+veio (spec D4: o corte não espera por isso). Das duas sondas em `MIA50` na segunda leitura, a 6
+resolveu IP de Miami nas duas leituras; a 7 estava em `SCL51` na primeira.
 
 ## 2. `sistema` sai da zona (spec D2)
 
