@@ -535,7 +535,7 @@ Nome `www.lotusotec.cl`, esperado `cloudfront`, medição iniciada em 2026-10-05
 | quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 57/60) | 64 s         | 13.227.110.41 13.227.110.69 13.227.110.33 13.227.110.10 / 2600:9000:21ed:1600:13:9e71:75c0:93a1 2600:9000:21ed:8a00:13:9e71:75c0:93a1 2600:9000:21ed:e00:13:9e71:75c0:93a1 2600:9000:21ed:c000:13:9e71:75c0:93a1 2600:9000:21ed:3a00:13:9e71:75c0:93a1 2600:9000:21ed:f600:13:9e71:75c0:93a1 2600:9000:21ed:1a00:13:9e71:75c0:93a1 2600:9000:21ed:aa00:13:9e71:75c0:93a1 (TTL 18/60)  | —                 |
 
 Os quatro `route53` passaram à borda em 11 a 15 s, com TTL ≤ 60; os públicos saíram do WordPress, com
-TTL ≤ 60, e chegaram à borda em 16 a 64 s. Às 14:13:37Z, 71 s depois do `execute`, os sete
+TTL ≤ 60, e chegaram à borda em 16 a 64 s. Às 14:13:37Z, 74 s depois do `execute`, os sete
 resolvedores respondiam a distribuição nos dois nomes.
 
 ## 6. Depois do corte (spec §5, passo 7)
@@ -632,7 +632,8 @@ João, num navegador comum, sem `hosts` nem resolução forçada:
 - cadeado de `https://lotusotec.cl/`: certificado com CN `lotusotec.cl`, emitido por `Amazon RSA
 2048 M01` (Amazon), válido de 2026-09-25 a 2027-04-11, SHA-256
   `840f347bca405b65ad71cb43562a8b852c8545363017da3ac04090283c2c3d95`;
-- formulário enviado; a chegada em `contacto@lotusotec.cl` foi confirmada pelo cliente, segundo João.
+- formulário enviado; a chegada em `contacto@lotusotec.cl`, confirmada pelo cliente, João mostrou em
+  captura de tela da caixa de entrada (abaixo).
 
 Recebida em `contacto@lotusotec.cl` às 11:24 (UTC−3; 2026-10-05T14:24Z), remetente "Sitio Lotus
 OTEC", assunto "Nuevo mensaje desde el sitio de Lotus OTEC", mensagem `corte 7.2.5 2026-10-05`,
@@ -720,4 +721,7 @@ houve deploy depois do congelamento. O run seguinte em `main`, do `8774aa7`, seg
 - O X não tem validador público de card desde 2022; os `twitter:*` seguem provados por
   `src/app/head.test.ts` (D10).
 - A cauda além dos 60 s, em resolvedores que impõem TTL mínimo próprio, é medida, não controlada.
-- O recebimento da mensagem do formulário é declaração de João.
+- O recebimento da mensagem do formulário é declaração de João, com captura de tela da caixa.
+- A linha `"desfecho":"enviado"` do log da função, pedida pela spec §7, item 4, não foi lida (§6.5):
+  a chegada da mensagem ficou no lugar dela.
+- A estabilização durou 8 h 35 min, não 24 h (§7, `D-67`).

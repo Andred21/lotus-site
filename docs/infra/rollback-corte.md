@@ -18,6 +18,10 @@ certificado vencido é erro de TLS sem "prosseguir". Regra (spec de `B4`, D8): *
 volta ao WordPress: a saída é correção para frente na distribuição ou a restauração de desastre
 (§7).
 
+> **Nota de 2026-10-05.** A correção para frente depende de o CI corporativo publicar, e ele está
+> reprovando desde o espelho `8774aa7` (`D-62`): enquanto `D-62` estiver aberto, nenhum deploy sai,
+> e o que está no ar segue `ca8f49b`. `D-62` tem prazo antes de 2026-11-10 por isso.
+
 ```bash
 echo | openssl s_client -connect 185.146.167.195:443 -servername lotusotec.cl 2>/dev/null \
   | openssl x509 -noout -enddate
@@ -57,7 +61,8 @@ o que resolvedores com TTL mínimo próprio impuserem.
 
 Depois do corte, `pnpm smoke` com `SMOKE_URL=https://lotusotec.cl` (sem `SMOKE_VIA`) reprovando em
 qualquer dos itens 2 a 6 (TLS, redirects, home, assets, formulário), ou o site fora do ar. Itens
-1, 7, 8 e 9 reprovando são regressão que um deploy corrige, não motivo de rollback.
+1, 7, 8 e 9 reprovando são regressão que um deploy corrige, não motivo de rollback — desde que o
+CI corporativo publique (nota da §0, `D-62`).
 
 ## 3. Caminho A — change set (principal)
 
@@ -79,8 +84,12 @@ aws cloudformation describe-change-set --region us-east-1 --change-set-name <arn
 # esperado: uma linha, Modify Registros False
 ```
 
-`<sha do corte>` é o commit `feat(7.2.5): apontar apex e www para a distribuição`; o `^` traz o
-estado de antes dele. Os três arquivos vão juntos: o `zona.test.mjs` de depois do corte exige o
+`<sha do corte>` é `515a13f`, o commit `feat(7.2.5): apontar apex e www para a distribuição`; o `^`
+(`355a410`) traz o estado de antes dele, com TTL 60 e sem `sistema`. O SHA vale porque o PR de `B5`
+entra em `main` por merge commit, como os anteriores; se entrar por squash, o `^` do commit
+squashed é o template de antes do bloco (TTL 3600, `sistema` de volta) e reprova no `zona.test.mjs`
+contra `infra/rollback-corte.json` — usar `355a410` direto, buscado da branch
+`feat/7-2-5-cutover-lotusotec`. Os três arquivos vão juntos: o `zona.test.mjs` de depois do corte exige o
 alias que o template de antes não tem (spec de `7.2.5`, D6).
 
 Revisar o change set comparando `BeforeContext` com `AfterContext` por `Name` e `Type`, não pelos

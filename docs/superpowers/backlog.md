@@ -37,7 +37,8 @@ sempre explícita.
 `B5 · 7.2.5` pôs `lotusotec.cl` na distribuição em 2026-10-05; o fechamento do bloco fica
 registrado em `docs/superpowers/historico/progress.md`. `B0` a `B4` estão fechados, cada um com PR
 integrado em `main`. O próximo bloco da fila é `B6 · 7.2.6`, que só fica ativo por seleção
-explícita (Lei 3).
+explícita (Lei 3). Antes dele, ou junto, `D-62`: o CI corporativo não publica desde 2026-10-05, e
+a produção não recebe deploy até a correção atravessar o espelho.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -671,6 +672,9 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `/// <reference lib="dom" />`, e o DOM só chegava pelos arquivos que o espelho exclui; o CI
   pessoal do mesmo merge passou. Reproduzido na árvore de `upstream/main`. O que está no ar segue
   `ca8f49b`, e nenhum deploy sai até a correção atravessar o espelho.
+  **Prazo:** corrigido e atravessado o espelho antes de 2026-11-10, quando a volta ao WordPress
+  deixa de existir e a correção para frente vira a única saída (`rollback-corte.md` §0); de
+  preferência antes de `B6`.
 - **D-63 · a sonda `allowsEval` do zod viola a CSP ao carregar o bundle, a cada visita de página** —
   medido em 2026-09-27 neste bloco e remedido em 2026-09-28 contra a distribuição
   (`dhpoztt69jydz.cloudfront.net`): o zod 4.4.3 lê o getter `allowsEval.value`

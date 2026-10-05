@@ -166,7 +166,8 @@ sai no ar, mas arquivos que saíram do build continuam na raiz do bucket.
 Ver a secção correspondente do plano do bloco. Em resumo: toda resposta da distribuição — `/`, um
 asset, `/api/*` e um caminho inventado (404) — traz os cabeçalhos de `7.2.2`
 (`Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options`,
-`X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` e `X-Robots-Tag`) e **não** traz
+`X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` e `X-Robots-Tag`, este até o corte de
+`B5`) e **não** traz
 `Server` do S3, `x-amz-version-id` nem `x-amz-server-side-encryption` (`Server: CloudFront` é o
 CloudFront repondo o próprio); o bucket responde 403 quando acessado direto, e os quatro bloqueios
 de acesso público estão ligados. Os valores canônicos moram em `scripts/infra/lib/cabecalhos.mjs`,
@@ -391,6 +392,9 @@ Com a zona no Route 53 não há limite de um subdomínio. `sistema.lotusotec.cl`
 já nascem no template como `A` **e** `AAAA` para o WordPress. Nenhum dos dois é registro no painel
 antigo — o inventário fechado de 2026-09-20 prova isso —, e os dois só resolviam por causa do
 wildcard, que não atravessou.
+
+> **Nota de 2026-10-05 (`B5`).** `sistema` saiu da zona e `www`, como o apex, é alias da
+> distribuição (§10).
 
 Subdomínio novo é uma entrada a mais em `RecordSets` **e** uma linha a mais no inventário de
 `scripts/infra/lib/zona.mjs`, senão a catraca reprova. Não é `change-resource-record-sets` à mão.

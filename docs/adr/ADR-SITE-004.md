@@ -84,11 +84,11 @@ hemisfério norte, com latência maior. Aceitável enquanto o endereço é de ho
 corte de DNS (`D-39`).
 
 > **Atualização de 2026-10-05 (`B5`, `7.2.5`).** A distribuição passou a `PriceClass_All`,
-> a única classe com bordas na América do Sul (`D-39`). Medido em 2026-10-05 de cinco sondas no
-> Chile: com `PriceClass_100` ela respondia de Miami e de Dallas, `total` mediano de 854 ms, contra
-> 31 ms do WordPress; depois da troca, com dez sondas, `total` mediano de 279 ms contra 766 ms antes,
-> borda `SCL51` (Santiago) em cinco delas e `EZE50`, `LIM50` e `MIA50` nas outras (evidência de
-> `7.2.5`, §1.4). O free tier do CloudFront vale para todas as regiões, e acima dele a diferença
+> a única classe com bordas na América do Sul (`D-39`). No planejamento, cinco sondas no Chile: com
+> `PriceClass_100` ela respondia de Miami e de Dallas, `total` mediano de 854 ms, contra 31 ms do
+> WordPress (spec de `7.2.5`, D4). Na execução, dez sondas: 766 ms antes da troca e 279 ms depois,
+> contra 74 ms do WordPress, borda `SCL51` (Santiago) em cinco delas e `EZE50`, `LIM50` e `MIA50`
+> nas outras (evidência de `7.2.5`, §1). O free tier do CloudFront vale para todas as regiões, e acima dele a diferença
 > neste volume é de centavos por mês; o budget de US$ 30 continua sendo a guarda.
 
 ## Operação
