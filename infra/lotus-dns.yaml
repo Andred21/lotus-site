@@ -37,6 +37,17 @@ Parameters:
       TTL de toda a zona atual. Copia fiel: mudar o TTL aqui mudaria o
       comportamento durante a propagacao da troca de nameservers.
 
+  # TTL de apex e www no dia do corte (B5, spec de 7.2.5, D3). Parametro novo,
+  # e nao Default novo em TtlPadrao: `aws cloudformation deploy` reusa o valor
+  # anterior de todo parametro que o stack ja tem, e TtlPadrao vale para a
+  # zona inteira. Com 3600 s no registro de antes, a cauda medida no ensaio de
+  # B4 foi de 30 a 56 min; com 60, cerca de um minuto. Sai no corte, com os
+  # IPs do WordPress.
+  TtlDoCorte:
+    Type: Number
+    Default: 60
+    MinValue: 60
+
   # Os tres tokens do Easy DKIM da identidade SES (stack lotus-contato,
   # sa-east-1). Sao Default por dois motivos: a catraca de zona.test.mjs so le
   # parametro com Default, e o valor e publico -- e o nome de uma chave
@@ -99,15 +110,16 @@ Resources:
       # que o wildcard devolvia. sistema nasceu do mesmo jeito e saiu em B5
       # (spec de 7.2.5, D2): o nome da intranet e app.
       RecordSets:
+        # Apex e www com TtlDoCorte ate o corte, que os torna alias (B5).
         - Name: !Sub '${NomeDaZona}.'
           Type: A
-          TTL: !Ref TtlPadrao
+          TTL: !Ref TtlDoCorte
           ResourceRecords:
             - !Ref IpDoWordPress
 
         - Name: !Sub '${NomeDaZona}.'
           Type: AAAA
-          TTL: !Ref TtlPadrao
+          TTL: !Ref TtlDoCorte
           ResourceRecords:
             - !Ref Ipv6DoWordPress
 
@@ -133,7 +145,7 @@ Resources:
 
         - Name: !Sub 'www.${NomeDaZona}.'
           Type: A
-          TTL: !Ref TtlPadrao
+          TTL: !Ref TtlDoCorte
           ResourceRecords:
             - !Ref IpDoWordPress
 
@@ -141,7 +153,7 @@ Resources:
         # dual-stack perde IPv6 em www na troca de delegacao.
         - Name: !Sub 'www.${NomeDaZona}.'
           Type: AAAA
-          TTL: !Ref TtlPadrao
+          TTL: !Ref TtlDoCorte
           ResourceRecords:
             - !Ref Ipv6DoWordPress
 

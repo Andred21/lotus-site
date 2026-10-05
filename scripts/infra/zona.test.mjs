@@ -3,9 +3,12 @@ import { describe, expect, it } from 'vitest'
 import {
   INVENTARIO,
   NOME_DO_ENSAIO,
+  TTL_DO_CORTE,
   WORDPRESS,
+  conferirLoteDeRollback,
   convergiu,
   delegacaoEsperada,
+  eDoCorte,
   lerParametros,
   lerPoliticasDaZona,
   lerPoliticasDoRecurso,
@@ -33,6 +36,7 @@ describe('leitura textual do template', () => {
     expect(parametros.get('IpDoWordPress')).toBe('185.146.167.195')
     expect(parametros.get('Ipv6DoWordPress')).toBe('2a07:7800::195')
     expect(parametros.get('TtlPadrao')).toBe('3600')
+    expect(parametros.get('TtlDoCorte')).toBe(String(TTL_DO_CORTE))
     // Os tres tokens DKIM sao Default de parametro, como os IPs: sem Default
     // `resolver` lanca e a catraca nao consegue ler os CNAME.
     for (const nome of ['TokenDkim1', 'TokenDkim2', 'TokenDkim3']) {
@@ -282,16 +286,23 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     expect(app[0]?.valores).toEqual(['18.230.53.197'])
   })
 
-  it('usa o TTL medido da zona atual em todo registro que não é alias', () => {
+  it('usa 3600 em todo registro comum, e TTL_DO_CORTE em apex e www (7.2.5, spec D3)', () => {
     // Comparado contra o INVENTARIO, e nao contra o proprio `registros`: com
     // os dois lados derivados da mesma lista, uma leitura vazia passaria.
-    // Alias não tem TTL: a AWS fixa em 60 s (spec D12).
+    // Alias não tem TTL: a AWS fixa em 60 s (spec D12 de B4).
     const comuns = INVENTARIO.filter((registro) => !registro.alias)
-    expect(
-      registros
-        .filter((registro) => !registro.alias)
-        .map((registro) => registro.ttl),
-    ).toEqual(comuns.map(() => 3600))
+    expect(registros.filter((registro) => !registro.alias)).toHaveLength(
+      comuns.length,
+    )
+    for (const esperado of comuns) {
+      const achado = registros.find(
+        (registro) =>
+          registro.nome === esperado.nome && registro.tipo === esperado.tipo,
+      )
+      expect(achado?.ttl, `TTL de ${esperado.tipo} ${esperado.nome}`).toBe(
+        eDoCorte(esperado) ? TTL_DO_CORTE : 3600,
+      )
+    }
   })
 
   it('publica o DMARC em p=none, com relatorio em contacto@', () => {
@@ -537,36 +548,73 @@ describe('alias no conferir-zona (7.2.5, spec §4.5)', () => {
   })
 })
 
-describe('infra/rollback-corte.json (spec D1, caminho de emergência)', () => {
-  /**
-   * @type {{ Comment: string, Changes: { Action: string, ResourceRecordSet: {
-   *   Name: string, Type: string, TTL: number, ResourceRecords: { Value: string }[] } }[] }}
-   */
+describe('infra/rollback-corte.json (caminho B do rollback, spec D3 de 7.2.5)', () => {
+  /** @typedef {import('./lib/zona.mjs').MudancaDeRegistro} Mudanca */
+  /** @type {{ Comment: string, Changes: Mudanca[] }} */
   const lote = JSON.parse(readFileSync('infra/rollback-corte.json', 'utf8'))
+  /** @param {(mudanca: Mudanca) => Mudanca} mexer */
+  const mexido = (mexer) => ({ ...lote, Changes: lote.Changes.map(mexer) })
 
-  it('devolve apex e www, A e AAAA, ao WordPress por UPSERT, com o TTL do template', () => {
-    const esperados = INVENTARIO.filter(
-      (registro) =>
-        ['lotusotec.cl.', 'www.lotusotec.cl.'].includes(registro.nome) &&
-        ['A', 'AAAA'].includes(registro.tipo),
-    )
-    expect(esperados).toHaveLength(4)
-    expect(lote.Changes).toHaveLength(4)
-    for (const mudanca of lote.Changes) {
-      expect(mudanca.Action).toBe('UPSERT')
-      const { Name, Type, TTL, ResourceRecords } = mudanca.ResourceRecordSet
-      const esperado = esperados.find(
-        (registro) => registro.nome === Name && registro.tipo === Type,
-      )
-      expect(esperado, `${Type} ${Name}`).toBeDefined()
-      expect(TTL).toBe(3600)
-      expect(ResourceRecords.map((r) => r.Value)).toEqual(esperado?.valores)
-    }
+  it('devolve apex e www, A e AAAA, ao WordPress por UPSERT, com TTL_DO_CORTE', () => {
+    expect(conferirLoteDeRollback(lote)).toEqual([])
   })
 
-  it('não toca em nenhum outro nome', () => {
-    expect(new Set(lote.Changes.map((c) => c.ResourceRecordSet.Name))).toEqual(
-      new Set(['lotusotec.cl.', 'www.lotusotec.cl.']),
+  it('TTL diferente de TTL_DO_CORTE reprova com o nome do campo', () => {
+    // Com 3600 contra um template de 60, a reconciliação do §5 de
+    // rollback-corte.md seria caso não ensaiado (spec D3).
+    const problemas = conferirLoteDeRollback(
+      mexido((m) => ({
+        ...m,
+        ResourceRecordSet: { ...m.ResourceRecordSet, TTL: 3600 },
+      })),
     )
+    expect(problemas).toHaveLength(4)
+    expect(problemas).toContain(
+      'TTL de A lotusotec.cl.: esperado 60, veio 3600',
+    )
+  })
+
+  it('outro nome, registro faltando, valor ou ação errados reprovam', () => {
+    const comApp = mexido((m) =>
+      m.ResourceRecordSet.Name === 'www.lotusotec.cl.' &&
+      m.ResourceRecordSet.Type === 'A'
+        ? {
+            ...m,
+            ResourceRecordSet: {
+              ...m.ResourceRecordSet,
+              Name: 'app.lotusotec.cl.',
+            },
+          }
+        : m,
+    )
+    expect(conferirLoteDeRollback(comApp)).toEqual([
+      'Changes: A app.lotusotec.cl. fora de apex e www, A e AAAA',
+      'Changes: falta A www.lotusotec.cl.',
+    ])
+    const outroIp = mexido((m) =>
+      m.ResourceRecordSet.Type === 'A'
+        ? {
+            ...m,
+            ResourceRecordSet: {
+              ...m.ResourceRecordSet,
+              ResourceRecords: [{ Value: '18.230.53.197' }],
+            },
+          }
+        : m,
+    )
+    expect(conferirLoteDeRollback(outroIp)).toContain(
+      'ResourceRecords de A lotusotec.cl.: esperado 185.146.167.195, veio ["18.230.53.197"]',
+    )
+    const apagar = mexido((m) => ({ ...m, Action: 'DELETE' }))
+    expect(conferirLoteDeRollback(apagar)).toContain(
+      'Action de AAAA www.lotusotec.cl.: esperado UPSERT, veio DELETE',
+    )
+    const repetido = {
+      ...lote,
+      Changes: [...lote.Changes, ...lote.Changes.slice(0, 1)],
+    }
+    expect(conferirLoteDeRollback(repetido)).toEqual([
+      'Changes: A lotusotec.cl. repetido',
+    ])
   })
 })

@@ -198,6 +198,118 @@ Depois, `pnpm infra:conferir-zona --pos-delegacao` contra a zona viva e o templa
 
 ## 3. TTL 60 em apex e `www` (spec D3)
 
+### 3.1 A janela de volta
+
+```bash
+echo | openssl s_client -connect 185.146.167.195:443 -servername lotusotec.cl 2>/dev/null \
+  | openssl x509 -noout -enddate
+curl -sI --resolve lotusotec.cl:443:185.146.167.195 https://lotusotec.cl/ | head -1
+```
+
+Às 2026-10-05T10:19:06Z:
+
+```text
+notAfter=Nov 10 20:37:55 2026 GMT
+HTTP/2 200
+```
+
+36 dias à frente; há para onde voltar. Antes de editar, `pnpm infra:conferir-zona --pos-delegacao`
+contra a zona viva: saída 0, 19 linhas `sim`, nenhuma `NÃO`.
+
+### 3.2 Antes: aquecimento com o TTL de 3600
+
+```bash
+AWS_PROFILE=lotus node scripts/infra/medir-propagacao.mjs --nome lotusotec.cl --esperado wordpress --aquecer
+AWS_PROFILE=lotus node scripts/infra/medir-propagacao.mjs --nome www.lotusotec.cl --esperado wordpress --aquecer
+```
+
+Nome `lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T10:20:47.481Z
+
+| resolvedor                      | início: A / AAAA (TTL)                           | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ------------------------------------------------ | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 3502/3600) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+
+Nome `www.lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T10:20:48.749Z
+
+| resolvedor                      | início: A / AAAA (TTL)                           | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ------------------------------------------------ | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+
+### 3.3 Change set do `lotus-dns`
+
+- Data: 2026-10-05.
+- Executou: João.
+- Change set: `arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791195680/efe64cb0-01ec-4038-864c-26bb7f6df9a9`
+  (stack `lotus-dns`, `us-east-1`). Parâmetros: `TtlDoCorte=60`, `TtlPadrao=3600`.
+
+```text
+|  Acao  |   Recurso   | Substituicao   |
+|  Modify|  Registros  |  False         |
+```
+
+```text
+lotusotec.cl. A
+  antes:  {"Type":"A","ResourceRecords":["185.146.167.195"],"TTL":"3600","Name":"lotusotec.cl."}
+  depois: {"Type":"A","ResourceRecords":["185.146.167.195"],"TTL":"60","Name":"lotusotec.cl."}
+lotusotec.cl. AAAA
+  antes:  {"Type":"AAAA","ResourceRecords":["2a07:7800::195"],"TTL":"3600","Name":"lotusotec.cl."}
+  depois: {"Type":"AAAA","ResourceRecords":["2a07:7800::195"],"TTL":"60","Name":"lotusotec.cl."}
+www.lotusotec.cl. A
+  antes:  {"Type":"A","ResourceRecords":["185.146.167.195"],"TTL":"3600","Name":"www.lotusotec.cl."}
+  depois: {"Type":"A","ResourceRecords":["185.146.167.195"],"TTL":"60","Name":"www.lotusotec.cl."}
+www.lotusotec.cl. AAAA
+  antes:  {"Type":"AAAA","ResourceRecords":["2a07:7800::195"],"TTL":"3600","Name":"www.lotusotec.cl."}
+  depois: {"Type":"AAAA","ResourceRecords":["2a07:7800::195"],"TTL":"60","Name":"www.lotusotec.cl."}
+```
+
+- `execute-change-set`: 2026-10-05T10:37:25Z (início do `UPDATE_IN_PROGRESS` da stack).
+- `UPDATE_COMPLETE` da stack (evento): 2026-10-05T10:38:30Z.
+- **T0: 2026-10-05T10:38:30Z. O corte não antes de 2026-10-05T11:38:30Z.**
+
+### 3.4 Depois: o TTL novo nos nameservers
+
+Os mesmos dois comandos, logo depois de T0:
+
+Nome `lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T10:38:51.153Z
+
+| resolvedor                      | início: A / AAAA (TTL)                         | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ---------------------------------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 2516/60) | —            | —                      | —                 |
+
+Nome `www.lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T10:38:52.450Z
+
+| resolvedor                      | início: A / AAAA (TTL)                         | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ---------------------------------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 2304/60) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 60/60)   | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 2519/60) | —            | —                      | —                 |
+
+Os quatro `route53` respondem com TTL 60/60 e o WordPress. Dos públicos, a cópia antiga com TTL de
+3600 resta no `A` do apex no Quad9 (2516 s) e no `A` do `www` no Google (2304 s) e no Quad9
+(2519 s); todas vencem antes de T0 + 3600 s.
+
 ## 4. `X-Robots-Tag` fora da borda e smoke forçado (spec D5 e D9)
 
 ## 5. Pré-checagens e o corte (spec §5, passos 5 e 6)

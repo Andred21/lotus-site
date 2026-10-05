@@ -1,12 +1,12 @@
 {
-  "Comment": "Rollback do corte (B5; spec 7.2.3+7.2.4, D1): apex e www de volta ao WordPress. Procedimento em docs/infra/rollback-corte.md.",
+  "Comment": "Rollback do corte (B5; spec 7.2.5, D3): apex e www de volta ao WordPress, com o TTL do template de antes do corte. Procedimento em docs/infra/rollback-corte.md.",
   "Changes": [
     {
       "Action": "UPSERT",
       "ResourceRecordSet": {
         "Name": "lotusotec.cl.",
         "Type": "A",
-        "TTL": 3600,
+        "TTL": 60,
         "ResourceRecords": [{ "Value": "185.146.167.195" }]
       }
     },
@@ -15,7 +15,7 @@
       "ResourceRecordSet": {
         "Name": "lotusotec.cl.",
         "Type": "AAAA",
-        "TTL": 3600,
+        "TTL": 60,
         "ResourceRecords": [{ "Value": "2a07:7800::195" }]
       }
     },
@@ -24,7 +24,7 @@
       "ResourceRecordSet": {
         "Name": "www.lotusotec.cl.",
         "Type": "A",
-        "TTL": 3600,
+        "TTL": 60,
         "ResourceRecords": [{ "Value": "185.146.167.195" }]
       }
     },
@@ -33,7 +33,7 @@
       "ResourceRecordSet": {
         "Name": "www.lotusotec.cl.",
         "Type": "AAAA",
-        "TTL": 3600,
+        "TTL": 60,
         "ResourceRecords": [{ "Value": "2a07:7800::195" }]
       }
     }

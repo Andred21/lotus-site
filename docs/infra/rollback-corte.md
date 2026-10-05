@@ -11,9 +11,12 @@
 ## 0. A janela — conferir antes de cortar e antes de voltar
 
 O WordPress serve um certificado Let's Encrypt válido até **2026-11-10T20:37:55Z** e sem caminho
-de renovação (`D-51`). O HSTS do clone (`max-age=31536000`) fixa HTTPS por um ano em quem visitar:
-voltar para o WordPress com certificado vencido é erro de TLS sem "prosseguir". Regra (spec D8):
-**`B5` corta até 2026-10-27**, a menos que `D-51` esteja resolvido antes.
+de renovação (`D-51`), e João decidiu não renová-lo (spec de `7.2.5`, D1). O HSTS do clone
+(`max-age=31536000`) fixa HTTPS por um ano em quem visitar: voltar para o WordPress com
+certificado vencido é erro de TLS sem "prosseguir". Regra (spec de `B4`, D8): **`B5` corta até
+2026-10-27**, para haver pelo menos catorze dias de volta possível. Depois de 2026-11-10 não há
+volta ao WordPress: a saída é correção para frente na distribuição ou a restauração de desastre
+(§7).
 
 ```bash
 echo | openssl s_client -connect 185.146.167.195:443 -servername lotusotec.cl 2>/dev/null \
@@ -26,7 +29,7 @@ para onde voltar; o rollback vira restauração de desastre (§7) noutro host.
 
 ## 1. O que o corte muda (`B5`)
 
-Apex e `www`, `A` e `AAAA`: de `185.146.167.195` / `2a07:7800::195` (TTL 3600) para alias de
+Apex e `www`, `A` e `AAAA`: de `185.146.167.195` / `2a07:7800::195` (TTL 60 desde o dia do corte; antes, 3600) para alias de
 `dhpoztt69jydz.cloudfront.net`, em `infra/lotus-dns.yaml`, por change set. O alias não tem TTL no
 template: o Route 53 responde com no máximo 60 s (no ensaio, de 22 a 60; evidência §3.3). Nada
 mais muda de valor: o WordPress continua servindo no IP dele até `B7`, e o MX não é tocado.
@@ -42,8 +45,9 @@ WordPress por até 3600 s; com os caches cheios, como o tráfego deixa os do ape
 primeira resposta nova de um resolvedor público espera o TTL que resta ao registro antigo: no
 estágio 4a, cerca de 30 min, com entradas buscadas meia hora antes (evidência §3.4); na remoção do
 estágio 5, 56 min, com entradas buscadas 5 min antes (§3.7). Smoke verde no domínio logo depois do
-corte não quer dizer que todos os visitantes já estão na distribuição. Baixar o TTL do apex e do
-`www` para 60 pelo menos 3600 s antes do corte encurta essa cauda; é decisão de `B5`.
+corte não quer dizer que todos os visitantes já estão na distribuição. Por isso `B5` baixa o TTL de apex e `www` para 60 e só corta pelo menos 3600 s depois do
+`UPDATE_COMPLETE` dessa troca (spec de `7.2.5`, D3): a cauda esperada cai para cerca de 60 s, mais
+o que resolvedores com TTL mínimo próprio impuserem.
 
 ## 2. Gatilho
 
@@ -61,7 +65,7 @@ O `UPDATE_COMPLETE` e a volta do `wait` chegam depois do DNS e não servem de re
 No corte real, o que domina é o tempo de revisar e autorizar o change set.
 
 ```bash
-git checkout <sha anterior ao corte> -- infra/lotus-dns.yaml scripts/infra/lib/zona.mjs
+git checkout <sha do corte>^ -- infra/lotus-dns.yaml scripts/infra/lib/zona.mjs scripts/infra/zona.test.mjs
 source ~/.nvm/nvm.sh >/dev/null && nvm use >/dev/null && pnpm exec vitest run scripts/infra/zona.test.mjs
 export AWS_PROFILE=lotus
 aws cloudformation deploy --region us-east-1 --stack-name lotus-dns \
@@ -70,6 +74,10 @@ aws cloudformation describe-change-set --region us-east-1 --change-set-name <arn
   --query 'Changes[].ResourceChange.{Acao:Action,Recurso:LogicalResourceId,Substituicao:Replacement}' --output table
 # esperado: uma linha, Modify Registros False
 ```
+
+`<sha do corte>` é o commit `feat(7.2.5): apontar apex e www para a distribuição`; o `^` traz o
+estado de antes dele. Os três arquivos vão juntos: o `zona.test.mjs` de depois do corte exige o
+alias que o template de antes não tem (spec de `7.2.5`, D6).
 
 Revisar o change set comparando `BeforeContext` com `AfterContext` por `Name` e `Type`, não pelos
 `Details`: o `Path` dos `Details` aponta um índice da lista que não é o do registro que muda (cinco
@@ -126,7 +134,7 @@ depois do B, com três cuidados:
    contra o template guardado no stack (o alias), não contra a zona: as mesmas quatro linhas do
    caminho A.
 2. **Conferir a zona pela API antes do `execute`:** apex e `www`, `A` e `AAAA`, em
-   `ResourceRecords` do WordPress, TTL 3600, sem `AliasTarget`.
+   `ResourceRecords` do WordPress, TTL 60, sem `AliasTarget`.
 
    ```bash
    aws route53 list-resource-record-sets --hosted-zone-id "$ZONA" --output json \
