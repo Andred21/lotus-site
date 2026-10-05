@@ -3,9 +3,9 @@ Description: >-
   Zona DNS de lotusotec.cl no Route 53, copia conferida da zona que a StackDNS
   servia (inventario em docs/infra/zona-dns-lotusotec.md, ADR-SITE-006), e o
   certificado ACM do dominio. Stack separado do lotus-site porque o ciclo de
-  vida e outro: delete-stack do site nao pode arrastar a zona junto. NAO troca
-  a delegacao -- ela e feita no painel do registrador -- e NAO aponta nada para
-  o CloudFront: isso e B5.
+  vida e outro: delete-stack do site nao pode arrastar a zona junto. Apex e
+  www sao alias da distribuicao do CloudFront desde o corte (B5). NAO troca a
+  delegacao: ela e feita no painel do registrador.
 
   Regiao us-east-1 de proposito, embora o Route 53 seja global: o CloudFront so
   le certificado de us-east-1.
@@ -17,18 +17,6 @@ Parameters:
     Description: Zona sem ponto final; o template acrescenta onde precisa.
     AllowedPattern: '^[a-z0-9][a-z0-9.-]*[a-z0-9]$'
 
-  IpDoWordPress:
-    Type: String
-    Default: 185.146.167.195
-    Description: >-
-      WordPress na BlueHosting. Apex e www apontam para ele ate o corte
-      (B5). Medido em 2026-09-09.
-
-  Ipv6DoWordPress:
-    Type: String
-    Default: '2a07:7800::195'
-    Description: AAAA do apex. Medido em 2026-09-09.
-
   TtlPadrao:
     Type: Number
     Default: 3600
@@ -36,17 +24,6 @@ Parameters:
     Description: >-
       TTL de toda a zona atual. Copia fiel: mudar o TTL aqui mudaria o
       comportamento durante a propagacao da troca de nameservers.
-
-  # TTL de apex e www no dia do corte (B5, spec de 7.2.5, D3). Parametro novo,
-  # e nao Default novo em TtlPadrao: `aws cloudformation deploy` reusa o valor
-  # anterior de todo parametro que o stack ja tem, e TtlPadrao vale para a
-  # zona inteira. Com 3600 s no registro de antes, a cauda medida no ensaio de
-  # B4 foi de 30 a 56 min; com 60, cerca de um minuto. Sai no corte, com os
-  # IPs do WordPress.
-  TtlDoCorte:
-    Type: Number
-    Default: 60
-    MinValue: 60
 
   # Os tres tokens do Easy DKIM da identidade SES (stack lotus-contato,
   # sa-east-1). Sao Default por dois motivos: a catraca de zona.test.mjs so le
@@ -75,6 +52,15 @@ Parameters:
       de Joao em 2026-09-27 (ADR-14 do repo lotus-infra, emenda). Sem AAAA:
       o EIP nao tem IPv6.
     AllowedPattern: '^\d{1,3}(\.\d{1,3}){3}$'
+
+  DominioDaDistribuicao:
+    Type: String
+    Default: dhpoztt69jydz.cloudfront.net
+    Description: >-
+      Output DominioDaDistribuicao do stack lotus-site. Apex e www sao alias
+      dele desde o corte (B5). Default porque a catraca de zona.test.mjs so
+      le parametro com Default.
+    AllowedPattern: '^[a-z0-9]+\.cloudfront\.net$'
 
 Resources:
   Zona:
@@ -110,18 +96,23 @@ Resources:
       # que o wildcard devolvia. sistema nasceu do mesmo jeito e saiu em B5
       # (spec de 7.2.5, D2): o nome da intranet e app.
       RecordSets:
-        # Apex e www com TtlDoCorte ate o corte, que os torna alias (B5).
+        # Apex e www sao alias da distribuicao desde o corte (B5, spec de
+        # 7.2.5, D6). Alias nao tem TTL: a AWS fixa em 60 s. A volta ao
+        # WordPress esta em docs/infra/rollback-corte.md.
         - Name: !Sub '${NomeDaZona}.'
           Type: A
-          TTL: !Ref TtlDoCorte
-          ResourceRecords:
-            - !Ref IpDoWordPress
+          AliasTarget:
+            DNSName: !Ref DominioDaDistribuicao
+            # Hosted zone fixa de TODA distribuicao CloudFront; nao e a nossa.
+            HostedZoneId: Z2FDTNDATAQYW2
+            EvaluateTargetHealth: false
 
         - Name: !Sub '${NomeDaZona}.'
           Type: AAAA
-          TTL: !Ref TtlDoCorte
-          ResourceRecords:
-            - !Ref Ipv6DoWordPress
+          AliasTarget:
+            DNSName: !Ref DominioDaDistribuicao
+            HostedZoneId: Z2FDTNDATAQYW2
+            EvaluateTargetHealth: false
 
         # Google Workspace: e o e-mail da empresa, e e o registro que mais
         # exige conferencia antes e depois da troca de nameservers.
@@ -145,17 +136,19 @@ Resources:
 
         - Name: !Sub 'www.${NomeDaZona}.'
           Type: A
-          TTL: !Ref TtlDoCorte
-          ResourceRecords:
-            - !Ref IpDoWordPress
+          AliasTarget:
+            DNSName: !Ref DominioDaDistribuicao
+            HostedZoneId: Z2FDTNDATAQYW2
+            EvaluateTargetHealth: false
 
         # O wildcard do painel tem A e AAAA. Sem este registro, cliente
         # dual-stack perde IPv6 em www na troca de delegacao.
         - Name: !Sub 'www.${NomeDaZona}.'
           Type: AAAA
-          TTL: !Ref TtlDoCorte
-          ResourceRecords:
-            - !Ref Ipv6DoWordPress
+          AliasTarget:
+            DNSName: !Ref DominioDaDistribuicao
+            HostedZoneId: Z2FDTNDATAQYW2
+            EvaluateTargetHealth: false
 
         - Name: !Sub 'mail.${NomeDaZona}.'
           Type: CNAME

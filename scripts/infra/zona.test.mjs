@@ -2,13 +2,11 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   INVENTARIO,
-  NOME_DO_ENSAIO,
-  TTL_DO_CORTE,
   WORDPRESS,
+  conferirAliasesDoCorte,
   conferirLoteDeRollback,
   convergiu,
   delegacaoEsperada,
-  eDoCorte,
   lerParametros,
   lerPoliticasDaZona,
   lerPoliticasDoRecurso,
@@ -16,9 +14,9 @@ import {
   linhaConfere,
   mesmoConjunto,
   normalizar,
+  resolver,
   respondeComoBorda,
   respostaDosNameservers,
-  resolver,
   valoresDaApi,
   wildcardAusente,
 } from './lib/zona.mjs'
@@ -33,10 +31,15 @@ describe('leitura textual do template', () => {
 
   it('lê o Default de cada parâmetro', () => {
     expect(parametros.get('NomeDaZona')).toBe('lotusotec.cl')
-    expect(parametros.get('IpDoWordPress')).toBe('185.146.167.195')
-    expect(parametros.get('Ipv6DoWordPress')).toBe('2a07:7800::195')
     expect(parametros.get('TtlPadrao')).toBe('3600')
-    expect(parametros.get('TtlDoCorte')).toBe(String(TTL_DO_CORTE))
+    // Desde o corte (7.2.5, spec D6), apex e www são alias da distribuição; o
+    // WordPress, alvo do rollback, mora em WORDPRESS, no zona.mjs.
+    expect(parametros.get('DominioDaDistribuicao')).toBe(
+      'dhpoztt69jydz.cloudfront.net',
+    )
+    for (const nome of ['IpDoWordPress', 'Ipv6DoWordPress', 'TtlDoCorte']) {
+      expect(parametros.has(nome), `${nome} saiu no corte`).toBe(false)
+    }
     // Os tres tokens DKIM sao Default de parametro, como os IPs: sem Default
     // `resolver` lanca e a catraca nao consegue ler os CNAME.
     for (const nome of ['TokenDkim1', 'TokenDkim2', 'TokenDkim3']) {
@@ -46,7 +49,7 @@ describe('leitura textual do template', () => {
   })
 
   it('resolve !Ref e !Sub contra os defaults', () => {
-    expect(resolver('!Ref IpDoWordPress', parametros)).toBe('185.146.167.195')
+    expect(resolver('!Ref IpDaIntranet', parametros)).toBe('18.230.53.197')
     expect(resolver("!Sub 'www.${NomeDaZona}.'", parametros)).toBe(
       'www.lotusotec.cl.',
     )
@@ -206,13 +209,44 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     ).toEqual([])
   })
 
-  it('só ensaio-corte pode ser alias para o CloudFront; apex e www, nunca', () => {
-    // Apontar apex e www é B5. O ensaio de B4 (spec §4.4) usa um nome
-    // descartável, que nasce e morre dentro do bloco.
-    const aliases = registros
-      .filter((registro) => registro.alias)
-      .map((registro) => registro.nome)
-    expect(aliases.filter((nome) => nome !== NOME_DO_ENSAIO)).toEqual([])
+  it('exatamente apex e www, A e AAAA, são alias (7.2.5, spec §4.3)', () => {
+    // Para onde apontam é o teste por linha do INVENTARIO, acima.
+    expect(conferirAliasesDoCorte(registros)).toEqual([])
+  })
+
+  it('alias fora de apex e www, apex ou www sem alias e TTL em alias reprovam', () => {
+    /** @typedef {import('./lib/zona.mjs').RegistroLido} RegistroLido */
+    /**
+     * @param {(registro: RegistroLido) => boolean} qual
+     * @param {Partial<RegistroLido>} mudanca
+     */
+    const mexendo = (qual, mudanca) =>
+      registros.map((registro) =>
+        qual(registro) ? { ...registro, ...mudanca } : registro,
+      )
+    expect(
+      conferirAliasesDoCorte(
+        mexendo((r) => r.nome === 'app.lotusotec.cl.', {
+          alias: true,
+          ttl: 0,
+        }),
+      ),
+    ).toEqual(['alias fora de apex e www: A app.lotusotec.cl.'])
+    expect(
+      conferirAliasesDoCorte(
+        mexendo((r) => r.nome === 'www.lotusotec.cl.' && r.tipo === 'AAAA', {
+          alias: false,
+          ttl: 60,
+        }),
+      ),
+    ).toEqual(['sem alias: AAAA www.lotusotec.cl.'])
+    expect(
+      conferirAliasesDoCorte(
+        mexendo((r) => r.nome === 'lotusotec.cl.' && r.tipo === 'A', {
+          ttl: 60,
+        }),
+      ),
+    ).toEqual(['TTL em alias: A lotusotec.cl.'])
   })
 
   it('declara o certificado da zona, com SAN explícito e sem wildcard', () => {
@@ -286,7 +320,7 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     expect(app[0]?.valores).toEqual(['18.230.53.197'])
   })
 
-  it('usa 3600 em todo registro comum, e TTL_DO_CORTE em apex e www (7.2.5, spec D3)', () => {
+  it('usa 3600 em todo registro que não é alias; apex e www são alias desde o corte', () => {
     // Comparado contra o INVENTARIO, e nao contra o proprio `registros`: com
     // os dois lados derivados da mesma lista, uma leitura vazia passaria.
     // Alias não tem TTL: a AWS fixa em 60 s (spec D12 de B4).
@@ -299,9 +333,7 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
         (registro) =>
           registro.nome === esperado.nome && registro.tipo === esperado.tipo,
       )
-      expect(achado?.ttl, `TTL de ${esperado.tipo} ${esperado.nome}`).toBe(
-        eDoCorte(esperado) ? TTL_DO_CORTE : 3600,
-      )
+      expect(achado?.ttl, `TTL de ${esperado.tipo} ${esperado.nome}`).toBe(3600)
     }
   })
 

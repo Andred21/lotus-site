@@ -30,13 +30,27 @@
  * wildcard do painel tinha `A` **e** `AAAA`. `sistema` nasceu do mesmo jeito
  * e saiu em `B5` (spec de `7.2.5`, D2): o nome da intranet é `app`.
  *
+ * Apex e `www`, `A` e `AAAA`, são alias da distribuição desde o corte
+ * (`B5`, spec de `7.2.5`, §4.3): o valor é o domínio dela, e o IP que cada
+ * resolvedor recebe varia.
+ *
  * Os seis registros do SES foram acrescentados em `B2`, com os tokens lidos
  * dos outputs do stack `lotus-contato`.
  * @type {readonly RegistroEsperado[]}
  */
 export const INVENTARIO = Object.freeze([
-  { nome: 'lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
-  { nome: 'lotusotec.cl.', tipo: 'AAAA', valores: ['2a07:7800::195'] },
+  {
+    nome: 'lotusotec.cl.',
+    tipo: 'A',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  },
+  {
+    nome: 'lotusotec.cl.',
+    tipo: 'AAAA',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  },
   {
     nome: 'lotusotec.cl.',
     tipo: 'MX',
@@ -55,8 +69,18 @@ export const INVENTARIO = Object.freeze([
       '"v=spf1 include:_spf.google.com include:spf.stackmail.com -all"',
     ],
   },
-  { nome: 'www.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
-  { nome: 'www.lotusotec.cl.', tipo: 'AAAA', valores: ['2a07:7800::195'] },
+  {
+    nome: 'www.lotusotec.cl.',
+    tipo: 'A',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  },
+  {
+    nome: 'www.lotusotec.cl.',
+    tipo: 'AAAA',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  },
   {
     nome: 'mail.lotusotec.cl.',
     tipo: 'CNAME',
@@ -124,28 +148,14 @@ export const INVENTARIO = Object.freeze([
 ])
 
 /**
- * O nome descartável do ensaio de rollback do corte (bloco `B4`, spec §4.4).
- * É o único que a catraca deixa ser alias para o CloudFront antes de `B5`.
- * Nasce, vira alias, volta e some dentro do bloco; ninguém o lê.
- */
-export const NOME_DO_ENSAIO = 'ensaio-corte.lotusotec.cl.'
-
-/** @param {'A' | 'AAAA'} tipo */
-function valorDoApex(tipo) {
-  const valor = INVENTARIO.find(
-    (registro) => registro.nome === 'lotusotec.cl.' && registro.tipo === tipo,
-  )?.valores[0]
-  if (valor === undefined) throw new Error(`INVENTARIO sem ${tipo} do apex`)
-  return valor
-}
-
-/**
- * Para onde o rollback do corte volta (spec D1): os endereços do WordPress,
- * lidos do apex do inventário para não existirem em dois lugares.
+ * Para onde o rollback do corte volta: os endereços do WordPress na
+ * BlueHosting, medidos em 2026-09-09. Literal desde o corte (7.2.5, spec D6),
+ * quando apex e `www` viraram alias e o inventário deixou de guardá-los. Sai
+ * com o WordPress, em `B7`.
  */
 export const WORDPRESS = Object.freeze({
-  A: valorDoApex('A'),
-  AAAA: valorDoApex('AAAA'),
+  A: '185.146.167.195',
+  AAAA: '2a07:7800::195',
 })
 
 /**
@@ -226,6 +236,32 @@ export function conferirLoteDeRollback(lote) {
       if (!vistos.has(`${tipo} ${nome}`)) {
         problemas.push(`Changes: falta ${tipo} ${nome}`)
       }
+    }
+  }
+  return problemas
+}
+
+/**
+ * A catraca do corte (7.2.5, spec §4.3): exatamente apex e `www`, `A` e
+ * `AAAA`, são alias, e alias não declara TTL — a AWS fixa em 60 s. Para onde
+ * eles apontam é a conferência por linha do `INVENTARIO`. Vazio quando
+ * confere; senão um problema por registro.
+ * @param {readonly RegistroLido[]} registros
+ * @returns {string[]}
+ */
+export function conferirAliasesDoCorte(registros) {
+  /** @type {string[]} */
+  const problemas = []
+  for (const registro of registros) {
+    const chave = `${registro.tipo} ${registro.nome}`
+    if (registro.alias && !eDoCorte(registro)) {
+      problemas.push(`alias fora de apex e www: ${chave}`)
+    }
+    if (!registro.alias && eDoCorte(registro)) {
+      problemas.push(`sem alias: ${chave}`)
+    }
+    if (registro.alias && registro.ttl !== 0) {
+      problemas.push(`TTL em alias: ${chave}`)
     }
   }
   return problemas

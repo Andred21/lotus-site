@@ -382,6 +382,162 @@ corporativo (D9). Se o corte não acontecer até 2026-10-06T10:48:53Z (24 h depo
 
 ## 5. Pré-checagens e o corte (spec §5, passos 5 e 6)
 
+### 5.1 Pré-checagens, a partir do "corte não antes de"
+
+Às 2026-10-05T11:38:57Z (o corte não antes de 11:38:30Z):
+
+```text
+notAfter=Nov 10 20:37:55 2026 GMT
+HTTP/2 200
+```
+
+A janela de `rollback-corte.md` §0 vale: 36 dias e o WordPress respondendo.
+
+Aquecimento com o TTL novo, às 11:39:
+
+Nome `lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T11:39:40.876Z
+
+| resolvedor                      | início: A / AAAA (TTL)                       | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | -------------------------------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+
+Nome `www.lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T11:39:42.075Z
+
+| resolvedor                      | início: A / AAAA (TTL)                       | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | -------------------------------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+
+TTL 60/60 nos quatro `route53` e nos três públicos, apex e `www`.
+
+`pnpm infra:conferir-zona --pos-delegacao` contra o template do commit anterior (os três arquivos
+editados guardados em `git stash` durante a leitura): saída 0, 19 linhas `sim`, nenhuma `NÃO`.
+
+Último run do CI corporativo na `main`:
+
+```json
+[
+  {
+    "conclusion": "failure",
+    "createdAt": "2026-10-05T01:34:10Z",
+    "headSha": "8774aa7e1015d60d3c9329d44378a77cd0533025"
+  }
+]
+```
+
+**Divergência.** O plano espera que o último run seja o SHA no ar. É `8774aa7`, espelho de
+`b41e0da` (merge do PR #25), criado antes do início do congelamento (10:50:07Z), com o job `check`
+reprovado em "Gates de qualidade" e o `deploy` pulado; o ar segue `ca8f49b`, o último verde, provado
+pelo smoke forçado de §4.2. O risco que a checagem guarda, deploy durante o congelamento, não
+aconteceu. A divergência foi ao `blocker` do portão do corte como decisão de João, e o corte só seguiu
+com a autorização dele dada nesse portão. Às 14:13, nenhum run novo.
+
+### 5.2 Change set do `lotus-dns`
+
+- Data: 2026-10-05.
+- Executou: Claude, com autorização explícita de João dada neste passo ("pode rodar para mim", em
+  resposta ao portão do Step 9, que trazia a divergência de §5.1).
+- Change set: `arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791200409/455a3aef-4264-455f-a643-032bce13a831`
+  (stack `lotus-dns`, `us-east-1`). Parâmetros: `DominioDaDistribuicao=dhpoztt69jydz.cloudfront.net`,
+  `TtlPadrao=3600`; saem `IpDoWordPress`, `Ipv6DoWordPress` e `TtlDoCorte`.
+
+```text
+|  Acao  |   Recurso   | Substituicao   |
+|  Modify|  Registros  |  False         |
+```
+
+Diff por `Name` e `Type` (19 registros dos dois lados; os outros 15 iguais):
+
+```text
+lotusotec.cl. A
+  antes:  {"Type":"A","ResourceRecords":["185.146.167.195"],"TTL":"60","Name":"lotusotec.cl."}
+  depois: {"AliasTarget":{"HostedZoneId":"Z2FDTNDATAQYW2","DNSName":"dhpoztt69jydz.cloudfront.net","EvaluateTargetHealth":"false"},"Type":"A","Name":"lotusotec.cl."}
+lotusotec.cl. AAAA
+  antes:  {"Type":"AAAA","ResourceRecords":["2a07:7800::195"],"TTL":"60","Name":"lotusotec.cl."}
+  depois: {"AliasTarget":{"HostedZoneId":"Z2FDTNDATAQYW2","DNSName":"dhpoztt69jydz.cloudfront.net","EvaluateTargetHealth":"false"},"Type":"AAAA","Name":"lotusotec.cl."}
+www.lotusotec.cl. A
+  antes:  {"Type":"A","ResourceRecords":["185.146.167.195"],"TTL":"60","Name":"www.lotusotec.cl."}
+  depois: {"AliasTarget":{"HostedZoneId":"Z2FDTNDATAQYW2","DNSName":"dhpoztt69jydz.cloudfront.net","EvaluateTargetHealth":"false"},"Type":"A","Name":"www.lotusotec.cl."}
+www.lotusotec.cl. AAAA
+  antes:  {"Type":"AAAA","ResourceRecords":["2a07:7800::195"],"TTL":"60","Name":"www.lotusotec.cl."}
+  depois: {"AliasTarget":{"HostedZoneId":"Z2FDTNDATAQYW2","DNSName":"dhpoztt69jydz.cloudfront.net","EvaluateTargetHealth":"false"},"Type":"AAAA","Name":"www.lotusotec.cl."}
+```
+
+- Aquecimento logo antes do `execute`: 2026-10-05T14:12:21Z (apex) e 14:12:23Z (`www`).
+- `execute-change-set`: 2026-10-05T14:12:23Z.
+- Início das medições: 2026-10-05T14:12:26Z.
+- `UPDATE_COMPLETE` da stack (evento): 2026-10-05T14:13:31Z.
+
+### 5.3 Aquecimento antes do `execute`
+
+Nome `lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T14:12:21.526Z
+
+| resolvedor                      | início: A / AAAA (TTL)                       | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | -------------------------------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+
+Nome `www.lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T14:12:23.443Z
+
+| resolvedor                      | início: A / AAAA (TTL)                       | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | -------------------------------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | —            | —                      | —                 |
+
+### 5.4 Propagação
+
+`medir-propagacao.mjs --esperado cloudfront --limite 1800`, as duas com saída 0. O `convergiu em`
+conta do início da medição (14:12:26Z), três segundos depois do `execute`.
+
+Nome `lotusotec.cl`, esperado `cloudfront`, medição iniciada em 2026-10-05T14:12:26.341Z
+
+| resolvedor                      | início: A / AAAA (TTL)                       | convergiu em | depois: A / AAAA (TTL)                                                                                                                                                                                                                                                                                                                                                                | erros de consulta |
+| ------------------------------- | -------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 11 s         | 13.227.110.41 13.227.110.33 13.227.110.10 13.227.110.69 / 2600:9000:21ed:c00:13:9e71:75c0:93a1 2600:9000:21ed:1200:13:9e71:75c0:93a1 2600:9000:21ed:a00:13:9e71:75c0:93a1 2600:9000:21ed:400:13:9e71:75c0:93a1 2600:9000:21ed:5e00:13:9e71:75c0:93a1 2600:9000:21ed:6a00:13:9e71:75c0:93a1 2600:9000:21ed:8a00:13:9e71:75c0:93a1 2600:9000:21ed:8600:13:9e71:75c0:93a1 (TTL 60/60)    | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 15 s         | 13.227.110.33 13.227.110.69 13.227.110.41 13.227.110.10 / 2600:9000:21ed:5000:13:9e71:75c0:93a1 2600:9000:21ed:9e00:13:9e71:75c0:93a1 2600:9000:21ed:8000:13:9e71:75c0:93a1 2600:9000:21ed:e600:13:9e71:75c0:93a1 2600:9000:21ed:4c00:13:9e71:75c0:93a1 2600:9000:21ed:2c00:13:9e71:75c0:93a1 2600:9000:21ed:ee00:13:9e71:75c0:93a1 2600:9000:21ed:6800:13:9e71:75c0:93a1 (TTL 60/60) | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 11 s         | 13.227.110.33 13.227.110.41 13.227.110.69 13.227.110.10 / 2600:9000:21ed:9400:13:9e71:75c0:93a1 2600:9000:21ed:c000:13:9e71:75c0:93a1 2600:9000:21ed:8e00:13:9e71:75c0:93a1 2600:9000:21ed:cc00:13:9e71:75c0:93a1 2600:9000:21ed:9200:13:9e71:75c0:93a1 2600:9000:21ed:c200:13:9e71:75c0:93a1 2600:9000:21ed:7800:13:9e71:75c0:93a1 2600:9000:21ed:ac00:13:9e71:75c0:93a1 (TTL 60/60) | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 11 s         | 13.227.110.69 13.227.110.41 13.227.110.10 13.227.110.33 / 2600:9000:21ed:9200:13:9e71:75c0:93a1 2600:9000:21ed:9000:13:9e71:75c0:93a1 2600:9000:21ed:da00:13:9e71:75c0:93a1 2600:9000:21ed:ee00:13:9e71:75c0:93a1 2600:9000:21ed:a600:13:9e71:75c0:93a1 2600:9000:21ed:c600:13:9e71:75c0:93a1 2600:9000:21ed:1c00:13:9e71:75c0:93a1 2600:9000:21ed:3a00:13:9e71:75c0:93a1 (TTL 60/60) | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 16 s         | 13.227.110.69 13.227.110.33 13.227.110.41 13.227.110.10 / 2600:9000:21ed:2200:13:9e71:75c0:93a1 2600:9000:21ed:be00:13:9e71:75c0:93a1 2600:9000:21ed:a200:13:9e71:75c0:93a1 2600:9000:21ed:6400:13:9e71:75c0:93a1 2600:9000:21ed:3e00:13:9e71:75c0:93a1 2600:9000:21ed:cc00:13:9e71:75c0:93a1 2600:9000:21ed:3400:13:9e71:75c0:93a1 2600:9000:21ed:e400:13:9e71:75c0:93a1 (TTL 60/60) | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 60/56) | 64 s         | 13.227.110.69 13.227.110.10 13.227.110.33 13.227.110.41 / 2600:9000:21ed:4600:13:9e71:75c0:93a1 2600:9000:21ed:8600:13:9e71:75c0:93a1 2600:9000:21ed:5400:13:9e71:75c0:93a1 2600:9000:21ed:3a00:13:9e71:75c0:93a1 2600:9000:21ed:4200:13:9e71:75c0:93a1 2600:9000:21ed:3800:13:9e71:75c0:93a1 2600:9000:21ed:5200:13:9e71:75c0:93a1 2600:9000:21ed:a000:13:9e71:75c0:93a1 (TTL 60/55) | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 60/56) | 59 s         | 13.227.110.33 13.227.110.69 13.227.110.10 13.227.110.41 / 2600:9000:21ed:b000:13:9e71:75c0:93a1 2600:9000:21ed:3a00:13:9e71:75c0:93a1 2600:9000:21ed:7800:13:9e71:75c0:93a1 2600:9000:21ed:1c00:13:9e71:75c0:93a1 2600:9000:21ed:6600:13:9e71:75c0:93a1 2600:9000:21ed:da00:13:9e71:75c0:93a1 2600:9000:21ed:2600:13:9e71:75c0:93a1 2600:9000:21ed:9200:13:9e71:75c0:93a1 (TTL 60/60) | —                 |
+
+Nome `www.lotusotec.cl`, esperado `cloudfront`, medição iniciada em 2026-10-05T14:12:26.342Z
+
+| resolvedor                      | início: A / AAAA (TTL)                       | convergiu em | depois: A / AAAA (TTL)                                                                                                                                                                                                                                                                                                                                                                | erros de consulta |
+| ------------------------------- | -------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 11 s         | 13.227.110.41 13.227.110.33 13.227.110.10 13.227.110.69 / 2600:9000:21ed:e600:13:9e71:75c0:93a1 2600:9000:21ed:c400:13:9e71:75c0:93a1 2600:9000:21ed:8400:13:9e71:75c0:93a1 2600:9000:21ed:fc00:13:9e71:75c0:93a1 2600:9000:21ed:c200:13:9e71:75c0:93a1 2600:9000:21ed:6000:13:9e71:75c0:93a1 2600:9000:21ed:8a00:13:9e71:75c0:93a1 2600:9000:21ed:800:13:9e71:75c0:93a1 (TTL 60/60)  | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 15 s         | 13.227.110.33 13.227.110.10 13.227.110.41 13.227.110.69 / 2600:9000:21ed:e600:13:9e71:75c0:93a1 2600:9000:21ed:8a00:13:9e71:75c0:93a1 2600:9000:21ed:ae00:13:9e71:75c0:93a1 2600:9000:21ed:c800:13:9e71:75c0:93a1 2600:9000:21ed:2400:13:9e71:75c0:93a1 2600:9000:21ed:2a00:13:9e71:75c0:93a1 2600:9000:21ed:dc00:13:9e71:75c0:93a1 2600:9000:21ed:9600:13:9e71:75c0:93a1 (TTL 60/60) | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 15 s         | 13.227.110.10 13.227.110.41 13.227.110.69 13.227.110.33 / 2600:9000:21ed:ee00:13:9e71:75c0:93a1 2600:9000:21ed:bc00:13:9e71:75c0:93a1 2600:9000:21ed:8a00:13:9e71:75c0:93a1 2600:9000:21ed:5e00:13:9e71:75c0:93a1 2600:9000:21ed:c200:13:9e71:75c0:93a1 2600:9000:21ed:1400:13:9e71:75c0:93a1 2600:9000:21ed:cc00:13:9e71:75c0:93a1 2600:9000:21ed:d000:13:9e71:75c0:93a1 (TTL 60/60) | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 11 s         | 13.227.110.41 13.227.110.69 13.227.110.10 13.227.110.33 / 2600:9000:21ed:fe00:13:9e71:75c0:93a1 2600:9000:21ed:e200:13:9e71:75c0:93a1 2600:9000:21ed:1200:13:9e71:75c0:93a1 2600:9000:21ed:fa00:13:9e71:75c0:93a1 2600:9000:21ed:c000:13:9e71:75c0:93a1 2600:9000:21ed:800:13:9e71:75c0:93a1 2600:9000:21ed:f800:13:9e71:75c0:93a1 2600:9000:21ed:ec00:13:9e71:75c0:93a1 (TTL 59/60)  | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 22 s         | 13.227.110.33 13.227.110.10 13.227.110.69 13.227.110.41 / 2600:9000:21ed:7400:13:9e71:75c0:93a1 2600:9000:21ed:c400:13:9e71:75c0:93a1 2600:9000:21ed:2c00:13:9e71:75c0:93a1 2600:9000:21ed:9800:13:9e71:75c0:93a1 2600:9000:21ed:2800:13:9e71:75c0:93a1 2600:9000:21ed:2400:13:9e71:75c0:93a1 2600:9000:21ed:200:13:9e71:75c0:93a1 2600:9000:21ed:c600:13:9e71:75c0:93a1 (TTL 60/60)  | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 60/60) | 21 s         | 13.227.110.10 13.227.110.69 13.227.110.41 13.227.110.33 / 2600:9000:20bb:1400:13:9e71:75c0:93a1 2600:9000:20bb:8000:13:9e71:75c0:93a1 2600:9000:20bb:c400:13:9e71:75c0:93a1 2600:9000:20bb:5e00:13:9e71:75c0:93a1 2600:9000:20bb:ea00:13:9e71:75c0:93a1 2600:9000:20bb:f000:13:9e71:75c0:93a1 2600:9000:20bb:4c00:13:9e71:75c0:93a1 2600:9000:20bb:5000:13:9e71:75c0:93a1 (TTL 60/60) | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 57/60) | 64 s         | 13.227.110.41 13.227.110.69 13.227.110.33 13.227.110.10 / 2600:9000:21ed:1600:13:9e71:75c0:93a1 2600:9000:21ed:8a00:13:9e71:75c0:93a1 2600:9000:21ed:e00:13:9e71:75c0:93a1 2600:9000:21ed:c000:13:9e71:75c0:93a1 2600:9000:21ed:3a00:13:9e71:75c0:93a1 2600:9000:21ed:f600:13:9e71:75c0:93a1 2600:9000:21ed:1a00:13:9e71:75c0:93a1 2600:9000:21ed:aa00:13:9e71:75c0:93a1 (TTL 18/60)  | —                 |
+
+Os quatro `route53` passaram à borda em 11 a 15 s, com TTL ≤ 60; os públicos saíram do WordPress, com
+TTL ≤ 60, e chegaram à borda em 16 a 64 s. Às 14:13:37Z, 71 s depois do `execute`, os sete
+resolvedores respondiam a distribuição nos dois nomes.
+
 ## 6. Depois do corte (spec §5, passo 7)
 
 ## 7. Estabilização (spec D11)
