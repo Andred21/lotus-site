@@ -607,8 +607,8 @@ Medição `2HgotqDwMinYcrZbK00021GG0` de `lotusotec.cl`, criada em 2026-10-05T14
 
 HTTP 200 e `x-amz-cf-pop` em toda sonda (spec §7, item 2). Contra a linha de base de §1.1, mesmas
 sondas: `total` 74 ms de mediana no WordPress, 383 ms em `lotusotec.cl` pela borda; `firstByte` 5
-contra 301 ms. **A condição de `D-65` vale** (mediana de `total` acima da do WordPress); ele nasce
-na Task 9. As sondas 6 e 7 resolveram IPs de `DFW59` e a 8 caiu em `LIM50`, acima de 1 s; as outras
+contra 301 ms. **A condição do `D-65` da spec vale** (mediana de `total` acima da do WordPress); ele nasce
+na Task 9 como `D-66`, porque o número `D-65` já era do débito da exceção de reviewer. As sondas 6 e 7 resolveram IPs de `DFW59` e a 8 caiu em `LIM50`, acima de 1 s; as outras
 sete, em `SCL51` e `EZE50`, entre 330 e 384 ms.
 
 ### 6.4 O certificado em uso e renovável
@@ -672,6 +672,45 @@ Nenhum validador acusou erro: `D-22` fecha na Task 9.
 substitui `ca8f49b` no ar.
 
 ## 7. Estabilização (spec D11)
+
+> **Desvio declarado.** A spec (D11) pede o smoke de estabilização pelo menos 24 h depois do
+> `execute`, a partir de 2026-10-06T14:12:23Z. Por decisão de João em 2026-10-05 ("Quero finalizar
+> esse bloco hoje, anotando como desvio a que a espera foi antecipada"), ele rodou 8 h 35 min
+> depois. O que não foi observado: uma falha que só aparecesse entre 8 h e 24 h do corte. A volta
+> ao WordPress segue possível pelo `rollback-corte.md` até 2026-11-10; débito `D-67`.
+
+Às 2026-10-05T22:48:12Z, sem `SMOKE_SHA` nem `SMOKE_VIA`:
+
+```bash
+SMOKE_URL=https://lotusotec.cl pnpm smoke
+```
+
+```text
+[smoke] SHA no ar: ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb (index.html d3836b522c218bca68d2f7c533189200596a54f109769fb733e0dc4f227fe3cd)
+  ✓   1 › 1 · artefato: index.html servido ≡ releases/ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb/index.html
+[smoke] lotusotec.cl: TLSv1.3, Amazon, válido até 2027-04-11T23:59:59.000Z
+  ✓   2 › 2 · TLS de lotusotec.cl: certificado da Amazon com os dois nomes, ≥ 30 dias, TLS ≥ 1.2
+[smoke] www.lotusotec.cl: TLSv1.3, Amazon, válido até 2027-04-11T23:59:59.000Z
+  ✓   3 › 2 · TLS de www.lotusotec.cl: certificado da Amazon com os dois nomes, ≥ 30 dias, TLS ≥ 1.2
+[smoke] http://lotusotec.cl/ → 301 https://lotusotec.cl/
+[smoke] https://www.lotusotec.cl/cursos/?a=1&a=2&b=x%26y → 301 https://lotusotec.cl/cursos/?b=x%26y&a=1&a=2
+[smoke] http://www.lotusotec.cl/x?y=1 → 301 https://www.lotusotec.cl/x?y=1
+[smoke] https://www.lotusotec.cl/x?y=1 → 301 https://lotusotec.cl/x?y=1
+  ✓   4 › 3 · redirects: http → https, www → apex com caminho e query; cadeia registrada
+  ✓   5 › 4 · home: 200, H1, âncoras do menu, console limpo, nenhuma resposta ≥ 400 do site
+[smoke] 16 assets immutable (HTML 7, CSS 5, JS 6); 3 de nome fixo no-cache
+  ✓   6 › 5 · assets: todo asset referenciado 200 e immutable; nome fixo no-cache; fontes carregam
+  ✓   7 › 6 · formulário: Turnstile carrega; /api/contacto recusa GET, corpo vazio, token ausente e token falso
+  ✓   8 › 7 · SEO técnico: title, description, canonical, og:*, JSON-LD, robots, sitemap, X-Robots-Tag
+  ✓   9 › 8 · cabeçalhos: a política de B3 em /, asset, /api/contacto e 404
+  ✓  10 › 9 · 404: caminho inexistente devolve 404
+  10 passed (15.7s)
+```
+
+O SHA conferido é o do último `CI` verde do corporativo, `ca8f49b`, o mesmo de §4.2 e §6.1: não
+houve deploy depois do congelamento. O run seguinte em `main`, do `8774aa7`, segue reprovado no
+`tsc -b` (`scripts/wordpress/verificar-restauracao.mjs(49,45): error TS2584: Cannot find name
+'document'`), caso de `D-62`; ele não toca o que está no ar. Nenhum vermelho nos itens 2 a 6.
 
 ## Limites declarados (spec §7)
 

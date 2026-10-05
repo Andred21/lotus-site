@@ -142,7 +142,7 @@ pela zona.
 A cópia tem três diferenças deliberadas em relação ao painel:
 
 - **não tem wildcard** — `www` e `sistema` viraram registro explícito no lugar dele, com `A` e
-  `AAAA`;
+  `AAAA` (`sistema` saiu em `B5`);
 - **não declara `NS` nem `SOA`** do apex, que a própria zona gera;
 - **não tem os três atalhos do StackCP**, cujos nomes não são nomes de host.
 
@@ -190,7 +190,8 @@ stack `lotus-contato` (`sa-east-1`). Recriar a identidade SES troca os três.
 
 Um registro entrou pelo stack `lotus-dns`, na data da conferência abaixo, para a intranet do Lotus
 (EC2 em `sa-east-1`, EIP fixo). O nome é `app`, por decisão de João em 2026-09-27 (ADR-14 do
-`lotus-infra`, emenda); `sistema` **não** é a intranet e segue no WordPress até `B5`/`8.2.1`.
+`lotus-infra`, emenda). `sistema` **não** era a intranet e saiu da zona em `B5`, em 2026-10-05 (spec de
+`7.2.5`, D2).
 
 | Nome               | Tipo | Valor           | Para quê                                  |
 | ------------------ | ---- | --------------- | ----------------------------------------- |
@@ -236,6 +237,22 @@ por resolvedor e, no IPv6, por nameserver (evidência §3.2), então a linha con
 respondem e que nenhuma resposta é do WordPress. O drift do stack `lotus-dns` (`runbook-aws.md`)
 continua comparando só a `Zona`, não os registros (evidência §3.4).
 
+## Corte de apex e `www` (`B5`)
+
+Três change sets do `lotus-dns`, em [`evidencia-corte-2026-10-05.md`](evidencia-corte-2026-10-05.md) §2, §3
+e §5:
+
+- `sistema.lotusotec.cl` saiu da zona em 2026-10-05 (spec de `7.2.5`, D2), antes do corte,
+  para o rollback mexer só nas quatro linhas ensaiadas em `B4`;
+- apex e `www`, `A` e `AAAA`, passaram a TTL 60 em 2026-10-05T10:38:30Z, ainda no WordPress (D3);
+- em 2026-10-05T14:12:23Z, viraram alias de `dhpoztt69jydz.cloudfront.net` (hosted zone
+  `Z2FDTNDATAQYW2`), sem TTL no template.
+
+O inventário de `scripts/infra/lib/zona.mjs` acompanha: apex e `www` com `alias: true`, e o
+endereço do WordPress, alvo do rollback, na constante `WORDPRESS`. Conferência depois do corte em
+[`conferencia-zona-2026-10-05.md`](conferencia-zona-2026-10-05.md); a volta está em
+[`rollback-corte.md`](rollback-corte.md), até 2026-11-10.
+
 ## Certificado
 
 Desde 2026-09-26, o stack `lotus-dns` também declara o certificado ACM da zona, em `us-east-1`:
@@ -265,6 +282,10 @@ serviço da AWS, ou exportado; este não está em uso (`InUseBy` vazio), daí `I
 `ELIGIBLE` quando `B5` o ligar à distribuição. Se `B5` não acontecer antes de 2027-04-11, o
 certificado expira sem renovar e o caminho é emitir outro — sem efeito no ar, porque nada o serve
 até lá.
+
+> **Atualização de 2026-10-05 (`B5`).** O certificado está em uso pela distribuição desde
+> `B4` (`InUseBy` `E1R7SPH4OLUIEQ`) e serve `lotusotec.cl` e `www` em público desde o corte:
+> `RenewalEligibility` `ELIGIBLE`, renovação gerenciada pelo ACM (`D-47`, fechado; evidência §6).
 
 Em uso, a renovação é silenciosa, que é justamente o motivo de a `CAA` ser assunto de bloco próprio:
 um `CAA` errado bloqueia a renovação sem aviso.

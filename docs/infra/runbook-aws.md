@@ -706,8 +706,8 @@ SMOKE_URL=https://lotusotec.cl pnpm smoke
 
 Nove itens (`e2e/smoke/`), fora de `pnpm check` e de `pnpm e2e`. `SMOKE_SHA` fixa o release do
 item 1; sem ele, o último `CI` verde do corporativo (`gh run list --repo Gatika-CL/lotus-site`).
-`X_ROBOTS_TAG_PRESENTE` em `e2e/smoke/alvo.ts` inverte no corte. O envio real do formulário é
-humano (spec D11).
+`X_ROBOTS_TAG_PRESENTE` em `e2e/smoke/alvo.ts` é `false` desde o corte (`B5`): o item 7 confere o
+cabeçalho ausente. O envio real do formulário é humano (spec D11).
 
 ### 9.3 Rollback do corte e ensaio
 
@@ -732,3 +732,38 @@ Cópias e hashes em
 restauração exercitada localmente com
 `scripts/wordpress/ensaio-restauracao.sh <arquivos.zip|.tar.gz> <dump.sql|.sql.gz>` (Docker; nada
 entra no repositório — `.gitignore` recusa `*.sql`, `*.sql.gz`, `*wpvivid*`, `backup*.zip`, `stackcp-*`).
+
+## 10. O corte de `lotusotec.cl` (`B5`)
+
+Spec em `docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md`; evidência em
+[`evidencia-corte-2026-10-05.md`](evidencia-corte-2026-10-05.md). Desde 2026-10-05, apex e `www` são
+alias da distribuição; o WordPress segue no IP dele até `B7`, como alvo do rollback
+([`rollback-corte.md`](rollback-corte.md), até 2026-11-10).
+
+### 10.1 Latência a partir do Chile
+
+```bash
+export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use
+node scripts/infra/medir-latencia.mjs --alvo <host> [--sondas <id de medição anterior>] [--pais CL] [--quantas 10]
+```
+
+API pública do Globalping, sem chave (250 testes por hora, 50 sondas por medição). A primeira
+linha da tabela traz o ID da medição; `--sondas` repete as sondas dela, na mesma ordem. ID vencido
+ou inválido sai 1 com o 422 da API: trocar de sondas é decisão de quem mede, e a evidência diz
+isso. As sondas do Chile são quase todas de datacenter, então a medição não é a do visitante
+residencial.
+
+### 10.2 A sequência do corte
+
+A ordem de `B5`, para uma troca futura do mesmo tipo:
+
+1. TTL do registro de antes baixado para 60 — parâmetro próprio, porque `aws cloudformation
+deploy` reusa o valor anterior de parâmetro que o stack já tem — e pelo menos 3600 s de espera
+   depois do `UPDATE_COMPLETE`: é o TTL antigo que governa a cauda.
+2. Pré-checagens: `rollback-corte.md` §0; `medir-propagacao --esperado wordpress --aquecer` com TTL
+   60 nos nameservers e no máximo 60 restantes nos públicos; nenhum deploy desde o smoke forçado.
+3. Change set do `lotus-dns` revisto por `Name` e `Type` (`rollback-corte.md` §3), `--aquecer`,
+   `execute` e `medir-propagacao --esperado cloudfront` em apex e `www`, em paralelo.
+4. `SMOKE_URL=https://lotusotec.cl SMOKE_SHA=<sha> pnpm smoke`, com o mesmo SHA do smoke forçado, e
+   `pnpm infra:conferir-zona --pos-delegacao`, que desde `7.2.5` confere linha de alias.
+5. Smoke de novo pelo menos 24 h depois, sem `SMOKE_VIA`.

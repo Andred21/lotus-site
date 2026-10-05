@@ -29,6 +29,10 @@ para onde voltar; o rollback vira restauração de desastre (§7) noutro host.
 
 ## 1. O que o corte muda (`B5`)
 
+> **Feito em 2026-10-05** (evidência em [`evidencia-corte-2026-10-05.md`](evidencia-corte-2026-10-05.md)
+> §5): apex e `www` são alias da distribuição, e o WordPress segue no IP dele, alvo deste
+> procedimento até 2026-11-10 (§0). O que segue descreve a troca como ela foi feita.
+
 Apex e `www`, `A` e `AAAA`: de `185.146.167.195` / `2a07:7800::195` (TTL 60 desde o dia do corte; antes, 3600) para alias de
 `dhpoztt69jydz.cloudfront.net`, em `infra/lotus-dns.yaml`, por change set. O alias não tem TTL no
 template: o Route 53 responde com no máximo 60 s (no ensaio, de 22 a 60; evidência §3.3). Nada

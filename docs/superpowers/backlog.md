@@ -34,9 +34,10 @@ sempre explícita.
 
 # AGORA
 
-`B5 · 7.2.5` está ativo em `docs/superpowers/state.md`, em planejamento na branch
-`feat/7-2-5-cutover-lotusotec`. `B0` a `B4` estão fechados, cada um com PR integrado em `main`; o
-registro de cada fechamento está em `docs/superpowers/historico/progress.md`.
+`B5 · 7.2.5` pôs `lotusotec.cl` na distribuição em 2026-10-05; o fechamento do bloco fica
+registrado em `docs/superpowers/historico/progress.md`. `B0` a `B4` estão fechados, cada um com PR
+integrado em `main`. O próximo bloco da fila é `B6 · 7.2.6`, que só fica ativo por seleção
+explícita (Lei 3).
 
 ## Decisões de 2026-09-09 (João)
 
@@ -185,6 +186,11 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Fecha:** `D-22` — Rich Results Test e depuradores sociais passam a ter URL pública.
 - **Evidência exigida:** `lotusotec.cl` entregando o clone por HTTPS; nenhum recurso essencial
   quebrado; rollback do `ADR-SITE-004` pronto para uso.
+- **Entregue (spec `2026-10-04-7.2.5-cutover-lotusotec-design.md`):** corte em 2026-10-05, com
+  TTL 60 no registro de antes; `PriceClass_All` (`D-39`), `sistema` fora da zona e `X-Robots-Tag`
+  fora da borda. Evidência: `docs/infra/evidencia-corte-2026-10-05.md`; zona conferida em
+  `docs/infra/conferencia-zona-2026-10-05.md`; volta ao WordPress por `docs/infra/rollback-corte.md`
+  até 2026-11-10.
 
 ## B6 · `7.2.6` — observabilidade mínima
 
@@ -262,7 +268,8 @@ O que não avança por conta nossa.
 6. **Confirmar a entrada de e-mail em `contacto@lotusotec.cl`.** Uma mensagem de fora chegando e a
    resposta voltando. João confirma com o dono da caixa; o resultado entra em
    `docs/infra/delegacao-2026-09-26.md`, secção "Entrada", em commit próprio. Contexto em `D-50`.
-7. **Decidir a renovação do certificado do WordPress** antes de 2026-10-11. Ver `D-51`.
+7. ~~**Decidir a renovação do certificado do WordPress** antes de 2026-10-11.~~ Decidido por João
+   em 2026-10-04: não renovar (spec de `7.2.5`, D1). Ver `D-51`, fechado.
 
 ---
 
@@ -379,11 +386,6 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   reportar os nós e as quatro exceções saíram de `e2e/a11y-exceptions.ts` — exceção órfã reprova
   o gate. Nenhuma cor foi trocada por escolha estética: a paridade fechou o defeito de contraste.
   **Gatilho:** redesign, quando a paleta deixar de ser paridade.
-- **D-22 · JSON-LD e tags sociais validados só localmente** — schema Zod `strict` e parse em
-  `src/app/head.test.ts`, mais `og:image` resolvendo em `e2e/seo.spec.ts` (D5/D10 do bloco
-  `5.1.1-5.3.2`). Rich Results Test e depuradores sociais (Facebook, LinkedIn, X) exigem URL
-  pública.
-  **Gatilho:** primeiro deploy, antes do go-live.
 - **D-27 · a review do bloco `refactor-contato-intake` não teve segunda lente** — o invariante do
   harness exige `executor` e `reviewer` diferentes, e `scripts/validate-agent-workflow.mjs:160`
   transforma isso em erro de `pnpm agent:check`. A cota da conta Codex estava esgotada, e João
@@ -449,19 +451,14 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   exercitado uma vez na execução do bloco. Não há automação, não há teste que o exercite e não há
   alarme que o dispare. Em `B4` o rollback de DNS foi ensaiado em nome descartável e virou
   procedimento escrito (`docs/infra/rollback-corte.md`, `infra/rollback-corte.json`); continua sem
-  botão.
+  botão. Em `B5` o procedimento ficou atrás de um corte de verdade: `rollback-corte.md` passou ao
+  TTL 60 e ao checkout de template, `zona.mjs` e `zona.test.mjs` juntos; continua sem botão.
   **Gatilho:** segundo incidente de publicação errada, ou `7.2.6` (observabilidade).
 - **D-38 · a trust policy da role de deploy fixa `refs/heads/main`** — `sub` com `StringEquals` em
   `repo:Gatika-CL/lotus-site:ref:refs/heads/main`. Publicar a partir de tag ou de outra branch exige
   editar `infra/lotus-site.yaml` e reimplantar o stack. É a restrição desejada, registrada para que
   a próxima pessoa não a confunda com defeito.
   **Gatilho:** necessidade de publicar a partir de tag.
-- **D-39 · `PriceClass_100` não inclui borda na América do Sul** — a distribuição usa a classe mais
-  barata, que cobre Estados Unidos, Canadá, Europa e Israel. O visitante chileno é servido por uma
-  borda do hemisfério norte, com latência maior. Aceitável enquanto o endereço é de homologação sem
-  tráfego; a decisão precisa ser reconsiderada, com medição, antes de o domínio do cliente apontar
-  para lá.
-  **Gatilho:** `7.2.5` (cutover), ou primeira medição de latência real a partir do Chile.
 - **D-40 · a distribuição não grava access log** — CloudTrail registra quem mudou o quê e o run do
   GitHub Actions registra o deploy, mas não existe registro de quem acessou o site. Ligar o log hoje
   criaria volume de objetos com custo e nenhum consumidor: não há dashboard, alerta nem consulta que
@@ -524,20 +521,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `include:spf.stackmail.com`.
   **Gatilho:** `B2`.
 
-- **D-47 · `7.2.1` fechou parcial: sem HTTPS servido** — o critério de
-  aceite da EAP no Notion pede domínio resolvendo e HTTPS válido. O bloco de 2026-09-20 entregou
-  só a zona: criada no Route 53, conferida registro a registro contra a StackDNS e travada por
-  catraca, mas **não delegada**. Sem delegação não há validação DNS-01, sem ela não há
-  certificado, e sem certificado não há HTTPS. A EAP **não** foi marcada como concluída, e não
-  havia autorização de escrita no Notion nesta rodada de qualquer forma.
-  **Encolhido em 2026-09-26.** Delegação trocada, saída de e-mail provada e certificado `ISSUED`. O
-  que resta é uma linha: **o HTTPS não é servido**. Nada apresenta o certificado a um navegador
-  enquanto a distribuição não tiver `Aliases` e `ViewerCertificate`, e o ARN precisa atravessar de
-  `us-east-1` para `sa-east-1` como parâmetro, porque CloudFormation não importa valor entre regiões.
-  **Prazo:** `B5` precisa ligar o certificado à distribuição antes de 2027-04-11. Até lá ele não
-  renova sozinho (`RenewalEligibility: INELIGIBLE`, porque não está em uso); se o prazo passar, o
-  certificado expira e é preciso emitir outro. A EAP continua **não** marcada no Notion.
-  **Gatilho:** `B5`.
 - **D-49 · a zona não publica `CAA`** — sem `CAA`, qualquer autoridade certificadora do mundo pode
   emitir certificado para `lotusotec.cl`. A `CAA` precisa listar **toda** CA que emite para algum
   nome da zona: hoje são duas, `amazon.com` para o ACM e `letsencrypt.org` para o wildcard que a
@@ -561,34 +544,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   ele, mas o endereço parece real e não é.
   **Gatilho:** `B7`, junto da decisão sobre os nomes do StackMail; o dado de teste, no próximo bloco
   que tocar esses testes.
-
-- **D-51 · a delegação corta a renovação do certificado do WordPress** — o WordPress serve em
-  `lotusotec.cl`, `www` e `sistema` um certificado Let's Encrypt **wildcard** (`*.lotusotec.cl`,
-  emissor `Let's Encrypt YR1`), válido até **2026-11-10T20:37:55Z** (medido em 2026-09-26 com
-  `openssl s_client`). Wildcard só se emite por validação DNS, e a 20i, que opera o StackCP, só
-  emite o SSL grátis com os nameservers dela como autoritativos: o desafio é um TXT que ela grava na
-  zona que controla, sem alternativa por HTTP nem por registro externo (docs.20i.com, "Can I use the
-  free SSL if my site doesn't use the 20i nameservers?"). Desde 2026-09-26 quem responde por
-  `lotusotec.cl` é o Route 53, então a renovação — que clientes ACME costumam fazer 30 dias antes do
-  vencimento, por volta de 2026-10-11 — não tem onde publicar o desafio. Se nada mudar, **o HTTPS do
-  site em produção expira em 2026-11-10**. A cópia fiel da zona não tinha como ver isso:
-  `_acme-challenge` é registro efêmero, e não existe em nenhum dos dois lados fora da hora da
-  emissão. Saídas, a decidir por João: (1) confirmar com a BlueHosting/20i o que acontece na
-  renovação; (2) o certificado pago da 20i ("Simple SSL"), que ela oferece para domínio fora dos
-  nameservers dela; (3) devolver a delegação à StackDNS antes da janela e refazer a troca junto com
-  `B5` — a zona da StackDNS continua de pé, e nada serve o certificado do ACM até lá; (4) antecipar
-  a parte TLS de `B5`, improvável a tempo porque `B5` depende de `B4`, `B3` e `B2`. `sistema` é
-  servido pelo mesmo certificado, e o destino dele em `B5` precisa levar isto em conta.
-  Verificação:
-
-  ```bash
-  echo | openssl s_client -connect lotusotec.cl:443 -servername lotusotec.cl 2>/dev/null \
-    | openssl x509 -noout -issuer -dates
-  ```
-
-  **Prazo operacional (`B4`, spec D8):** o corte de `B5` acontece até 2026-10-27 — catorze dias de
-  rollback possível antes do vencimento — ou espera a decisão.
-  **Gatilho:** agora. Decisão antes de 2026-10-11; prazo duro 2026-11-10.
 
 - **D-53 · o bloco `7.2.1` (delegação e certificado) não teve segunda lente** — Claude executou
   `b64bb94..cb06414` e também fez a review formal de `/revisar-site`: a cota da conta Codex estava
@@ -710,6 +665,12 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   rodar `pnpm check` na árvore filtrada antes do push.
   **Gatilho:** próximo bloco que tocar `.github/workflows/ci.yml`, `scripts/espelhar-corporativo.sh`
   ou `tsconfig.node.json`; ou a próxima reprovação do corporativo que só aparece na árvore filtrada.
+  **Disparou em 2026-10-05.** O espelho `8774aa7` (PR #25) reprovou no `tsc -b` do corporativo:
+  `scripts/wordpress/verificar-restauracao.mjs(49,45): error TS2584: Cannot find name 'document'`
+  (run `37251928367`). O script roda `document` dentro do `evaluate` do Playwright sem a diretiva
+  `/// <reference lib="dom" />`, e o DOM só chegava pelos arquivos que o espelho exclui; o CI
+  pessoal do mesmo merge passou. Reproduzido na árvore de `upstream/main`. O que está no ar segue
+  `ca8f49b`, e nenhum deploy sai até a correção atravessar o espelho.
 - **D-63 · a sonda `allowsEval` do zod viola a CSP ao carregar o bundle, a cada visita de página** —
   medido em 2026-09-27 neste bloco e remedido em 2026-09-28 contra a distribuição
   (`dhpoztt69jydz.cloudfront.net`): o zod 4.4.3 lê o getter `allowsEval.value`
@@ -743,7 +704,9 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   forçado para a distribuição. Depois do corte, qualquer versão antiga fica em
   `lotusotec.cl/releases/<sha>/`. Não é segredo, e o canonical aponta para o apex; é superfície
   que ninguém decidiu expor. Saídas: behavior `/releases/*` respondendo 403, ou o smoke passar a
-  identificar o release por outro caminho (ETag do S3, credencial de leitura).
+  identificar o release por outro caminho (ETag do S3, credencial de leitura). Desde o corte
+  (`B5`, 2026-10-05), eles respondem em `lotusotec.cl/releases/<sha>/` e, sem o `X-Robots-Tag`,
+  ficam indexáveis; o canonical aponta para o apex.
   **Gatilho:** `B6`.
 - **D-65 · o bloco `7.2.5` (cutover de `lotusotec.cl`) não tem segunda lente** — o plano previa
   `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-05: Claude executa e
@@ -752,7 +715,98 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
   de João de dispensá-la.
 
+- **D-66 · `lotusotec.cl` responde mais devagar que o WordPress a partir do Chile** — medido em
+  2026-10-05 com as sondas da linha de base (`docs/infra/evidencia-corte-2026-10-05.md` §1 e §6):
+  `total` mediano de 383 ms em `lotusotec.cl` na distribuição, contra 74 ms do WordPress. Causa
+  provável, a confirmar: `index.html` com `no-cache`, revalidado na origem em `sa-east-1` a cada
+  pedido. Nasceu como o `D-65` condicional da spec de `7.2.5`; o número já era do débito da
+  exceção de reviewer.
+  **Gatilho:** `B6`, que traz a primeira medição de tráfego real.
+- **D-67 · a estabilização de `B5` durou 8 h 35 min, não 24 h** — a spec de `7.2.5` (D11) pede o
+  smoke de estabilização pelo menos 24 h depois do corte; por decisão de João em 2026-10-05, ele
+  rodou às 2026-10-05T22:48:12Z, verde, para o bloco fechar no mesmo dia
+  (`docs/infra/evidencia-corte-2026-10-05.md` §7). Uma falha que só aparecesse entre 8 h e 24 h do
+  corte não foi observada pelo smoke.
+  **Gatilho:** qualquer sessão a partir de 2026-10-06T14:12:23Z roda
+  `SMOKE_URL=https://lotusotec.cl pnpm smoke`; verde fecha, vermelho nos itens 2 a 6 é o gatilho
+  de `docs/infra/rollback-corte.md` §2.
+
 ## Fechados
+
+- **D-22 · JSON-LD e tags sociais validados só localmente** — schema Zod `strict` e parse em
+  `src/app/head.test.ts`, mais `og:image` resolvendo em `e2e/seo.spec.ts` (D5/D10 do bloco
+  `5.1.1-5.3.2`). Rich Results Test e depuradores sociais (Facebook, LinkedIn, X) exigem URL
+  pública.
+  **Gatilho:** primeiro deploy, antes do go-live.
+  **Fechado em 2026-10-05.** Validadores rodados por João contra `https://lotusotec.cl/` depois
+  do corte (spec de `7.2.5`, D10): Rich Results Test com 1 item válido, `Organization`, e nenhum
+  erro de dados estruturados (o único recurso que não carregou foi o script do Turnstile, de
+  terceiro); Schema Markup Validator com `Organization`, 0 erros e 0 avisos; Sharing Debugger do
+  Facebook sem erro, com `og:image:alt` vazio; Post Inspector do LinkedIn sem erro, sem autor nem
+  data de publicação, campos de artigo que a página institucional não declara. O X não tem
+  validador público de card desde 2022; os `twitter:*` seguem provados por `src/app/head.test.ts`.
+  Evidência em `docs/infra/evidencia-corte-2026-10-05.md` §6.
+
+- **D-47 · `7.2.1` fechou parcial: sem HTTPS servido** — o critério de
+  aceite da EAP no Notion pede domínio resolvendo e HTTPS válido. O bloco de 2026-09-20 entregou
+  só a zona: criada no Route 53, conferida registro a registro contra a StackDNS e travada por
+  catraca, mas **não delegada**. Sem delegação não há validação DNS-01, sem ela não há
+  certificado, e sem certificado não há HTTPS. A EAP **não** foi marcada como concluída, e não
+  havia autorização de escrita no Notion nesta rodada de qualquer forma.
+  **Encolhido em 2026-09-26.** Delegação trocada, saída de e-mail provada e certificado `ISSUED`. O
+  que resta é uma linha: **o HTTPS não é servido**. Nada apresenta o certificado a um navegador
+  enquanto a distribuição não tiver `Aliases` e `ViewerCertificate`, e o ARN precisa atravessar de
+  `us-east-1` para `sa-east-1` como parâmetro, porque CloudFormation não importa valor entre regiões.
+  **Prazo:** `B5` precisa ligar o certificado à distribuição antes de 2027-04-11. Até lá ele não
+  renova sozinho (`RenewalEligibility: INELIGIBLE`, porque não está em uso); se o prazo passar, o
+  certificado expira e é preciso emitir outro. A EAP continua **não** marcada no Notion.
+  **Gatilho:** `B5`.
+  **Fechado em 2026-10-05.** HTTPS servido em público desde o corte: certificado `ISSUED`,
+  `RenewalEligibility: ELIGIBLE`, `InUseBy` com a distribuição `E1R7SPH4OLUIEQ` (evidência §6). A
+  marcação de `7.2.1` no Notion é pedida no fechamento de `B5`, com autorização própria.
+
+- **D-39 · `PriceClass_100` não inclui borda na América do Sul** — a distribuição usa a classe mais
+  barata, que cobre Estados Unidos, Canadá, Europa e Israel. O visitante chileno é servido por uma
+  borda do hemisfério norte, com latência maior. Aceitável enquanto o endereço é de homologação sem
+  tráfego; a decisão precisa ser reconsiderada, com medição, antes de o domínio do cliente apontar
+  para lá.
+  **Gatilho:** `7.2.5` (cutover), ou primeira medição de latência real a partir do Chile.
+  **Fechado em 2026-10-05.** `PriceClass_All` (spec de `7.2.5`, D4), decidido por medição a
+  partir do Chile: com as mesmas dez sondas, `total` mediano de 766 ms antes (borda `MIA50` em
+  todas) e 279 ms depois (`SCL51` em cinco; `EZE50`, `LIM50` e `MIA50` nas outras), contra 74 ms
+  do WordPress. Evidência em `docs/infra/evidencia-corte-2026-10-05.md` §1.
+
+- **D-51 · a delegação corta a renovação do certificado do WordPress** — o WordPress serve em
+  `lotusotec.cl`, `www` e `sistema` um certificado Let's Encrypt **wildcard** (`*.lotusotec.cl`,
+  emissor `Let's Encrypt YR1`), válido até **2026-11-10T20:37:55Z** (medido em 2026-09-26 com
+  `openssl s_client`). Wildcard só se emite por validação DNS, e a 20i, que opera o StackCP, só
+  emite o SSL grátis com os nameservers dela como autoritativos: o desafio é um TXT que ela grava na
+  zona que controla, sem alternativa por HTTP nem por registro externo (docs.20i.com, "Can I use the
+  free SSL if my site doesn't use the 20i nameservers?"). Desde 2026-09-26 quem responde por
+  `lotusotec.cl` é o Route 53, então a renovação — que clientes ACME costumam fazer 30 dias antes do
+  vencimento, por volta de 2026-10-11 — não tem onde publicar o desafio. Se nada mudar, **o HTTPS do
+  site em produção expira em 2026-11-10**. A cópia fiel da zona não tinha como ver isso:
+  `_acme-challenge` é registro efêmero, e não existe em nenhum dos dois lados fora da hora da
+  emissão. Saídas, a decidir por João: (1) confirmar com a BlueHosting/20i o que acontece na
+  renovação; (2) o certificado pago da 20i ("Simple SSL"), que ela oferece para domínio fora dos
+  nameservers dela; (3) devolver a delegação à StackDNS antes da janela e refazer a troca junto com
+  `B5` — a zona da StackDNS continua de pé, e nada serve o certificado do ACM até lá; (4) antecipar
+  a parte TLS de `B5`, improvável a tempo porque `B5` depende de `B4`, `B3` e `B2`. `sistema` é
+  servido pelo mesmo certificado, e o destino dele em `B5` precisa levar isto em conta.
+  Verificação:
+
+  ```bash
+  echo | openssl s_client -connect lotusotec.cl:443 -servername lotusotec.cl 2>/dev/null \
+    | openssl x509 -noout -issuer -dates
+  ```
+
+  **Prazo operacional (`B4`, spec D8):** o corte de `B5` acontece até 2026-10-27 — catorze dias de
+  rollback possível antes do vencimento — ou espera a decisão.
+  **Gatilho:** agora. Decisão antes de 2026-10-11; prazo duro 2026-11-10.
+  **Fechado em 2026-10-04**, por decisão de João: o certificado do WordPress não é renovado (spec
+  de `7.2.5`, D1). A volta ao WordPress vale até 2026-11-10T20:37:55Z; depois, correção para
+  frente ou restauração de desastre (`rollback-corte.md` §7). O corte aconteceu em
+  2026-10-05, dentro do prazo de 2026-10-27.
 
 - **D-52 · `delete-stack` do `lotus-dns` esvaziaria a zona viva** — `Zona` tem
   `DeletionPolicy: Retain`, mas `Registros` não: um `delete-stack` apaga MX, SPF e todo o resto e
