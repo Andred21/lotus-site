@@ -443,17 +443,106 @@ export function convergiu(esperado, respostas) {
         mesmoConjunto(A, [WORDPRESS.A]) && mesmoConjunto(AAAA, [WORDPRESS.AAAA])
       )
     case 'cloudfront':
-      // O IP do CloudFront varia por borda; o que se sabe é que não é o
-      // do WordPress e que há resposta nos dois tipos (IPV6Enabled).
-      return (
-        A.length > 0 &&
-        AAAA.length > 0 &&
-        !A.includes(WORDPRESS.A) &&
-        !AAAA.map(normalizar).includes(normalizar(WORDPRESS.AAAA))
-      )
+      // Resposta nos dois tipos (IPV6Enabled), nenhuma do WordPress.
+      return respondeComoBorda('A', A) && respondeComoBorda('AAAA', AAAA)
     case 'ausente':
       return A.length === 0 && AAAA.length === 0
     default:
       throw new Error(`esperado desconhecido: ${String(esperado)}`)
   }
+}
+
+/**
+ * Resposta de um alias da distribuição (7.2.5, spec §4.5): não vazia e sem
+ * o endereço do WordPress daquele tipo. O IP da borda varia por resolvedor e
+ * por nameserver, então é só isso que dá para afirmar dele.
+ * @param {'A' | 'AAAA'} tipo
+ * @param {string[]} valores
+ */
+export function respondeComoBorda(tipo, valores) {
+  return (
+    valores.length > 0 &&
+    !valores.map(normalizar).includes(normalizar(WORDPRESS[tipo]))
+  )
+}
+
+/**
+ * @param {string} tipo
+ * @returns {'A' | 'AAAA'}
+ */
+function tipoDeAlias(tipo) {
+  if (tipo !== 'A' && tipo !== 'AAAA') {
+    throw new Error(`alias para o CloudFront só existe em A e AAAA: ${tipo}`)
+  }
+  return tipo
+}
+
+/**
+ * O lado AWS de uma linha, a partir da resposta de cada nameserver do Route
+ * 53. Registro comum: os quatro dão o mesmo conjunto, e discordar lança — é
+ * a zona servida de dois jeitos. Alias: cada nameserver resolve a borda por
+ * conta própria; no estágio 2 do ensaio de `B4` os quatro deram o mesmo
+ * IPv4 e IPv6 diferentes (evidência §3.2). O que precisa valer em todos é
+ * responder como borda: a coluna mostra a união, ou a primeira resposta que
+ * não responde, para a linha reprovar mostrando o motivo.
+ * @param {RegistroEsperado} registro
+ * @param {string[][]} respostas uma por nameserver
+ * @returns {string[]}
+ */
+export function respostaDosNameservers(registro, respostas) {
+  if (registro.alias) {
+    const tipo = tipoDeAlias(registro.tipo)
+    const falha = respostas.find(
+      (resposta) => !respondeComoBorda(tipo, resposta),
+    )
+    return falha ?? [...new Set(respostas.flat())]
+  }
+  const primeira = respostas[0] ?? []
+  if (!respostas.every((resposta) => mesmoConjunto(resposta, primeira))) {
+    throw new Error(
+      `os nameservers da AWS discordam entre si em ${registro.tipo} ${registro.nome}`,
+    )
+  }
+  return primeira
+}
+
+/** @param {string[]} valores */
+const semPontoFinal = (valores) =>
+  valores.map((valor) => valor.replace(/\.$/, ''))
+
+/**
+ * Veredito de uma linha do `INVENTARIO` no `conferir-zona` (spec §4.5).
+ * Registro comum: inventário, AWS e servido com o mesmo conjunto. Alias: os
+ * dois lados respondendo como borda — exceto quando o lado AWS veio da API
+ * (`pelaApi`), em que ele é o `DNSName` da configuração e se compara com o
+ * do inventário, com ou sem o ponto final.
+ * @param {RegistroEsperado} registro
+ * @param {string[]} naAws
+ * @param {string[]} servido
+ * @param {boolean} pelaApi
+ */
+export function linhaConfere(registro, naAws, servido, pelaApi) {
+  if (!registro.alias) {
+    return (
+      mesmoConjunto(naAws, servido) &&
+      mesmoConjunto(naAws, [...registro.valores])
+    )
+  }
+  const tipo = tipoDeAlias(registro.tipo)
+  const ladoAws = pelaApi
+    ? mesmoConjunto(semPontoFinal(naAws), semPontoFinal([...registro.valores]))
+    : respondeComoBorda(tipo, naAws)
+  return ladoAws && respondeComoBorda(tipo, servido)
+}
+
+/**
+ * Os valores de um `ResourceRecordSet` de `aws route53
+ * list-resource-record-sets`: o `DNSName` quando é alias (spec §4.5), senão
+ * os `ResourceRecords`.
+ * @param {{ ResourceRecords?: { Value: string }[], AliasTarget?: { DNSName: string } }} conjunto
+ * @returns {string[]}
+ */
+export function valoresDaApi(conjunto) {
+  if (conjunto.AliasTarget) return [conjunto.AliasTarget.DNSName]
+  return (conjunto.ResourceRecords ?? []).map((registro) => registro.Value)
 }

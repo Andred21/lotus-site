@@ -27,7 +27,10 @@ import {
   INVENTARIO,
   NOMES_INVENTADOS,
   delegacaoEsperada,
+  linhaConfere,
   mesmoConjunto,
+  respostaDosNameservers,
+  valoresDaApi,
   wildcardAusente,
 } from './lib/zona.mjs'
 
@@ -35,6 +38,11 @@ const STACK = 'lotus-dns'
 const REGIAO = 'us-east-1'
 const HOJE = new Date().toISOString().slice(0, 10)
 const CODIGO_DOH = { A: 1, AAAA: 28, CNAME: 5, MX: 15, TXT: 16, NS: 2 }
+
+// Linha de alias (7.2.5, spec §4.5): o IP muda de resolvedor para resolvedor,
+// e a coluna AWS e a StackDNS nao batem entre si mesmo com tudo certo.
+const NOTA_DO_ALIAS =
+  'alias: o IP da borda varia por resolvedor; a linha confere que ele responde e não é o WordPress'
 
 /**
  * @typedef {{
@@ -187,15 +195,12 @@ function zonaPelaApi() {
     '--output',
     'json',
   ])
-  /** @type {{ ResourceRecordSets: { Name: string, Type: string, ResourceRecords?: { Value: string }[] }[] }} */
+  /** @type {{ ResourceRecordSets: { Name: string, Type: string, ResourceRecords?: { Value: string }[], AliasTarget?: { DNSName: string } }[] }} */
   const corpo = JSON.parse(bruto)
   /** @type {Map<string, string[]>} */
   const mapa = new Map()
   for (const conjunto of corpo.ResourceRecordSets) {
-    mapa.set(
-      `${conjunto.Name}|${conjunto.Type}`,
-      (conjunto.ResourceRecords ?? []).map((registro) => registro.Value),
-    )
+    mapa.set(`${conjunto.Name}|${conjunto.Type}`, valoresDaApi(conjunto))
   }
   return mapa
 }
@@ -243,11 +248,11 @@ try {
 }
 
 /**
- * @param {string} nome
- * @param {string} tipo
+ * @param {import('./lib/zona.mjs').RegistroEsperado} registro
  * @returns {Promise<string[]>}
  */
-async function ladoAws(nome, tipo) {
+async function ladoAws(registro) {
+  const { nome, tipo } = registro
   if (porApi) return porApi.get(`${nome}|${tipo}`) ?? []
   /** @type {string[][]} */
   const respostas = []
@@ -258,20 +263,14 @@ async function ladoAws(nome, tipo) {
       await tolerandoAusencia(() => perguntarDireto(resolvedor, nome, tipo)),
     )
   }
-  const primeira = respostas[0] ?? []
-  if (!respostas.every((resposta) => mesmoConjunto(resposta, primeira))) {
-    throw new Error(
-      `os nameservers da AWS discordam entre si em ${tipo} ${nome}`,
-    )
-  }
-  return primeira
+  return respostaDosNameservers(registro, respostas)
 }
 
 /** @type {Linha[]} */
 const linhas = []
 
 for (const registro of INVENTARIO) {
-  const naAws = await ladoAws(registro.nome, registro.tipo)
+  const naAws = await ladoAws(registro)
   const naStack = await perguntarDoh(registro.nome, registro.tipo)
   linhas.push({
     nome: registro.nome,
@@ -279,16 +278,14 @@ for (const registro of INVENTARIO) {
     inventario: [...registro.valores],
     aws: naAws,
     atual: naStack,
-    igual:
-      mesmoConjunto(naAws, naStack) &&
-      mesmoConjunto(naAws, [...registro.valores]),
+    igual: linhaConfere(registro, naAws, naStack, porApi !== undefined),
     esperado: false,
-    nota: '',
+    nota: registro.alias ? NOTA_DO_ALIAS : '',
   })
 }
 
 for (const inventado of NOMES_INVENTADOS) {
-  const naAws = await ladoAws(inventado, 'A')
+  const naAws = await ladoAws({ nome: inventado, tipo: 'A', valores: [] })
   const naStack = await perguntarDoh(inventado, 'A')
   linhas.push({
     nome: inventado,
@@ -356,7 +353,9 @@ const relatorio = [
   '| ---- | ---- | ---------- | --- | -------- | -------- |',
   ...linhas.map((linha) => {
     const veredito = linha.igual
-      ? 'sim'
+      ? linha.nota
+        ? `sim — ${linha.nota}`
+        : 'sim'
       : linha.esperado
         ? `divergência esperada — ${linha.nota}`
         : '**NÃO**'

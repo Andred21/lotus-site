@@ -231,10 +231,10 @@ resposta antiga nos públicos); reconciliação do CloudFormation depois do `UPS
 efeito no DNS. O procedimento está em [`rollback-corte.md`](rollback-corte.md). A zona terminou o
 ensaio sem o nome.
 
-Duas conferências não servem como estão depois do corte (`B5`): o `pnpm infra:conferir-zona` desta
-secção não trata alias e daria o apex e o `www` como divergentes, mesmo certos; e o drift do stack
-`lotus-dns` (`runbook-aws.md`) só compara a `Zona`, não os registros. Com o alias no ar, a leitura é
-registro a registro, nos nameservers ou pela API do Route 53 (evidência §3.4).
+Desde `7.2.5`, o `pnpm infra:conferir-zona` desta secção confere linha de alias: o IP da borda varia
+por resolvedor e, no IPv6, por nameserver (evidência §3.2), então a linha confere que os dois lados
+respondem e que nenhuma resposta é do WordPress. O drift do stack `lotus-dns` (`runbook-aws.md`)
+continua comparando só a `Zona`, não os registros (evidência §3.4).
 
 ## Certificado
 

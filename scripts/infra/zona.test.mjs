@@ -10,9 +10,13 @@ import {
   lerPoliticasDaZona,
   lerPoliticasDoRecurso,
   lerRegistros,
+  linhaConfere,
   mesmoConjunto,
   normalizar,
+  respondeComoBorda,
+  respostaDosNameservers,
   resolver,
+  valoresDaApi,
   wildcardAusente,
 } from './lib/zona.mjs'
 
@@ -388,6 +392,138 @@ describe('convergiu (medir-propagacao, spec §4.4)', () => {
   it('ausente exige silêncio nos dois tipos', () => {
     expect(convergiu('ausente', { A: [], AAAA: [] })).toBe(true)
     expect(convergiu('ausente', { A: [], AAAA: wp.AAAA })).toBe(false)
+  })
+})
+
+describe('alias no conferir-zona (7.2.5, spec §4.5)', () => {
+  // Duas das oito respostas AAAA que cada nameserver deu ao alias de
+  // ensaio-corte no estágio 2 de B4 (evidência §3.2): o IPv4 veio igual nos
+  // quatro, o IPv6 não.
+  const AAAA_POR_NAMESERVER = [
+    [
+      '2600:9000:27a4:f800:13:9e71:75c0:21',
+      '2600:9000:27a4:6800:13:9e71:75c0:21',
+    ],
+    [
+      '2600:9000:27a4:7200:13:9e71:75c0:21',
+      '2600:9000:27a4:2600:13:9e71:75c0:21',
+    ],
+    [
+      '2600:9000:27a4:ec00:13:9e71:75c0:21',
+      '2600:9000:27a4:c00:13:9e71:75c0:21',
+    ],
+    [
+      '2600:9000:27a4:de00:13:9e71:75c0:21',
+      '2600:9000:27a4:9a00:13:9e71:75c0:21',
+    ],
+  ]
+  const ALIAS_AAAA = {
+    nome: 'lotusotec.cl.',
+    tipo: 'AAAA',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  }
+  const COMUM = {
+    nome: 'app.lotusotec.cl.',
+    tipo: 'A',
+    valores: ['18.230.53.197'],
+  }
+
+  it('borda é resposta não vazia e sem o WordPress daquele tipo', () => {
+    expect(respondeComoBorda('A', ['3.166.160.79'])).toBe(true)
+    expect(respondeComoBorda('A', [])).toBe(false)
+    expect(respondeComoBorda('A', ['3.166.160.79', WORDPRESS.A])).toBe(false)
+    expect(respondeComoBorda('AAAA', [WORDPRESS.AAAA.toUpperCase()])).toBe(
+      false,
+    )
+  })
+
+  it('alias com IPv6 diferente em cada nameserver confere, com a união na coluna', () => {
+    const lado = respostaDosNameservers(ALIAS_AAAA, AAAA_POR_NAMESERVER)
+    expect(lado).toHaveLength(8)
+    expect(
+      linhaConfere(ALIAS_AAAA, lado, AAAA_POR_NAMESERVER[0] ?? [], false),
+    ).toBe(true)
+  })
+
+  it('alias com um nameserver vazio ou no WordPress mostra essa resposta e reprova', () => {
+    const vazio = [...AAAA_POR_NAMESERVER.slice(0, 3), []]
+    expect(respostaDosNameservers(ALIAS_AAAA, vazio)).toEqual([])
+    const noWordPress = [[WORDPRESS.AAAA], ...AAAA_POR_NAMESERVER.slice(1)]
+    const lado = respostaDosNameservers(ALIAS_AAAA, noWordPress)
+    expect(lado).toEqual([WORDPRESS.AAAA])
+    expect(
+      linhaConfere(ALIAS_AAAA, lado, AAAA_POR_NAMESERVER[1] ?? [], false),
+    ).toBe(false)
+  })
+
+  it('registro comum com nameservers discordando continua lançando', () => {
+    expect(() =>
+      respostaDosNameservers(COMUM, [['18.230.53.197'], ['18.230.53.198']]),
+    ).toThrow('os nameservers da AWS discordam entre si em A app.lotusotec.cl.')
+    expect(
+      respostaDosNameservers(COMUM, [['18.230.53.197'], ['18.230.53.197']]),
+    ).toEqual(['18.230.53.197'])
+  })
+
+  it('linha comum confere quando inventário, AWS e servido batem', () => {
+    expect(
+      linhaConfere(COMUM, ['18.230.53.197'], ['18.230.53.197'], false),
+    ).toBe(true)
+    expect(linhaConfere(COMUM, ['18.230.53.197'], [], false)).toBe(false)
+  })
+
+  it('alias com o lado servido ainda no WordPress não confere', () => {
+    // Resolvedor público com o registro de antes em cache.
+    expect(
+      linhaConfere(
+        ALIAS_AAAA,
+        AAAA_POR_NAMESERVER[0] ?? [],
+        [WORDPRESS.AAAA],
+        false,
+      ),
+    ).toBe(false)
+  })
+
+  it('alias lido pela API compara o DNSName, com ou sem ponto e sem caixa', () => {
+    const servido = AAAA_POR_NAMESERVER[2] ?? []
+    expect(
+      linhaConfere(
+        ALIAS_AAAA,
+        ['dhpoztt69jydz.cloudfront.net.'],
+        servido,
+        true,
+      ),
+    ).toBe(true)
+    expect(
+      linhaConfere(ALIAS_AAAA, ['DHPOZTT69JYDZ.cloudfront.net'], servido, true),
+    ).toBe(true)
+    expect(
+      linhaConfere(
+        ALIAS_AAAA,
+        ['d111111abcdef8.cloudfront.net.'],
+        servido,
+        true,
+      ),
+    ).toBe(false)
+  })
+
+  it('valoresDaApi lê o DNSName do alias e os ResourceRecords do resto', () => {
+    expect(
+      valoresDaApi({
+        AliasTarget: { DNSName: 'dhpoztt69jydz.cloudfront.net.' },
+      }),
+    ).toEqual(['dhpoztt69jydz.cloudfront.net.'])
+    expect(
+      valoresDaApi({ ResourceRecords: [{ Value: '18.230.53.197' }] }),
+    ).toEqual(['18.230.53.197'])
+    expect(valoresDaApi({})).toEqual([])
+  })
+
+  it('alias fora de A e AAAA é erro de quem escreveu o inventário', () => {
+    expect(() =>
+      linhaConfere({ ...ALIAS_AAAA, tipo: 'CNAME' }, [], [], false),
+    ).toThrow('alias para o CloudFront só existe em A e AAAA: CNAME')
   })
 })
 

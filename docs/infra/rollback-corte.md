@@ -169,7 +169,7 @@ Como ler: o `convergiu em` é a primeira resposta nova de cada resolvedor, não 
 porque a cauda do alias (até 60 s) já acabou, não porque a troca foi instantânea. O
 `conferir-zona` compara os quatro nameservers com o inventário de `scripts/infra/lib/zona.mjs`, o
 de antes do corte depois do checkout de §3, e deve sair 0; sem `--saida`, ele grava o relatório em
-`docs/infra/`. Ele não trata alias: só serve com o apex e o `www` de volta ao WordPress.
+`docs/infra/`. Desde `7.2.5` ele também confere linha de alias, então roda dos dois lados do corte.
 
 E uma mensagem de e-mail de fora para `contacto@lotusotec.cl`: o MX não foi tocado, mas a prova é
 a mensagem chegando, como em `B1`.
