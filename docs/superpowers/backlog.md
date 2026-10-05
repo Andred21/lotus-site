@@ -745,6 +745,12 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   que ninguém decidiu expor. Saídas: behavior `/releases/*` respondendo 403, ou o smoke passar a
   identificar o release por outro caminho (ETag do S3, credencial de leitura).
   **Gatilho:** `B6`.
+- **D-65 · o bloco `7.2.5` (cutover de `lotusotec.cl`) não tem segunda lente** — o plano previa
+  `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-05: Claude executa e
+  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
+  autorizado por João em 2026-10-05. Mesma classe de `D-27`, `D-32` e `D-53`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
 
 ## Fechados
 
