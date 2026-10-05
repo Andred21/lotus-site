@@ -249,10 +249,14 @@ Resources:
         DefaultRootObject: index.html
         HttpVersion: http2and3
         IPV6Enabled: true
-        # Mais barata das classes. NAO inclui borda na America do Sul: o
-        # visitante chileno e servido do hemisferio norte, com latencia maior.
-        # Aceitavel para homologacao; revisar no corte de DNS (D-39).
-        PriceClass: PriceClass_100
+        # Todas as bordas (D-39, decidido em 7.2.5 por medicao). So
+        # PriceClass_All inclui a America do Sul, e o visitante e chileno:
+        # medido em 2026-10-05 de cinco sondas no Chile, PriceClass_100
+        # respondia de Miami e de Dallas, total mediano de 854 ms, contra 31 ms
+        # do WordPress. O free tier vale para todas as regioes; o budget do
+        # stack continua sendo a guarda (ADR-SITE-004, Custo). A catraca
+        # scripts/infra/distribuicao.test.mjs reprova outra classe.
+        PriceClass: PriceClass_All
         # sni-only: sem IP dedicado (US$ 600/mes). TLSv1.2_2021 e a politica
         # recomendada; o smoke exige TLS >= 1.2 (spec §4.5 item 2).
         ViewerCertificate:

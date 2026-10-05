@@ -21,6 +21,11 @@ export const CERTIFICADO_ESPERADO = Object.freeze({
   SslSupportMethod: 'sni-only',
   MinimumProtocolVersion: 'TLSv1.2_2021',
 })
+/**
+ * Só `PriceClass_All` tem borda na América do Sul, e o visitante é chileno
+ * (`D-39`, decidido em 7.2.5 por medição: spec D4).
+ */
+export const PRICE_CLASS = 'PriceClass_All'
 export const ARN_DA_FUNCAO =
   '!GetAtt RedirecionarWww.FunctionMetadata.FunctionARN'
 export const APEX = 'lotusotec.cl'
@@ -63,8 +68,9 @@ function campoDeFuncao(funcao, chave, valor) {
 }
 
 /**
- * Lê de `Distribuicao` o que a catraca confere: aliases, certificado, e as
- * funções associadas ao behavior padrão e a cada `CacheBehaviors`.
+ * Lê de `Distribuicao` o que a catraca confere: aliases, classe de preço,
+ * certificado, e as funções associadas ao behavior padrão e a cada
+ * `CacheBehaviors`.
  * @param {string} texto conteúdo de `infra/lotus-site.yaml`
  */
 export function lerDistribuicao(texto) {
@@ -77,6 +83,7 @@ export function lerDistribuicao(texto) {
   /** @type {Comportamento[]} */
   const comportamentos = []
   let secao = ''
+  let priceClass = ''
   /** @type {'' | 'padrao' | 'caminho'} */
   let associando = ''
   /** @type {Funcao | undefined} */
@@ -102,6 +109,7 @@ export function lerDistribuicao(texto) {
       fecharFuncao()
       associando = ''
       secao = m[1] ?? ''
+      if (secao === 'PriceClass') priceClass = semAspas(m[2] ?? '')
       continue
     }
     if (secao === 'Aliases' && (m = linha.match(/^ {10}- (\S+)$/))) {
@@ -168,7 +176,7 @@ export function lerDistribuicao(texto) {
     }
   }
   fecharFuncao()
-  return { aliases, certificado, funcoesPadrao, comportamentos }
+  return { aliases, priceClass, certificado, funcoesPadrao, comportamentos }
 }
 
 /**
@@ -365,6 +373,11 @@ export function conferirDistribuicao(textoSite, textoDns) {
         `ViewerCertificate.${campo}: esperado ${esperado}, veio ${veio ?? 'ausente'}`,
       )
     }
+  }
+  if (distribuicao.priceClass !== PRICE_CLASS) {
+    problemas.push(
+      `PriceClass: esperado ${PRICE_CLASS} (D-39, borda na América do Sul), veio ${distribuicao.priceClass || 'ausente'}`,
+    )
   }
   const padrao = distribuicao.funcoesPadrao
   if (

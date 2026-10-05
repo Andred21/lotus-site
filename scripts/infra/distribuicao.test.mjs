@@ -43,6 +43,7 @@ Resources:
         Aliases:
           - lotusotec.cl
           - www.lotusotec.cl
+        PriceClass: PriceClass_All
         ViewerCertificate:
           AcmCertificateArn: !Ref ArnDoCertificadoDoDominio
           SslSupportMethod: sni-only
@@ -83,8 +84,9 @@ Outputs:
 describe('leitura da Distribuicao', () => {
   const lida = lerDistribuicao(MODELO)
 
-  it('lê aliases, certificado e funções por behavior', () => {
+  it('lê aliases, classe de preço, certificado e funções por behavior', () => {
     expect(lida.aliases).toEqual(['lotusotec.cl', 'www.lotusotec.cl'])
+    expect(lida.priceClass).toBe('PriceClass_All')
     expect(lida.certificado).toEqual({
       AcmCertificateArn: '!Ref ArnDoCertificadoDoDominio',
       SslSupportMethod: 'sni-only',
@@ -213,6 +215,25 @@ describe('catraca: infra/lotus-site.yaml ≡ spec §4.2', () => {
       problemas.some((p) => p.startsWith('location para www com caminho')),
     ).toBe(true)
     expect(problemas.join('\n')).toContain('https://lotusotec.cl//cursos/')
+  })
+
+  it('PriceClass sem a América do Sul reprova citando D-39', () => {
+    const semAmericaDoSul = SITE.replace(
+      '        PriceClass: PriceClass_All\n',
+      '        PriceClass: PriceClass_100\n',
+    )
+    expect(conferirDistribuicao(semAmericaDoSul, DNS)).toContain(
+      'PriceClass: esperado PriceClass_All (D-39, borda na América do Sul), veio PriceClass_100',
+    )
+  })
+
+  it('PriceClass ausente reprova em vez de passar calado', () => {
+    // Sem o campo, o CloudFront usa PriceClass_All; a catraca exige que a
+    // decisão esteja escrita no template.
+    const sem = SITE.replace('        PriceClass: PriceClass_All\n', '')
+    expect(conferirDistribuicao(sem, DNS)).toContain(
+      'PriceClass: esperado PriceClass_All (D-39, borda na América do Sul), veio ausente',
+    )
   })
 
   it('AllowedPattern do certificado solto de us-east-1 reprova', () => {
