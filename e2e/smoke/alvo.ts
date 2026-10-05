@@ -11,9 +11,9 @@ import { test as base } from '@playwright/test'
 export const DOMINIO = 'lotusotec.cl'
 export const WWW = `www.${DOMINIO}`
 
-// `B5` inverte esta linha: depois do corte a borda deixa de mandar o
-// X-Robots-Tag (spec §4.5, item 7). É o único lugar que muda.
-export const X_ROBOTS_TAG_PRESENTE = true
+// Falso desde o corte (7.2.5, spec D5): a borda deixou de mandar o
+// X-Robots-Tag, e o item 7 confere que ele está ausente.
+export const X_ROBOTS_TAG_PRESENTE = false
 
 function exigir(nome: string): string {
   const valor = process.env[nome]

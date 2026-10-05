@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.5
 active_notion_eap: 7.2.5
@@ -9,20 +9,20 @@ active_title: Realizar cutover do lotusotec.cl para o novo site (bloco `B5`)
 active_branch: feat/7-2-5-cutover-lotusotec
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: executar_change_set_x_robots_tag
-resume_state: executing
+next_owner: claude
+next_action: continue_active_plan
+resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md
 active_plan: docs/superpowers/plans/2026-10-04-7.2.5-cutover-lotusotec.md
 executor: claude
 reviewer: claude
 reviewer_exception: 'Autorizado por João em 2026-10-05: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-65.'
-blocker: 'Portão do X-Robots-Tag (Task 6, Step 6). Change set criado e lido, não executado: arn:aws:cloudformation:sa-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791196886/a6336aea-7b86-423f-8525-cb5cf2621bbb (stack lotus-site, sa-east-1). Tabela: uma linha, Modify PoliticaDeCabecalhos Substituicao False. Diff: Comment sem o X-Robots-Tag; CustomHeadersConfig/Items/1/Header "X-Robots-Tag", Value "noindex, nofollow" e Override "true" -> —. Editados e não commitados: scripts/infra/cabecalhos.test.mjs, scripts/infra/lib/cabecalhos.mjs, infra/lotus-site.yaml, e2e/cabecalhos.spec.ts, e2e/smoke/alvo.ts. T0 2026-10-05T10:38:30Z; corte não antes de 2026-10-05T11:38:30Z. Executar é de João, ou de Claude com autorização explícita neste passo.'
+blocker: null
 supervised_cycles_completed: 19
 last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: 34ed545
-updated_at: 2026-10-05T10:50:00Z
+state_basis_commit: 0b2b16a
+updated_at: 2026-10-05T10:55:00Z
 ---
 
 # Estado operacional — Lotus Site

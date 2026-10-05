@@ -312,6 +312,74 @@ Os quatro `route53` respondem com TTL 60/60 e o WordPress. Dos públicos, a cóp
 
 ## 4. `X-Robots-Tag` fora da borda e smoke forçado (spec D5 e D9)
 
+### 4.1 Change set do `lotus-site`
+
+- Data: 2026-10-05.
+- Executou: Claude, com autorização explícita de João dada neste passo ("Autorizado, pode rodar",
+  em resposta ao portão do Step 6).
+- Change set: `arn:aws:cloudformation:sa-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791196886/a6336aea-7b86-423f-8525-cb5cf2621bbb`
+  (stack `lotus-site`, `sa-east-1`).
+
+```text
+|  Acao  |        Recurso         | Substituicao   |
+|  Modify|  PoliticaDeCabecalhos  |  False         |
+```
+
+```text
+PoliticaDeCabecalhos /Properties/ResponseHeadersPolicyConfig/Comment: "Cabecalhos de seguranca de 7.2.2 e X-Robots-Tag ate 7.2.5. Valores canonicos em scripts/infra/lib/cabecalhos.mjs." -> "Cabecalhos de seguranca de 7.2.2. Valores canonicos em scripts/infra/lib/cabecalhos.mjs."
+PoliticaDeCabecalhos /Properties/ResponseHeadersPolicyConfig/CustomHeadersConfig/Items/1/Header: "X-Robots-Tag" -> —
+PoliticaDeCabecalhos /Properties/ResponseHeadersPolicyConfig/CustomHeadersConfig/Items/1/Value: "noindex, nofollow" -> —
+PoliticaDeCabecalhos /Properties/ResponseHeadersPolicyConfig/CustomHeadersConfig/Items/1/Override: "true" -> —
+```
+
+- `execute-change-set`: 2026-10-05T10:48:53Z.
+- `UPDATE_COMPLETE` da stack (evento): 2026-10-05T10:49:06Z.
+- `Deployed` da distribuição: visto às 2026-10-05T10:49:34Z.
+- A partir daqui o domínio do CloudFront e os `/releases/<sha>/` ficam indexáveis (custo aceito em
+  D5).
+
+### 4.2 Smoke forçado, com o SHA nomeado
+
+SHA no ar: `ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb`, o último CI verde da `main`
+(`gh run list --repo Gatika-CL/lotus-site --workflow CI --branch main --status success --limit 1`,
+`updatedAt` 2026-09-28T01:10:23Z).
+
+```bash
+SMOKE_URL=https://lotusotec.cl SMOKE_VIA=dhpoztt69jydz.cloudfront.net \
+  SMOKE_SHA=ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb pnpm smoke
+```
+
+```text
+[smoke] SHA no ar: ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb (index.html d3836b522c218bca68d2f7c533189200596a54f109769fb733e0dc4f227fe3cd)
+  ✓   1 › 1 · artefato: index.html servido ≡ releases/ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb/index.html
+[smoke] lotusotec.cl: TLSv1.3, Amazon, válido até 2027-04-11T23:59:59.000Z
+  ✓   2 › 2 · TLS de lotusotec.cl: certificado da Amazon com os dois nomes, ≥ 30 dias, TLS ≥ 1.2
+[smoke] www.lotusotec.cl: TLSv1.3, Amazon, válido até 2027-04-11T23:59:59.000Z
+  ✓   3 › 2 · TLS de www.lotusotec.cl: certificado da Amazon com os dois nomes, ≥ 30 dias, TLS ≥ 1.2
+[smoke] http://lotusotec.cl/ → 301 https://lotusotec.cl/
+[smoke] https://www.lotusotec.cl/cursos/?a=1&a=2&b=x%26y → 301 https://lotusotec.cl/cursos/?b=x%26y&a=1&a=2
+[smoke] http://www.lotusotec.cl/x?y=1 → 301 https://www.lotusotec.cl/x?y=1
+[smoke] https://www.lotusotec.cl/x?y=1 → 301 https://lotusotec.cl/x?y=1
+  ✓   4 › 3 · redirects: http → https, www → apex com caminho e query; cadeia registrada
+  ✓   5 › 4 · home: 200, H1, âncoras do menu, console limpo, nenhuma resposta ≥ 400 do site
+[smoke] 16 assets immutable (HTML 7, CSS 5, JS 6); 3 de nome fixo no-cache
+  ✓   6 › 5 · assets: todo asset referenciado 200 e immutable; nome fixo no-cache; fontes carregam
+  ✓   7 › 6 · formulário: Turnstile carrega; /api/contacto recusa GET, corpo vazio, token ausente e token falso
+  ✓   8 › 7 · SEO técnico: title, description, canonical, og:*, JSON-LD, robots, sitemap, X-Robots-Tag
+  ✓   9 › 8 · cabeçalhos: a política de B3 em /, asset, /api/contacto e 404
+  ✓  10 › 9 · 404: caminho inexistente devolve 404
+
+  10 passed (12.0s)
+```
+
+O item 7 roda com `X_ROBOTS_TAG_PRESENTE = false` e confere o cabeçalho ausente. Conferência
+direta, pela borda: `curl -sI --connect-to lotusotec.cl:443:dhpoztt69jydz.cloudfront.net:443
+https://lotusotec.cl/` devolve zero linhas `x-robots-tag`.
+
+**Início do congelamento: 2026-10-05T10:50:07Z.** Até o smoke pós-corte da Task 8, nenhum deploy no
+corporativo (D9). Se o corte não acontecer até 2026-10-06T10:48:53Z (24 h depois do
+`execute-change-set`), o cabeçalho volta (D5, adendo 2).
+
 ## 5. Pré-checagens e o corte (spec §5, passos 5 e 6)
 
 ## 6. Depois do corte (spec §5, passo 7)

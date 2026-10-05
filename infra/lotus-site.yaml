@@ -124,8 +124,8 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  # Cabecalhos de seguranca em TODA resposta (7.2.2) mais o X-Robots-Tag, que
-  # sai em 7.2.5. Os valores canonicos moram em scripts/infra/lib/cabecalhos.mjs:
+  # Cabecalhos de seguranca em TODA resposta (7.2.2); o X-Robots-Tag saiu no
+  # corte (7.2.5, spec D5). Valores canonicos em scripts/infra/lib/cabecalhos.mjs:
   # o preview do Vite serve os mesmos, e a catraca scripts/infra/cabecalhos.test.mjs
   # reprova divergencia entre este template e o modulo -- CloudFormation nao le
   # arquivo externo, entao o YAML aqui e copia vigiada.
@@ -141,8 +141,6 @@ Resources:
   #   em 443 -- includeSubDomains os tornaria inalcancaveis depois do corte.
   # - Permissions-Policy vai em CustomHeadersConfig: nao ha campo nativo.
   # - Remover Server faz o CloudFront responder o proprio Server: CloudFront.
-  # - X-Robots-Tag cobre o que o robots.txt nao cobre (proibe indexar, nao so
-  #   rastrear) enquanto o endereco publicado for o dominio do CloudFront.
   #
   # A razao completa mora AQUI porque o campo Comment aceita no maximo 128
   # caracteres. Medido em 2026-09-04: com 286 o stack reprovou em CREATE_FAILED
@@ -152,7 +150,7 @@ Resources:
     Properties:
       ResponseHeadersPolicyConfig:
         Name: !Sub '${AWS::StackName}-cabecalhos'
-        Comment: Cabecalhos de seguranca de 7.2.2 e X-Robots-Tag ate 7.2.5. Valores canonicos em scripts/infra/lib/cabecalhos.mjs.
+        Comment: Cabecalhos de seguranca de 7.2.2. Valores canonicos em scripts/infra/lib/cabecalhos.mjs.
         SecurityHeadersConfig:
           ContentSecurityPolicy:
             ContentSecurityPolicy: "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
@@ -174,9 +172,6 @@ Resources:
           Items:
             - Header: Permissions-Policy
               Value: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-              Override: true
-            - Header: X-Robots-Tag
-              Value: noindex, nofollow
               Override: true
         RemoveHeadersConfig:
           Items:
