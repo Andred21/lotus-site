@@ -13,7 +13,7 @@ next_owner: claude
 next_action: continue_planning
 resume_state: null
 context_packet: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md
 active_plan: null
 executor: null
 reviewer: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 19
 last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: b41e0da
-updated_at: 2026-10-05T01:20:37Z
+state_basis_commit: b439f17
+updated_at: 2026-10-05T02:11:22Z
 ---
 
 # Estado operacional — Lotus Site
