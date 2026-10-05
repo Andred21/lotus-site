@@ -1,16 +1,16 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
+workflow_state: planning
 work_class: null
-active_work_item: null
-active_notion_eap: null
-active_title: null
-active_branch: null
+active_work_item: 7.2.5
+active_notion_eap: 7.2.5
+active_title: Realizar cutover do lotusotec.cl para o novo site (bloco `B5`)
+active_branch: feat/7-2-5-cutover-lotusotec
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: select_work_item
+next_owner: claude
+next_action: continue_planning
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 19
 last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: b28c24d
-updated_at: 2026-10-05T01:05:09Z
+state_basis_commit: b41e0da
+updated_at: 2026-10-05T01:20:37Z
 ---
 
 # Estado operacional — Lotus Site
