@@ -540,6 +540,137 @@ resolvedores respondiam a distribuição nos dois nomes.
 
 ## 6. Depois do corte (spec §5, passo 7)
 
+### 6.1 Smoke pós-corte, pela resolução pública
+
+Às 2026-10-05T14:14:48Z, 60 s depois de as duas medições de §5.4 convergirem, sem `SMOKE_VIA`:
+
+```bash
+SMOKE_URL=https://lotusotec.cl SMOKE_SHA=ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb pnpm smoke
+```
+
+```text
+[smoke] SHA no ar: ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb (index.html d3836b522c218bca68d2f7c533189200596a54f109769fb733e0dc4f227fe3cd)
+  ✓   1 › 1 · artefato: index.html servido ≡ releases/ca8f49bcd3ae1e94b7769de741b26b9daef8cdeb/index.html
+[smoke] lotusotec.cl: TLSv1.3, Amazon, válido até 2027-04-11T23:59:59.000Z
+  ✓   2 › 2 · TLS de lotusotec.cl: certificado da Amazon com os dois nomes, ≥ 30 dias, TLS ≥ 1.2
+[smoke] www.lotusotec.cl: TLSv1.3, Amazon, válido até 2027-04-11T23:59:59.000Z
+  ✓   3 › 2 · TLS de www.lotusotec.cl: certificado da Amazon com os dois nomes, ≥ 30 dias, TLS ≥ 1.2
+[smoke] http://lotusotec.cl/ → 301 https://lotusotec.cl/
+[smoke] https://www.lotusotec.cl/cursos/?a=1&a=2&b=x%26y → 301 https://lotusotec.cl/cursos/?b=x%26y&a=1&a=2
+[smoke] http://www.lotusotec.cl/x?y=1 → 301 https://www.lotusotec.cl/x?y=1
+[smoke] https://www.lotusotec.cl/x?y=1 → 301 https://lotusotec.cl/x?y=1
+  ✓   4 › 3 · redirects: http → https, www → apex com caminho e query; cadeia registrada
+  ✓   5 › 4 · home: 200, H1, âncoras do menu, console limpo, nenhuma resposta ≥ 400 do site
+[smoke] 16 assets immutable (HTML 7, CSS 5, JS 6); 3 de nome fixo no-cache
+[smoke] importados pelo JS: /assets/LOTUS_TRANSP_Fondo-Negro-REC2-boV8wriy.png, /assets/shutterstock_1444636373-1-scaled-Bm9ZLwYf.jpg, /assets/home-office-12-C_nJ1MKt.jpg, /assets/LLVV_00-v1-BN2-BOwYFW68.jpeg, /assets/LLVV_Mantas02-BN2-DB-pMcHr.jpeg, /assets/LOTUS-G2_TRANSP_Fondo-Blanco-B3GzsLLb.png
+  ✓   6 › 5 · assets: todo asset referenciado 200 e immutable; nome fixo no-cache; fontes carregam
+  ✓   7 › 6 · formulário: Turnstile carrega; /api/contacto recusa GET, corpo vazio, token ausente e token falso
+  ✓   8 › 7 · SEO técnico: title, description, canonical, og:*, JSON-LD, robots, sitemap, X-Robots-Tag
+  ✓   9 › 8 · cabeçalhos: a política de B3 em /, asset, /api/contacto e 404
+  ✓  10 › 9 · 404: caminho inexistente devolve 404
+  10 passed
+```
+
+O mesmo SHA de §4.2; o item 7 com o `X-Robots-Tag` ausente. Nenhum vermelho nos itens 2 a 6: o
+gatilho de rollback de `rollback-corte.md` §2 não disparou.
+
+### 6.2 O resto da zona intacto
+
+`pnpm infra:conferir-zona --pos-delegacao --saida docs/infra/conferencia-zona-2026-10-05.md`: saída
+0, 19 linhas `sim`, nenhuma `NÃO`. Apex e `www`, `A` e `AAAA`, com `sim — alias: o IP da borda varia
+por resolvedor; a linha confere que ele responde e não é o WordPress`; MX, SPF, DKIM, DMARC, SES,
+`app` e os CNAME `sim`; os nomes inventados sem resposta dos dois lados. O relatório completo está
+em `docs/infra/conferencia-zona-2026-10-05.md`.
+
+### 6.3 Latência pública, com as sondas da linha de base
+
+```bash
+node scripts/infra/medir-latencia.mjs --alvo lotusotec.cl --sondas 2gCnAzOrC1AsubQxh00021G5S
+```
+
+Medição `2HgotqDwMinYcrZbK00021GG0` de `lotusotec.cl`, criada em 2026-10-05T14:16:04.090Z; sondas: as mesmas da medição `2gCnAzOrC1AsubQxh00021G5S`.
+
+| #   | sonda        | rede                                | status   | IP resolvido   | HTTP | x-amz-cf-pop | x-cache                    | dns | tcp | tls | firstByte | total |
+| --- | ------------ | ----------------------------------- | -------- | -------------- | ---- | ------------ | -------------------------- | --- | --- | --- | --------- | ----- |
+| 1   | Santiago     | AS20473 The Constant Company        | finished | 13.227.123.105 | 200  | SCL51-P6     | Hit from cloudfront        | 97  | 1   | 10  | 274       | 383   |
+| 2   | Vina del Mar | AS31898 Oracle                      | finished | 13.227.123.105 | 200  | SCL51-P6     | Hit from cloudfront        | 56  | 4   | 13  | 309       | 383   |
+| 3   | Santiago     | AS61138 Zappie Host                 | finished | 13.227.123.119 | 200  | SCL51-P6     | Hit from cloudfront        | 59  | 5   | 17  | 294       | 377   |
+| 4   | Santiago     | AS136907 HUAWEI CLOUDS              | finished | 65.8.207.78    | 200  | EZE50-P6     | Hit from cloudfront        | 58  | 23  | 35  | 213       | 331   |
+| 5   | Santiago     | AS31898 Oracle                      | finished | 65.8.207.29    | 200  | EZE50-P6     | Miss from cloudfront       | 53  | 24  | 35  | 221       | 336   |
+| 6   | Santiago     | AS270013 J AND J SPA (INFOFRACTAL)  | finished | 3.167.246.28   | 200  | DFW59-P1     | Miss from cloudfront       | 123 | 127 | 140 | 633       | 1025  |
+| 7   | Curico       | AS52368 ZAM                         | finished | 3.167.246.61   | 200  | DFW59-P1     | Hit from cloudfront        | 134 | 159 | 177 | 591       | 1066  |
+| 8   | Vina del Mar | AS28099 iHosting Servicios Internet | finished | 54.230.124.29  | 200  | LIM50-P4     | RefreshHit from cloudfront | 64  | 40  | 52  | 900       | 1062  |
+| 9   | Santiago     | AS396982 Google                     | finished | 65.8.207.49    | 200  | EZE50-P6     | Hit from cloudfront        | 61  | 21  | 33  | 213       | 330   |
+| 10  | Santiago     | AS266713 WMAX                       | finished | 13.227.123.105 | 200  | SCL51-P6     | Miss from cloudfront       | 62  | 1   | 12  | 307       | 384   |
+
+10 de 10 sondas terminaram. `firstByte`: mediana 301 ms (213–900); `total`: mediana 383 ms (330–1066).
+
+HTTP 200 e `x-amz-cf-pop` em toda sonda (spec §7, item 2). Contra a linha de base de §1.1, mesmas
+sondas: `total` 74 ms de mediana no WordPress, 383 ms em `lotusotec.cl` pela borda; `firstByte` 5
+contra 301 ms. **A condição de `D-65` vale** (mediana de `total` acima da do WordPress); ele nasce
+na Task 9. As sondas 6 e 7 resolveram IPs de `DFW59` e a 8 caiu em `LIM50`, acima de 1 s; as outras
+sete, em `SCL51` e `EZE50`, entre 330 e 384 ms.
+
+### 6.4 O certificado em uso e renovável
+
+```json
+{
+  "Estado": "ISSUED",
+  "Renovacao": "ELIGIBLE",
+  "EmUso": ["arn:aws:cloudfront::760144413534:distribution/E1R7SPH4OLUIEQ"],
+  "Ate": "2027-04-11T20:59:59-03:00"
+}
+```
+
+`ISSUED`, `ELIGIBLE`, em uso pela distribuição `E1R7SPH4OLUIEQ`, até 2027-04-11T23:59:59Z (`D-47`,
+spec §7, item 8).
+
+### 6.5 Envio real pelo formulário
+
+João, num navegador comum, sem `hosts` nem resolução forçada:
+
+- cadeado de `https://lotusotec.cl/`: certificado com CN `lotusotec.cl`, emitido por `Amazon RSA
+2048 M01` (Amazon), válido de 2026-09-25 a 2027-04-11, SHA-256
+  `840f347bca405b65ad71cb43562a8b852c8545363017da3ac04090283c2c3d95`;
+- formulário enviado; a chegada em `contacto@lotusotec.cl` foi confirmada pelo cliente, segundo João.
+
+Recebida em `contacto@lotusotec.cl` às 11:24 (UTC−3; 2026-10-05T14:24Z), remetente "Sitio Lotus
+OTEC", assunto "Nuevo mensaje desde el sitio de Lotus OTEC", mensagem `corte 7.2.5 2026-10-05`,
+rodapé "Enviado desde el formulario de contacto de lotusotec.cl" — captura de tela da caixa de
+entrada, mostrada por João (spec §7, item 4). A linha `"desfecho":"enviado"` do log da função não
+foi lida: o `aws logs tail` foi recusado pela política de permissão do agente, por trazer dados
+pessoais do formulário. A chegada da mensagem prova o caminho inteiro (Turnstile, função, SES,
+Workspace), que a linha do log provaria só até o SES.
+
+### 6.6 Validadores (D10)
+
+- **Rich Results Test** (`https://search.google.com/test/rich-results/result?id=ZUgVVcJTSpe3cJ0b93e3bg`,
+  2026-10-05 11:30:23 no horário da página): 1 item válido, `Organization`; página elegível; rastreio
+  pelo Google Inspection Tool smartphone com 200 e indexação permitida. Nenhum erro de dados
+  estruturados. Um recurso de 13 não carregou: `https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit`,
+  marcado como erro de redirecionamento — o script do Turnstile, de terceiro, não o JSON-LD.
+- **Schema Markup Validator**: `Organization`, 0 erros, 0 avisos; `name` `LOTUS OTEC`, `url`
+  `https://lotusotec.cl/`, `logo` `https://lotusotec.cl/LOTUS-G2_TRANSP_Fondo-Blanco.png`, `email`
+  `contacto@lotusotec.cl`.
+- **Sharing Debugger do Facebook**: `og:url` `https://lotusotec.cl/`, `og:type` `website`,
+  `og:title` `LOTUS | OTEC`, `og:description` "Somos especialistas en entrenamiento en servicios de
+  Alta y Media Tensión para líneas de transmisión y subestaciones.", `og:image`
+  `https://lotusotec.cl/LOTUS-G2_TRANSP_Fondo-Blanco.png`; os `twitter:*` lidos com os mesmos
+  valores; `og:image:alt` vazio. Nenhum erro.
+- **Post Inspector do LinkedIn**: URL buscada e canônica `https://lotusotec.cl/`, cadeia de
+  redirecionamento de um passo (`206 Success`); `Title` `LOTUS | OTEC`, `Type` `Article`, `Image`
+  servida da cópia do LinkedIn (`media.licdn.com`), `Description` igual à do `og:description`;
+  "No author found" e "No publication date found", campos de artigo que a página institucional não
+  declara. Nenhum erro.
+
+Nenhum validador acusou erro: `D-22` fecha na Task 9.
+
+### 6.7 Fim do congelamento
+
+**2026-10-05T14:48:57Z.** O corporativo volta a poder fazer deploy: o smoke pós-corte de §6.1 passou
+(D9). O último run do CI corporativo segue o `8774aa7` reprovado de §5.1; o próximo deploy verde
+substitui `ca8f49b` no ar.
+
 ## 7. Estabilização (spec D11)
 
 ## Limites declarados (spec §7)
