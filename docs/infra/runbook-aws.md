@@ -731,4 +731,4 @@ Cópias e hashes em
 [`evidencia-backup-rollback-2026-09-29.md`](evidencia-backup-rollback-2026-09-29.md) §1;
 restauração exercitada localmente com
 `scripts/wordpress/ensaio-restauracao.sh <arquivos.zip|.tar.gz> <dump.sql|.sql.gz>` (Docker; nada
-entra no repositório — `.gitignore` recusa `*.sql`, `*.sql.gz`, `*wpvivid*`, `backup*.zip`).
+entra no repositório — `.gitignore` recusa `*.sql`, `*.sql.gz`, `*wpvivid*`, `backup*.zip`, `stackcp-*`).

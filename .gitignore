@@ -39,3 +39,4 @@ coverage/
 *.sql.gz
 *wpvivid*
 backup*.zip
+stackcp-*
