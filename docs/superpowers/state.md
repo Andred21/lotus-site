@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: executing
+workflow_state: blocked
 work_class: architectural
 active_work_item: 7.2.5
 active_notion_eap: 7.2.5
@@ -9,20 +9,20 @@ active_title: Realizar cutover do lotusotec.cl para o novo site (bloco `B5`)
 active_branch: feat/7-2-5-cutover-lotusotec
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: continue_active_plan
-resume_state: null
+next_owner: joao
+next_action: executar_change_set_do_corte
+resume_state: executing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md
 active_plan: docs/superpowers/plans/2026-10-04-7.2.5-cutover-lotusotec.md
 executor: claude
 reviewer: claude
 reviewer_exception: 'Autorizado por João em 2026-10-05: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-65.'
-blocker: null
+blocker: 'Portão do corte (Task 7, Step 9). Change set criado e lido, não executado: arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791200409/455a3aef-4264-455f-a643-032bce13a831 (stack lotus-dns, us-east-1). Tabela: uma linha, Modify Registros Substituicao False. Diff por Name e Type, exatamente quatro entradas: lotusotec.cl. A, lotusotec.cl. AAAA, www.lotusotec.cl. A e www.lotusotec.cl. AAAA, cada uma de TTL 60 com ResourceRecords do WordPress para AliasTarget DNSName dhpoztt69jydz.cloudfront.net, HostedZoneId Z2FDTNDATAQYW2, EvaluateTargetHealth false; os outros 15 registros iguais. Editados e não commitados: infra/lotus-dns.yaml, scripts/infra/lib/zona.mjs, scripts/infra/zona.test.mjs. Pré-checagens às 2026-10-05T11:38:57Z (depois do corte não antes de 11:38:30Z): certificado do WordPress notAfter 2026-11-10, HTTP/2 200; aquecimento com TTL 60/60 nos sete resolvedores, apex e www; conferir-zona --pos-delegacao contra o commit anterior saída 0, 19 sim. Divergência para João decidir: o último run do CI corporativo na main é 8774aa7 (espelho de b41e0da, PR #25), criado 2026-10-05T01:34:10Z, antes do congelamento, com check failure e deploy skipped; o ar segue ca8f49b, o último verde, provado pelo smoke forçado de 10:50:07Z. O plano pede que o último run seja o SHA no ar; o risco que a checagem guarda, deploy durante o congelamento, não aconteceu. Sequência do Step 9 em $RASCUNHO/corte.sh: aquecer, medições para cloudfront com limite 1800 em fundo, execute-change-set, wait stack-update-complete, describe-stacks, wait das medições. Executar é de João, ou de Claude com autorização explícita neste passo.'
 supervised_cycles_completed: 19
 last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: 0b2b16a
-updated_at: 2026-10-05T10:55:00Z
+state_basis_commit: 89d625f
+updated_at: 2026-10-05T11:45:00Z
 ---
 
 # Estado operacional — Lotus Site
