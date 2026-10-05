@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: executing
+workflow_state: ready_for_review
 work_class: architectural
 active_work_item: 7.2.5
 active_notion_eap: 7.2.5
@@ -10,7 +10,7 @@ active_branch: feat/7-2-5-cutover-lotusotec
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: continue_active_plan
+next_action: review_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md
@@ -21,8 +21,8 @@ reviewer_exception: 'Autorizado por João em 2026-10-05: cota da conta Codex esg
 blocker: null
 supervised_cycles_completed: 19
 last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: 8ab196e
-updated_at: 2026-10-05T22:55:00Z
+state_basis_commit: 39a6dce
+updated_at: 2026-10-05T23:20:00Z
 ---
 
 # Estado operacional — Lotus Site
