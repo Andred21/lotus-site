@@ -24,12 +24,11 @@
  * devolveu o IP do apex e foi lido como wildcard falando; `pop3` nunca foi
  * perguntado.
  *
- * `www` e `sistema` continuam aqui, e agora por prova em vez de precaução: o
- * painel mostra que nenhum dos dois é registro do outro lado. Eles só
- * resolvem hoje por causa do wildcard, que não atravessa — sem estas linhas,
- * a troca de delegação apagaria os dois. O `AAAA` dos dois existe pelo mesmo
- * motivo: o wildcard do painel tem `A` **e** `AAAA`, então cliente
- * dual-stack perderia IPv6 na troca.
+ * `www` está aqui por prova, não por precaução: o painel mostrava que ele
+ * não era registro do outro lado e só resolvia por causa do wildcard, que
+ * não atravessou a delegação. O `AAAA` dele existe pelo mesmo motivo: o
+ * wildcard do painel tinha `A` **e** `AAAA`. `sistema` nasceu do mesmo jeito
+ * e saiu em `B5` (spec de `7.2.5`, D2): o nome da intranet é `app`.
  *
  * Os seis registros do SES foram acrescentados em `B2`, com os tokens lidos
  * dos outputs do stack `lotus-contato`.
@@ -58,12 +57,6 @@ export const INVENTARIO = Object.freeze([
   },
   { nome: 'www.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
   { nome: 'www.lotusotec.cl.', tipo: 'AAAA', valores: ['2a07:7800::195'] },
-  { nome: 'sistema.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
-  {
-    nome: 'sistema.lotusotec.cl.',
-    tipo: 'AAAA',
-    valores: ['2a07:7800::195'],
-  },
   {
     nome: 'mail.lotusotec.cl.',
     tipo: 'CNAME',

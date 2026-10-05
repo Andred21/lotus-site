@@ -264,6 +264,16 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     )
   })
 
+  it('sistema saiu da zona e do inventário (7.2.5, spec D2)', () => {
+    // O nome da intranet é app desde 2026-09-27; sistema só apontava para o
+    // WordPress. Ele sai antes do corte, para o rollback mexer só em apex e
+    // www, como no ensaio de B4.
+    /** @param {{ nome: string }} registro */
+    const sistema = (registro) => registro.nome === 'sistema.lotusotec.cl.'
+    expect(registros.filter(sistema)).toEqual([])
+    expect(INVENTARIO.filter(sistema)).toEqual([])
+  })
+
   it('app tem A para o EIP da intranet e NÃO tem AAAA — o EIP não tem IPv6', () => {
     const app = registros.filter(
       (registro) => registro.nome === 'app.lotusotec.cl.',

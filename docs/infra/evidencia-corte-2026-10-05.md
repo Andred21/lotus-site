@@ -125,6 +125,77 @@ Miami nas duas leituras.
 
 ## 2. `sistema` sai da zona (spec D2)
 
+Antes de editar, `pnpm infra:conferir-zona --pos-delegacao` contra a zona viva: saída 0, 21 linhas
+`sim`, nenhuma `NÃO`.
+
+### 2.1 Aquecimento
+
+```bash
+AWS_PROFILE=lotus node scripts/infra/medir-propagacao.mjs --nome sistema.lotusotec.cl --esperado wordpress --aquecer
+```
+
+Nome `sistema.lotusotec.cl`, esperado `wordpress`, aquecimento iniciada em 2026-10-05T03:35:36.569Z
+
+| resolvedor                      | início: A / AAAA (TTL)                           | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ------------------------------------------------ | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-31.awsdns-03.com     | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-1889.awsdns-44.co.uk | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| route53 ns-1507.awsdns-60.org   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| google 8.8.8.8                  | 185.146.167.195 / 2a07:7800::195 (TTL 2567/3600) | —            | —                      | —                 |
+| cloudflare 1.1.1.1              | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+| quad9 9.9.9.9                   | 185.146.167.195 / 2a07:7800::195 (TTL 3600/3600) | —            | —                      | —                 |
+
+### 2.2 Change set do `lotus-dns`
+
+- Data: 2026-10-05.
+- Executou: João.
+- Change set: `arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791171347/15ebed03-31ac-4356-a99e-6ba80b7b28d4`
+  (stack `lotus-dns`, `us-east-1`).
+
+```text
+|  Acao  |   Recurso   | Substituicao   |
+|  Modify|  Registros  |  False         |
+```
+
+```text
+sistema.lotusotec.cl. A
+  antes:  {"Type":"A","ResourceRecords":["185.146.167.195"],"TTL":"3600","Name":"sistema.lotusotec.cl."}
+  depois: —
+sistema.lotusotec.cl. AAAA
+  antes:  {"Type":"AAAA","ResourceRecords":["2a07:7800::195"],"TTL":"3600","Name":"sistema.lotusotec.cl."}
+  depois: —
+```
+
+- `execute-change-set`: 2026-10-05T03:37:34Z (início do `UPDATE_IN_PROGRESS` da stack).
+- `UPDATE_COMPLETE` da stack (evento): 2026-10-05T03:38:39Z.
+
+### 2.3 Propagação
+
+```bash
+AWS_PROFILE=lotus node scripts/infra/medir-propagacao.mjs --nome sistema.lotusotec.cl --esperado ausente --limite 3900
+```
+
+Nome `sistema.lotusotec.cl`, esperado `ausente`, medição iniciada em 2026-10-05T03:39:13.135Z
+
+| resolvedor                      | início: A / AAAA (TTL)          | convergiu em | depois: A / AAAA (TTL) | erros de consulta |
+| ------------------------------- | ------------------------------- | ------------ | ---------------------- | ----------------- |
+| route53 ns-904.awsdns-49.net    | — / — (TTL —/—)                 | 0 s          | — / — (TTL —/—)        | —                 |
+| route53 ns-31.awsdns-03.com     | — / — (TTL —/—)                 | 0 s          | — / — (TTL —/—)        | —                 |
+| route53 ns-1889.awsdns-44.co.uk | — / — (TTL —/—)                 | 0 s          | — / — (TTL —/—)        | —                 |
+| route53 ns-1507.awsdns-60.org   | — / — (TTL —/—)                 | 0 s          | — / — (TTL —/—)        | —                 |
+| google 8.8.8.8                  | — / 2a07:7800::195 (TTL —/3383) | 21 s         | — / — (TTL —/—)        | —                 |
+| cloudflare 1.1.1.1              | — / — (TTL —/—)                 | 0 s          | — / — (TTL —/—)        | —                 |
+| quad9 9.9.9.9                   | — / 2a07:7800::195 (TTL —/3383) | 3384 s       | — / — (TTL —/—)        | —                 |
+
+Saída 0, às 2026-10-05T04:35:37Z. Os quatro `route53` já respondiam sem o registro no início. Dos
+públicos, o Cloudflare já não devolvia nada, o Google largou o `AAAA` em 21 s e o Quad9 o guardou até
+o TTL vencer (3384 s). Quem guardou a resposta negativa a guarda por até 900 s, o TTL do SOA (spec
+§8).
+
+Depois, `pnpm infra:conferir-zona --pos-delegacao` contra a zona viva e o template novo: saída 0,
+19 linhas `sim`, nenhuma `NÃO`, nenhuma linha de `sistema`.
+
 ## 3. TTL 60 em apex e `www` (spec D3)
 
 ## 4. `X-Robots-Tag` fora da borda e smoke forçado (spec D5 e D9)

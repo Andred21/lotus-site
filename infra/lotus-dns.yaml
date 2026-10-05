@@ -21,8 +21,8 @@ Parameters:
     Type: String
     Default: 185.146.167.195
     Description: >-
-      WordPress na BlueHosting. Apex, www e sistema apontam para ele ate o
-      cutover (B5). Medido em 2026-09-09.
+      WordPress na BlueHosting. Apex e www apontam para ele ate o corte
+      (B5). Medido em 2026-09-09.
 
   Ipv6DoWordPress:
     Type: String
@@ -94,10 +94,10 @@ Resources:
       # NS e SOA do apex nao entram: a zona ja nasce com os dois, e declara-los
       # brigaria com o delegation set que a AWS escolheu.
       #
-      # O wildcard da zona atual (`*.lotusotec.cl`, D-45) tambem nao entra. Os
-      # dois nomes que hoje so existem por causa dele e nao podem quebrar --
-      # www e sistema -- nascem explicitos, com o mesmo IP que o wildcard
-      # devolve.
+      # O wildcard da zona antiga (`*.lotusotec.cl`, D-45) tambem nao entra.
+      # www, que so existia por causa dele, nasceu explicito com o mesmo IP
+      # que o wildcard devolvia. sistema nasceu do mesmo jeito e saiu em B5
+      # (spec de 7.2.5, D2): o nome da intranet e app.
       RecordSets:
         - Name: !Sub '${NomeDaZona}.'
           Type: A
@@ -140,20 +140,6 @@ Resources:
         # O wildcard do painel tem A e AAAA. Sem este registro, cliente
         # dual-stack perde IPv6 em www na troca de delegacao.
         - Name: !Sub 'www.${NomeDaZona}.'
-          Type: AAAA
-          TTL: !Ref TtlPadrao
-          ResourceRecords:
-            - !Ref Ipv6DoWordPress
-
-        # Registro de DNS e nada mais. Nao abre a 8.2.1, congelada por Joao em
-        # 2026-09-09.
-        - Name: !Sub 'sistema.${NomeDaZona}.'
-          Type: A
-          TTL: !Ref TtlPadrao
-          ResourceRecords:
-            - !Ref IpDoWordPress
-
-        - Name: !Sub 'sistema.${NomeDaZona}.'
           Type: AAAA
           TTL: !Ref TtlPadrao
           ResourceRecords:
@@ -247,8 +233,8 @@ Resources:
 
         # ── Intranet do Lotus (item 32 do repo lotus-infra) ─────────────────────
         # Nasce no Route 53, nunca existiu no painel. Sem AAAA: o EIP nao tem
-        # IPv6. `sistema` continua no WordPress ate B5/8.2.1 -- nao e a
-        # intranet, por decisao de Joao em 2026-09-27.
+        # IPv6. `sistema` nao era a intranet (decisao de Joao em 2026-09-27) e
+        # saiu da zona em B5.
         - Name: !Sub 'app.${NomeDaZona}.'
           Type: A
           TTL: !Ref TtlPadrao

@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.5
 active_notion_eap: 7.2.5
@@ -9,20 +9,20 @@ active_title: Realizar cutover do lotusotec.cl para o novo site (bloco `B5`)
 active_branch: feat/7-2-5-cutover-lotusotec
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: executar_change_set_sistema
-resume_state: executing
+next_owner: claude
+next_action: continue_active_plan
+resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md
 active_plan: docs/superpowers/plans/2026-10-04-7.2.5-cutover-lotusotec.md
 executor: claude
 reviewer: claude
 reviewer_exception: 'Autorizado por João em 2026-10-05: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-65.'
-blocker: 'Portão da remoção de sistema (Task 4, Step 6). Change set criado e lido, não executado: arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791171347/15ebed03-31ac-4356-a99e-6ba80b7b28d4 (stack lotus-dns, us-east-1). Tabela: uma linha, Modify Registros Substituicao False. Diff por Name e Type: sistema.lotusotec.cl. A (185.146.167.195) e sistema.lotusotec.cl. AAAA (2a07:7800::195), ambos com depois: —. Editados e não commitados: scripts/infra/zona.test.mjs, scripts/infra/lib/zona.mjs, infra/lotus-dns.yaml. Resolvedores aquecidos às 2026-10-05T03:35:36Z. Executar é de João, ou de Claude com autorização explícita neste passo.'
+blocker: null
 supervised_cycles_completed: 19
 last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: 76fe9e8
-updated_at: 2026-10-05T03:40:00Z
+state_basis_commit: de14951
+updated_at: 2026-10-05T04:40:00Z
 ---
 
 # Estado operacional — Lotus Site
