@@ -200,13 +200,28 @@ Em paralelo, e num lugar diferente: abrir o pedido de **production access do SES
 ### 6.1 Criar e popular a zona
 
 A zona é um stack, `infra/lotus-dns.yaml`, e não uma sequência de `change-resource-record-sets`.
-Editar registros à mão fica fora do template e vira drift, que o CloudFormation **não corrige
-sozinho** — não é desfeito pelo próximo deploy: pode conviver com ele, sem aviso. Antes de qualquer
-deploy na zona viva:
+Editar registros à mão fica fora do template, e o CloudFormation **não avisa**: o
+`detect-stack-drift` deste stack só compara a `Zona` (nome, comentário e tags). `Registros` e
+`Certificado` saem `NOT_CHECKED`, e o stack segue `IN_SYNC` com a zona divergindo do template
+(medido em `B4`:
+[`evidencia-backup-rollback-2026-09-29.md`](evidencia-backup-rollback-2026-09-29.md) §3.4 e
+§3.5). O próximo change set que mexer no `Registros` reescreve o grupo inteiro, num lote só
+— `DELETE` de tudo o que o stack guarda e `CREATE` do template (§3.6) —, e com um registro editado
+à mão o `DELETE` dele não bate com a zona. Pela documentação do Route 53, o lote inteiro é
+recusado; no ensaio, com um alias, ele aceitou, e o caso de um registro comum não foi ensaiado
+([`rollback-corte.md`](rollback-corte.md) §5). Antes de qualquer deploy na zona viva, ler a zona
+registro a registro e comparar com o template:
 
 ```bash
-AWS_PROFILE=lotus aws cloudformation detect-stack-drift --region us-east-1 --stack-name lotus-dns
+export AWS_PROFILE=lotus
+ZONA=$(aws cloudformation describe-stacks --region us-east-1 --stack-name lotus-dns \
+  --query "Stacks[0].Outputs[?OutputKey=='IdDaZona'].OutputValue" --output text)
+aws route53 list-resource-record-sets --hosted-zone-id "$ZONA" --output json \
+  --query 'ResourceRecordSets[].{Nome:Name,Tipo:Type,TTL:TTL,Valores:ResourceRecords[].Value,Alias:AliasTarget.DNSName}'
 ```
+
+Enquanto apex e `www` não forem alias, `pnpm infra:conferir-zona` (`zona-dns-lotusotec.md`) faz a
+mesma conferência nos quatro nameservers, contra o `INVENTARIO`.
 
 O template continua sendo a fonte.
 
@@ -308,9 +323,11 @@ E então **enviar uma mensagem de fora para uma caixa `@lotusotec.cl` e confirma
 `lotusotec.cl` e `www.lotusotec.cl`, válido até 2027-04-11 — 198 dias, o teto que o ACM aplica a
 certificado público desde 2026-02-18 (anúncio da AWS,
 <https://aws.amazon.com/about-aws/whats-new/2026/02/aws-certificate-manager-updates-default>). O
-ARN sai no output `ArnDoCertificado` e é consumido por `B5` como parâmetro,
-não por `ImportValue`. A renovação só fica automática quando o certificado estiver em uso:
-`RenewalEligibility` é `INELIGIBLE` até `B5` ligá-lo à distribuição.
+ARN sai no output `ArnDoCertificado` e é consumido pelo `lotus-site` como parâmetro
+(`ArnDoCertificadoDoDominio`, desde `B4`), não por `ImportValue`. A renovação só fica automática
+quando o certificado está em uso: `RenewalEligibility` foi `INELIGIBLE` até `B4` ligá-lo à
+distribuição, em 2026-10-04, e desde então é `ELIGIBLE`
+([`evidencia-smoke-2026-10-04.md`](evidencia-smoke-2026-10-04.md) §1).
 
 **Só depois de 6.4.** A validação DNS-01 precisa que o mundo leia a zona da AWS; com a delegação
 ainda na StackDNS, o CNAME de validação existe e ninguém o enxerga.
@@ -318,7 +335,7 @@ ainda na StackDNS, o CNAME de validação existe e ninguém o enxerga.
 Caminho padrão: um `AWS::CertificateManager::Certificate` no stack `lotus-dns`, com
 `DomainValidationOptions.HostedZoneId` apontando para a própria zona — o CloudFormation cria o
 CNAME de validação sozinho, e ele fica na zona, não é removido depois. A renovação só é automática e
-silenciosa quando o certificado estiver em uso (`RenewalEligibility: INELIGIBLE` até `B5`).
+silenciosa quando o certificado está em uso (`RenewalEligibility: ELIGIBLE` desde `B4`).
 
 ```yaml
 Certificado:
@@ -646,3 +663,72 @@ Rollback (`ADR-SITE-005`, spec §8), do mais leve ao mais pesado:
 
 Logs da função: `aws logs tail /aws/lambda/lotus-site-contato --region sa-east-1 --since 1h`. Cada
 linha é `{"requestId","desfecho"}` e nada mais: nome, e-mail, empresa e mensagem não são logados.
+
+## 9. Domínio na distribuição, ensaio de rollback e smoke (`B4`)
+
+Spec em `docs/superpowers/specs/2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md`.
+
+### 9.1 O change set do domínio
+
+Desde `B4`, `lotus-site.yaml` exige `ArnDoCertificadoDoDominio`, o output `ArnDoCertificado` do
+`lotus-dns` (us-east-1; o `AllowedPattern` recusa outra região). A distribuição responde por
+`lotusotec.cl` e `www` — certificado do ACM, redirect `www` → apex por CloudFront Function — antes
+de o DNS virar; enquanto apex e `www` apontarem para o WordPress, ninguém chega por esses nomes.
+
+```bash
+export AWS_PROFILE=lotus
+ARN_CERT=$(aws cloudformation describe-stacks --region us-east-1 --stack-name lotus-dns \
+  --query "Stacks[0].Outputs[?OutputKey=='ArnDoCertificado'].OutputValue" --output text)
+aws cloudformation deploy --region sa-east-1 --stack-name lotus-site \
+  --template-file infra/lotus-site.yaml --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides ArnDoCertificadoDoDominio="$ARN_CERT" --no-execute-changeset
+```
+
+Change set da primeira vez, aplicado em 2026-10-04: `RedirecionarWww` Add e `Distribuicao` Modify
+sem Replacement ([`evidencia-smoke-2026-10-04.md`](evidencia-smoke-2026-10-04.md) §1). A catraca
+`scripts/infra/distribuicao.test.mjs` roda em `pnpm check` e reprova aliases diferentes dos nomes
+do certificado, função fora do behavior padrão e `location` errado — o código da função é extraído
+do template e rodado em `node:vm`. Na borda, o redirect mantém o caminho e cada par da query como
+veio, mas a ordem entre chaves diferentes é a do objeto `querystring` que o CloudFront entrega à
+função, não a da URL (evidência, §3).
+
+### 9.2 Smoke de produção
+
+```bash
+export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use
+# antes do corte: domínio real forçado para a distribuição
+SMOKE_URL=https://lotusotec.cl SMOKE_VIA=dhpoztt69jydz.cloudfront.net pnpm smoke
+# a distribuição pelo próprio nome
+SMOKE_URL=https://dhpoztt69jydz.cloudfront.net pnpm smoke
+# depois do corte (B5): resolução normal
+SMOKE_URL=https://lotusotec.cl pnpm smoke
+```
+
+Nove itens (`e2e/smoke/`), fora de `pnpm check` e de `pnpm e2e`. `SMOKE_SHA` fixa o release do
+item 1; sem ele, o último `CI` verde do corporativo (`gh run list --repo Gatika-CL/lotus-site`).
+`X_ROBOTS_TAG_PRESENTE` em `e2e/smoke/alvo.ts` inverte no corte. O envio real do formulário é
+humano (spec D11).
+
+### 9.3 Rollback do corte e ensaio
+
+Procedimento em [`rollback-corte.md`](rollback-corte.md), com os tempos medidos em
+`ensaio-corte.lotusotec.cl`
+([`evidencia-backup-rollback-2026-09-29.md`](evidencia-backup-rollback-2026-09-29.md) §3 e §4).
+Change batch de emergência em `infra/rollback-corte.json`. Medir propagação de qualquer nome da
+zona:
+
+```bash
+AWS_PROFILE=lotus node scripts/infra/medir-propagacao.mjs --nome <nome> --esperado wordpress|cloudfront|ausente [--aquecer] [--limite <s>]
+```
+
+Sem `--nameservers`, o script lê os quatro do output `NameServers` do `lotus-dns` — daí o
+`AWS_PROFILE`. O `convergiu em` é a primeira resposta nova de cada resolvedor, não o fim da
+propagação: respostas antigas seguem saindo até o TTL do registro antigo acabar.
+
+### 9.4 Backup do WordPress
+
+Cópias e hashes em
+[`evidencia-backup-rollback-2026-09-29.md`](evidencia-backup-rollback-2026-09-29.md) §1;
+restauração exercitada localmente com
+`scripts/wordpress/ensaio-restauracao.sh <arquivos.zip|.tar.gz> <dump.sql|.sql.gz>` (Docker; nada
+entra no repositório — `.gitignore` recusa `*.sql`, `*.sql.gz`, `*wpvivid*`, `backup*.zip`, `stackcp-*`).

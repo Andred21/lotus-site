@@ -159,14 +159,21 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Depende de:** `B2`, `B3`.
 - **Evidência exigida:** restauração exercitada, não descrita; checklist de produção rodado contra
   o release que será promovido.
+- **Entregue (spec `2026-09-28-7.2.3-7.2.4-backup-rollback-smoke-design.md`):** aliases, certificado
+  do ACM e redirect `www` → apex saíram de `B5` e entraram aqui (D5). Evidências:
+  `docs/infra/evidencia-backup-rollback-2026-09-29.md` e `docs/infra/evidencia-smoke-2026-10-04.md`;
+  procedimento em `docs/infra/rollback-corte.md`.
 
 ## B5 · `7.2.5` — cutover de `lotusotec.cl`
 
-- **Escopo:** apex e `www` apontando para a distribuição; remoção do `X-Robots-Tag` — desde `B3`
-  ele é um item de `CustomHeadersConfig` em `infra/lotus-site.yaml` **e** uma entrada em
+- **Escopo:** apex e `www` viram alias da distribuição em `infra/lotus-dns.yaml` (mecanismo
+  ensaiado em `B4`, procedimento em `docs/infra/rollback-corte.md`); remoção do `X-Robots-Tag` —
+  desde `B3` ele é um item de `CustomHeadersConfig` em `infra/lotus-site.yaml` **e** uma entrada em
   `scripts/infra/lib/cabecalhos.mjs`, e a catraca `scripts/infra/cabecalhos.test.mjs` obriga os
-  dois a saírem juntos; decisão de `D-39` (`PriceClass_100` não tem borda na América do Sul, e o
-  visitante é chileno).
+  dois a saírem juntos; `X_ROBOTS_TAG_PRESENTE` em `e2e/smoke/alvo.ts` vira `false`; decisão de
+  `D-39` (`PriceClass_100` não tem borda na América do Sul, e o visitante é chileno). Aliases,
+  certificado e redirect `www` **já estão na distribuição** desde `B4`.
+- **Prazo:** corta até **2026-10-27**, a menos que `D-51` esteja resolvido antes (spec de `B4`, D8).
 - **Depende de:** `B4`.
 - **Fecha:** `D-22` — Rich Results Test e depuradores sociais passam a ter URL pública.
 - **Evidência exigida:** `lotusotec.cl` entregando o clone por HTTPS; nenhum recurso essencial
@@ -433,7 +440,9 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   **Gatilho:** alguém precisar rodar inventário ou QA a partir do corporativo.
 - **D-37 · o rollback é procedimento, não botão** — `ADR-SITE-004` traz o comando exato e ele foi
   exercitado uma vez na execução do bloco. Não há automação, não há teste que o exercite e não há
-  alarme que o dispare.
+  alarme que o dispare. Em `B4` o rollback de DNS foi ensaiado em nome descartável e virou
+  procedimento escrito (`docs/infra/rollback-corte.md`, `infra/rollback-corte.json`); continua sem
+  botão.
   **Gatilho:** segundo incidente de publicação errada, ou `7.2.6` (observabilidade).
 - **D-38 · a trust policy da role de deploy fixa `refs/heads/main`** — `sub` com `StringEquals` em
   `repo:Gatika-CL/lotus-site:ref:refs/heads/main`. Publicar a partir de tag ou de outra branch exige
@@ -570,6 +579,8 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
     | openssl x509 -noout -issuer -dates
   ```
 
+  **Prazo operacional (`B4`, spec D8):** o corte de `B5` acontece até 2026-10-27 — catorze dias de
+  rollback possível antes do vencimento — ou espera a decisão.
   **Gatilho:** agora. Decisão antes de 2026-10-11; prazo duro 2026-11-10.
 
 - **D-53 · o bloco `7.2.1` (delegação e certificado) não teve segunda lente** — Claude executou
@@ -719,6 +730,14 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   página, não ao enviar o formulário (texto do débito corrigido nesta data).
   **Renumerado em 2026-09-28**, no fechamento de `7.2.2`: nasceu como `D-62` nos commits `fa5c7a7`
   e `bf394b3`, mas `main` publicou antes outro `D-62` (CI pessoal e árvore espelhada).
+- **D-64 · releases antigos são públicos pela distribuição** — medido em 2026-09-28:
+  `/releases/<sha>/index.html` responde 200 pelo domínio do CloudFront; o smoke de `B4` usa isso
+  para identificar o artefato (spec D10), e em 2026-10-04 respondeu também por `lotusotec.cl`
+  forçado para a distribuição. Depois do corte, qualquer versão antiga fica em
+  `lotusotec.cl/releases/<sha>/`. Não é segredo, e o canonical aponta para o apex; é superfície
+  que ninguém decidiu expor. Saídas: behavior `/releases/*` respondendo 403, ou o smoke passar a
+  identificar o release por outro caminho (ETag do S3, credencial de leitura).
+  **Gatilho:** `B6`.
 
 ## Fechados
 

@@ -208,6 +208,15 @@ empresa. `7.2.1` começa pedindo o export BIND ao suporte.
 > zona tem um wildcard que faz qualquer subdomínio inventado responder (`D-45`), o que torna o
 > export BIND condição, não zelo.
 
+> **Atualização de 2026-10-04 (`B4`, `7.2.3+7.2.4`).** Aliases `lotusotec.cl`/`www.lotusotec.cl`,
+> certificado do ACM (parâmetro `ArnDoCertificadoDoDominio`) e o redirect `www` → apex (CloudFront
+> Function `RedirecionarWww`) entraram na distribuição **antes** do corte, para o smoke rodar no
+> domínio real; `7.2.5` vira só a troca de DNS e a remoção do `X-Robots-Tag`. O rollback de DNS
+> foi ensaiado num nome descartável e está em `docs/infra/rollback-corte.md`, com janela: o
+> certificado do WordPress vence em 2026-11-10 (`D-51`), então o corte acontece até 2026-10-27, a
+> menos que `D-51` esteja resolvido antes (spec de `B4`, D8). O rollback de release desta ADR não
+> muda.
+
 ## Motivo da decisão
 
 Quatro opções foram consideradas.

@@ -28,6 +28,7 @@
     "vite.lambda.config.ts",
     "vitest.config.ts",
     "playwright.config.ts",
+    "playwright.smoke.config.ts",
     "scripts/**/*.mjs"
   ]
 }

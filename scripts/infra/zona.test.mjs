@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   INVENTARIO,
+  NOME_DO_ENSAIO,
+  WORDPRESS,
+  convergiu,
   delegacaoEsperada,
   lerParametros,
   lerPoliticasDaZona,
@@ -85,6 +88,67 @@ describe('leitura textual do template', () => {
     expect(lidos[0]?.nome).toBe('ftp.exemplo.cl.')
     expect(lidos[0]?.valores).toEqual(['ftp.exemplo.'])
   })
+
+  it('lê AliasTarget como alias, com o DNSName resolvido e sem TTL', () => {
+    // Forma do estágio 2 do ensaio (spec §4.4) e do corte em B5.
+    const fixture = [
+      '',
+      'Parameters:',
+      '  NomeDaZona:',
+      '    Default: exemplo.cl',
+      '  DominioDaDistribuicao:',
+      '    Default: d123.cloudfront.net',
+      'Resources:',
+      '  Registros:',
+      '    Properties:',
+      '      RecordSets:',
+      "        - Name: !Sub 'ensaio-corte.${NomeDaZona}.'",
+      '          Type: A',
+      '          AliasTarget:',
+      '            DNSName: !Ref DominioDaDistribuicao',
+      '            # hosted zone fixa do CloudFront',
+      '            HostedZoneId: Z2FDTNDATAQYW2',
+      '            EvaluateTargetHealth: false',
+      "        - Name: !Sub 'app.${NomeDaZona}.'",
+      '          Type: A',
+      '          TTL: 3600',
+      '          ResourceRecords:',
+      '            - 18.230.53.197',
+      'Outputs:',
+    ].join('\n')
+    const [alias, comum] = lerRegistros(fixture)
+    expect(alias).toEqual({
+      nome: 'ensaio-corte.exemplo.cl.',
+      tipo: 'A',
+      ttl: 0,
+      valores: ['d123.cloudfront.net'],
+      alias: true,
+    })
+    expect(comum?.alias).toBe(false)
+    expect(comum?.ttl).toBe(3600)
+  })
+
+  it('campo desconhecido num RecordSet quebra com o nome do campo', () => {
+    // Sem isto, `SetIdentifier`, `Weight` ou um erro de digitação viraria
+    // registro lido pela metade e catraca verde por vacuidade.
+    const fixture = [
+      '',
+      'Parameters:',
+      '  NomeDaZona:',
+      '    Default: exemplo.cl',
+      'Resources:',
+      '  Registros:',
+      '    Properties:',
+      '      RecordSets:',
+      "        - Name: !Sub 'x.${NomeDaZona}.'",
+      '          Type: A',
+      '          Weight: 10',
+      'Outputs:',
+    ].join('\n')
+    expect(() => lerRegistros(fixture)).toThrow(
+      'RecordSet x.exemplo.cl. com campo desconhecido: Weight',
+    )
+  })
 })
 
 describe('infra/lotus-dns.yaml contra o inventário medido', () => {
@@ -101,6 +165,7 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
         `${esperado.tipo} ${esperado.nome} não está no template`,
       ).toBeDefined()
       expect(mesmoConjunto(achado?.valores ?? [], esperado.valores)).toBe(true)
+      expect(Boolean(achado?.alias)).toBe(Boolean(esperado.alias))
     })
   }
 
@@ -133,11 +198,13 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     ).toEqual([])
   })
 
-  it('não aponta nada para o CloudFront', () => {
-    // Alias do apex e de www são B5. Chegar aqui cedo aponta o domínio antes
-    // de existir certificado.
-    expect(TEMPLATE).not.toMatch(/cloudfront\.net/)
-    expect(TEMPLATE).not.toMatch(/AliasTarget/)
+  it('só ensaio-corte pode ser alias para o CloudFront; apex e www, nunca', () => {
+    // Apontar apex e www é B5. O ensaio de B4 (spec §4.4) usa um nome
+    // descartável, que nasce e morre dentro do bloco.
+    const aliases = registros
+      .filter((registro) => registro.alias)
+      .map((registro) => registro.nome)
+    expect(aliases.filter((nome) => nome !== NOME_DO_ENSAIO)).toEqual([])
   })
 
   it('declara o certificado da zona, com SAN explícito e sem wildcard', () => {
@@ -201,13 +268,16 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     expect(app[0]?.valores).toEqual(['18.230.53.197'])
   })
 
-  it('usa o TTL medido da zona atual em todos os registros', () => {
-    // Comparado contra o tamanho do INVENTARIO, e nao contra o proprio
-    // `registros`: com os dois lados derivados da mesma lista, uma leitura
-    // vazia passaria.
-    expect(registros.map((registro) => registro.ttl)).toEqual(
-      INVENTARIO.map(() => 3600),
-    )
+  it('usa o TTL medido da zona atual em todo registro que não é alias', () => {
+    // Comparado contra o INVENTARIO, e nao contra o proprio `registros`: com
+    // os dois lados derivados da mesma lista, uma leitura vazia passaria.
+    // Alias não tem TTL: a AWS fixa em 60 s (spec D12).
+    const comuns = INVENTARIO.filter((registro) => !registro.alias)
+    expect(
+      registros
+        .filter((registro) => !registro.alias)
+        .map((registro) => registro.ttl),
+    ).toEqual(comuns.map(() => 3600))
   })
 
   it('publica o DMARC em p=none, com relatorio em contacto@', () => {
@@ -290,5 +360,67 @@ describe('vereditos que a delegação inverte', () => {
     expect(
       delegacaoEsperada(['ns-31.awsdns-03.com', 'ns-904.awsdns-49.net.'], true),
     ).toEqual(['ns-31.awsdns-03.com.', 'ns-904.awsdns-49.net.'])
+  })
+})
+
+describe('convergiu (medir-propagacao, spec §4.4)', () => {
+  const wp = { A: [WORDPRESS.A], AAAA: [WORDPRESS.AAAA] }
+  const cf = { A: ['3.166.165.48', '3.166.165.9'], AAAA: ['2600:9000:2::1'] }
+
+  it('wordpress exige exatamente o A e o AAAA do apex', () => {
+    expect(convergiu('wordpress', wp)).toBe(true)
+    expect(convergiu('wordpress', cf)).toBe(false)
+    expect(convergiu('wordpress', { A: wp.A, AAAA: [] })).toBe(false)
+  })
+
+  it('cloudfront exige resposta nos dois tipos e nenhuma delas do WordPress', () => {
+    expect(convergiu('cloudfront', cf)).toBe(true)
+    expect(convergiu('cloudfront', { A: cf.A, AAAA: [] })).toBe(false)
+  })
+
+  it('convergência parcial não é convergência', () => {
+    // Resolvedor que já trocou o A mas ainda serve o AAAA antigo, ou o
+    // contrário: o visitante dual-stack ainda pode cair no lado errado.
+    expect(convergiu('cloudfront', { A: cf.A, AAAA: wp.AAAA })).toBe(false)
+    expect(convergiu('wordpress', { A: cf.A, AAAA: wp.AAAA })).toBe(false)
+  })
+
+  it('ausente exige silêncio nos dois tipos', () => {
+    expect(convergiu('ausente', { A: [], AAAA: [] })).toBe(true)
+    expect(convergiu('ausente', { A: [], AAAA: wp.AAAA })).toBe(false)
+  })
+})
+
+describe('infra/rollback-corte.json (spec D1, caminho de emergência)', () => {
+  /**
+   * @type {{ Comment: string, Changes: { Action: string, ResourceRecordSet: {
+   *   Name: string, Type: string, TTL: number, ResourceRecords: { Value: string }[] } }[] }}
+   */
+  const lote = JSON.parse(readFileSync('infra/rollback-corte.json', 'utf8'))
+
+  it('devolve apex e www, A e AAAA, ao WordPress por UPSERT, com o TTL do template', () => {
+    const esperados = INVENTARIO.filter(
+      (registro) =>
+        ['lotusotec.cl.', 'www.lotusotec.cl.'].includes(registro.nome) &&
+        ['A', 'AAAA'].includes(registro.tipo),
+    )
+    expect(esperados).toHaveLength(4)
+    expect(lote.Changes).toHaveLength(4)
+    for (const mudanca of lote.Changes) {
+      expect(mudanca.Action).toBe('UPSERT')
+      const { Name, Type, TTL, ResourceRecords } = mudanca.ResourceRecordSet
+      const esperado = esperados.find(
+        (registro) => registro.nome === Name && registro.tipo === Type,
+      )
+      expect(esperado, `${Type} ${Name}`).toBeDefined()
+      expect(TTL).toBe(3600)
+      expect(ResourceRecords.map((r) => r.Value)).toEqual(esperado?.valores)
+    }
+  })
+
+  it('não toca em nenhum outro nome', () => {
+    expect(new Set(lote.Changes.map((c) => c.ResourceRecordSet.Name))).toEqual(
+      new Set(['lotusotec.cl.', 'www.lotusotec.cl.']),
+    )
   })
 })
