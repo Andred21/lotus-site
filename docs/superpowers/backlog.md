@@ -34,9 +34,9 @@ sempre explícita.
 
 # AGORA
 
-`B0 · espelho-8982f50` está ativo em `docs/superpowers/state.md`. As quatro evidências do `D-33`
-foram colhidas em 2026-09-09/10 e estão em
-[`docs/infra/evidencia-pipeline-2026-09-09.md`](../infra/evidencia-pipeline-2026-09-09.md).
+`B5 · 7.2.5` está ativo em `docs/superpowers/state.md`, em planejamento na branch
+`feat/7-2-5-cutover-lotusotec`. `B0` a `B4` estão fechados, cada um com PR integrado em `main`; o
+registro de cada fechamento está em `docs/superpowers/historico/progress.md`.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -84,8 +84,8 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Bloqueio externo:** nenhum.
 - **Executado em 2026-09-09/10.** As quatro evidências estão colhidas em
   [`docs/infra/evidencia-pipeline-2026-09-09.md`](../infra/evidencia-pipeline-2026-09-09.md). O que
-  atravessou foi `c6c6f9a`, a ponta de `origin/main` de agora, que já contém `8982f50`. O bloco sai
-  desta fila em `/fechar-site`, depois da review.
+  atravessou foi `c6c6f9a`, a ponta de `origin/main` de então, que já contém `8982f50`.
+- **Fechado em `/fechar-site`:** PR #16, integrado em `main` por `b16ebd2`.
 
 ## B1 · `7.2.1` — zona DNS em Route 53
 
@@ -151,6 +151,13 @@ um por vez, porque o harness admite um `active_work_item` só.
   que ainda vai mudar é armadilha, não hardening.
 - **Evidência exigida:** `curl -sI` mostrando cada cabeçalho; `pnpm e2e` verde com a CSP ligada,
   provando que ela não quebra fonte self-hosted, imagem nem o envio do formulário.
+- **Entregue em 2026-09-28 (spec `2026-09-27-7.2.2-headers-hardening-design.md`, PR #24):** CSP
+  com `frame-ancestors 'none'`, HSTS de um ano sem `includeSubDomains` e sem `preload`,
+  `X-Content-Type-Options`, `Referrer-Policy` e `Permissions-Policy` na `ResponseHeadersPolicy`;
+  `x-amz-version-id` e `x-amz-server-side-encryption` removidos na borda. A lista vive em
+  `scripts/infra/lib/cabecalhos.mjs`, com catraca em `scripts/infra/cabecalhos.test.mjs`.
+  Evidência: `docs/infra/evidencia-cabecalhos-2026-09-28.md`. Débito novo: `D-63` (sonda `eval` do
+  zod). O `X-Robots-Tag` continua até `B5`.
 
 ## B4 · `7.2.3+7.2.4` — backup do WordPress e smoke test
 
