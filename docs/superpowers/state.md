@@ -10,7 +10,7 @@ active_branch: feat/7-2-6-observabilidade-minima
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: executar_change_set_do_stack_de_observabilidade
+next_action: confirmar_assinatura_do_sns
 resume_state: executing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
@@ -18,11 +18,11 @@ active_plan: docs/superpowers/plans/2026-10-06-7.2.6-observabilidade-minima.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: 'Portão do stack de observabilidade (Task 3, Step 3). Change set de criação criado e lido, não executado: arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791288770/f4994f08-b9c3-407e-92cf-695630d53269 (stack lotus-observabilidade, us-east-1, destinatário jv***@gmail.com). Tabela: catorze linhas, todas Add — Acessos (AWS::Logs::LogGroup), Alarme5xx e AlarmeDeSaude (AWS::CloudWatch::Alarm), Assinatura (AWS::SNS::Subscription), Consulta5xx, ConsultaCache, ConsultaLatencia e ConsultaReleases (AWS::Logs::QueryDefinition), DestinoDoLog (AWS::Logs::DeliveryDestination), EntregaDoLog (AWS::Logs::Delivery), OrigemDoLog (AWS::Logs::DeliverySource), PapelDeAlerta (AWS::IAM::Role), SaudeDoSite (AWS::Route53::HealthCheck) e Topico (AWS::SNS::Topic). Nenhum arquivo editado e não commitado. João: executar o change set (aws cloudformation execute-change-set --region us-east-1 --change-set-name <ARN acima>, com AWS_PROFILE=lotus), esperar o CREATE_COMPLETE (aws cloudformation wait stack-create-complete --region us-east-1 --stack-name lotus-observabilidade) e clicar no link do e-mail de confirmação do SNS — remetente no-reply@sns.amazonaws.com; procurar no spam antes de concluir que não veio; o link vale 48 h. Executar é de João, ou de Claude com autorização explícita neste passo; a confirmação da assinatura é sempre de João.'
+blocker: 'Portão da confirmação da assinatura (Task 3, Step 5). Stack lotus-observabilidade em CREATE_COMPLETE desde 2026-10-06T12:52:18Z (execute por Claude às 12:51:55Z, autorizado por João neste passo). Às 12:56:46Z a assinatura email do tópico arn:aws:sns:us-east-1:760144413534:lotus-site-alertas segue PendingConfirmation (destinatário jv***@gmail.com). Os dois alarmes em OK, os seis checadores com 200, a entrega do log com 12 campos e as quatro consultas criadas. João: tocar em "Confirm subscription" no e-mail AWS Notification - Subscription Confirmation, remetente no-reply@sns.amazonaws.com, chegado às 12:52Z; procurar no spam antes de concluir que não veio; o link vale 48 h, até cerca de 2026-10-08T12:52Z — passado o prazo, o SNS apaga a assinatura pendente e a volta pede substituir o recurso, decisão de João. Nenhum passo de prova começa antes. Editado e não commitado: docs/infra/evidencia-observabilidade-2026-10-06.md (§1).'
 supervised_cycles_completed: 20
 last_completed_work_item: 7.2.5
-state_basis_commit: 18621d4
-updated_at: 2026-10-06T12:13:15Z
+state_basis_commit: c63ba9f
+updated_at: 2026-10-06T12:57:29Z
 ---
 
 # Estado operacional — Lotus Site
