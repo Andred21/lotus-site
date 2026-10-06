@@ -638,10 +638,25 @@ João, num navegador comum, sem `hosts` nem resolução forçada:
 Recebida em `contacto@lotusotec.cl` às 11:24 (UTC−3; 2026-10-05T14:24Z), remetente "Sitio Lotus
 OTEC", assunto "Nuevo mensaje desde el sitio de Lotus OTEC", mensagem `corte 7.2.5 2026-10-05`,
 rodapé "Enviado desde el formulario de contacto de lotusotec.cl" — captura de tela da caixa de
-entrada, mostrada por João (spec §7, item 4). A linha `"desfecho":"enviado"` do log da função não
-foi lida: o `aws logs tail` foi recusado pela política de permissão do agente, por trazer dados
-pessoais do formulário. A chegada da mensagem prova o caminho inteiro (Turnstile, função, SES,
-Workspace), que a linha do log provaria só até o SES.
+entrada, mostrada por João (spec §7, item 4).
+
+O log da função, lido por João na review (achado R-1, decisão dele em 2026-10-05: o `aws logs tail`
+da execução foi recusado pela política de permissão do agente), filtrado pela janela de 14:20Z a
+14:30Z e por `desfecho`:
+
+```bash
+aws logs filter-log-events --profile lotus --region sa-east-1 \
+  --log-group-name /aws/lambda/lotus-site-contato \
+  --start-time 1791210000000 --end-time 1791210600000 \
+  --filter-pattern '"desfecho"' \
+  --query 'events[].[timestamp,message]' --output text
+```
+
+```text
+1791210294590   2026-10-05T14:24:54.590Z        b8ce9bf1-4943-4a8a-bf2f-a0d65e026ef2    INFO    {"requestId":"b8ce9bf1-4943-4a8a-bf2f-a0d65e026ef2","desfecho":"enviado"}
+```
+
+Uma linha só na janela, `enviado`, às 14:24:54Z: o mesmo minuto da mensagem na caixa.
 
 ### 6.6 Validadores (D10)
 
@@ -722,6 +737,4 @@ houve deploy depois do congelamento. O run seguinte em `main`, do `8774aa7`, seg
   `src/app/head.test.ts` (D10).
 - A cauda além dos 60 s, em resolvedores que impõem TTL mínimo próprio, é medida, não controlada.
 - O recebimento da mensagem do formulário é declaração de João, com captura de tela da caixa.
-- A linha `"desfecho":"enviado"` do log da função, pedida pela spec §7, item 4, não foi lida (§6.5):
-  a chegada da mensagem ficou no lugar dela.
 - A estabilização durou 8 h 35 min, não 24 h (§7, `D-67`).
