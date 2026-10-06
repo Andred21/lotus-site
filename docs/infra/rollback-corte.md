@@ -11,9 +11,16 @@
 ## 0. A janela — conferir antes de cortar e antes de voltar
 
 O WordPress serve um certificado Let's Encrypt válido até **2026-11-10T20:37:55Z** e sem caminho
-de renovação (`D-51`). O HSTS do clone (`max-age=31536000`) fixa HTTPS por um ano em quem visitar:
-voltar para o WordPress com certificado vencido é erro de TLS sem "prosseguir". Regra (spec D8):
-**`B5` corta até 2026-10-27**, a menos que `D-51` esteja resolvido antes.
+de renovação (`D-51`), e João decidiu não renová-lo (spec de `7.2.5`, D1). O HSTS do clone
+(`max-age=31536000`) fixa HTTPS por um ano em quem visitar: voltar para o WordPress com
+certificado vencido é erro de TLS sem "prosseguir". Regra (spec de `B4`, D8): **`B5` corta até
+2026-10-27**, para haver pelo menos catorze dias de volta possível. Depois de 2026-11-10 não há
+volta ao WordPress: a saída é correção para frente na distribuição ou a restauração de desastre
+(§7).
+
+> **Nota de 2026-10-05.** A correção para frente depende de o CI corporativo publicar, e ele está
+> reprovando desde o espelho `8774aa7` (`D-62`): enquanto `D-62` estiver aberto, nenhum deploy sai,
+> e o que está no ar segue `ca8f49b`. `D-62` tem prazo antes de 2026-11-10 por isso.
 
 ```bash
 echo | openssl s_client -connect 185.146.167.195:443 -servername lotusotec.cl 2>/dev/null \
@@ -26,7 +33,11 @@ para onde voltar; o rollback vira restauração de desastre (§7) noutro host.
 
 ## 1. O que o corte muda (`B5`)
 
-Apex e `www`, `A` e `AAAA`: de `185.146.167.195` / `2a07:7800::195` (TTL 3600) para alias de
+> **Feito em 2026-10-05** (evidência em [`evidencia-corte-2026-10-05.md`](evidencia-corte-2026-10-05.md)
+> §5): apex e `www` são alias da distribuição, e o WordPress segue no IP dele, alvo deste
+> procedimento até 2026-11-10 (§0). O que segue descreve a troca como ela foi feita.
+
+Apex e `www`, `A` e `AAAA`: de `185.146.167.195` / `2a07:7800::195` (TTL 60 desde o dia do corte; antes, 3600) para alias de
 `dhpoztt69jydz.cloudfront.net`, em `infra/lotus-dns.yaml`, por change set. O alias não tem TTL no
 template: o Route 53 responde com no máximo 60 s (no ensaio, de 22 a 60; evidência §3.3). Nada
 mais muda de valor: o WordPress continua servindo no IP dele até `B7`, e o MX não é tocado.
@@ -42,14 +53,16 @@ WordPress por até 3600 s; com os caches cheios, como o tráfego deixa os do ape
 primeira resposta nova de um resolvedor público espera o TTL que resta ao registro antigo: no
 estágio 4a, cerca de 30 min, com entradas buscadas meia hora antes (evidência §3.4); na remoção do
 estágio 5, 56 min, com entradas buscadas 5 min antes (§3.7). Smoke verde no domínio logo depois do
-corte não quer dizer que todos os visitantes já estão na distribuição. Baixar o TTL do apex e do
-`www` para 60 pelo menos 3600 s antes do corte encurta essa cauda; é decisão de `B5`.
+corte não quer dizer que todos os visitantes já estão na distribuição. Por isso `B5` baixa o TTL de apex e `www` para 60 e só corta pelo menos 3600 s depois do
+`UPDATE_COMPLETE` dessa troca (spec de `7.2.5`, D3): a cauda esperada cai para cerca de 60 s, mais
+o que resolvedores com TTL mínimo próprio impuserem.
 
 ## 2. Gatilho
 
 Depois do corte, `pnpm smoke` com `SMOKE_URL=https://lotusotec.cl` (sem `SMOKE_VIA`) reprovando em
 qualquer dos itens 2 a 6 (TLS, redirects, home, assets, formulário), ou o site fora do ar. Itens
-1, 7, 8 e 9 reprovando são regressão que um deploy corrige, não motivo de rollback.
+1, 7, 8 e 9 reprovando são regressão que um deploy corrige, não motivo de rollback — desde que o
+CI corporativo publique (nota da §0, `D-62`).
 
 ## 3. Caminho A — change set (principal)
 
@@ -61,7 +74,7 @@ O `UPDATE_COMPLETE` e a volta do `wait` chegam depois do DNS e não servem de re
 No corte real, o que domina é o tempo de revisar e autorizar o change set.
 
 ```bash
-git checkout <sha anterior ao corte> -- infra/lotus-dns.yaml scripts/infra/lib/zona.mjs
+git checkout <sha do corte>^ -- infra/lotus-dns.yaml scripts/infra/lib/zona.mjs scripts/infra/zona.test.mjs
 source ~/.nvm/nvm.sh >/dev/null && nvm use >/dev/null && pnpm exec vitest run scripts/infra/zona.test.mjs
 export AWS_PROFILE=lotus
 aws cloudformation deploy --region us-east-1 --stack-name lotus-dns \
@@ -70,6 +83,14 @@ aws cloudformation describe-change-set --region us-east-1 --change-set-name <arn
   --query 'Changes[].ResourceChange.{Acao:Action,Recurso:LogicalResourceId,Substituicao:Replacement}' --output table
 # esperado: uma linha, Modify Registros False
 ```
+
+`<sha do corte>` é `515a13f`, o commit `feat(7.2.5): apontar apex e www para a distribuição`; o `^`
+(`355a410`) traz o estado de antes dele, com TTL 60 e sem `sistema`. O SHA vale porque o PR de `B5`
+entra em `main` por merge commit, como os anteriores; se entrar por squash, o `^` do commit
+squashed é o template de antes do bloco (TTL 3600, `sistema` de volta) e reprova no `zona.test.mjs`
+contra `infra/rollback-corte.json` — usar `355a410` direto, buscado da branch
+`feat/7-2-5-cutover-lotusotec`. Os três arquivos vão juntos: o `zona.test.mjs` de depois do corte exige o
+alias que o template de antes não tem (spec de `7.2.5`, D6).
 
 Revisar o change set comparando `BeforeContext` com `AfterContext` por `Name` e `Type`, não pelos
 `Details`: o `Path` dos `Details` aponta um índice da lista que não é o do registro que muda (cinco
@@ -126,7 +147,7 @@ depois do B, com três cuidados:
    contra o template guardado no stack (o alias), não contra a zona: as mesmas quatro linhas do
    caminho A.
 2. **Conferir a zona pela API antes do `execute`:** apex e `www`, `A` e `AAAA`, em
-   `ResourceRecords` do WordPress, TTL 3600, sem `AliasTarget`.
+   `ResourceRecords` do WordPress, TTL 60, sem `AliasTarget`.
 
    ```bash
    aws route53 list-resource-record-sets --hosted-zone-id "$ZONA" --output json \
@@ -169,7 +190,7 @@ Como ler: o `convergiu em` é a primeira resposta nova de cada resolvedor, não 
 porque a cauda do alias (até 60 s) já acabou, não porque a troca foi instantânea. O
 `conferir-zona` compara os quatro nameservers com o inventário de `scripts/infra/lib/zona.mjs`, o
 de antes do corte depois do checkout de §3, e deve sair 0; sem `--saida`, ele grava o relatório em
-`docs/infra/`. Ele não trata alias: só serve com o apex e o `www` de volta ao WordPress.
+`docs/infra/`. Desde `7.2.5` ele também confere linha de alias, então roda dos dois lados do corte.
 
 E uma mensagem de e-mail de fora para `contacto@lotusotec.cl`: o MX não foi tocado, mas a prova é
 a mensagem chegando, como em `B1`.

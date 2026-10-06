@@ -83,6 +83,14 @@ opção mais barata e serve o mundo inteiro — o visitante chileno é atendido 
 hemisfério norte, com latência maior. Aceitável enquanto o endereço é de homologação; revisar no
 corte de DNS (`D-39`).
 
+> **Atualização de 2026-10-05 (`B5`, `7.2.5`).** A distribuição passou a `PriceClass_All`,
+> a única classe com bordas na América do Sul (`D-39`). No planejamento, cinco sondas no Chile: com
+> `PriceClass_100` ela respondia de Miami e de Dallas, `total` mediano de 854 ms, contra 31 ms do
+> WordPress (spec de `7.2.5`, D4). Na execução, dez sondas: 766 ms antes da troca e 279 ms depois,
+> contra 74 ms do WordPress, borda `SCL51` (Santiago) em cinco delas e `EZE50`, `LIM50` e `MIA50`
+> nas outras (evidência de `7.2.5`, §1). O free tier do CloudFront vale para todas as regiões, e acima dele a diferença
+> neste volume é de centavos por mês; o budget de US$ 30 continua sendo a guarda.
+
 ## Operação
 
 | Ação                         | Quem              | Como                                                                                                                                        |
@@ -217,6 +225,12 @@ empresa. `7.2.1` começa pedindo o export BIND ao suporte.
 > menos que `D-51` esteja resolvido antes (spec de `B4`, D8). O rollback de release desta ADR não
 > muda.
 
+> **Atualização de 2026-10-05 (`B5`, `7.2.5`).** Apex e `www` são alias da distribuição
+> desde 2026-10-05T14:12:23Z, e o `X-Robots-Tag` saiu da borda no mesmo dia, antes de o DNS virar. O
+> corte foi feito com TTL 60 no registro de antes, e a volta ao WordPress segue possível pelo
+> `docs/infra/rollback-corte.md` até 2026-11-10, quando vence o certificado dele (`D-51`, não
+> renovado por decisão de João). Evidência em `docs/infra/evidencia-corte-2026-10-05.md`.
+
 ## Motivo da decisão
 
 Quatro opções foram consideradas.
@@ -246,10 +260,11 @@ antes de existir.
 - O que vai para o ar é o mesmo `pnpm build` que o CI já roda em PR. Não há flag de ambiente nem
   variável que mude o bundle entre "staging" e "produção" — a diferença é um cabeçalho de resposta
   e, depois, um domínio.
-- Enquanto o endereço for do CloudFront, **toda** resposta carrega `X-Robots-Tag: noindex,
-nofollow`, aplicado pela distribuição. Isso cobre o que o `robots.txt` não cobre — um
-  `robots.txt` proíbe rastrear, não indexar — e some em `7.2.5` removendo uma linha da política,
-  sem tocar em `public/`.
+- Enquanto o endereço foi o do CloudFront, **toda** resposta carregou `X-Robots-Tag: noindex,
+nofollow`, aplicado pela distribuição: cobria o que o `robots.txt` não cobre — um `robots.txt`
+  proíbe rastrear, não indexar. Saiu no dia do corte (`7.2.5`, 2026-10-05), removendo um item
+  da política, sem tocar em `public/`. Desde então o domínio do CloudFront e os
+  `/releases/<sha>/` também são indexáveis; o `canonical` aponta para o apex (`D-64`).
 - Caminho inexistente devolve **404**, não `index.html` com 200. Não há rota de cliente para
   salvar: `#Somos` e `#Cursos` são fragmentos, que nunca chegam ao CloudFront.
 - A role de deploy está presa a `repo:Gatika-CL/lotus-site:ref:refs/heads/main` com `StringEquals`.

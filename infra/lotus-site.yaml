@@ -124,8 +124,8 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  # Cabecalhos de seguranca em TODA resposta (7.2.2) mais o X-Robots-Tag, que
-  # sai em 7.2.5. Os valores canonicos moram em scripts/infra/lib/cabecalhos.mjs:
+  # Cabecalhos de seguranca em TODA resposta (7.2.2); o X-Robots-Tag saiu no
+  # corte (7.2.5, spec D5). Valores canonicos em scripts/infra/lib/cabecalhos.mjs:
   # o preview do Vite serve os mesmos, e a catraca scripts/infra/cabecalhos.test.mjs
   # reprova divergencia entre este template e o modulo -- CloudFormation nao le
   # arquivo externo, entao o YAML aqui e copia vigiada.
@@ -141,8 +141,6 @@ Resources:
   #   em 443 -- includeSubDomains os tornaria inalcancaveis depois do corte.
   # - Permissions-Policy vai em CustomHeadersConfig: nao ha campo nativo.
   # - Remover Server faz o CloudFront responder o proprio Server: CloudFront.
-  # - X-Robots-Tag cobre o que o robots.txt nao cobre (proibe indexar, nao so
-  #   rastrear) enquanto o endereco publicado for o dominio do CloudFront.
   #
   # A razao completa mora AQUI porque o campo Comment aceita no maximo 128
   # caracteres. Medido em 2026-09-04: com 286 o stack reprovou em CREATE_FAILED
@@ -152,7 +150,7 @@ Resources:
     Properties:
       ResponseHeadersPolicyConfig:
         Name: !Sub '${AWS::StackName}-cabecalhos'
-        Comment: Cabecalhos de seguranca de 7.2.2 e X-Robots-Tag ate 7.2.5. Valores canonicos em scripts/infra/lib/cabecalhos.mjs.
+        Comment: Cabecalhos de seguranca de 7.2.2. Valores canonicos em scripts/infra/lib/cabecalhos.mjs.
         SecurityHeadersConfig:
           ContentSecurityPolicy:
             ContentSecurityPolicy: "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
@@ -174,9 +172,6 @@ Resources:
           Items:
             - Header: Permissions-Policy
               Value: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-              Override: true
-            - Header: X-Robots-Tag
-              Value: noindex, nofollow
               Override: true
         RemoveHeadersConfig:
           Items:
@@ -249,10 +244,14 @@ Resources:
         DefaultRootObject: index.html
         HttpVersion: http2and3
         IPV6Enabled: true
-        # Mais barata das classes. NAO inclui borda na America do Sul: o
-        # visitante chileno e servido do hemisferio norte, com latencia maior.
-        # Aceitavel para homologacao; revisar no corte de DNS (D-39).
-        PriceClass: PriceClass_100
+        # Todas as bordas (D-39, decidido em 7.2.5 por medicao). So
+        # PriceClass_All inclui a America do Sul, e o visitante e chileno:
+        # medido em 2026-10-05 de cinco sondas no Chile, PriceClass_100
+        # respondia de Miami e de Dallas, total mediano de 854 ms, contra 31 ms
+        # do WordPress. O free tier vale para todas as regioes; o budget do
+        # stack continua sendo a guarda (ADR-SITE-004, Custo). A catraca
+        # scripts/infra/distribuicao.test.mjs reprova outra classe.
+        PriceClass: PriceClass_All
         # sni-only: sem IP dedicado (US$ 600/mes). TLSv1.2_2021 e a politica
         # recomendada; o smoke exige TLS >= 1.2 (spec §4.5 item 2).
         ViewerCertificate:

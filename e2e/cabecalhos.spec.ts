@@ -18,7 +18,6 @@ const NOMES_ESPERADOS = [
   'x-frame-options',
   'referrer-policy',
   'permissions-policy',
-  'x-robots-tag',
 ] as const
 
 const SUCCESS =
@@ -70,6 +69,8 @@ test('a resposta de / traz cada cabeçalho da política', async ({ page }) => {
   // Sem isto, "zero violação" nos outros testes poderia ser um preview sem
   // CSP nenhuma.
   expect(cabecalhos['content-security-policy']).toMatch(/^default-src 'none'/)
+  // Saiu no corte (7.2.5, spec D5): o site no domínio do cliente é indexável.
+  expect(cabecalhos['x-robots-tag']).toBeUndefined()
 })
 
 test('a jornada completa e o envio do formulário passam sob a CSP', async ({

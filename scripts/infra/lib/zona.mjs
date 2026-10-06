@@ -24,20 +24,33 @@
  * devolveu o IP do apex e foi lido como wildcard falando; `pop3` nunca foi
  * perguntado.
  *
- * `www` e `sistema` continuam aqui, e agora por prova em vez de precaução: o
- * painel mostra que nenhum dos dois é registro do outro lado. Eles só
- * resolvem hoje por causa do wildcard, que não atravessa — sem estas linhas,
- * a troca de delegação apagaria os dois. O `AAAA` dos dois existe pelo mesmo
- * motivo: o wildcard do painel tem `A` **e** `AAAA`, então cliente
- * dual-stack perderia IPv6 na troca.
+ * `www` está aqui por prova, não por precaução: o painel mostrava que ele
+ * não era registro do outro lado e só resolvia por causa do wildcard, que
+ * não atravessou a delegação. O `AAAA` dele existe pelo mesmo motivo: o
+ * wildcard do painel tinha `A` **e** `AAAA`. `sistema` nasceu do mesmo jeito
+ * e saiu em `B5` (spec de `7.2.5`, D2): o nome da intranet é `app`.
+ *
+ * Apex e `www`, `A` e `AAAA`, são alias da distribuição desde o corte
+ * (`B5`, spec de `7.2.5`, §4.3): o valor é o domínio dela, e o IP que cada
+ * resolvedor recebe varia.
  *
  * Os seis registros do SES foram acrescentados em `B2`, com os tokens lidos
  * dos outputs do stack `lotus-contato`.
  * @type {readonly RegistroEsperado[]}
  */
 export const INVENTARIO = Object.freeze([
-  { nome: 'lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
-  { nome: 'lotusotec.cl.', tipo: 'AAAA', valores: ['2a07:7800::195'] },
+  {
+    nome: 'lotusotec.cl.',
+    tipo: 'A',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  },
+  {
+    nome: 'lotusotec.cl.',
+    tipo: 'AAAA',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  },
   {
     nome: 'lotusotec.cl.',
     tipo: 'MX',
@@ -56,13 +69,17 @@ export const INVENTARIO = Object.freeze([
       '"v=spf1 include:_spf.google.com include:spf.stackmail.com -all"',
     ],
   },
-  { nome: 'www.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
-  { nome: 'www.lotusotec.cl.', tipo: 'AAAA', valores: ['2a07:7800::195'] },
-  { nome: 'sistema.lotusotec.cl.', tipo: 'A', valores: ['185.146.167.195'] },
   {
-    nome: 'sistema.lotusotec.cl.',
+    nome: 'www.lotusotec.cl.',
+    tipo: 'A',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  },
+  {
+    nome: 'www.lotusotec.cl.',
     tipo: 'AAAA',
-    valores: ['2a07:7800::195'],
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
   },
   {
     nome: 'mail.lotusotec.cl.',
@@ -131,29 +148,124 @@ export const INVENTARIO = Object.freeze([
 ])
 
 /**
- * O nome descartável do ensaio de rollback do corte (bloco `B4`, spec §4.4).
- * É o único que a catraca deixa ser alias para o CloudFront antes de `B5`.
- * Nasce, vira alias, volta e some dentro do bloco; ninguém o lê.
+ * Para onde o rollback do corte volta: os endereços do WordPress na
+ * BlueHosting, medidos em 2026-09-09. Literal desde o corte (7.2.5, spec D6),
+ * quando apex e `www` viraram alias e o inventário deixou de guardá-los. Sai
+ * com o WordPress, em `B7`.
  */
-export const NOME_DO_ENSAIO = 'ensaio-corte.lotusotec.cl.'
+export const WORDPRESS = Object.freeze({
+  A: '185.146.167.195',
+  AAAA: '2a07:7800::195',
+})
 
-/** @param {'A' | 'AAAA'} tipo */
-function valorDoApex(tipo) {
-  const valor = INVENTARIO.find(
-    (registro) => registro.nome === 'lotusotec.cl.' && registro.tipo === tipo,
-  )?.valores[0]
-  if (valor === undefined) throw new Error(`INVENTARIO sem ${tipo} do apex`)
-  return valor
+/**
+ * TTL de apex e `www`, `A` e `AAAA`, no dia do corte (7.2.5, spec D3). Com
+ * 3600 s no registro de antes, a cauda do corte medida em `B4` foi de 30 a
+ * 56 min. É também o TTL de `infra/rollback-corte.json`, que precisa ser o do
+ * template de antes do corte.
+ */
+export const TTL_DO_CORTE = 60
+
+/**
+ * Os quatro registros que o corte troca e o rollback devolve: apex e `www`,
+ * `A` e `AAAA` (spec §4.3).
+ * @param {{ nome: string, tipo: string }} registro
+ */
+export function eDoCorte(registro) {
+  return (
+    ['lotusotec.cl.', 'www.lotusotec.cl.'].includes(registro.nome) &&
+    ['A', 'AAAA'].includes(registro.tipo)
+  )
 }
 
 /**
- * Para onde o rollback do corte volta (spec D1): os endereços do WordPress,
- * lidos do apex do inventário para não existirem em dois lugares.
+ * @typedef {{
+ *   Action: string,
+ *   ResourceRecordSet: {
+ *     Name: string,
+ *     Type: string,
+ *     TTL?: number,
+ *     ResourceRecords?: { Value: string }[],
+ *   },
+ * }} MudancaDeRegistro
  */
-export const WORDPRESS = Object.freeze({
-  A: valorDoApex('A'),
-  AAAA: valorDoApex('AAAA'),
-})
+
+/**
+ * O change batch de emergência (`infra/rollback-corte.json`) contra o que o
+ * caminho B precisa escrever (spec D3 e §4.3): quatro `UPSERT` de apex e
+ * `www`, `A` e `AAAA`, para o WordPress, com `TTL_DO_CORTE` — o TTL do
+ * template de antes do corte, o único estado em que a reconciliação de
+ * `rollback-corte.md` §5 foi provada. Vazio quando confere; senão um
+ * problema por campo, com o nome dele.
+ * @param {{ Changes?: MudancaDeRegistro[] }} lote
+ * @returns {string[]}
+ */
+export function conferirLoteDeRollback(lote) {
+  /** @type {string[]} */
+  const problemas = []
+  /** @type {Set<string>} */
+  const vistos = new Set()
+  for (const { Action, ResourceRecordSet: conjunto } of lote.Changes ?? []) {
+    const chave = `${conjunto.Type} ${conjunto.Name}`
+    if (!eDoCorte({ nome: conjunto.Name, tipo: conjunto.Type })) {
+      problemas.push(`Changes: ${chave} fora de apex e www, A e AAAA`)
+      continue
+    }
+    if (vistos.has(chave)) problemas.push(`Changes: ${chave} repetido`)
+    vistos.add(chave)
+    if (Action !== 'UPSERT') {
+      problemas.push(`Action de ${chave}: esperado UPSERT, veio ${Action}`)
+    }
+    if (conjunto.TTL !== TTL_DO_CORTE) {
+      problemas.push(
+        `TTL de ${chave}: esperado ${TTL_DO_CORTE}, veio ${conjunto.TTL ?? 'ausente'}`,
+      )
+    }
+    const esperado = WORDPRESS[/** @type {'A' | 'AAAA'} */ (conjunto.Type)]
+    const valores = (conjunto.ResourceRecords ?? []).map(
+      (registro) => registro.Value,
+    )
+    if (!mesmoConjunto(valores, [esperado])) {
+      problemas.push(
+        `ResourceRecords de ${chave}: esperado ${esperado}, veio ${JSON.stringify(valores)}`,
+      )
+    }
+  }
+  for (const nome of ['lotusotec.cl.', 'www.lotusotec.cl.']) {
+    for (const tipo of ['A', 'AAAA']) {
+      if (!vistos.has(`${tipo} ${nome}`)) {
+        problemas.push(`Changes: falta ${tipo} ${nome}`)
+      }
+    }
+  }
+  return problemas
+}
+
+/**
+ * A catraca do corte (7.2.5, spec §4.3): exatamente apex e `www`, `A` e
+ * `AAAA`, são alias, e alias não declara TTL — a AWS fixa em 60 s. Para onde
+ * eles apontam é a conferência por linha do `INVENTARIO`. Vazio quando
+ * confere; senão um problema por registro.
+ * @param {readonly RegistroLido[]} registros
+ * @returns {string[]}
+ */
+export function conferirAliasesDoCorte(registros) {
+  /** @type {string[]} */
+  const problemas = []
+  for (const registro of registros) {
+    const chave = `${registro.tipo} ${registro.nome}`
+    if (registro.alias && !eDoCorte(registro)) {
+      problemas.push(`alias fora de apex e www: ${chave}`)
+    }
+    if (!registro.alias && eDoCorte(registro)) {
+      problemas.push(`sem alias: ${chave}`)
+    }
+    if (registro.alias && registro.ttl !== 0) {
+      problemas.push(`TTL em alias: ${chave}`)
+    }
+  }
+  return problemas
+}
 
 /**
  * Nomes que só respondiam, antes de 2026-09-26, porque o wildcard existia na
@@ -443,17 +555,106 @@ export function convergiu(esperado, respostas) {
         mesmoConjunto(A, [WORDPRESS.A]) && mesmoConjunto(AAAA, [WORDPRESS.AAAA])
       )
     case 'cloudfront':
-      // O IP do CloudFront varia por borda; o que se sabe é que não é o
-      // do WordPress e que há resposta nos dois tipos (IPV6Enabled).
-      return (
-        A.length > 0 &&
-        AAAA.length > 0 &&
-        !A.includes(WORDPRESS.A) &&
-        !AAAA.map(normalizar).includes(normalizar(WORDPRESS.AAAA))
-      )
+      // Resposta nos dois tipos (IPV6Enabled), nenhuma do WordPress.
+      return respondeComoBorda('A', A) && respondeComoBorda('AAAA', AAAA)
     case 'ausente':
       return A.length === 0 && AAAA.length === 0
     default:
       throw new Error(`esperado desconhecido: ${String(esperado)}`)
   }
+}
+
+/**
+ * Resposta de um alias da distribuição (7.2.5, spec §4.5): não vazia e sem
+ * o endereço do WordPress daquele tipo. O IP da borda varia por resolvedor e
+ * por nameserver, então é só isso que dá para afirmar dele.
+ * @param {'A' | 'AAAA'} tipo
+ * @param {string[]} valores
+ */
+export function respondeComoBorda(tipo, valores) {
+  return (
+    valores.length > 0 &&
+    !valores.map(normalizar).includes(normalizar(WORDPRESS[tipo]))
+  )
+}
+
+/**
+ * @param {string} tipo
+ * @returns {'A' | 'AAAA'}
+ */
+function tipoDeAlias(tipo) {
+  if (tipo !== 'A' && tipo !== 'AAAA') {
+    throw new Error(`alias para o CloudFront só existe em A e AAAA: ${tipo}`)
+  }
+  return tipo
+}
+
+/**
+ * O lado AWS de uma linha, a partir da resposta de cada nameserver do Route
+ * 53. Registro comum: os quatro dão o mesmo conjunto, e discordar lança — é
+ * a zona servida de dois jeitos. Alias: cada nameserver resolve a borda por
+ * conta própria; no estágio 2 do ensaio de `B4` os quatro deram o mesmo
+ * IPv4 e IPv6 diferentes (evidência §3.2). O que precisa valer em todos é
+ * responder como borda: a coluna mostra a união, ou a primeira resposta que
+ * não responde, para a linha reprovar mostrando o motivo.
+ * @param {RegistroEsperado} registro
+ * @param {string[][]} respostas uma por nameserver
+ * @returns {string[]}
+ */
+export function respostaDosNameservers(registro, respostas) {
+  if (registro.alias) {
+    const tipo = tipoDeAlias(registro.tipo)
+    const falha = respostas.find(
+      (resposta) => !respondeComoBorda(tipo, resposta),
+    )
+    return falha ?? [...new Set(respostas.flat())]
+  }
+  const primeira = respostas[0] ?? []
+  if (!respostas.every((resposta) => mesmoConjunto(resposta, primeira))) {
+    throw new Error(
+      `os nameservers da AWS discordam entre si em ${registro.tipo} ${registro.nome}`,
+    )
+  }
+  return primeira
+}
+
+/** @param {string[]} valores */
+const semPontoFinal = (valores) =>
+  valores.map((valor) => valor.replace(/\.$/, ''))
+
+/**
+ * Veredito de uma linha do `INVENTARIO` no `conferir-zona` (spec §4.5).
+ * Registro comum: inventário, AWS e servido com o mesmo conjunto. Alias: os
+ * dois lados respondendo como borda — exceto quando o lado AWS veio da API
+ * (`pelaApi`), em que ele é o `DNSName` da configuração e se compara com o
+ * do inventário, com ou sem o ponto final.
+ * @param {RegistroEsperado} registro
+ * @param {string[]} naAws
+ * @param {string[]} servido
+ * @param {boolean} pelaApi
+ */
+export function linhaConfere(registro, naAws, servido, pelaApi) {
+  if (!registro.alias) {
+    return (
+      mesmoConjunto(naAws, servido) &&
+      mesmoConjunto(naAws, [...registro.valores])
+    )
+  }
+  const tipo = tipoDeAlias(registro.tipo)
+  const ladoAws = pelaApi
+    ? mesmoConjunto(semPontoFinal(naAws), semPontoFinal([...registro.valores]))
+    : respondeComoBorda(tipo, naAws)
+  return ladoAws && respondeComoBorda(tipo, servido)
+}
+
+/**
+ * Os valores de um `ResourceRecordSet` de `aws route53
+ * list-resource-record-sets`: o `DNSName` quando é alias (spec §4.5), senão
+ * os `ResourceRecords`.
+ * @param {{ ResourceRecords?: { Value: string }[], AliasTarget?: { DNSName: string } }} conjunto
+ * @returns {string[]}
+ */
+export function valoresDaApi(conjunto) {
+  if (conjunto.AliasTarget) return [conjunto.AliasTarget.DNSName]
+  return (conjunto.ResourceRecords ?? []).map((registro) => registro.Value)
 }

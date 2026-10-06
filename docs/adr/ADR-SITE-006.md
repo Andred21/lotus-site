@@ -146,3 +146,9 @@ item 32 do repo `lotus-infra` (ADR-14 de lá, emenda da mesma data), que o nome 
 cópia da zona antiga, e o destino dele é `B5`/`8.2.1` — não muda aqui, também porque é servido pelo
 certificado wildcard de `D-51`. O registro `app` é o primeiro da zona que nasce no Route 53 sem ter
 existido no painel.
+
+> **Nota de 2026-10-05 (`B5`, spec de `7.2.5`, D2).** `sistema.lotusotec.cl` saiu da zona,
+> por decisão de João em 2026-10-04: o nome da intranet é `app`, e `sistema` só apontava para o
+> WordPress. A remoção veio antes do corte, para o rollback mexer só em apex e `www`. As descrições
+> de `7.2.1` e `8.2.1` no Notion que citam `sistema` continuam verdadeiras como histórico; a
+> correção delas é pedida no fechamento de `B5`.

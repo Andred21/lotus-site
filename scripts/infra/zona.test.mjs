@@ -2,17 +2,22 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   INVENTARIO,
-  NOME_DO_ENSAIO,
   WORDPRESS,
+  conferirAliasesDoCorte,
+  conferirLoteDeRollback,
   convergiu,
   delegacaoEsperada,
   lerParametros,
   lerPoliticasDaZona,
   lerPoliticasDoRecurso,
   lerRegistros,
+  linhaConfere,
   mesmoConjunto,
   normalizar,
   resolver,
+  respondeComoBorda,
+  respostaDosNameservers,
+  valoresDaApi,
   wildcardAusente,
 } from './lib/zona.mjs'
 
@@ -26,9 +31,15 @@ describe('leitura textual do template', () => {
 
   it('lê o Default de cada parâmetro', () => {
     expect(parametros.get('NomeDaZona')).toBe('lotusotec.cl')
-    expect(parametros.get('IpDoWordPress')).toBe('185.146.167.195')
-    expect(parametros.get('Ipv6DoWordPress')).toBe('2a07:7800::195')
     expect(parametros.get('TtlPadrao')).toBe('3600')
+    // Desde o corte (7.2.5, spec D6), apex e www são alias da distribuição; o
+    // WordPress, alvo do rollback, mora em WORDPRESS, no zona.mjs.
+    expect(parametros.get('DominioDaDistribuicao')).toBe(
+      'dhpoztt69jydz.cloudfront.net',
+    )
+    for (const nome of ['IpDoWordPress', 'Ipv6DoWordPress', 'TtlDoCorte']) {
+      expect(parametros.has(nome), `${nome} saiu no corte`).toBe(false)
+    }
     // Os tres tokens DKIM sao Default de parametro, como os IPs: sem Default
     // `resolver` lanca e a catraca nao consegue ler os CNAME.
     for (const nome of ['TokenDkim1', 'TokenDkim2', 'TokenDkim3']) {
@@ -38,7 +49,7 @@ describe('leitura textual do template', () => {
   })
 
   it('resolve !Ref e !Sub contra os defaults', () => {
-    expect(resolver('!Ref IpDoWordPress', parametros)).toBe('185.146.167.195')
+    expect(resolver('!Ref IpDaIntranet', parametros)).toBe('18.230.53.197')
     expect(resolver("!Sub 'www.${NomeDaZona}.'", parametros)).toBe(
       'www.lotusotec.cl.',
     )
@@ -198,13 +209,44 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     ).toEqual([])
   })
 
-  it('só ensaio-corte pode ser alias para o CloudFront; apex e www, nunca', () => {
-    // Apontar apex e www é B5. O ensaio de B4 (spec §4.4) usa um nome
-    // descartável, que nasce e morre dentro do bloco.
-    const aliases = registros
-      .filter((registro) => registro.alias)
-      .map((registro) => registro.nome)
-    expect(aliases.filter((nome) => nome !== NOME_DO_ENSAIO)).toEqual([])
+  it('exatamente apex e www, A e AAAA, são alias (7.2.5, spec §4.3)', () => {
+    // Para onde apontam é o teste por linha do INVENTARIO, acima.
+    expect(conferirAliasesDoCorte(registros)).toEqual([])
+  })
+
+  it('alias fora de apex e www, apex ou www sem alias e TTL em alias reprovam', () => {
+    /** @typedef {import('./lib/zona.mjs').RegistroLido} RegistroLido */
+    /**
+     * @param {(registro: RegistroLido) => boolean} qual
+     * @param {Partial<RegistroLido>} mudanca
+     */
+    const mexendo = (qual, mudanca) =>
+      registros.map((registro) =>
+        qual(registro) ? { ...registro, ...mudanca } : registro,
+      )
+    expect(
+      conferirAliasesDoCorte(
+        mexendo((r) => r.nome === 'app.lotusotec.cl.', {
+          alias: true,
+          ttl: 0,
+        }),
+      ),
+    ).toEqual(['alias fora de apex e www: A app.lotusotec.cl.'])
+    expect(
+      conferirAliasesDoCorte(
+        mexendo((r) => r.nome === 'www.lotusotec.cl.' && r.tipo === 'AAAA', {
+          alias: false,
+          ttl: 60,
+        }),
+      ),
+    ).toEqual(['sem alias: AAAA www.lotusotec.cl.'])
+    expect(
+      conferirAliasesDoCorte(
+        mexendo((r) => r.nome === 'lotusotec.cl.' && r.tipo === 'A', {
+          ttl: 60,
+        }),
+      ),
+    ).toEqual(['TTL em alias: A lotusotec.cl.'])
   })
 
   it('declara o certificado da zona, com SAN explícito e sem wildcard', () => {
@@ -260,6 +302,16 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     )
   })
 
+  it('sistema saiu da zona e do inventário (7.2.5, spec D2)', () => {
+    // O nome da intranet é app desde 2026-09-27; sistema só apontava para o
+    // WordPress. Ele sai antes do corte, para o rollback mexer só em apex e
+    // www, como no ensaio de B4.
+    /** @param {{ nome: string }} registro */
+    const sistema = (registro) => registro.nome === 'sistema.lotusotec.cl.'
+    expect(registros.filter(sistema)).toEqual([])
+    expect(INVENTARIO.filter(sistema)).toEqual([])
+  })
+
   it('app tem A para o EIP da intranet e NÃO tem AAAA — o EIP não tem IPv6', () => {
     const app = registros.filter(
       (registro) => registro.nome === 'app.lotusotec.cl.',
@@ -268,16 +320,21 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     expect(app[0]?.valores).toEqual(['18.230.53.197'])
   })
 
-  it('usa o TTL medido da zona atual em todo registro que não é alias', () => {
+  it('usa 3600 em todo registro que não é alias; apex e www são alias desde o corte', () => {
     // Comparado contra o INVENTARIO, e nao contra o proprio `registros`: com
     // os dois lados derivados da mesma lista, uma leitura vazia passaria.
-    // Alias não tem TTL: a AWS fixa em 60 s (spec D12).
+    // Alias não tem TTL: a AWS fixa em 60 s (spec D12 de B4).
     const comuns = INVENTARIO.filter((registro) => !registro.alias)
-    expect(
-      registros
-        .filter((registro) => !registro.alias)
-        .map((registro) => registro.ttl),
-    ).toEqual(comuns.map(() => 3600))
+    expect(registros.filter((registro) => !registro.alias)).toHaveLength(
+      comuns.length,
+    )
+    for (const esperado of comuns) {
+      const achado = registros.find(
+        (registro) =>
+          registro.nome === esperado.nome && registro.tipo === esperado.tipo,
+      )
+      expect(achado?.ttl, `TTL de ${esperado.tipo} ${esperado.nome}`).toBe(3600)
+    }
   })
 
   it('publica o DMARC em p=none, com relatorio em contacto@', () => {
@@ -391,36 +448,205 @@ describe('convergiu (medir-propagacao, spec §4.4)', () => {
   })
 })
 
-describe('infra/rollback-corte.json (spec D1, caminho de emergência)', () => {
-  /**
-   * @type {{ Comment: string, Changes: { Action: string, ResourceRecordSet: {
-   *   Name: string, Type: string, TTL: number, ResourceRecords: { Value: string }[] } }[] }}
-   */
-  const lote = JSON.parse(readFileSync('infra/rollback-corte.json', 'utf8'))
+describe('alias no conferir-zona (7.2.5, spec §4.5)', () => {
+  // Duas das oito respostas AAAA que cada nameserver deu ao alias de
+  // ensaio-corte no estágio 2 de B4 (evidência §3.2): o IPv4 veio igual nos
+  // quatro, o IPv6 não.
+  const AAAA_POR_NAMESERVER = [
+    [
+      '2600:9000:27a4:f800:13:9e71:75c0:21',
+      '2600:9000:27a4:6800:13:9e71:75c0:21',
+    ],
+    [
+      '2600:9000:27a4:7200:13:9e71:75c0:21',
+      '2600:9000:27a4:2600:13:9e71:75c0:21',
+    ],
+    [
+      '2600:9000:27a4:ec00:13:9e71:75c0:21',
+      '2600:9000:27a4:c00:13:9e71:75c0:21',
+    ],
+    [
+      '2600:9000:27a4:de00:13:9e71:75c0:21',
+      '2600:9000:27a4:9a00:13:9e71:75c0:21',
+    ],
+  ]
+  const ALIAS_AAAA = {
+    nome: 'lotusotec.cl.',
+    tipo: 'AAAA',
+    valores: ['dhpoztt69jydz.cloudfront.net'],
+    alias: true,
+  }
+  const COMUM = {
+    nome: 'app.lotusotec.cl.',
+    tipo: 'A',
+    valores: ['18.230.53.197'],
+  }
 
-  it('devolve apex e www, A e AAAA, ao WordPress por UPSERT, com o TTL do template', () => {
-    const esperados = INVENTARIO.filter(
-      (registro) =>
-        ['lotusotec.cl.', 'www.lotusotec.cl.'].includes(registro.nome) &&
-        ['A', 'AAAA'].includes(registro.tipo),
+  it('borda é resposta não vazia e sem o WordPress daquele tipo', () => {
+    expect(respondeComoBorda('A', ['3.166.160.79'])).toBe(true)
+    expect(respondeComoBorda('A', [])).toBe(false)
+    expect(respondeComoBorda('A', ['3.166.160.79', WORDPRESS.A])).toBe(false)
+    expect(respondeComoBorda('AAAA', [WORDPRESS.AAAA.toUpperCase()])).toBe(
+      false,
     )
-    expect(esperados).toHaveLength(4)
-    expect(lote.Changes).toHaveLength(4)
-    for (const mudanca of lote.Changes) {
-      expect(mudanca.Action).toBe('UPSERT')
-      const { Name, Type, TTL, ResourceRecords } = mudanca.ResourceRecordSet
-      const esperado = esperados.find(
-        (registro) => registro.nome === Name && registro.tipo === Type,
-      )
-      expect(esperado, `${Type} ${Name}`).toBeDefined()
-      expect(TTL).toBe(3600)
-      expect(ResourceRecords.map((r) => r.Value)).toEqual(esperado?.valores)
-    }
   })
 
-  it('não toca em nenhum outro nome', () => {
-    expect(new Set(lote.Changes.map((c) => c.ResourceRecordSet.Name))).toEqual(
-      new Set(['lotusotec.cl.', 'www.lotusotec.cl.']),
+  it('alias com IPv6 diferente em cada nameserver confere, com a união na coluna', () => {
+    const lado = respostaDosNameservers(ALIAS_AAAA, AAAA_POR_NAMESERVER)
+    expect(lado).toHaveLength(8)
+    expect(
+      linhaConfere(ALIAS_AAAA, lado, AAAA_POR_NAMESERVER[0] ?? [], false),
+    ).toBe(true)
+  })
+
+  it('alias com um nameserver vazio ou no WordPress mostra essa resposta e reprova', () => {
+    const vazio = [...AAAA_POR_NAMESERVER.slice(0, 3), []]
+    expect(respostaDosNameservers(ALIAS_AAAA, vazio)).toEqual([])
+    const noWordPress = [[WORDPRESS.AAAA], ...AAAA_POR_NAMESERVER.slice(1)]
+    const lado = respostaDosNameservers(ALIAS_AAAA, noWordPress)
+    expect(lado).toEqual([WORDPRESS.AAAA])
+    expect(
+      linhaConfere(ALIAS_AAAA, lado, AAAA_POR_NAMESERVER[1] ?? [], false),
+    ).toBe(false)
+  })
+
+  it('registro comum com nameservers discordando continua lançando', () => {
+    expect(() =>
+      respostaDosNameservers(COMUM, [['18.230.53.197'], ['18.230.53.198']]),
+    ).toThrow('os nameservers da AWS discordam entre si em A app.lotusotec.cl.')
+    expect(
+      respostaDosNameservers(COMUM, [['18.230.53.197'], ['18.230.53.197']]),
+    ).toEqual(['18.230.53.197'])
+  })
+
+  it('linha comum confere quando inventário, AWS e servido batem', () => {
+    expect(
+      linhaConfere(COMUM, ['18.230.53.197'], ['18.230.53.197'], false),
+    ).toBe(true)
+    expect(linhaConfere(COMUM, ['18.230.53.197'], [], false)).toBe(false)
+  })
+
+  it('alias com o lado servido ainda no WordPress não confere', () => {
+    // Resolvedor público com o registro de antes em cache.
+    expect(
+      linhaConfere(
+        ALIAS_AAAA,
+        AAAA_POR_NAMESERVER[0] ?? [],
+        [WORDPRESS.AAAA],
+        false,
+      ),
+    ).toBe(false)
+  })
+
+  it('alias lido pela API compara o DNSName, com ou sem ponto e sem caixa', () => {
+    const servido = AAAA_POR_NAMESERVER[2] ?? []
+    expect(
+      linhaConfere(
+        ALIAS_AAAA,
+        ['dhpoztt69jydz.cloudfront.net.'],
+        servido,
+        true,
+      ),
+    ).toBe(true)
+    expect(
+      linhaConfere(ALIAS_AAAA, ['DHPOZTT69JYDZ.cloudfront.net'], servido, true),
+    ).toBe(true)
+    expect(
+      linhaConfere(
+        ALIAS_AAAA,
+        ['d111111abcdef8.cloudfront.net.'],
+        servido,
+        true,
+      ),
+    ).toBe(false)
+  })
+
+  it('valoresDaApi lê o DNSName do alias e os ResourceRecords do resto', () => {
+    expect(
+      valoresDaApi({
+        AliasTarget: { DNSName: 'dhpoztt69jydz.cloudfront.net.' },
+      }),
+    ).toEqual(['dhpoztt69jydz.cloudfront.net.'])
+    expect(
+      valoresDaApi({ ResourceRecords: [{ Value: '18.230.53.197' }] }),
+    ).toEqual(['18.230.53.197'])
+    expect(valoresDaApi({})).toEqual([])
+  })
+
+  it('alias fora de A e AAAA é erro de quem escreveu o inventário', () => {
+    expect(() =>
+      linhaConfere({ ...ALIAS_AAAA, tipo: 'CNAME' }, [], [], false),
+    ).toThrow('alias para o CloudFront só existe em A e AAAA: CNAME')
+  })
+})
+
+describe('infra/rollback-corte.json (caminho B do rollback, spec D3 de 7.2.5)', () => {
+  /** @typedef {import('./lib/zona.mjs').MudancaDeRegistro} Mudanca */
+  /** @type {{ Comment: string, Changes: Mudanca[] }} */
+  const lote = JSON.parse(readFileSync('infra/rollback-corte.json', 'utf8'))
+  /** @param {(mudanca: Mudanca) => Mudanca} mexer */
+  const mexido = (mexer) => ({ ...lote, Changes: lote.Changes.map(mexer) })
+
+  it('devolve apex e www, A e AAAA, ao WordPress por UPSERT, com TTL_DO_CORTE', () => {
+    expect(conferirLoteDeRollback(lote)).toEqual([])
+  })
+
+  it('TTL diferente de TTL_DO_CORTE reprova com o nome do campo', () => {
+    // Com 3600 contra um template de 60, a reconciliação do §5 de
+    // rollback-corte.md seria caso não ensaiado (spec D3).
+    const problemas = conferirLoteDeRollback(
+      mexido((m) => ({
+        ...m,
+        ResourceRecordSet: { ...m.ResourceRecordSet, TTL: 3600 },
+      })),
     )
+    expect(problemas).toHaveLength(4)
+    expect(problemas).toContain(
+      'TTL de A lotusotec.cl.: esperado 60, veio 3600',
+    )
+  })
+
+  it('outro nome, registro faltando, valor ou ação errados reprovam', () => {
+    const comApp = mexido((m) =>
+      m.ResourceRecordSet.Name === 'www.lotusotec.cl.' &&
+      m.ResourceRecordSet.Type === 'A'
+        ? {
+            ...m,
+            ResourceRecordSet: {
+              ...m.ResourceRecordSet,
+              Name: 'app.lotusotec.cl.',
+            },
+          }
+        : m,
+    )
+    expect(conferirLoteDeRollback(comApp)).toEqual([
+      'Changes: A app.lotusotec.cl. fora de apex e www, A e AAAA',
+      'Changes: falta A www.lotusotec.cl.',
+    ])
+    const outroIp = mexido((m) =>
+      m.ResourceRecordSet.Type === 'A'
+        ? {
+            ...m,
+            ResourceRecordSet: {
+              ...m.ResourceRecordSet,
+              ResourceRecords: [{ Value: '18.230.53.197' }],
+            },
+          }
+        : m,
+    )
+    expect(conferirLoteDeRollback(outroIp)).toContain(
+      'ResourceRecords de A lotusotec.cl.: esperado 185.146.167.195, veio ["18.230.53.197"]',
+    )
+    const apagar = mexido((m) => ({ ...m, Action: 'DELETE' }))
+    expect(conferirLoteDeRollback(apagar)).toContain(
+      'Action de AAAA www.lotusotec.cl.: esperado UPSERT, veio DELETE',
+    )
+    const repetido = {
+      ...lote,
+      Changes: [...lote.Changes, ...lote.Changes.slice(0, 1)],
+    }
+    expect(conferirLoteDeRollback(repetido)).toEqual([
+      'Changes: A lotusotec.cl. repetido',
+    ])
   })
 })

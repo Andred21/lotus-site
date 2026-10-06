@@ -48,7 +48,7 @@ const MODELO = `
 `
 
 describe('o módulo canônico', () => {
-  it('declara os sete cabeçalhos e os três removidos da spec', () => {
+  it('declara os seis cabeçalhos e os três removidos; o X-Robots-Tag saiu em 7.2.5', () => {
     expect(Object.keys(CABECALHOS)).toEqual([
       'Content-Security-Policy',
       'Strict-Transport-Security',
@@ -56,7 +56,6 @@ describe('o módulo canônico', () => {
       'X-Frame-Options',
       'Referrer-Policy',
       'Permissions-Policy',
-      'X-Robots-Tag',
     ])
     expect([...REMOVIDOS]).toEqual([
       'Server',

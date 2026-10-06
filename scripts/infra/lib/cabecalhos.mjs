@@ -35,8 +35,9 @@ const DIRETIVAS_CSP = Object.freeze([
 ])
 
 /**
- * Tudo o que a borda emite, `X-Robots-Tag` incluso — em `7.2.5` ele sai
- * daqui E do template, e a catraca obriga os dois a mudarem juntos.
+ * Tudo o que a borda emite. O `X-Robots-Tag: noindex, nofollow` saiu daqui e
+ * do template juntos no dia do corte (7.2.5, spec D5): com o domínio do
+ * cliente apontando para a distribuição, o site precisa ser indexável.
  * HSTS de um ano sem `includeSubDomains` e sem `preload`: `mail.lotusotec.cl`
  * falha verificação TLS e `app.lotusotec.cl` não responde em 443 (spec D1).
  * @type {Readonly<Record<string, string>>}
@@ -49,7 +50,6 @@ export const CABECALHOS = Object.freeze({
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy':
     'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
-  'X-Robots-Tag': 'noindex, nofollow',
 })
 
 /**
