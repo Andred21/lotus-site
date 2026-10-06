@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
+workflow_state: ready_for_closure
 work_class: architectural
 active_work_item: 7.2.5
 active_notion_eap: 7.2.5
@@ -9,20 +9,20 @@ active_title: Realizar cutover do lotusotec.cl para o novo site (bloco `B5`)
 active_branch: feat/7-2-5-cutover-lotusotec
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: trazer_linha_do_log_do_formulario
-resume_state: reviewing
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md
 active_plan: docs/superpowers/plans/2026-10-04-7.2.5-cutover-lotusotec.md
 executor: claude
 reviewer: claude
 reviewer_exception: 'Autorizado por João em 2026-10-05: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-65.'
-blocker: 'Achado R-1 da review: a spec de 7.2.5, §7 item 4, pede a linha do log da função com desfecho: enviado, não lida na execução. João decidiu em 2026-10-05 pela opção (a): ele roda aws logs filter-log-events no log group /aws/lambda/lotus-site-contato (sa-east-1), janela de 2026-10-05T14:20Z a 14:30Z, filtro "desfecho", e traz a linha. Claude então a registra na evidência §6.5, tira o item dos Limites declarados, repete prettier e retoma a review. Linha ausente ou desfecho diferente de enviado é achado novo. R-0 corrigido em ee3b200.'
+blocker: null
 supervised_cycles_completed: 19
 last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: f0503df
-updated_at: 2026-10-06T00:08:22Z
+state_basis_commit: 7c303b6
+updated_at: 2026-10-06T00:10:50Z
 ---
 
 # Estado operacional — Lotus Site
