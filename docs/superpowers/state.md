@@ -10,7 +10,7 @@ active_branch: feat/7-2-6-observabilidade-minima
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: executar_change_set_da_prova_do_health_check
+next_action: executar_volta_do_health_check_e_prova_do_5xx
 resume_state: executing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
@@ -18,11 +18,11 @@ active_plan: docs/superpowers/plans/2026-10-06-7.2.6-observabilidade-minima.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: 'Portão da prova do health check (Task 3, Step 8), com divergência do plano. Change set criado e lido, não executado: arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791291722/0b10cf7e-85ae-456d-93aa-69331cc777f0 (stack lotus-observabilidade, us-east-1; só o override CaminhoDaSonda=/prova-b6-inexistente). Diff por propriedade: uma linha, a esperada — SaudeDoSite /Properties/HealthCheckConfig/ResourcePath: "/" -> "/prova-b6-inexistente". Divergência: a tabela do plano (describe-change-set sem --include-property-values) veio com duas linhas — Modify AlarmeDeSaude Substituicao False e Modify SaudeDoSite Substituicao Conditional —, e o plano esperava uma, Modify SaudeDoSite False; pela regra do plano, recurso fora do esperado para o fluxo sem executar. Leitura de Claude: sem os valores, a CloudFormation avalia HealthCheckConfig inteira (RequiresRecreation Conditionally) e lista o AlarmeDeSaude só como consequência dinâmica do !Ref SaudeDoSite; com --include-property-values, a mudança é uma só, ResourcePath com RequiresRecreation Never e SaudeDoSite Replacement False; o schema de AWS::Route53::HealthCheck dá como create-only só Type, MeasureLatency e RequestInterval. Recomendação: executar. Depois do UPDATE_COMPLETE, Claude confere que o IdDoHealthCheck continua 28047618-872b-4a39-90d9-3e1ff6d1ed53 e que os eventos não tocaram o AlarmeDeSaude. Esperado: o AlarmeDeSaude em ALARM alguns minutos depois e um e-mail ALARM: "lotus-site-indisponivel"; o site não muda para o visitante. Editado e não commitado: docs/infra/evidencia-observabilidade-2026-10-06.md (§1, §2 e §3.1). Executar é de João, ou de Claude com autorização explícita neste passo.'
+blocker: 'Portão da volta do health check e da prova do 5xx (Task 3, Step 12). Change set da volta criado e lido, não executado: arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791293693/d7f446b4-b9fb-4bcf-934c-ed1ec6d8fff6 (stack lotus-observabilidade, us-east-1; só o override explícito CaminhoDaSonda=/). Diff por propriedade: uma linha, a esperada — SaudeDoSite /Properties/HealthCheckConfig/ResourcePath: "/prova-b6-inexistente" -> "/". Tabela do plano: as mesmas duas linhas da prova — Modify AlarmeDeSaude Substituicao False e Modify SaudeDoSite Substituicao Conditional —, contra uma esperada; com --include-property-values, uma mudança, Replacement False, ResourcePath RequiresRecreation Never. O Step 9 provou que esse formato atualiza no lugar: o execute da prova (13:30:48Z, UPDATE_COMPLETE 13:30:55Z) gerou eventos só do SaudeDoSite, com o mesmo físico 28047618-872b-4a39-90d9-3e1ff6d1ed53, e nenhum do AlarmeDeSaude. Recomendação: executar. Step 10 provado: lotus-site-indisponivel em ALARM às 13:34:16Z (Threshold Crossed, ponto 0.0 às 13:33), seis checadores com Failure: HTTP Status Code 404, ação SNS executada às 13:34:16Z; falta João declarar a chegada e o horário do e-mail ALARM: "lotus-site-indisponivel". Comandos de João, nesta ordem: (1) o execute deste change set, com wait stack-update-complete; (2) depois do UPDATE_COMPLETE e só com o lotus-site-5xx em OK, o set-alarm-state do Step 13 (lotus-site-5xx para ALARM, razão da prova de B6). Cada um é de João, ou de Claude com autorização explícita dada para ele. Esperados três e-mails: OK: "lotus-site-indisponivel", ALARM: "lotus-site-5xx" e, segundos depois, OK: "lotus-site-5xx"; João declara cada um e o horário. Enquanto este portão não fecha, o AlarmeDeSaude fica em ALARM e uma queda real não manda e-mail novo. Editado e não commitado: docs/infra/evidencia-observabilidade-2026-10-06.md (§1 a §3.3).'
 supervised_cycles_completed: 20
 last_completed_work_item: 7.2.5
-state_basis_commit: fda436c
-updated_at: 2026-10-06T13:04:11Z
+state_basis_commit: 100febf
+updated_at: 2026-10-06T13:37:06Z
 ---
 
 # Estado operacional — Lotus Site
