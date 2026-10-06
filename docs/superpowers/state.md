@@ -1,8 +1,8 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: planning
-work_class: null
+workflow_state: ready_for_execution
+work_class: architectural
 active_work_item: 7.2.6
 active_notion_eap: 7.2.6
 active_title: Configurar observabilidade mínima pós-go-live (bloco `B6`)
@@ -10,19 +10,19 @@ active_branch: feat/7-2-6-observabilidade-minima
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: continue_planning
+next_action: execute_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
-active_plan: null
-executor: null
-reviewer: null
+active_plan: docs/superpowers/plans/2026-10-06-7.2.6-observabilidade-minima.md
+executor: claude
+reviewer: codex
 reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 20
 last_completed_work_item: 7.2.5
-state_basis_commit: 1721c08
-updated_at: 2026-10-06T01:54:58Z
+state_basis_commit: 8ff5502
+updated_at: 2026-10-06T11:52:56Z
 ---
 
 # Estado operacional — Lotus Site
