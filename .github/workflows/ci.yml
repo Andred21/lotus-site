@@ -185,6 +185,14 @@ jobs:
       contents: read
 
     steps:
+      # Sem as duas variáveis, o job `alerta` não tem como avisar: fica
+      # `skipped`, ou falha sem destino, e uma falha deste workflow em main
+      # passa calada (spec de 7.2.6, §4.2). Primeiro passo de propósito: um
+      # passo que reprove adiante não esconde o aviso.
+      - name: Alerta de falha do CI não configurado
+        if: vars.AWS_ALERT_ROLE_ARN == '' || vars.AWS_ALERT_TOPIC_ARN == ''
+        run: echo "::warning::AWS_ALERT_ROLE_ARN ou AWS_ALERT_TOPIC_ARN não está definida; uma falha deste workflow em main não chega ao e-mail de alerta (job alerta)."
+
       - uses: actions/checkout@v4
 
       - name: Habilitar Corepack
@@ -370,3 +378,63 @@ jobs:
           echo "release publicado em s3://$BALDE/releases/$SHA/"
           git log -1 --pretty='%(trailers:key=Source-Commit,valueonly)' \
             | sed 's/^/commit de origem: /'
+
+  # Avisa por e-mail quando qualquer job de um push em main falha ou estoura
+  # o tempo (spec de 7.2.6, D3 e §4.2). `failure()` num job com `needs` olha
+  # a cadeia inteira: pega o `check` reprovando, o `procedencia` recusando o
+  # commit (e o `deploy` pulado por isso) e o `deploy` quebrando no meio da
+  # promoção. Job que estoura `timeout-minutes` termina `cancelled`, e aí
+  # `failure()` é falso: `contains(needs.*.result, 'cancelled')` pega esse
+  # caso. `!cancelled()` cala o run cancelado à mão -- push não cancela run
+  # em andamento (`cancel-in-progress`, no topo) -- e, por ser função de
+  # status, tira do `if` o `success()` implícito.
+  # AWS_ALERT_ROLE_ARN só existe no corporativo: no pessoal, e em PR, o job
+  # fica `skipped`. Todo job novo entra em `needs`, ou a falha dele não avisa
+  # ninguém -- a catraca scripts/infra/ci-alerta.test.mjs reprova a falta.
+  #
+  # A mensagem só usa valores do próprio workflow, e por `env`: mensagem de
+  # commit e nome de branch são texto de quem fez o push, e interpolá-los no
+  # `run` abriria injeção de shell. O `--subject` do SNS recusa quebra de linha
+  # e caractere de controle, e precisa ter menos de 100 caracteres.
+  alerta:
+    name: alerta
+    needs: [check, procedencia, deploy]
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      vars.AWS_ALERT_ROLE_ARN != '' &&
+      !cancelled() &&
+      (failure() || contains(needs.*.result, 'cancelled'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Assumir a role de alerta por OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ALERT_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Publicar a falha no SNS
+        env:
+          TOPICO: ${{ vars.AWS_ALERT_TOPIC_ARN }}
+          RESULTADOS: ${{ toJSON(needs) }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+          URL_DO_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$TOPICO" ]; then
+            echo "::error::AWS_ALERT_TOPIC_ARN não está definida; o alerta não tem para onde ir."
+            exit 1
+          fi
+          # `cancelled` em needs é tempo estourado: run cancelado não chega aqui.
+          jobs=$(printf '%s' "$RESULTADOS" | jq -r 'to_entries[]
+            | "\(.key): \(.value.result)"
+              + (if .value.result == "cancelled" then " (tempo estourado)" else "" end)')
+          corpo=$(printf 'Um push em main de %s falhou.\n\n%s\n\ncommit: %s\nrun: %s\n' \
+            "$REPO" "$jobs" "$SHA" "$URL_DO_RUN")
+          aws sns publish --topic-arn "$TOPICO" \
+            --subject "lotus-site: CI falhou em ${SHA:0:7}" \
+            --message "$corpo" --query MessageId --output text
