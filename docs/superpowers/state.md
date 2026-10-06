@@ -10,7 +10,7 @@ active_branch: feat/7-2-5-cutover-lotusotec
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: decidir_prova_do_log_do_formulario
+next_action: trazer_linha_do_log_do_formulario
 resume_state: reviewing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md
@@ -18,11 +18,11 @@ active_plan: docs/superpowers/plans/2026-10-04-7.2.5-cutover-lotusotec.md
 executor: claude
 reviewer: claude
 reviewer_exception: 'Autorizado por João em 2026-10-05: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-65.'
-blocker: 'Achado R-1 da review (important, exige decisão): a spec de 7.2.5, §7 item 4, prova o envio real pelo log da função com desfecho: enviado e pela mensagem em contacto@lotusotec.cl. A linha do log não foi lida (o aws logs tail foi recusado pela política de permissão do agente, por trazer dados pessoais do formulário); a chegada da mensagem, com captura de tela, ficou no lugar dela por escolha do executor, sem decisão de João (evidência §6.5 e Limites declarados). Decisão de João: (a) rodar ele mesmo aws logs tail no log group da função de contato, janela de 2026-10-05T14:20Z a 14:30Z, e trazer só a linha com desfecho, para entrar em §6.5; ou (b) aceitar a chegada da mensagem como prova suficiente do item 4, registrado como desvio aceito por ele na evidência. Achado blocking R-0 (sonda 7 em §1.4) já corrigido em ee3b200. Gates: pnpm check e pnpm e2e verdes em 5e77bb7.'
+blocker: 'Achado R-1 da review: a spec de 7.2.5, §7 item 4, pede a linha do log da função com desfecho: enviado, não lida na execução. João decidiu em 2026-10-05 pela opção (a): ele roda aws logs filter-log-events no log group /aws/lambda/lotus-site-contato (sa-east-1), janela de 2026-10-05T14:20Z a 14:30Z, filtro "desfecho", e traz a linha. Claude então a registra na evidência §6.5, tira o item dos Limites declarados, repete prettier e retoma a review. Linha ausente ou desfecho diferente de enviado é achado novo. R-0 corrigido em ee3b200.'
 supervised_cycles_completed: 19
 last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: ee3b200
-updated_at: 2026-10-05T23:45:30Z
+state_basis_commit: f0503df
+updated_at: 2026-10-06T00:08:22Z
 ---
 
 # Estado operacional — Lotus Site
