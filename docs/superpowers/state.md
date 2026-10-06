@@ -10,7 +10,7 @@ active_branch: feat/7-2-6-observabilidade-minima
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: confirmar_assinatura_do_sns
+next_action: executar_change_set_da_prova_do_health_check
 resume_state: executing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
@@ -18,11 +18,11 @@ active_plan: docs/superpowers/plans/2026-10-06-7.2.6-observabilidade-minima.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: 'Portão da confirmação da assinatura (Task 3, Step 5). Stack lotus-observabilidade em CREATE_COMPLETE desde 2026-10-06T12:52:18Z (execute por Claude às 12:51:55Z, autorizado por João neste passo). Às 12:56:46Z a assinatura email do tópico arn:aws:sns:us-east-1:760144413534:lotus-site-alertas segue PendingConfirmation (destinatário jv***@gmail.com). Os dois alarmes em OK, os seis checadores com 200, a entrega do log com 12 campos e as quatro consultas criadas. João: tocar em "Confirm subscription" no e-mail AWS Notification - Subscription Confirmation, remetente no-reply@sns.amazonaws.com, chegado às 12:52Z; procurar no spam antes de concluir que não veio; o link vale 48 h, até cerca de 2026-10-08T12:52Z — passado o prazo, o SNS apaga a assinatura pendente e a volta pede substituir o recurso, decisão de João. Nenhum passo de prova começa antes. Editado e não commitado: docs/infra/evidencia-observabilidade-2026-10-06.md (§1).'
+blocker: 'Portão da prova do health check (Task 3, Step 8), com divergência do plano. Change set criado e lido, não executado: arn:aws:cloudformation:us-east-1:760144413534:changeSet/awscli-cloudformation-package-deploy-1791291722/0b10cf7e-85ae-456d-93aa-69331cc777f0 (stack lotus-observabilidade, us-east-1; só o override CaminhoDaSonda=/prova-b6-inexistente). Diff por propriedade: uma linha, a esperada — SaudeDoSite /Properties/HealthCheckConfig/ResourcePath: "/" -> "/prova-b6-inexistente". Divergência: a tabela do plano (describe-change-set sem --include-property-values) veio com duas linhas — Modify AlarmeDeSaude Substituicao False e Modify SaudeDoSite Substituicao Conditional —, e o plano esperava uma, Modify SaudeDoSite False; pela regra do plano, recurso fora do esperado para o fluxo sem executar. Leitura de Claude: sem os valores, a CloudFormation avalia HealthCheckConfig inteira (RequiresRecreation Conditionally) e lista o AlarmeDeSaude só como consequência dinâmica do !Ref SaudeDoSite; com --include-property-values, a mudança é uma só, ResourcePath com RequiresRecreation Never e SaudeDoSite Replacement False; o schema de AWS::Route53::HealthCheck dá como create-only só Type, MeasureLatency e RequestInterval. Recomendação: executar. Depois do UPDATE_COMPLETE, Claude confere que o IdDoHealthCheck continua 28047618-872b-4a39-90d9-3e1ff6d1ed53 e que os eventos não tocaram o AlarmeDeSaude. Esperado: o AlarmeDeSaude em ALARM alguns minutos depois e um e-mail ALARM: "lotus-site-indisponivel"; o site não muda para o visitante. Editado e não commitado: docs/infra/evidencia-observabilidade-2026-10-06.md (§1, §2 e §3.1). Executar é de João, ou de Claude com autorização explícita neste passo.'
 supervised_cycles_completed: 20
 last_completed_work_item: 7.2.5
-state_basis_commit: c63ba9f
-updated_at: 2026-10-06T12:57:29Z
+state_basis_commit: fda436c
+updated_at: 2026-10-06T13:04:11Z
 ---
 
 # Estado operacional — Lotus Site
