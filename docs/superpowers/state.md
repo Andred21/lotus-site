@@ -1,28 +1,28 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_closure
-work_class: architectural
-active_work_item: 7.2.5
-active_notion_eap: 7.2.5
-active_title: Realizar cutover do lotusotec.cl para o novo site (bloco `B5`)
-active_branch: feat/7-2-5-cutover-lotusotec
+workflow_state: idle
+work_class: null
+active_work_item: null
+active_notion_eap: null
+active_title: null
+active_branch: null
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: close_active_work_item
+next_owner: joao
+next_action: select_work_item
 resume_state: null
 context_packet: null
-active_spec: docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md
-active_plan: docs/superpowers/plans/2026-10-04-7.2.5-cutover-lotusotec.md
-executor: claude
-reviewer: claude
-reviewer_exception: 'Autorizado por João em 2026-10-05: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-65.'
+active_spec: null
+active_plan: null
+executor: null
+reviewer: null
+reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 19
-last_completed_work_item: 7.2.3+7.2.4
-state_basis_commit: 7c303b6
-updated_at: 2026-10-06T00:10:50Z
+supervised_cycles_completed: 20
+last_completed_work_item: 7.2.5
+state_basis_commit: b40c153
+updated_at: 2026-10-06T00:19:22Z
 ---
 
 # Estado operacional — Lotus Site
