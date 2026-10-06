@@ -675,6 +675,13 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   **Prazo:** corrigido e atravessado o espelho antes de 2026-11-10, quando a volta ao WordPress
   deixa de existir e a correção para frente vira a única saída (`rollback-corte.md` §0); de
   preferência antes de `B6`.
+  **Disparo corrigido em 2026-10-06**, fora do workflow por decisão de João (branch
+  `fix/d-62-dom-verificar-restauracao`): a diretiva entrou em `verificar-restauracao.mjs`. Na
+  árvore filtrada de `main@28542cb`, montada com as exclusões do espelho, `pnpm check` reprovou
+  com o mesmo `TS2584` antes da diretiva e saiu 0 depois dela (32 arquivos, 283 testes). A produção
+  volta a receber deploy quando a correção atravessar o espelho. O débito continua aberto: as saídas
+  (a), (b) e (c) seguem sem decisão, e o próximo script de Node que usar o DOM sem a diretiva
+  reprova do mesmo jeito.
 - **D-63 · a sonda `allowsEval` do zod viola a CSP ao carregar o bundle, a cada visita de página** —
   medido em 2026-09-27 neste bloco e remedido em 2026-09-28 contra a distribuição
   (`dhpoztt69jydz.cloudfront.net`): o zod 4.4.3 lê o getter `allowsEval.value`

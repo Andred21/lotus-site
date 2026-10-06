@@ -6,6 +6,11 @@
 // falha na cópia num GET é pedida de novo ao vivo, anônima, para a emenda E1.
 //
 // Uso: node scripts/wordpress/verificar-restauracao.mjs   (sai 1 se reprovar)
+//
+// O `evaluate` abaixo roda no navegador e lê `document`. A diretiva é deste
+// arquivo porque o DOM que os scripts de inventário e QA trazem não atravessa
+// o espelho (D-62).
+/// <reference lib="dom" />
 import { chromium, request } from '@playwright/test'
 import { compararPaginas } from './lib/comparar.mjs'
 
