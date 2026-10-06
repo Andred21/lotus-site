@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.6
 active_notion_eap: 7.2.6
@@ -10,7 +10,7 @@ active_branch: feat/7-2-6-observabilidade-minima
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_plan
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 20
 last_completed_work_item: 7.2.5
-state_basis_commit: 8ff5502
-updated_at: 2026-10-06T11:52:56Z
+state_basis_commit: a7f3567
+updated_at: 2026-10-06T12:02:23Z
 ---
 
 # Estado operacional — Lotus Site
