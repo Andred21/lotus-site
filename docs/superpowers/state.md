@@ -13,7 +13,7 @@ next_owner: claude
 next_action: continue_planning
 resume_state: null
 context_packet: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
 active_plan: null
 executor: null
 reviewer: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 20
 last_completed_work_item: 7.2.5
-state_basis_commit: 71ba24a
-updated_at: 2026-10-06T01:02:35Z
+state_basis_commit: 1721c08
+updated_at: 2026-10-06T01:54:58Z
 ---
 
 # Estado operacional — Lotus Site
