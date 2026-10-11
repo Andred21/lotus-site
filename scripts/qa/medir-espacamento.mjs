@@ -26,7 +26,7 @@ mkdirSync(OUT_DIR, { recursive: true })
 
 /** @typedef {{ nome: string, largura: number, referencia: Record<string, number> | null, clone: Record<string, number> | null }} LinhaMedida */
 
-// SITE_URL resolve para o WordPress pelo IP; o clone em localhost não muda.
+// Desde B7 (7.2.7) launchReferencia recusa: não há referência viva (spec D6).
 const browser = await launchReferencia()
 /** @type {LinhaMedida[]} */
 const medidas = []

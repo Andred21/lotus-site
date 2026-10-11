@@ -4,6 +4,8 @@ import {
   cssColor,
   exigirCloneForaDaReferencia,
   exigirWordPress,
+  launchReferencia,
+  openPage,
   rgbToHex,
 } from './site.mjs'
 
@@ -108,4 +110,18 @@ describe('exigirCloneForaDaReferencia', () => {
       )
     },
   )
+})
+
+describe('launchReferencia (7.2.7, spec D6)', () => {
+  it('recusa abrir a referência: o WordPress saiu do host em B7', async () => {
+    await expect(launchReferencia()).rejects.toThrow(
+      'a referência do WordPress foi desativada em B7 (7.2.7)',
+    )
+  })
+
+  it('openPage falha com a mesma mensagem, sem abrir navegador', async () => {
+    await expect(
+      openPage({ name: 'mobile', width: 375, height: 667 }),
+    ).rejects.toThrow('a referência do WordPress foi desativada em B7 (7.2.7)')
+  })
 })
