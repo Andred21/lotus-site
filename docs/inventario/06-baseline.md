@@ -1,6 +1,6 @@
 # 06 — Baseline visual
 
-> Evidência: `docs/inventario/baseline/*.png`, gerado em `2026-08-25` por `pnpm inventario:baseline` (usa `openPage`/`VIEWPORTS` de `lib/site.mjs`). `sha256` de cada captura: `home-375.png` `2c45c6568c56dc15…`, `home-375-menu.png` `7463bc13504d256f…`, `home-768.png` `23aab02ff5d32f03…`, `home-1440.png` `697832b4f2f49d44…`, `home-1920.png` `1bf486f41cbc5b1c…`.
+> Evidência: `docs/inventario/baseline/*.png`, recapturado em `2026-10-11` por `pnpm inventario:baseline` (usa `openPage`/`VIEWPORTS`/`capturarPaginaInteira` de `lib/site.mjs`) contra o WordPress em `185.146.167.195`. `sha256` de cada captura: `home-375.png` `43d878a8f3efcdba…`, `home-375-menu.png` `7463bc13504d256f…`, `home-768.png` `1b836a7dce7cf812…`, `home-1440.png` `cefef084d61cb6c5…`, `home-1920.png` `f113a5dafbad6483…`. A captura original, de `2026-08-25`, fica no histórico Git (`92906d2`); a comparação entre as duas está em "Recaptura de 2026-10-11", abaixo.
 
 ## Como foi gerado
 
@@ -8,17 +8,21 @@
 pnpm inventario:baseline
 ```
 
-O script abre a home nos 4 viewports do inventário, rola a página inteira (dispara o lazy-load do Divi) e tira uma captura `fullPage`. Em `375px`, depois da captura normal, clica no toggle do menu mobile (`.mobile_menu_bar`) e tira uma segunda captura, não full-page, com o menu aberto.
+O script abre a home nos 4 viewports do inventário e rola a página inteira (dispara o lazy-load do Divi). Desde o corte de `2026-10-05`, `lotusotec.cl` entrega o clone pela CloudFront: o Chromium resolve `lotusotec.cl` para o IP do WordPress (`--host-resolver-rules`), com URL, Host e SNI intactos, e a captura reprova se a resposta vier da CloudFront.
+
+A captura de página inteira é composta: o screenshot `fullPage` do Playwright redesenha o cabeçalho desktop do Divi em outro estado (fundo `#f8f8f8`, logo pequeno; `D-30`), então as linhas da altura do viewport vêm de um screenshot de viewport tirado na mesma página, com a rolagem já no topo, e o resto vem do `fullPage`. Em `375px`, depois da captura normal, o script clica no toggle do menu mobile (`.mobile_menu_bar`) e tira uma segunda captura, só do viewport, com o menu aberto.
 
 ## Arquivos
 
 | arquivo             | viewport | altura capturada | peso        |
 | ------------------- | -------- | ---------------- | ----------- |
-| `home-375.png`      | 375px    | 5467px           | 418 063 B   |
+| `home-375.png`      | 375px    | 5467px           | 609 373 B   |
 | `home-375-menu.png` | 375px    | viewport (812px) | 27 210 B    |
-| `home-768.png`      | 768px    | 4913px           | 446 187 B   |
-| `home-1440.png`     | 1440px   | 3441px           | 1 292 314 B |
-| `home-1920.png`     | 1920px   | 3409px           | 1 490 055 B |
+| `home-768.png`      | 768px    | 4913px           | 653 520 B   |
+| `home-1440.png`     | 1440px   | 3441px           | 1 820 853 B |
+| `home-1920.png`     | 1920px   | 3409px           | 2 125 661 B |
+
+O peso subiu em relação à captura de `2026-08-25` porque a composição reencoda o PNG pelo canvas do Chromium, que comprime menos que o screenshot do Playwright; os pixels são os mesmos fora do cabeçalho (abaixo).
 
 A altura da página cai de `5467px`/`4913px` (mobile/tablet) para `~3400px` (desktop) porque `Somos` e `Cursos` deixam de empilhar conteúdo verticalmente — ver `05-layout.md` para a altura por seção.
 
@@ -35,6 +39,22 @@ A altura da página cai de `5467px`/`4913px` (mobile/tablet) para `~3400px` (des
 ## Estado `home-375-menu.png`
 
 Existe porque o menu mobile só aparece via clique — uma captura `fullPage` normal nunca mostraria os 4 itens do menu (`Inicio`, `Quienes Somos`, `Cursos`, `Contacto`) abertos. A captura confirma visualmente a lista de itens já extraída em `01-estrutura.md`/`02-conteudo.md` e mostra a ordem em que aparecem (empilhados, com o logo por trás, parcialmente coberto pelo dropdown).
+
+## Recaptura de 2026-10-11
+
+`node scripts/inventario/comparar-png.mjs <antigo> <novo>`, com o antigo extraído de `92906d2` (`git show 92906d2:docs/inventario/baseline/home-1440.png > /tmp/home-1440.png`):
+
+| arquivo             | dimensões       | pixels diferentes | faixas                |
+| ------------------- | --------------- | ----------------- | --------------------- |
+| `home-375.png`      | 375×5467 nos 2  | 0                 | —                     |
+| `home-375-menu.png` | 375×812 nos 2   | 0                 | — (bytes iguais)      |
+| `home-768.png`      | 768×4913 nos 2  | 0                 | —                     |
+| `home-1440.png`     | 1440×3441 nos 2 | 134 794           | linhas 0–93, x 0–1439 |
+| `home-1920.png`     | 1920×3409 nos 2 | 179 914           | linhas 0–93, x 0–1919 |
+
+A diferença inteira é a faixa do cabeçalho desktop, a que `D-30` previa: o resto da página, inclusive o hero e o mobile, é pixel a pixel o da captura de agosto. O WordPress não mudou entre as duas datas, e o defeito era só da captura.
+
+Achado da execução: o WordPress declara `scroll-behavior: smooth`, e o `scrollTo(0, 0)` de `openPage` ainda está animando 1 s depois em `375px` (`scrollY` 28) e `768px` (`scrollY` 1). O `fullPage` não sente isso, mas o screenshot de viewport sim; `capturarPaginaInteira` espera `scrollY === 0` antes de tirá-lo.
 
 ## Ressalva
 

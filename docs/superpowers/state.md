@@ -19,10 +19,10 @@ executor: null
 reviewer: null
 reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 21
-last_completed_work_item: 7.2.6
-state_basis_commit: 0ff8604
-updated_at: 2026-10-11T15:55:33Z
+supervised_cycles_completed: 22
+last_completed_work_item: recaptura-baseline
+state_basis_commit: f278eb7
+updated_at: 2026-10-11T18:42:42Z
 ---
 
 # Estado operacional — Lotus Site

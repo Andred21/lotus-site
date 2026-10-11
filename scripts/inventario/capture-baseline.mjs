@@ -1,16 +1,21 @@
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { OUT_DIR, VIEWPORTS, openPage } from './lib/site.mjs'
+import {
+  OUT_DIR,
+  VIEWPORTS,
+  capturarPaginaInteira,
+  openPage,
+} from './lib/site.mjs'
 
 const baselineDir = join(OUT_DIR, 'baseline')
 mkdirSync(baselineDir, { recursive: true })
 
 for (const viewport of VIEWPORTS) {
   const { browser, page } = await openPage(viewport)
-  await page.screenshot({
-    path: join(baselineDir, `home-${viewport.name}.png`),
-    fullPage: true,
-  })
+  writeFileSync(
+    join(baselineDir, `home-${viewport.name}.png`),
+    await capturarPaginaInteira(page),
+  )
   console.log(`home-${viewport.name}.png`)
 
   if (viewport.name === '375') {

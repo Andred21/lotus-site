@@ -17,7 +17,7 @@ const TARGETS = [
     file: 'home-1440.png',
     regions: [
       { name: 'header-fundo', x: 300, y: 10, w: 700, h: 70, bg: '#ffffff' },
-      { name: 'menu-link', x: 850, y: 36, w: 400, h: 20, bg: '#f8f8f8' },
+      { name: 'menu-link', x: 850, y: 36, w: 400, h: 20, bg: '#000000' },
       { name: 'hero-fundo', x: 120, y: 690, w: 400, h: 110, bg: '#ffffff' },
       { name: 'hero-kicker', x: 110, y: 230, w: 400, h: 50, bg: '#000000' },
       { name: 'hero-h1', x: 110, y: 344, w: 260, h: 52, bg: '#000000' },

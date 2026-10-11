@@ -69,7 +69,16 @@ O cabeçalho é o único elemento medido que troca de cor de fundo entre viewpor
 
 O `#f8f8f8` que esta tabela publicou até 2026-09-02 nunca esteve na tela. `capture-baseline.mjs` captura com `fullPage: true`, e nesse modo o cabeçalho rasteriza `#f8f8f8` onde o screenshot de viewport rasteriza `#000000`; `sample-baseline.mjs` amostrou o artefato e o publicou como cor medida. Medição direta em `https://lotusotec.cl/` (`docs/qa/paridade/2026-09-02/header-cursos.md`) devolve `rgb(0, 0, 0)` **opaco** em `1440` e `1920` — e `rgb(255, 255, 255)` em `375` e `768` —, em repouso e com `.et-fixed-header`, em duas alturas de viewport; a página mede `3441px`, idêntico ao baseline de 2026-08-25, então o site não mudou.
 
-Isso desfaz também a afirmação anterior de que `getComputedStyle` devolvia `rgba(0, 0, 0, 0.03)` para o fundo do cabeçalho: não reproduz. O defeito de `rgbToHex` (descartar alpha) é real e `cssColor` em `lib/site.mjs` o corrige — a faixa do rodapé é o caso genuíno (`#545454` na tabela, `#323232` na tela) —, mas o cabeçalho nunca foi prova dele. Os cinco PNG de `baseline/` ainda carregam o artefato: ver o débito de recaptura no backlog.
+Isso desfaz também a afirmação anterior de que `getComputedStyle` devolvia `rgba(0, 0, 0, 0.03)` para o fundo do cabeçalho: não reproduz. O defeito de `rgbToHex` (descartar alpha) é real e `cssColor` em `lib/site.mjs` o corrige — a faixa do rodapé é o caso genuíno (`#545454` na tabela, `#323232` na tela) —, mas o cabeçalho nunca foi prova dele.
+
+O baseline foi recapturado em `2026-10-11` com a página inteira composta pelo topo do viewport (`06-baseline.md`) e reamostrado por `node scripts/inventario/sample-baseline.mjs`, com a dica de fundo de `menu-link` trocada de `#f8f8f8` para `#000000`. Das 29 regiões, só as duas do cabeçalho de `home-1440.png` mudam:
+
+| região         | baseline de 2026-08-25                        | baseline de 2026-10-11                        |
+| -------------- | --------------------------------------------- | --------------------------------------------- |
+| `header-fundo` | dominante `#f8f8f8` (98,4%), núcleo `#24a2e0` | dominante `#000000` (98,4%), núcleo `#000000` |
+| `menu-link`    | dominante `#f8f8f8` (74,4%), núcleo `#24a2e0` | dominante `#000000` (74,4%), núcleo `#24a2e0` |
+
+As outras 27 saem idênticas, e a tabela de paleta acima não muda: ela já trazia o `#000000` medido no DOM. `sample-baseline.mjs` não tem região em `home-1920.png`; ali a faixa do cabeçalho (linhas 0–93) é `#000000` em 98,1% dos pixels no PNG novo e era `#f8f8f8` em 98,5% no antigo.
 
 O par `#2ea3f2` (links de conteúdo) e `#24a2e0` (links de menu) são dois azuis próximos, não o mesmo token — mantidos separados porque a medição não encontrou um só valor usado nos dois lugares.
 

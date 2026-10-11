@@ -37,7 +37,7 @@ describe('STATES', () => {
   })
 
   it('aponta a rodada para uma pasta datada, não para um temporário', () => {
-    expect(RUN_DIR).toBe('docs/qa/paridade/2026-08-30')
+    expect(RUN_DIR).toBe('docs/qa/paridade/2026-10-11')
   })
 })
 

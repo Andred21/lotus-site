@@ -39,6 +39,8 @@ de falha do CI e access log lido por quatro consultas; o fechamento do bloco fic
 `docs/superpowers/historico/progress.md`. `B0` a `B5` estão fechados, cada um com PR integrado em
 `main`. O próximo bloco da fila é `B7 · 7.2.7`, que só fica ativo por seleção explícita (Lei 3).
 Depois do merge de `B6`, a prova ponta a ponta do job `alerta` fechou `D-68` em 2026-10-11.
+`B8 · recaptura-baseline` fechou em 2026-10-11, fora da ordem por seleção de João: `D-30` fechado e
+a conferência humana de paridade feita.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -223,6 +225,11 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Por que existe:** os cinco PNG reportam o cabeçalho na cor errada, e a conferência humana de
   paridade — pendente desde a Sprint 2 e nunca feita — usa exatamente esse material.
 - **Não bloqueia o go-live.** Bloqueia a conferência humana.
+- **Entregue (bounded design `recaptura-baseline.md`, 2026-10-11):** capturas de referência de
+  volta ao WordPress por `185.146.167.195`, com guarda contra a CloudFront; página inteira composta
+  pelo topo do viewport; cinco PNG recapturados, paleta reamostrada e rodada referência × produção
+  em `docs/qa/paridade/2026-10-11/`. `D-30` fechado; conferência humana feita por João (PENDÊNCIAS
+  item 4).
 
 ## B9 · `revisao-arquitetura-2026-09`
 
@@ -266,8 +273,13 @@ O que não avança por conta nossa.
 3. ~~**Production access do SES.**~~ Não é necessário: sandbox só restringe destinatário a
    identidade verificada, e `contacto@` é do domínio verificado (D3 da spec de `B2`, 2026-09-26).
    Volta a ser necessário se o formulário um dia escrever a outro domínio.
-4. **Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
-   da Sprint 2 e nunca feita. Nenhum gate a substitui — e hoje está travada por `D-30`.
+4. ~~**Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
+   da Sprint 2 e nunca feita.~~ Feita por João em 2026-10-11, no fechamento do bloco
+   `recaptura-baseline`, sobre `docs/qa/paridade/2026-10-11/contact-sheet.html` (referência no
+   WordPress pelo IP contra a produção no release `4e8b3bb`): **aprovada com divergências**, sem
+   débito novo por decisão dele. A mais visível é a altura: o clone sai mais curto nas quatro
+   larguras (`5110` contra `5467` px em `375`, `4364`/`4913` em `768`, `3175`/`3441` em `1440`,
+   `3171`/`3409` em `1920`), aceita como está.
 5. **Autorização de escrita no Notion.** Concedida em 2026-09-09 para registrar as decisões
    daquele bloco. **Não vale para esta rodada**: a EAP `7.2.1` não foi marcada no Notion, e o
    aceite parcial está declarado em `D-47`.
@@ -402,27 +414,15 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   mecânica: com `reviewer: claude` no estado, `pnpm agent:check` reprova e `pnpm check` junto.
   **Gatilho:** cota do Codex de volta para uma segunda passada sobre estes dois commits, ou decisão
   de João sobre representar o desvio no validador em task própria do harness.
-- **D-30 · os cinco PNG de `docs/inventario/baseline/` reportam o cabeçalho na cor errada** —
-  `scripts/inventario/capture-baseline.mjs:9` captura com `fullPage: true`, e nesse modo o
-  cabeçalho desktop rasteriza `#f8f8f8` onde o screenshot de viewport, na mesma página e na mesma
-  sessão, rasteriza `#000000`. `sample-baseline.mjs` amostrou esses PNG e publicou o artefato como
-  cor medida; `docs/inventario/04-tipografia.md` e `src/index.css` seguiram, e só a medição ao vivo
-  de 2026-09-02 desfez a cadeia (`docs/qa/paridade/2026-09-02/header-cursos.md`). Isso **trava a
-  conferência humana dos cinco PNG**, que já era débito e agora tem artefato conhecido no material
-  conferido. Demonstrado para `#main-header`; **não provado** para o resto da paleta — quem
-  recapturar precisa reamostrar tudo, não só o cabeçalho. Fora do bloco por decisão de João em
-  2026-09-02: corrigir `capture-baseline.mjs` invalida os cinco PNG de uma vez e arrasta
-  `sample-baseline.mjs`.
-  **Gatilho:** bloco próprio de recaptura do baseline, antes da conferência humana.
 - **D-31 · a afirmação `rgba(0, 0, 0, 0.03)` do cabeçalho não reproduz** —
-  `docs/inventario/04-tipografia.md` (corrigido em 2026-09-02) e
-  `scripts/inventario/lib/site.mjs:96-98` (ainda não) afirmam que `getComputedStyle` devolve
+  `docs/inventario/04-tipografia.md` (corrigido em 2026-09-02) e o docstring de `cssColor` em
+  `scripts/inventario/lib/site.mjs` (corrigido em 2026-10-11 pelo bloco `recaptura-baseline`)
+  afirmavam que `getComputedStyle` devolve
   `rgba(0, 0, 0, 0.03)` para o fundo de `#main-header` sobre branco. A medição ao vivo devolve
   `rgb(0, 0, 0)` opaco, e o `body` do site também é preto. O defeito de `rgbToHex` (descartar
   alpha) é real e continua justificando o candidato 5 de `revisao-arquitetura-2026-09`, mas o
   cabeçalho não é a prova dele — o caso genuíno é o rodapé (`#545454` na tabela, `#323232` na
-  tela). O docstring de `site.mjs` ficou fora do bloco `paridade-header-cursos` porque
-  `scripts/inventario/` não estava em `authorized_paths`.
+  tela). Resta o defeito de `rgbToHex`.
   **Gatilho:** bloco `revisao-arquitetura-2026-09` (candidato 5), ou pedido explícito de João.
 - **D-32 · o incremento final do bloco `paridade-header-cursos` não teve segunda lente** —
   os cinco primeiros commits (`f19ee29..d619f0d`, onde está todo o código) tiveram review
@@ -772,9 +772,53 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53` e `D-65`.
   **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
   de João de dispensá-la.
+- **D-71 · `inventario:assets` não passa pela regra de IP do WordPress** —
+  `scripts/inventario/fetch-assets.mjs` baixa com `fetch` do Node as URLs de `dom.json`, 13 das 20
+  em `lotusotec.cl` (as outras no host de staging). Desde o corte, isso pede essas 13 à CloudFront, que serve o clone. O bloco
+  `recaptura-baseline` corrigiu só o caminho do Chromium (`launchReferencia`/`openPage`); o
+  `fetch` precisaria de um `lookup` próprio, como `e2e/smoke/rede.ts`, e da mesma guarda.
+  **Gatilho:** qualquer regeração de `docs/inventario/assets/` antes de `B7`; depois de `B7`, só
+  restaurando o backup localmente.
+- **D-72 · `openPage` devolve a página ainda rolando em `375` e `768`** — o WordPress declara
+  `scroll-behavior: smooth`, e o `scrollTo(0, 0)` do fim de `openPage` ainda está animando 1 s
+  depois: `scrollY` 28 em `375` e 1 em `768`, medido em 2026-10-11. `capturarPaginaInteira` espera
+  `scrollY === 0` e não sente o problema. `extract-dom`, `extract-styles` e `measure-breakpoints`
+  medem logo depois de `openPage`, mas hoje só leem `width`/`height` de `getBoundingClientRect` e
+  estilo computado, que a rolagem não muda; quem passar a ler posição, ou estado do Divi que
+  depende da rolagem, mede no meio da animação.
+  **Gatilho:** próxima regeração de `dom.json`, `styles.json` ou das medidas de breakpoint.
 
 ## Fechados
 
+- **D-73 · o bloco `recaptura-baseline` (`B8`) não tem segunda lente** — o desenho previa
+  `reviewer: codex`, mas a cota da conta Codex continuava esgotada em 2026-10-11: Claude executa e
+  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
+  autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`, `D-65` e `D-70`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
+  **Dispensado em 2026-10-11** por decisão de João, no fechamento do bloco: não haverá passada do
+  Codex sobre `main..HEAD`.
+
+- **D-30 · os cinco PNG de `docs/inventario/baseline/` reportam o cabeçalho na cor errada** —
+  `scripts/inventario/capture-baseline.mjs:9` captura com `fullPage: true`, e nesse modo o
+  cabeçalho desktop rasteriza `#f8f8f8` onde o screenshot de viewport, na mesma página e na mesma
+  sessão, rasteriza `#000000`. `sample-baseline.mjs` amostrou esses PNG e publicou o artefato como
+  cor medida; `docs/inventario/04-tipografia.md` e `src/index.css` seguiram, e só a medição ao vivo
+  de 2026-09-02 desfez a cadeia (`docs/qa/paridade/2026-09-02/header-cursos.md`). Isso **trava a
+  conferência humana dos cinco PNG**, que já era débito e agora tem artefato conhecido no material
+  conferido. Demonstrado para `#main-header`; **não provado** para o resto da paleta — quem
+  recapturar precisa reamostrar tudo, não só o cabeçalho. Fora do bloco por decisão de João em
+  2026-09-02: corrigir `capture-baseline.mjs` invalida os cinco PNG de uma vez e arrasta
+  `sample-baseline.mjs`.
+  **Gatilho:** bloco próprio de recaptura do baseline, antes da conferência humana.
+  **Fechado em 2026-10-11** pelo bloco `recaptura-baseline` (`B8`). A causa é só da captura:
+  `capturarPaginaInteira` (`scripts/inventario/lib/site.mjs`) compõe o screenshot de viewport sobre
+  as linhas de cima do `fullPage`, e as capturas voltaram a mirar o WordPress em `185.146.167.195`,
+  porque desde o corte `lotusotec.cl` entrega o clone. A recaptura contra a de 2026-08-25 difere só
+  nas linhas 0–93 de `1440` e `1920`, com 0 px em `375`, `375-menu` e `768`. Reamostradas as 29
+  regiões de `sample-baseline.mjs`, só `header-fundo` e `menu-link` mudam (de `#f8f8f8` para
+  `#000000`): o resto da paleta estava certo. Evidência em `docs/inventario/06-baseline.md` e
+  `docs/inventario/04-tipografia.md`.
 - **D-68 · o job `alerta` não foi provado ponta a ponta** — a trust da role de alerta só aceita a
   `main` do corporativo, e o `ci.yml` novo só chega lá pelo espelho, depois do merge de `B6` (spec
   de `7.2.6`, D13). Dentro do bloco, a prova foi a política simulada e as catracas

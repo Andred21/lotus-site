@@ -22,10 +22,12 @@
 pnpm inventario:dom       # 1º — grava dom.json; os outros três leem esse arquivo
 pnpm inventario:assets    # baixa docs/inventario/assets/*, grava manifest.json
 pnpm inventario:styles    # grava styles.json (tipografia/cor/layout, 4 viewports)
-pnpm inventario:baseline  # grava baseline/*.png (screenshots full-page)
+pnpm inventario:baseline  # grava baseline/*.png (página inteira com o topo do viewport)
 ```
 
 `dom.json` precisa vir primeiro: `fetch-assets.mjs` lê `assets[]` e `extract-styles.mjs` lê `sections[]`. `capture-baseline.mjs` é independente, mas mantém a ordem para reprodutibilidade.
+
+Desde o corte de `2026-10-05`, `lotusotec.cl` entrega o clone. `openPage`, em `lib/site.mjs`, resolve o domínio para o IP do WordPress (`185.146.167.195`) e reprova resposta vinda da CloudFront; quando o certificado do WordPress vencer (`2026-11-10`) ou o servidor sair do ar (`B7`), `inventario:dom`, `inventario:styles` e `inventario:baseline` falham em vez de medir o clone. `inventario:assets` baixa com `fetch` do Node e não passa por essa regra: hoje pediria os assets à CloudFront.
 
 Depois de regerar, rode `pnpm format`: os scripts gravam com `JSON.stringify(…, null, 2)` e o Prettier reindenta arrays curtos, então sem esse passo `pnpm format:check` fica vermelho. Os `sha256` citados no cabeçalho de cada documento são do arquivo **depois** do `pnpm format` — carimbar antes produz hash que não identifica os bytes versionados. `inventario.test.mjs` falha quando um documento cita hash que não pertence a nenhuma evidência versionada. O que o aceite compara entre execuções é o conteúdo de `assets[]` (URL, `bytes`, `sha256`, ordenado por URL), não os bytes do arquivo formatado — `capturedAt` muda a cada corrida por ser metadado de execução.
 
