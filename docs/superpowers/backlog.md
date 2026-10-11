@@ -742,7 +742,8 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   exceção de reviewer. Primeira medição de tráfego real em `B6`
   (`docs/infra/evidencia-observabilidade-2026-10-06.md` §7): no Chile, na borda `JFK50-P12`,
   `time-taken` p50 e p90 de 0,393 s, `time-to-first-byte` p50 e p90 de 0,392 s — um único pedido em
-  cinco dias, que não mede o Chile —; o `/` saiu 81 `Hit`, 238 `RefreshHit` e 52 `Miss`.
+  cinco dias, que não mede o Chile —; em todos os países, fora o health check, o `/` saiu 81 `Hit`,
+  238 `RefreshHit` e 52 `Miss`.
   **Gatilho:** `lotus-site/latencia-por-borda` com tráfego do Chile que valha medir, e decisão de
   João sobre a correção, com a medição na mão.
 - **D-67 · a estabilização de `B5` durou 8 h 35 min, não 24 h** — a spec de `7.2.5` (D11) pede o
@@ -771,6 +772,12 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   migram juntas, num bloco próprio.
   **Gatilho:** aviso do GitHub de fim do modo forçado, ou o próximo bloco que tocar a versão de uma
   action do `ci.yml`.
+- **D-70 · o bloco `7.2.6` (observabilidade mínima) não tem segunda lente** — o plano previa
+  `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-11: Claude executa e
+  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
+  autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53` e `D-65`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
 
 ## Fechados
 

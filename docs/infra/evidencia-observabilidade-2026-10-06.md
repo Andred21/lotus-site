@@ -457,7 +457,7 @@ As catracas no último `vitest` (14:01:57Z): `scripts/infra/observabilidade.test
 
 ## 6. Log gravado (spec §7, item 5)
 
-Lido em 2026-10-11T15:15:05Z, 4 dias e 2 h depois do `CREATE_COMPLETE` (plano, Task 4, Step 2). O
+Lido em 2026-10-11T15:15:05Z, 5 dias e 2 h depois do `CREATE_COMPLETE` (plano, Task 4, Step 2). O
 filtro `{ $.c-country = "CL" }` sobre as últimas 24 h não trouxe registro: nenhum visitante do Chile
 na janela (§7). Pelo caminho do plano, o padrão trocado por `"Mozilla"`, às 15:16:46Z:
 
@@ -541,8 +541,8 @@ sc-status=404  cs(User-Agent)=Mozilla/5.0%20(Windows%20NT%2010.0;%20Win64;%20x64
 
 **Primeira medição de `D-66`:** no Chile, a borda que mais atendeu foi `JFK50-P12`, com um único
 pedido em cinco dias — `time-taken` p50 e p90 de 0,393 s, `time-to-first-byte` p50 e p90 de 0,392
-s —; o `/` saiu 81 `Hit`, 238 `RefreshHit` e 52 `Miss` (fora `Error`, `Redirect` e
-`FunctionGeneratedResponse`). Com um pedido, o número não mede o Chile: o tráfego do site nesta
+s —; em todos os países, fora o health check, o `/` saiu 81 `Hit`, 238 `RefreshHit` e 52 `Miss`
+(fora `Error`, `Redirect` e `FunctionGeneratedResponse`). Com um pedido, o número não mede o Chile: o tráfego do site nesta
 janela é quase todo de checador e de fora do Chile. Leitura a mais, fora do health check: Países Baixos
 17.459 pedidos, Coreia 3.822, Austrália 2.539, Índia 2.056, Indonésia 2.033, Estados Unidos 1.860;
 as bordas de Santiago (`SCL*`) atenderam 6 pedidos, todos dos Estados Unidos. As consultas respondem
@@ -573,5 +573,9 @@ primeira leitura, não `D-66` fechado.
   AWS avisa que o resultado pode diferir do ambiente vivo (§5).
 - O alarme de 5xx avalia o ponto mais recente que a CloudFront já publicou, cerca de cinco minutos
   antes da avaliação (§4): um 5xx real vira e-mail com esse atraso.
+- O registro que prova a forma do log (§6) é de um scanner, não de visitante: o filtro do Chile
+  rodou só sobre as últimas 24 h, e nelas não houve pedido do Chile. Um pedido chileno existe na
+  janela inteira (`latencia-por-borda`, §7), mas o registro dele não foi transcrito. A forma do
+  registro é a mesma para todo pedido.
 - A primeira medição de `D-66` tem um único pedido do Chile em cinco dias (§7): a consulta funciona,
   mas o número não mede o Chile. `D-66` continua aberto, à espera de tráfego chileno.
