@@ -779,6 +779,13 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   depende da rolagem, mede no meio da animação.
   **Gatilho:** próxima regeração de `dom.json`, `styles.json` ou das medidas de breakpoint.
 
+- **D-73 · o bloco `recaptura-baseline` (`B8`) não tem segunda lente** — o desenho previa
+  `reviewer: codex`, mas a cota da conta Codex continuava esgotada em 2026-10-11: Claude executa e
+  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
+  autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`, `D-65` e `D-70`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
+
 ## Fechados
 
 - **D-30 · os cinco PNG de `docs/inventario/baseline/` reportam o cabeçalho na cor errada** —
