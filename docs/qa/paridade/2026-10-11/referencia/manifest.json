@@ -1,0 +1,32 @@
+{
+  "target": "referencia",
+  "url": "https://lotusotec.cl/",
+  "capturedAt": "2026-10-11T18:13:54.976Z",
+  "files": [
+    {
+      "name": "home-1440.png",
+      "bytes": 1820853,
+      "sha256": "cefef084d61cb6c5fae7fe189b358b7688ea9f4dfaf18ea58f081c757474b033"
+    },
+    {
+      "name": "home-1920.png",
+      "bytes": 2125661,
+      "sha256": "f113a5dafbad6483c501840b4e688a9ac5eab5235d088621e604c4c31fc8ece7"
+    },
+    {
+      "name": "home-375-menu.png",
+      "bytes": 27210,
+      "sha256": "7463bc13504d256fffbc0be023090e3161b914df9f1a2d400b1fb5fef4dadc2b"
+    },
+    {
+      "name": "home-375.png",
+      "bytes": 609373,
+      "sha256": "43d878a8f3efcdbaec03e922386108e8380f7c6e48b39ffa716253501ad44712"
+    },
+    {
+      "name": "home-768.png",
+      "bytes": 653520,
+      "sha256": "1b836a7dce7cf812b07bccdade4e2287414d41c8b7a485567b48e3a381a309fe"
+    }
+  ]
+}
