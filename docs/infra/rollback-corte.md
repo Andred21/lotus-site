@@ -31,6 +31,12 @@ mesmo arquivo. O host do StackCP continua no ar, vazio (spec de `7.2.7`, D2): ar
 `public_html` pelo gerenciador, dump importado pelo phpMyAdmin num banco novo, e o `wp-config.php`
 ajustado para ele. Apagar antes o `.htaccess` com `Require all denied`.
 
+O DNS vem por último. Apex e `www` são alias da distribuição em `infra/lotus-dns.yaml`; servir o
+host restaurado exige trocá-los por `A` e `AAAA` dele, pelo caminho A (change set) ou B (`UPSERT` de
+emergência) de `git show dcfeb76:docs/infra/rollback-corte.md`, §3 a §6, com o endereço do host no
+lugar de `WORDPRESS`. No caminho A, o teste de `conferirAliasesDoCorte` em
+`scripts/infra/zona.test.mjs` reprova o template sem alias: muda junto com ele.
+
 Sem login no `wp-admin`, a senha do administrador se recupera pelo phpMyAdmin:
 
 ```sql
