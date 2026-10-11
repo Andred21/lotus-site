@@ -745,7 +745,9 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   cinco dias, que não mede o Chile —; em todos os países, fora o health check, o `/` saiu 81 `Hit`,
   238 `RefreshHit` e 52 `Miss`.
   **Gatilho:** `lotus-site/latencia-por-borda` com tráfego do Chile que valha medir, e decisão de
-  João sobre a correção, com a medição na mão.
+  João sobre a correção, com a medição na mão. A primeira condição não está na spec de `7.2.6`
+  (§10), que dá só a decisão com a medição na mão: um pedido em cinco dias não é medição. Desvio
+  aceito por João em 2026-10-11, na review do bloco.
 - **D-67 · a estabilização de `B5` durou 8 h 35 min, não 24 h** — a spec de `7.2.5` (D11) pede o
   smoke de estabilização pelo menos 24 h depois do corte; por decisão de João em 2026-10-05, ele
   rodou às 2026-10-05T22:48:12Z, verde, para o bloco fechar no mesmo dia
