@@ -1,28 +1,28 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
-work_class: architectural
-active_work_item: 7.2.6
-active_notion_eap: 7.2.6
-active_title: Configurar observabilidade mínima pós-go-live (bloco `B6`)
-active_branch: feat/7-2-6-observabilidade-minima
+workflow_state: idle
+work_class: null
+active_work_item: null
+active_notion_eap: null
+active_title: null
+active_branch: null
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: decidir_abertura_do_pr
-resume_state: ready_for_closure
+next_action: select_work_item
+resume_state: null
 context_packet: null
-active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
-active_plan: docs/superpowers/plans/2026-10-06-7.2.6-observabilidade-minima.md
-executor: claude
-reviewer: claude
-reviewer_exception: 'Autorizado por João em 2026-10-11: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-70.'
-blocker: 'Fechamento: a branch feat/7-2-6-observabilidade-minima foi publicada em origin, mas gh pr create --repo Andred21/lotus-site foi negado pelo classificador de permissão do Claude Code ("Excess Sensitive Detail") e o PR não existe. O corpo do PR cita nomes de recursos da AWS (tópico, role, variáveis do corporativo) e um fragmento do ID da assinatura SNS. Gate 0 e gates verdes em 1d74d45: pnpm check exit 0 (42 arquivos, 426 testes), pnpm e2e exit 0 (78 passed), catracas de B6 89/89; a releitura viva na AWS não foi possível (InvalidClientTokenId). Decisão de João: (a) liberar o gh pr create com o corpo como está; ou (b) enxugar o corpo, tirando os identificadores de recurso.'
-supervised_cycles_completed: 20
-last_completed_work_item: 7.2.5
-state_basis_commit: 1d74d45
-updated_at: 2026-10-11T15:50:47Z
+active_spec: null
+active_plan: null
+executor: null
+reviewer: null
+reviewer_exception: null
+blocker: null
+supervised_cycles_completed: 21
+last_completed_work_item: 7.2.6
+state_basis_commit: 0ff8604
+updated_at: 2026-10-11T15:55:33Z
 ---
 
 # Estado operacional — Lotus Site
