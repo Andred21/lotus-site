@@ -67,6 +67,10 @@ Com `B2`, existe um terceiro stack, `lotus-contato` (§8): ele entra **antes** d
 porque este consome os outputs daquele (`DominioDaFuncaoDeContato`, `ArnDaFuncaoDeContato`) como
 parâmetro.
 
+Com `B6`, entra o `lotus-observabilidade` (§11), em `us-east-1`: ele vem **depois** do
+`lotus-site`, porque vigia a distribuição pelo ID dela (`IdDaDistribuicao`, com `Default`
+medido) e manda os avisos ao mesmo e-mail do budget, lido do `lotus-site`.
+
 ## 3. Stack do site
 
 Desde `B2`, `lotus-site.yaml` também exige `DominioDaFuncaoDeContato` e `ArnDaFuncaoDeContato`, sem
@@ -435,6 +439,36 @@ vez.
 
 ## 7. Desmonte
 
+Nenhum stack depende do `lotus-observabilidade` (§11): ele pode sair primeiro, e leva junto
+alarmes, health check, tópico, role de alerta e os 90 dias de access log (spec de `7.2.6`, §8).
+
+```bash
+aws cloudformation delete-stack --region us-east-1 --stack-name lotus-observabilidade
+aws cloudformation wait stack-delete-complete --region us-east-1 --stack-name lotus-observabilidade
+```
+
+A resource policy que a entrega do log criou no log group não é recurso do stack, e a AWS deixa a
+limpeza com quem criou. Depois do `delete-stack`, conferir que não sobrou nada:
+
+```bash
+aws logs describe-resource-policies --region us-east-1 --policy-scope RESOURCE \
+  --resource-arn arn:aws:logs:us-east-1:760144413534:log-group:lotus-site-acessos \
+  --query 'resourcePolicies[].{Nome:policyName,Revisao:revisionId}'
+aws logs describe-resource-policies --region us-east-1 --policy-scope ACCOUNT \
+  --query 'resourcePolicies[].policyName'
+aws logs describe-delivery-sources --region us-east-1 --query 'deliverySources[].name'
+```
+
+Sobrou policy do `lotus-site-acessos`: apagar pelo ARN do log group e pela revisão lida acima. No
+escopo do log group ela não tem nome — `Nome` volta `null` (evidência de `B6`, §1.3) —, e o
+`--policy-name` fica de fora.
+
+```bash
+aws logs delete-resource-policy --region us-east-1 \
+  --resource-arn arn:aws:logs:us-east-1:760144413534:log-group:lotus-site-acessos \
+  --expected-revision-id <revisão lida>
+```
+
 Com `B2`, o stack `lotus-contato` (§8) também existe: derrube este (`lotus-site`) primeiro — a
 ordem inversa da 8.5.5 — e só depois `lotus-contato`, senão `ControleDeAcessoDaFuncao` e
 `PermissaoDeUrl` ficam órfãos.
@@ -771,3 +805,168 @@ deploy` reusa o valor anterior de parâmetro que o stack já tem — e pelo meno
 4. `SMOKE_URL=https://lotusotec.cl SMOKE_SHA=<sha> pnpm smoke`, com o mesmo SHA do smoke forçado, e
    `pnpm infra:conferir-zona --pos-delegacao`, que desde `7.2.5` confere linha de alias.
 5. Smoke de novo pelo menos 24 h depois, sem `SMOKE_VIA`.
+
+## 11. Observabilidade (`B6`)
+
+Spec em `docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md`; evidência em
+[`evidencia-observabilidade-2026-10-06.md`](evidencia-observabilidade-2026-10-06.md). Tudo mora no stack
+`lotus-observabilidade`, em `us-east-1` — as métricas do CloudFront, o status do health check e a
+entrega do access log v2 só existem lá — e chega por e-mail, pelo tópico `lotus-site-alertas`, ao
+destinatário do budget (`infra/lotus-observabilidade.yaml`).
+
+| Assunto do e-mail                  | Quando chega                                                                                                                                              | O que fazer           |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `ALARM: "lotus-site-indisponivel"` | os checadores do Route 53 em `sa-east-1`, `us-east-1` e `us-west-2` não recebem 2xx ou 3xx de `https://lotusotec.cl/` (três falhas seguidas, a cada 30 s) | §11.3                 |
+| `ALARM: "lotus-site-5xx"`          | a distribuição respondeu 5xx a pelo menos um pedido no minuto, no site ou em `/api/contacto`                                                              | §11.3                 |
+| `lotus-site: CI falhou em <sha>`   | um job do CI de um push em `main` do corporativo reprovou ou estourou o tempo; sai quando o último job do run termina                                     | §11.3                 |
+| `OK: "…"`                          | o alarme voltou                                                                                                                                           | registrar o intervalo |
+
+### 11.1 Criar o stack e confirmar a assinatura
+
+O `lotus-observabilidade` vem depois do `lotus-site` (§2). O e-mail é o do budget, lido do
+`lotus-site` para não entrar no repositório:
+
+```bash
+export AWS_PROFILE=lotus
+EMAIL=$(aws cloudformation describe-stacks --region sa-east-1 --stack-name lotus-site \
+  --query "Stacks[0].Parameters[?ParameterKey=='EmailDeAlerta'].ParameterValue" --output text)
+aws cloudformation deploy --region us-east-1 --stack-name lotus-observabilidade \
+  --template-file infra/lotus-observabilidade.yaml --parameter-overrides EmailDeAlerta="$EMAIL" \
+  --capabilities CAPABILITY_NAMED_IAM --tags Projeto=lotus-site --no-execute-changeset
+```
+
+Revisar o change set e executar, sempre com `--region us-east-1` — o perfil `lotus` aponta para
+`sa-east-1`, e os comandos de §3 não passam região. O `describe-change-set` vai com `--query`: sem
+ele, imprime os `Parameters`, e-mail inclusive.
+
+```bash
+CS=<arn impresso pelo deploy>
+aws cloudformation describe-change-set --region us-east-1 --change-set-name "$CS" \
+  --query 'Changes[].ResourceChange.{Acao:Action,Recurso:LogicalResourceId,Substituicao:Replacement}' \
+  --output table
+aws cloudformation execute-change-set --region us-east-1 --change-set-name "$CS"
+aws cloudformation wait stack-create-complete --region us-east-1 --stack-name lotus-observabilidade
+```
+
+Numa atualização, `wait stack-update-complete`. Depois do `CREATE_COMPLETE`, o SNS manda um e-mail de
+`no-reply@sns.amazonaws.com` pedindo confirmação: sem o clique, nenhum aviso chega, e o link vale
+dois dias. Procure no spam antes de concluir que não veio. Passado o prazo, o SNS apaga a
+assinatura pendente e o recurso `Assinatura` do stack fica órfão: a volta pede substituí-lo, por
+change set revisado.
+
+Atualizações passam só o que muda em `--parameter-overrides`: o `deploy` reusa o valor atual dos
+outros parâmetros, e-mail inclusive. Sempre com `--capabilities CAPABILITY_NAMED_IAM` e
+`--tags Projeto=lotus-site`. A prova de `B6` trocou `CaminhoDaSonda` por um caminho inexistente e
+voltou com `CaminhoDaSonda=/` explícito; esquecido no caminho de prova, o alarme de
+indisponibilidade fica parado em `ALARM` e uma queda de verdade não manda e-mail.
+
+Trocar `CaminhoDaSonda` mostra duas linhas na tabela acima — `AlarmeDeSaude` `Modify` com
+`Substituicao` `False` e `SaudeDoSite` `Modify` com `Conditional` —, mas a mudança é uma só. Quem
+decide é a leitura fina, com `--include-property-values`: em `B6`, só `ResourcePath` mudou, com
+`Replacement` `False`, e o health check manteve o ID (evidência, §3).
+
+O access log v2 da distribuição é do stack. A distribuição aceita uma única origem de log v2, a
+`lotus-site-acessos-origem`: não ligar nem editar o logging pelo console do CloudFront. Nome,
+formato e destino da entrega são create-only, e com nome fixo o CloudFormation não substitui o
+recurso — um change set que os troque falha; a troca pede nome novo no template. A resource policy
+que a entrega criou no log group fica fora do stack (§7), e a AWS não diz se um update do log
+group a preserva. Depois de change set que toque `Acessos`, conferir que ela continua lá:
+
+```bash
+aws logs describe-resource-policies --region us-east-1 --policy-scope RESOURCE \
+  --resource-arn arn:aws:logs:us-east-1:760144413534:log-group:lotus-site-acessos \
+  --query 'resourcePolicies[].revisionId'
+```
+
+Lista vazia é log que deixou de chegar. A policy não tem nome nesse escopo, por isso a consulta lê
+a revisão.
+
+### 11.2 Variáveis do corporativo
+
+Em `Gatika-CL/lotus-site` → Settings → Secrets and variables → Actions → Variables:
+
+| Variável              | Valor                       |
+| --------------------- | --------------------------- |
+| `AWS_ALERT_ROLE_ARN`  | output `ArnDoPapelDeAlerta` |
+| `AWS_ALERT_TOPIC_ARN` | output `ArnDoTopico`        |
+
+Precisam existir **antes** do primeiro espelho que leva o job `alerta`. Sem as duas, o `deploy`
+mostra o aviso "Alerta de falha do CI não configurado" e o `alerta` fica `skipped`; só com a role,
+ele reprova com `::error::`. No pessoal elas não existem, de propósito: lá o `alerta` nunca roda.
+
+### 11.3 Um aviso chegou
+
+- **`lotus-site-indisponivel`.** Abrir `https://lotusotec.cl/` e ver o que cada checador viu:
+  `aws route53 get-health-check-status --health-check-id <IdDoHealthCheck>`. O smoke decide
+  (`SMOKE_URL=https://lotusotec.cl pnpm smoke`): vermelho nos itens 2 a 6 é o gatilho de
+  `rollback-corte.md` §2, até 2026-11-10, ou do rollback de release do `ADR-SITE-004`.
+- **`lotus-site-5xx`.** Rodar `lotus-site/5xx-por-caminho` sobre a última hora (§11.4). Em
+  `/api/contacto`, é a função:
+  `aws logs tail /aws/lambda/lotus-site-contato --region sa-east-1 --since 1h`. Em outro caminho,
+  é a origem S3 ou o release no ar: smoke e, se vermelho, rollback de release. Um 5xx isolado é o
+  ruído aceito na spec de `7.2.6`, D5; repetido, é incidente.
+- **`lotus-site: CI falhou em <sha>`.** O corpo lista o `result` de cada job e traz a URL do run.
+  `procedencia` em `failure` é commit em `main` sem PR mesclado nem trailer de espelho, e nada foi
+  publicado. `cancelled (tempo estourado)` é job que passou do `timeout-minutes`. `deploy` em
+  `failure` ou em `cancelled` pode ter parado no meio da promoção: smoke e, se vermelho, rollback
+  de release.
+- **O que não avisa:** falha no OIDC do próprio `alerta` (trust quebrada, SCP) — o run fica
+  vermelho, e a única rede é a notificação nativa do GitHub (spec de `7.2.6`, §4.2) —, run
+  cancelado à mão e o `lotus-site-5xx` de uma distribuição trocada. O alarme lê a distribuição do
+  parâmetro `IdDaDistribuicao`, e minuto sem ponto conta como bom (`notBreaching`): distribuição
+  recriada, com ID novo, deixa o alarme em `OK` para sempre. Distribuição nova pede change set com
+  `--parameter-overrides IdDaDistribuicao=<id novo>` e o `Default` do template e da catraca
+  atualizados.
+
+### 11.4 Consultas pela CLI
+
+As quatro consultas salvas (`lotus-site/…`) abrem no console do CloudWatch, em Logs Insights. Pela
+CLI não há `start-query` por id: lê-se o texto da consulta e passa-se o log group de novo. A janela
+é em epoch **segundos**; todo valor do log chega como texto.
+
+```bash
+export AWS_PROFILE=lotus
+NOME=lotus-site/5xx-por-caminho
+TEXTO=$(aws logs describe-query-definitions --region us-east-1 \
+  --query-definition-name-prefix "$NOME" \
+  --query "queryDefinitions[?name=='$NOME'] | [0].queryString" --output text)
+FIM=$(date -u +%s); INICIO=$((FIM - 3600))
+QID=$(aws logs start-query --region us-east-1 --log-group-name lotus-site-acessos \
+  --start-time "$INICIO" --end-time "$FIM" --query-string "$TEXTO" --query queryId --output text)
+while :; do
+  ST=$(aws logs get-query-results --region us-east-1 --query-id "$QID" --query status --output text)
+  case "$ST" in Scheduled | Running) sleep 2 ;; *) break ;; esac
+done
+echo "$ST"
+aws logs get-query-results --region us-east-1 --query-id "$QID" --output json \
+  | jq -r '.results[] | map(.field + "=" + .value) | join("  ")'
+```
+
+O prefixo é o nome inteiro da consulta: a API recusa prefixo que comece ou termine em `/`, e
+`lotus-site/` sozinho volta `InvalidParameterException` — para listar as quatro, `lotus-site`.
+
+A região vai em cada comando, e não em `AWS_REGION`: exportada, ela continuaria valendo no shell e
+mandaria para `us-east-1` os comandos do resto deste runbook, que contam com `sa-east-1`.
+
+`Complete` com zero linhas é resposta, não erro. O Logs Insights não lê registro anterior à criação
+do log group, e a AWS dá até 12 horas para uma mudança de logging valer. Registro de um período
+pode chegar até 24 horas depois: consulta sobre as últimas horas pode vir incompleta.
+
+### 11.5 A prova de `D-68`
+
+Depois do primeiro espelho que leva o job `alerta` (merge de `B6`), com as duas variáveis de §11.2.
+É o mesmo teste do `3cd9619` (2026-09-10, `docs/infra/evidencia-pipeline-2026-09-09.md`, E4): um
+commit vazio sem trailer, empurrado direto na `main` do corporativo, à mão por João — o agente não
+empurra para remoto compartilhado.
+
+```bash
+git fetch upstream main
+VAZIO=$(git commit-tree "upstream/main^{tree}" -p upstream/main \
+  -m "test: push direto sem trailer, para o alerta avisar (D-68)")
+git push upstream "$VAZIO:refs/heads/main"
+```
+
+O `check` passa (a árvore é a mesma), o `procedencia` reprova, o `deploy` fica `skipped` e o
+`alerta` roda. Chega `lotus-site: CI falhou em <sha de 7>`, com `check: success`,
+`procedencia: failure` e `deploy: skipped`, o SHA e a URL do run. O site não muda. O commit fica no
+histórico, como o `3cd9619`: prova apagada não é prova. O run e o e-mail fecham `D-68`.

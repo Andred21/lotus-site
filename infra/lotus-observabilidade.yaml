@@ -1,0 +1,371 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Observabilidade minima do lotus-site (B6): topico SNS que manda e-mail,
+  health check do Route 53 em lotusotec.cl, alarme de 5xx sobre a
+  distribuicao, access log v2 do CloudFront em CloudWatch Logs com quatro
+  consultas salvas, e a role que o job alerta do GitHub Actions assume para
+  publicar no topico. Regiao us-east-1 obrigatoria: as metricas do CloudFront,
+  o HealthCheckStatus do Route 53 e a entrega do log v2 so existem la. Stack
+  separado do lotus-site e do lotus-dns: delete-stack daqui nao toca site nem
+  zona.
+
+Parameters:
+  EmailDeAlerta:
+    Type: String
+    Description: >-
+      Destinatario dos alarmes e do aviso de falha do CI. Sem Default: o
+      endereco nao entra no repositorio. A assinatura so vale depois do clique
+      de confirmacao no e-mail que o SNS manda.
+    AllowedPattern: '^[^@]+@[^@]+$'
+
+  IdDaDistribuicao:
+    Type: String
+    Default: E1R7SPH4OLUIEQ
+    Description: >-
+      Output IdDaDistribuicao do stack lotus-site (sa-east-1), lido em
+      2026-10-05. Parametro com Default, e nao ImportValue: o CloudFormation
+      nao importa valor entre regioes, e a catraca le o valor daqui.
+    AllowedPattern: '^E[A-Z0-9]+$'
+
+  Dominio:
+    Type: String
+    Default: lotusotec.cl
+    Description: Nome que o health check resolve e pede por HTTPS.
+    AllowedPattern: '^[a-z0-9][a-z0-9.-]*[a-z0-9]$'
+
+  CaminhoDaSonda:
+    Type: String
+    Default: /
+    Description: >-
+      Caminho que o health check pede. Fica em / fora da prova de B6, que o
+      troca por um caminho inexistente so por override de parametro.
+    AllowedPattern: '^/[A-Za-z0-9._/-]*$'
+
+  RepositorioDeDeploy:
+    Type: String
+    Default: Gatika-CL/lotus-site
+    Description: >-
+      O mesmo Default do lotus-site: a trust da role de alerta e a da role de
+      deploy (catraca scripts/infra/observabilidade.test.mjs).
+
+  RepositorioDeDeployImutavel:
+    Type: String
+    Default: Gatika-CL@310231788/lotus-site@1357439884
+    Description: >-
+      O mesmo Default do lotus-site, na forma de ids numericos que o GitHub
+      emite hoje no sub do token.
+
+Resources:
+  # ── destinatario ───────────────────────────────────────────────────────────
+  # Sem KmsMasterKeyId de proposito (spec D11): com a chave gerenciada aws/sns
+  # o CloudWatch nao consegue publicar, porque a key policy dela nao pode ser
+  # editada. A politica padrao do topico ja deixa alarme da propria conta
+  # publicar. A catraca reprova KmsMasterKeyId.
+  Topico:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: lotus-site-alertas
+      DisplayName: lotus-site
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  Assinatura:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref Topico
+      Protocol: email
+      Endpoint: !Ref EmailDeAlerta
+
+  # ── indisponibilidade ──────────────────────────────────────────────────────
+  # HTTPS sem busca de texto (spec D7): o <title> do clone e igual ao do
+  # WordPress, e a busca nao distinguiria um do outro. Tres regioes e o
+  # minimo; sa-east-1 porque o visitante e chileno.
+  SaudeDoSite:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      HealthCheckConfig:
+        Type: HTTPS
+        FullyQualifiedDomainName: !Ref Dominio
+        Port: 443
+        ResourcePath: !Ref CaminhoDaSonda
+        EnableSNI: true
+        RequestInterval: 30
+        FailureThreshold: 3
+        Regions:
+          - sa-east-1
+          - us-east-1
+          - us-west-2
+      HealthCheckTags:
+        - Key: Name
+          Value: lotus-site-saude
+        - Key: Projeto
+          Value: lotus-site
+
+  # HealthCheckStatus e continuo: ele sumir ja e defeito, por isso breaching.
+  AlarmeDeSaude:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: lotus-site-indisponivel
+      AlarmDescription: >-
+        lotusotec.cl nao responde 2xx ou 3xx por HTTPS aos checadores do Route
+        53. O que fazer: docs/infra/runbook-aws.md, secao 11.
+      Namespace: AWS/Route53
+      MetricName: HealthCheckStatus
+      Dimensions:
+        - Name: HealthCheckId
+          Value: !Ref SaudeDoSite
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+      AlarmActions:
+        - !Ref Topico
+      OKActions:
+        - !Ref Topico
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  # ── runtime ────────────────────────────────────────────────────────────────
+  # O CloudFront publica a taxa de 5xx, nao a contagem: a contagem e Requests
+  # vezes a taxa, dividido por 100 (spec D5). Limiar > 0.5, e nao >= 1, porque
+  # a taxa e ponto flutuante: um 502 em tres pedidos pode dar 0,9999. Minuto
+  # sem trafego nao produz dado, e isso e saude: notBreaching.
+  Alarme5xx:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: lotus-site-5xx
+      AlarmDescription: >-
+        A distribuicao respondeu 5xx a pelo menos um pedido no minuto, no site
+        ou em /api/contacto. O que fazer: docs/infra/runbook-aws.md, secao 11.
+      Metrics:
+        - Id: m1
+          MetricStat:
+            Metric:
+              Namespace: AWS/CloudFront
+              MetricName: Requests
+              Dimensions:
+                - Name: DistributionId
+                  Value: !Ref IdDaDistribuicao
+                - Name: Region
+                  Value: Global
+            Period: 60
+            Stat: Sum
+          ReturnData: false
+        - Id: m2
+          MetricStat:
+            Metric:
+              Namespace: AWS/CloudFront
+              MetricName: 5xxErrorRate
+              Dimensions:
+                - Name: DistributionId
+                  Value: !Ref IdDaDistribuicao
+                - Name: Region
+                  Value: Global
+            Period: 60
+            Stat: Average
+          ReturnData: false
+        - Id: e1
+          Expression: m1 * m2 / 100
+          Label: respostas 5xx no minuto
+          ReturnData: true
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 0.5
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref Topico
+      OKActions:
+        - !Ref Topico
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  # ── registro ───────────────────────────────────────────────────────────────
+  # Sem barra no nome: o guia do CloudFront pede [\w-] no nome do log group
+  # (spec, 4.1). 90 dias, a mesma retencao do CloudTrail e do historico de
+  # runs do Actions (spec D4). A entrega cria sozinha, no escopo deste log
+  # group, a resource policy que deixa delivery.logs.amazonaws.com escrever
+  # aqui; ela fica fora do template (runbook-aws.md, secao 7).
+  Acessos:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: lotus-site-acessos
+      RetentionInDays: 90
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  # Nome, formato e destino da entrega sao create-only, e com nome fixo o
+  # CloudFormation nao substitui o recurso: um change set que os troque
+  # falha. A distribuicao aceita uma unica origem de log v2.
+  OrigemDoLog:
+    Type: AWS::Logs::DeliverySource
+    Properties:
+      Name: lotus-site-acessos-origem
+      ResourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${IdDaDistribuicao}'
+      LogType: ACCESS_LOGS
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  DestinoDoLog:
+    Type: AWS::Logs::DeliveryDestination
+    Properties:
+      Name: lotus-site-acessos-destino
+      # Sem o ':*' do !GetAtt Acessos.Arn, como no exemplo de CLI do guia do
+      # CloudWatch Logs; o template de exemplo do guia do S3 usa o !GetAtt, e
+      # as duas formas servem. A catraca fixa esta: trocar a forma substitui
+      # destino e entrega, e o nome fixo impede a substituicao.
+      DestinationResourceArn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${Acessos}'
+      OutputFormat: json
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  # Doze campos e nenhum outro (spec D8). Sem RecordFields a entrega usa a
+  # lista padrao, que traz c-ip, x-forwarded-for e cs(Cookie): IP de visitante
+  # e cookie sao dado pessoal, e nenhuma consulta precisa deles. Por isso a
+  # catraca exige a lista escrita aqui.
+  EntregaDoLog:
+    Type: AWS::Logs::Delivery
+    Properties:
+      DeliverySourceName: !Ref OrigemDoLog
+      DeliveryDestinationArn: !GetAtt DestinoDoLog.Arn
+      RecordFields:
+        - date
+        - time
+        - x-edge-location
+        - c-country
+        - cs-method
+        - cs-uri-stem
+        - sc-status
+        - x-edge-result-type
+        - time-taken
+        - time-to-first-byte
+        - cs(User-Agent)
+        - cache-behavior-path-pattern
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+  # ── leitura do log ─────────────────────────────────────────────────────────
+  # Toda consulta abre tirando o trafego do health check (spec D9): ele bate a
+  # cada poucos segundos, e sem o filtro a latencia medida seria a de um
+  # datacenter americano. A expressao pega o user-agent documentado
+  # (Amazon-Route53-Health-Check-Service) e as variantes com espaco ou %20. O
+  # log v2 entrega todo valor como texto; toNumber converte antes do pct. O
+  # texto pode ser ajustado contra os primeiros registros reais; a pergunta
+  # de cada uma, nao.
+  Consulta5xx:
+    Type: AWS::Logs::QueryDefinition
+    Properties:
+      Name: lotus-site/5xx-por-caminho
+      LogGroupNames:
+        - !Ref Acessos
+      QueryString: |-
+        filter `cs(User-Agent)` not like /Amazon.{0,3}Route.{0,3}53.{0,3}Health/
+        | filter `sc-status` like /^5/
+        | stats count(*) as pedidos by `cs-uri-stem`, `sc-status`
+        | sort pedidos desc
+
+  ConsultaLatencia:
+    Type: AWS::Logs::QueryDefinition
+    Properties:
+      Name: lotus-site/latencia-por-borda
+      LogGroupNames:
+        - !Ref Acessos
+      QueryString: |-
+        filter `cs(User-Agent)` not like /Amazon.{0,3}Route.{0,3}53.{0,3}Health/
+        | filter `c-country` = "CL"
+        | fields toNumber(`time-taken`) as total, toNumber(`time-to-first-byte`) as ttfb
+        | stats count(*) as pedidos,
+            pct(total, 50) as total_p50,
+            pct(total, 90) as total_p90,
+            pct(ttfb, 50) as ttfb_p50,
+            pct(ttfb, 90) as ttfb_p90
+          by `x-edge-location`
+        | sort pedidos desc
+
+  ConsultaCache:
+    Type: AWS::Logs::QueryDefinition
+    Properties:
+      Name: lotus-site/cache-do-index
+      LogGroupNames:
+        - !Ref Acessos
+      QueryString: |-
+        filter `cs(User-Agent)` not like /Amazon.{0,3}Route.{0,3}53.{0,3}Health/
+        | filter `cs-uri-stem` in ["/", "/index.html"]
+        | stats count(*) as pedidos by `cs-uri-stem`, `x-edge-result-type`
+        | sort pedidos desc
+
+  ConsultaReleases:
+    Type: AWS::Logs::QueryDefinition
+    Properties:
+      Name: lotus-site/acessos-a-releases
+      LogGroupNames:
+        - !Ref Acessos
+      QueryString: |-
+        filter `cs(User-Agent)` not like /Amazon.{0,3}Route.{0,3}53.{0,3}Health/
+        | filter `cs-uri-stem` like /^\/releases\//
+        | stats count(*) as pedidos by `sc-status`, `cs(User-Agent)`
+        | sort pedidos desc
+
+  # ── aviso de falha do CI ───────────────────────────────────────────────────
+  # Trust identica a da PapelDeDeploy do lotus-site (spec D10): so a main do
+  # corporativo, nas duas formas do sub; a catraca compara as duas. A
+  # politica so publica neste topico: se a credencial vazar, o maximo que ela
+  # faz e mandar e-mail ao destinatario do alarme.
+  PapelDeAlerta:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lotus-site-alerta
+      Description: Assumida por OIDC pelo job alerta do GitHub Actions do repositorio corporativo.
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub:
+                  - !Sub 'repo:${RepositorioDeDeploy}:ref:refs/heads/main'
+                  - !Sub 'repo:${RepositorioDeDeployImutavel}:ref:refs/heads/main'
+      Policies:
+        - PolicyName: publicar-no-topico-de-alerta
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: PublicarSoNoTopicoDeAlerta
+                Effect: Allow
+                Action: sns:Publish
+                Resource: !Ref Topico
+      Tags:
+        - Key: Projeto
+          Value: lotus-site
+
+Outputs:
+  ArnDoTopico:
+    Description: Variavel de repositorio AWS_ALERT_TOPIC_ARN no corporativo.
+    Value: !Ref Topico
+
+  ArnDoPapelDeAlerta:
+    Description: Variavel de repositorio AWS_ALERT_ROLE_ARN no corporativo.
+    Value: !GetAtt PapelDeAlerta.Arn
+
+  NomeDoLogDeAcesso:
+    Description: Log group do access log v2 da distribuicao, lido pelas consultas lotus-site/*.
+    Value: !Ref Acessos
+
+  IdDoHealthCheck:
+    Description: Health check de lotusotec.cl; aws route53 get-health-check-status --health-check-id.
+    Value: !Ref SaudeDoSite

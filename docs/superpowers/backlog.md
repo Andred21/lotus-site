@@ -34,11 +34,11 @@ sempre explícita.
 
 # AGORA
 
-`B5 · 7.2.5` pôs `lotusotec.cl` na distribuição em 2026-10-05; o fechamento do bloco fica
-registrado em `docs/superpowers/historico/progress.md`. `B0` a `B4` estão fechados, cada um com PR
-integrado em `main`. O próximo bloco da fila é `B6 · 7.2.6`, que só fica ativo por seleção
-explícita (Lei 3). Antes dele, ou junto, `D-62`: o CI corporativo não publica desde 2026-10-05, e
-a produção não recebe deploy até a correção atravessar o espelho.
+`B6 · 7.2.6` ligou a observabilidade mínima em 2026-10-06: alarmes de indisponibilidade e de 5xx, aviso
+de falha do CI e access log lido por quatro consultas; o fechamento do bloco fica registrado em
+`docs/superpowers/historico/progress.md`. `B0` a `B5` estão fechados, cada um com PR integrado em
+`main`. O próximo bloco da fila é `B7 · 7.2.7`, que só fica ativo por seleção explícita (Lei 3).
+Depois do merge de `B6`, `D-68` pede a prova ponta a ponta do job `alerta`.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -200,6 +200,11 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Depende de:** `B5` — antes do corte não há tráfego que valha medir.
 - **Fecha:** `D-40`. **Toca:** `D-37` (rollback continua procedimento, sem botão).
 - **Evidência exigida:** falha provocada de propósito chegando ao destinatário do alarme.
+- **Entregue (spec `2026-10-05-7.2.6-observabilidade-minima-design.md`):** stack
+  `lotus-observabilidade` em `us-east-1` desde 2026-10-06 — health check e alarme de indisponibilidade,
+  alarme de 5xx, tópico `lotus-site-alertas`, access log em `lotus-site-acessos` com quatro
+  consultas — e job `alerta` no `ci.yml`. A falha provocada de propósito foi o health check num
+  caminho inexistente. Evidência: `docs/infra/evidencia-observabilidade-2026-10-06.md`.
 
 ## B7 · `7.2.7` — desativar o WordPress
 
@@ -454,17 +459,14 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   procedimento escrito (`docs/infra/rollback-corte.md`, `infra/rollback-corte.json`); continua sem
   botão. Em `B5` o procedimento ficou atrás de um corte de verdade: `rollback-corte.md` passou ao
   TTL 60 e ao checkout de template, `zona.mjs` e `zona.test.mjs` juntos; continua sem botão.
-  **Gatilho:** segundo incidente de publicação errada, ou `7.2.6` (observabilidade).
+  Em `B6` ganhou alarme que avisa (`lotus-site-indisponivel` e `lotus-site-5xx`, por e-mail); quem
+  decide e executa a volta continua sendo João, pelo procedimento escrito.
+  **Gatilho:** segundo incidente de publicação errada.
 - **D-38 · a trust policy da role de deploy fixa `refs/heads/main`** — `sub` com `StringEquals` em
   `repo:Gatika-CL/lotus-site:ref:refs/heads/main`. Publicar a partir de tag ou de outra branch exige
   editar `infra/lotus-site.yaml` e reimplantar o stack. É a restrição desejada, registrada para que
   a próxima pessoa não a confunda com defeito.
   **Gatilho:** necessidade de publicar a partir de tag.
-- **D-40 · a distribuição não grava access log** — CloudTrail registra quem mudou o quê e o run do
-  GitHub Actions registra o deploy, mas não existe registro de quem acessou o site. Ligar o log hoje
-  criaria volume de objetos com custo e nenhum consumidor: não há dashboard, alerta nem consulta que
-  os leia.
-  **Gatilho:** `7.2.6` (observabilidade), junto com quem vai lê-los.
 - **D-41 · o `dist/` do repositório de desenvolvimento não é byte a byte o `dist/` do espelho** —
   Tailwind v4 varre a raiz do projeto sozinho, sem lista de `@source`, então prosa em `docs/` gera
   utilitário. Medido em 2026-09-04, comparando o build deste repositório com o build da árvore
@@ -681,7 +683,9 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   com o mesmo `TS2584` antes da diretiva e saiu 0 depois dela (32 arquivos, 283 testes). A produção
   volta a receber deploy quando a correção atravessar o espelho. O débito continua aberto: as saídas
   (a), (b) e (c) seguem sem decisão, e o próximo script de Node que usar o DOM sem a diretiva
-  reprova do mesmo jeito.
+  reprova do mesmo jeito. **Gatilho tocado por `B6`**, que mexe em `.github/workflows/ci.yml`: o
+  plano de `7.2.6` reproduz o `check` do corporativo na árvore filtrada antes da review (Task 6,
+  Step 3). As saídas (a), (b) e (c) continuam sem decisão de João.
 - **D-63 · a sonda `allowsEval` do zod viola a CSP ao carregar o bundle, a cada visita de página** —
   medido em 2026-09-27 neste bloco e remedido em 2026-09-28 contra a distribuição
   (`dhpoztt69jydz.cloudfront.net`): o zod 4.4.3 lê o getter `allowsEval.value`
@@ -717,8 +721,12 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   que ninguém decidiu expor. Saídas: behavior `/releases/*` respondendo 403, ou o smoke passar a
   identificar o release por outro caminho (ETag do S3, credencial de leitura). Desde o corte
   (`B5`, 2026-10-05), eles respondem em `lotusotec.cl/releases/<sha>/` e, sem o `X-Robots-Tag`,
-  ficam indexáveis; o canonical aponta para o apex.
-  **Gatilho:** `B6`.
+  ficam indexáveis; o canonical aponta para o apex. Desde `B6`, a consulta salva
+  `lotus-site/acessos-a-releases` conta esses acessos: na primeira leitura, 1 pedido entre
+  2026-10-06 e 2026-10-11, respondido com 404
+  (`docs/infra/evidencia-observabilidade-2026-10-06.md` §7).
+  **Gatilho:** a consulta mostrar acesso de terceiro a /releases/\*, ou o próximo bloco que tocar
+  a distribuição.
 - **D-65 · o bloco `7.2.5` (cutover de `lotusotec.cl`) não tem segunda lente** — o plano previa
   `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-05: Claude executa e
   também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
@@ -731,8 +739,15 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `total` mediano de 383 ms em `lotusotec.cl` na distribuição, contra 74 ms do WordPress. Causa
   provável, a confirmar: `index.html` com `no-cache`, revalidado na origem em `sa-east-1` a cada
   pedido. Nasceu como o `D-65` condicional da spec de `7.2.5`; o número já era do débito da
-  exceção de reviewer.
-  **Gatilho:** `B6`, que traz a primeira medição de tráfego real.
+  exceção de reviewer. Primeira medição de tráfego real em `B6`
+  (`docs/infra/evidencia-observabilidade-2026-10-06.md` §7): no Chile, na borda `JFK50-P12`,
+  `time-taken` p50 e p90 de 0,393 s, `time-to-first-byte` p50 e p90 de 0,392 s — um único pedido em
+  cinco dias, que não mede o Chile —; em todos os países, fora o health check, o `/` saiu 81 `Hit`,
+  238 `RefreshHit` e 52 `Miss`.
+  **Gatilho:** `lotus-site/latencia-por-borda` com tráfego do Chile que valha medir, e decisão de
+  João sobre a correção, com a medição na mão. A primeira condição não está na spec de `7.2.6`
+  (§10), que dá só a decisão com a medição na mão: um pedido em cinco dias não é medição. Desvio
+  aceito por João em 2026-10-11, na review do bloco.
 - **D-67 · a estabilização de `B5` durou 8 h 35 min, não 24 h** — a spec de `7.2.5` (D11) pede o
   smoke de estabilização pelo menos 24 h depois do corte; por decisão de João em 2026-10-05, ele
   rodou às 2026-10-05T22:48:12Z, verde, para o bloco fechar no mesmo dia
@@ -741,9 +756,41 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   **Gatilho:** qualquer sessão a partir de 2026-10-06T14:12:23Z roda
   `SMOKE_URL=https://lotusotec.cl pnpm smoke`; verde fecha, vermelho nos itens 2 a 6 é o gatilho
   de `docs/infra/rollback-corte.md` §2.
+- **D-68 · o job `alerta` não foi provado ponta a ponta** — a trust da role de alerta só aceita a
+  `main` do corporativo, e o `ci.yml` novo só chega lá pelo espelho, depois do merge de `B6` (spec
+  de `7.2.6`, D13). Dentro do bloco, a prova foi a política simulada e as catracas
+  (`docs/infra/evidencia-observabilidade-2026-10-06.md` §5).
+  **Gatilho:** primeiro espelho depois do merge de `B6`: com `AWS_ALERT_ROLE_ARN` e
+  `AWS_ALERT_TOPIC_ARN` definidas no corporativo, um commit vazio sem trailer, empurrado direto na
+  `main` de lá, faz o `procedencia` reprovar, e o e-mail `lotus-site: CI falhou em <sha>` precisa
+  chegar (`docs/infra/runbook-aws.md` §11.5).
+- **D-69 · as actions do `ci.yml` declaram Node 20 e rodam forçadas no Node 24** — o run
+  corporativo `37395699354` (2026-10-06) anotou "Node.js 20 is deprecated. The following actions
+  target Node.js 20 but are being forced to run on Node.js 24": `actions/cache@v4`,
+  `actions/checkout@v4` e `actions/setup-node@v4` no `check`, e
+  `aws-actions/configure-aws-credentials@v4` no `deploy`. O job `alerta` de `B6` usa a mesma
+  `configure-aws-credentials@v4`, por paridade com o `deploy`. A v6 dela declara Node 24 e pede
+  runner 2.327.1 ou mais novo, e a v5 mudou o tratamento de entrada booleana inválida: as actions
+  migram juntas, num bloco próprio.
+  **Gatilho:** aviso do GitHub de fim do modo forçado, ou o próximo bloco que tocar a versão de uma
+  action do `ci.yml`.
+- **D-70 · o bloco `7.2.6` (observabilidade mínima) não tem segunda lente** — o plano previa
+  `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-11: Claude executa e
+  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
+  autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53` e `D-65`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
 
 ## Fechados
 
+- **D-40 · a distribuição não grava access log** — CloudTrail registra quem mudou o quê e o run do
+  GitHub Actions registra o deploy, mas não existe registro de quem acessou o site. Ligar o log hoje
+  criaria volume de objetos com custo e nenhum consumidor: não há dashboard, alerta nem consulta que
+  os leia.
+  **Gatilho:** `7.2.6` (observabilidade), junto com quem vai lê-los.
+  **Fechado em 2026-10-11.** Access log v2 da distribuição em `lotus-site-acessos`
+  (`us-east-1`), 90 dias, doze campos sem IP nem cookie, lido por quatro consultas salvas (spec de
+  `7.2.6`, D4, D8 e D9). Evidência em `docs/infra/evidencia-observabilidade-2026-10-06.md` §6 e §7.
 - **D-22 · JSON-LD e tags sociais validados só localmente** — schema Zod `strict` e parse em
   `src/app/head.test.ts`, mais `og:image` resolvendo em `e2e/seo.spec.ts` (D5/D10 do bloco
   `5.1.1-5.3.2`). Rich Results Test e depuradores sociais (Facebook, LinkedIn, X) exigem URL
