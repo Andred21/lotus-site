@@ -37,7 +37,7 @@ sempre explícita.
 `B6 · 7.2.6` ligou a observabilidade mínima em 2026-10-06: alarmes de indisponibilidade e de 5xx, aviso
 de falha do CI e access log lido por quatro consultas; o fechamento do bloco fica registrado em
 `docs/superpowers/historico/progress.md`. `B0` a `B5` estão fechados, cada um com PR integrado em
-`main`. O próximo bloco da fila é `B7 · 7.2.7`, que só fica ativo por seleção explícita (Lei 3).
+`main`. `B7 · 7.2.7` apagou o WordPress e o Moodle do host em 2026-10-11, depois do backup final provado; o caminho crítico do go-live (`B0` a `B7`) está entregue.
 Depois do merge de `B6`, a prova ponta a ponta do job `alerta` fechou `D-68` em 2026-10-11.
 `B8 · recaptura-baseline` fechou em 2026-10-11, fora da ordem por seleção de João: `D-30` fechado e
 a conferência humana de paridade feita.
@@ -217,6 +217,11 @@ um por vez, porque o harness admite um `active_work_item` só.
   de 2026-09-26 saiu dela, ver `D-50` —, e quem mais usa esses nomes só aparece desligando-os. Por
   isso a decisão anda junto com o desligamento do WordPress.
 - **Depende de:** `B6` mais aceite explícito do João, depois de estabilização.
+- **Entregue (spec `2026-10-11-7.2.7-desativar-wordpress-design.md`):** backup final do StackCP
+  (arquivos e um dump por banco) provado por ensaio e WordPress e Moodle apagados do host em
+  2026-10-11, com o pacote mantido (`D-74`). Evidência:
+  `docs/infra/evidencia-desativacao-wordpress-2026-10-11.md`. Rollback ao WordPress encerrado
+  (`D-37`); `D-67` fechado.
 
 ## B8 · `recaptura-baseline` — `D-30` e a conferência humana de paridade
 
@@ -461,6 +466,8 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   TTL 60 e ao checkout de template, `zona.mjs` e `zona.test.mjs` juntos; continua sem botão.
   Em `B6` ganhou alarme que avisa (`lotus-site-indisponivel` e `lotus-site-5xx`, por e-mail); quem
   decide e executa a volta continua sendo João, pelo procedimento escrito.
+  Em `B7` a volta ao WordPress acabou (2026-10-11): `infra/rollback-corte.json` saiu, e
+  `rollback-corte.md` ficou com o rollback de release e a restauração de desastre.
   **Gatilho:** segundo incidente de publicação errada.
 - **D-38 · a trust policy da role de deploy fixa `refs/heads/main`** — `sub` com `StringEquals` em
   `repo:Gatika-CL/lotus-site:ref:refs/heads/main`. Publicar a partir de tag ou de outra branch exige
@@ -535,8 +542,10 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   renovação do ACM, que depois que `B5` o puser em uso é automática e silenciosa, e com certificado
   de 198 dias acontece duas vezes por ano — a falha apareceria como site fora do ar meses depois,
   sem ninguém ter tocado em nada. Merece bloco com prova própria: publicar, medir, e só então
-  confiar. `issuewild ";"` só depois de `B7`, quando o wildcard deixar de existir.
-  **Gatilho:** depois de `D-51` decidido; a forma final, em `B7`.
+  confiar. `issuewild ";"` só depois que o wildcard da 20i deixar de existir: `B7` manteve o pacote (spec
+  de `7.2.7`, D2), e o certificado vence em 2026-11-10 sem renovar.
+  **Gatilho:** depois de `D-51` decidido; o `issuewild`, a partir de 2026-11-11 ou do cancelamento do
+  pacote (`D-74`), o que vier primeiro.
 - **D-50 · caixa criada na StackMail envia mas nunca recebe** — o `MX` de `lotusotec.cl` aponta
   para o Google Workspace; a StackMail só aparece no SPF. Uma caixa criada no StackCP — caso de
   `jvandreoli@lotusotec.cl`, em 2026-09-26 — manda mensagem com `SPF: PASS`, mas o que chega de fora
@@ -545,8 +554,10 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   achar que tem e-mail. O mesmo vale para `ana@lotusotec.cl`, dado de teste em cinco arquivos de
   `src/`: a sonda `RCPT` de 2026-09-26 respondeu `550 5.1.1`. Nenhum código de produção envia para
   ele, mas o endereço parece real e não é.
-  **Gatilho:** `B7`, junto da decisão sobre os nomes do StackMail; o dado de teste, no próximo bloco
-  que tocar esses testes.
+  `B7` manteve o pacote e a StackMail: a decisão sobre `smtp`, `imap`, `pop3`, `autodiscover`, `ftp`
+  e o `include:spf.stackmail.com` passou para o cancelamento do pacote (`D-74`).
+  **Gatilho:** cancelamento do pacote (`D-74`); o dado de teste, no próximo bloco que tocar esses
+  testes.
 
 - **D-53 · o bloco `7.2.1` (delegação e certificado) não teve segunda lente** — Claude executou
   `b64bb94..cb06414` e também fez a review formal de `/revisar-site`: a cota da conta Codex estava
@@ -748,14 +759,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   João sobre a correção, com a medição na mão. A primeira condição não está na spec de `7.2.6`
   (§10), que dá só a decisão com a medição na mão: um pedido em cinco dias não é medição. Desvio
   aceito por João em 2026-10-11, na review do bloco.
-- **D-67 · a estabilização de `B5` durou 8 h 35 min, não 24 h** — a spec de `7.2.5` (D11) pede o
-  smoke de estabilização pelo menos 24 h depois do corte; por decisão de João em 2026-10-05, ele
-  rodou às 2026-10-05T22:48:12Z, verde, para o bloco fechar no mesmo dia
-  (`docs/infra/evidencia-corte-2026-10-05.md` §7). Uma falha que só aparecesse entre 8 h e 24 h do
-  corte não foi observada pelo smoke.
-  **Gatilho:** qualquer sessão a partir de 2026-10-06T14:12:23Z roda
-  `SMOKE_URL=https://lotusotec.cl pnpm smoke`; verde fecha, vermelho nos itens 2 a 6 é o gatilho
-  de `docs/infra/rollback-corte.md` §2.
 - **D-69 · as actions do `ci.yml` declaram Node 20 e rodam forçadas no Node 24** — o run
   corporativo `37395699354` (2026-10-06) anotou "Node.js 20 is deprecated. The following actions
   target Node.js 20 but are being forced to run on Node.js 24": `actions/cache@v4`,
@@ -777,8 +780,8 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   em `lotusotec.cl` (as outras no host de staging). Desde o corte, isso pede essas 13 à CloudFront, que serve o clone. O bloco
   `recaptura-baseline` corrigiu só o caminho do Chromium (`launchReferencia`/`openPage`); o
   `fetch` precisaria de um `lookup` próprio, como `e2e/smoke/rede.ts`, e da mesma guarda.
-  **Gatilho:** qualquer regeração de `docs/inventario/assets/` antes de `B7`; depois de `B7`, só
-  restaurando o backup localmente.
+  **Gatilho:** regeração de `docs/inventario/assets/` a partir do backup final restaurado
+  localmente: desde `B7` não há referência viva.
 - **D-72 · `openPage` devolve a página ainda rolando em `375` e `768`** — o WordPress declara
   `scroll-behavior: smooth`, e o `scrollTo(0, 0)` do fim de `openPage` ainda está animando 1 s
   depois: `scrollY` 28 em `375` e 1 em `768`, medido em 2026-10-11. `capturarPaginaInteira` espera
@@ -786,9 +789,42 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   medem logo depois de `openPage`, mas hoje só leem `width`/`height` de `getBoundingClientRect` e
   estilo computado, que a rolagem não muda; quem passar a ler posição, ou estado do Divi que
   depende da rolagem, mede no meio da animação.
-  **Gatilho:** próxima regeração de `dom.json`, `styles.json` ou das medidas de breakpoint.
+  **Gatilho:** próxima regeração de `dom.json`, `styles.json` ou das medidas de breakpoint, que
+  desde `B7` só existe contra o backup final restaurado localmente.
+- **D-74 · o pacote do StackCP segue pago sem site** — `B7` apagou o WordPress e o Moodle e manteve
+  a hospedagem (spec de `7.2.7`, D2), porque a StackMail ainda envia (`D-50`). Ficam vivos a
+  StackMail, a conta FTP (`ftp.lotusotec.cl`), o painel com os três atalhos (`zona-dns-lotusotec.md`)
+  e o wildcard da 20i até 2026-11-10. O Moodle (`aulavirtual.lotusotec.cl`) ficou fora do ar de
+  2026-09-26, quando o wildcard da zona não atravessou a delegação, até a remoção em `B7`, sem
+  ninguém perceber; João o declarou sem uso em 2026-10-11.
+  **Gatilho:** decisão de João de cancelar o pacote — junto com ela, `D-50` e o `issuewild` de
+  `D-49`.
+- **D-75 · o ensaio de restauração perdeu a referência viva** — `verificar-restauracao.mjs` compara a
+  cópia restaurada com o WordPress pelo IP (spec de `7.2.7`, D9); desde `B7` o IP responde `403` e
+  `exigirVivo` reprova a leitura. A última comparação válida é a de
+  `docs/infra/evidencia-desativacao-wordpress-2026-10-11.md` §2. Restaurar de novo exige outra
+  referência — o título, o `h1` e o texto registrados ali, ou capturas.
+  **Gatilho:** a próxima restauração do backup final.
+- **D-76 · o bloco `7.2.7` (desativar o WordPress, `B7`) não tem segunda lente** — o plano previa
+  `reviewer: codex`, mas João aprovou o plano em 2026-10-11 atribuindo execução e review ao Claude:
+  Claude executa e também faz a review formal de `/revisar-site`. Desvio declarado em
+  `reviewer_exception`, autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`,
+  `D-65`, `D-70` e `D-73`.
+  **Gatilho:** passada do Codex sobre `main..HEAD` do bloco, ou decisão de João de dispensá-la.
 
 ## Fechados
+
+- **D-67 · a estabilização de `B5` durou 8 h 35 min, não 24 h** — a spec de `7.2.5` (D11) pede o
+  smoke de estabilização pelo menos 24 h depois do corte; por decisão de João em 2026-10-05, ele
+  rodou às 2026-10-05T22:48:12Z, verde, para o bloco fechar no mesmo dia
+  (`docs/infra/evidencia-corte-2026-10-05.md` §7). Uma falha que só aparecesse entre 8 h e 24 h do
+  corte não foi observada pelo smoke.
+  **Gatilho:** qualquer sessão a partir de 2026-10-06T14:12:23Z roda
+  `SMOKE_URL=https://lotusotec.cl pnpm smoke`; verde fecha, vermelho nos itens 2 a 6 é o gatilho
+  de `docs/infra/rollback-corte.md` §2.
+  **Fechado em 2026-10-11.** `SMOKE_URL=https://lotusotec.cl pnpm smoke`, Node 24.19.0, no
+  planejamento de `B7`: `10 passed`, release `4e8b3bb1f7949676820561a8b584045cefb40076`,
+  certificado da Amazon até 2027-04-11. Seis dias depois do corte; nenhum item vermelho.
 
 - **D-73 · o bloco `recaptura-baseline` (`B8`) não tem segunda lente** — o desenho previa
   `reviewer: codex`, mas a cota da conta Codex continuava esgotada em 2026-10-11: Claude executa e
@@ -914,6 +950,8 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   de `7.2.5`, D1). A volta ao WordPress vale até 2026-11-10T20:37:55Z; depois, correção para
   frente ou restauração de desastre (`rollback-corte.md` §7). O corte aconteceu em
   2026-10-05, dentro do prazo de 2026-10-27.
+  Em `B7` (2026-10-11), o WordPress foi apagado do host antes do vencimento; o wildcard segue no
+  StackCP até 2026-11-10 (`D-49`).
 
 - **D-52 · `delete-stack` do `lotus-dns` esvaziaria a zona viva** — `Zona` tem
   `DeletionPolicy: Retain`, mas `Registros` não: um `delete-stack` apaga MX, SPF e todo o resto e

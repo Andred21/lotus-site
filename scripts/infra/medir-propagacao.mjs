@@ -8,7 +8,7 @@
 //
 // Uso:
 //   node scripts/infra/medir-propagacao.mjs --nome ensaio-corte.lotusotec.cl \
-//     --esperado wordpress|cloudfront|ausente [--aquecer] [--limite 900] \
+//     --esperado cloudfront|ausente [--aquecer] [--limite 900] \
 //     [--nameservers ns-1.awsdns-01.org,ns-2.awsdns-02.com,...]
 //
 // --aquecer: uma consulta só, sem esperar. É o que enche o cache dos
@@ -60,12 +60,10 @@ if (!nomeArg) throw new Error('--nome é obrigatório')
 /** @type {string} */
 const NOME = nomeArg
 const ESPERADO = args.esperado
-if (
-  ESPERADO !== 'wordpress' &&
-  ESPERADO !== 'cloudfront' &&
-  ESPERADO !== 'ausente'
-) {
-  throw new Error('--esperado deve ser wordpress, cloudfront ou ausente')
+if (ESPERADO !== 'cloudfront' && ESPERADO !== 'ausente') {
+  throw new Error(
+    '--esperado deve ser cloudfront ou ausente (wordpress saiu em B7, 7.2.7)',
+  )
 }
 const AQUECER = args.aquecer === 'true'
 const LIMITE_S = Number(args.limite ?? 900)

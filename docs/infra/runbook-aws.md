@@ -214,7 +214,7 @@ Editar registros à mão fica fora do template, e o CloudFormation **não avisa*
 — `DELETE` de tudo o que o stack guarda e `CREATE` do template (§3.6) —, e com um registro editado
 à mão o `DELETE` dele não bate com a zona. Pela documentação do Route 53, o lote inteiro é
 recusado; no ensaio, com um alias, ele aceitou, e o caso de um registro comum não foi ensaiado
-([`rollback-corte.md`](rollback-corte.md) §5). Antes de qualquer deploy na zona viva, ler a zona
+(o caminho B de `rollback-corte.md`, até `B7`: `git show dcfeb76:docs/infra/rollback-corte.md`, §5). Antes de qualquer deploy na zona viva, ler a zona
 registro a registro e comparar com o template:
 
 ```bash
@@ -747,16 +747,14 @@ item 1; sem ele, o último `CI` verde do corporativo (`gh run list --repo Gatika
 `X_ROBOTS_TAG_PRESENTE` em `e2e/smoke/alvo.ts` é `false` desde o corte (`B5`): o item 7 confere o
 cabeçalho ausente. O envio real do formulário é humano (spec D11).
 
-### 9.3 Rollback do corte e ensaio
+### 9.3 Rollback do corte e ensaio — encerrado em B7
 
-Procedimento em [`rollback-corte.md`](rollback-corte.md), com os tempos medidos em
-`ensaio-corte.lotusotec.cl`
-([`evidencia-backup-rollback-2026-09-29.md`](evidencia-backup-rollback-2026-09-29.md) §3 e §4).
-Change batch de emergência em `infra/rollback-corte.json`. Medir propagação de qualquer nome da
-zona:
+Valeu de `B4` a `B7` ([`rollback-corte.md`](rollback-corte.md) guarda o ponteiro para o texto
+antigo). Desde `B7` não há volta de DNS ao WordPress, e `infra/rollback-corte.json` saiu. Medir
+propagação de qualquer nome da zona:
 
 ```bash
-AWS_PROFILE=lotus node scripts/infra/medir-propagacao.mjs --nome <nome> --esperado wordpress|cloudfront|ausente [--aquecer] [--limite <s>]
+AWS_PROFILE=lotus node scripts/infra/medir-propagacao.mjs --nome <nome> --esperado cloudfront|ausente [--aquecer] [--limite <s>]
 ```
 
 Sem `--nameservers`, o script lê os quatro do output `NameServers` do `lotus-dns` — daí o
@@ -765,18 +763,22 @@ propagação: respostas antigas seguem saindo até o TTL do registro antigo acab
 
 ### 9.4 Backup do WordPress
 
-Cópias e hashes em
-[`evidencia-backup-rollback-2026-09-29.md`](evidencia-backup-rollback-2026-09-29.md) §1;
-restauração exercitada localmente com
+Backup final, de 2026-10-11, com um dump por banco (WordPress, Moodle e um terceiro, vazio), hashes
+e ensaio em
+[`evidencia-desativacao-wordpress-2026-10-11.md`](evidencia-desativacao-wordpress-2026-10-11.md)
+§1 e §2; as cópias de 2026-10-03 continuam em
+[`evidencia-backup-rollback-2026-09-29.md`](evidencia-backup-rollback-2026-09-29.md) §1.
+Restauração exercitada localmente com
 `scripts/wordpress/ensaio-restauracao.sh <arquivos.zip|.tar.gz> <dump.sql|.sql.gz>` (Docker; nada
-entra no repositório — `.gitignore` recusa `*.sql`, `*.sql.gz`, `*wpvivid*`, `backup*.zip`, `stackcp-*`).
+entra no repositório — `.gitignore` recusa `*.sql`, `*.sql.gz`, `*wpvivid*`, `backup*.zip`, `stackcp-*`). Depois de `B7` o ensaio não tem vivo para comparar e
+falha na leitura dele (spec de `7.2.7`, D9).
 
 ## 10. O corte de `lotusotec.cl` (`B5`)
 
 Spec em `docs/superpowers/specs/2026-10-04-7.2.5-cutover-lotusotec-design.md`; evidência em
 [`evidencia-corte-2026-10-05.md`](evidencia-corte-2026-10-05.md). Desde 2026-10-05, apex e `www` são
-alias da distribuição; o WordPress segue no IP dele até `B7`, como alvo do rollback
-([`rollback-corte.md`](rollback-corte.md), até 2026-11-10).
+alias da distribuição; o WordPress seguiu no IP dele como alvo do rollback até `B7` (2026-10-11),
+quando foi apagado do host.
 
 ### 10.1 Latência a partir do Chile
 
@@ -798,9 +800,10 @@ A ordem de `B5`, para uma troca futura do mesmo tipo:
 1. TTL do registro de antes baixado para 60 — parâmetro próprio, porque `aws cloudformation
 deploy` reusa o valor anterior de parâmetro que o stack já tem — e pelo menos 3600 s de espera
    depois do `UPDATE_COMPLETE`: é o TTL antigo que governa a cauda.
-2. Pré-checagens: `rollback-corte.md` §0; `medir-propagacao --esperado wordpress --aquecer` com TTL
-   60 nos nameservers e no máximo 60 restantes nos públicos; nenhum deploy desde o smoke forçado.
-3. Change set do `lotus-dns` revisto por `Name` e `Type` (`rollback-corte.md` §3), `--aquecer`,
+2. Pré-checagens: o rollback da troca escrito e com janela (em `B5`, `rollback-corte.md` §0, até
+   `B7`); `medir-propagacao --aquecer` no lado de antes (em `B5`, `--esperado wordpress`, que saiu
+   em `B7`) com TTL 60 nos nameservers e no máximo 60 restantes nos públicos; nenhum deploy desde o smoke forçado.
+3. Change set do `lotus-dns` revisto por `Name` e `Type` (em `B5`, `rollback-corte.md` §3, texto em `dcfeb76`), `--aquecer`,
    `execute` e `medir-propagacao --esperado cloudfront` em apex e `www`, em paralelo.
 4. `SMOKE_URL=https://lotusotec.cl SMOKE_SHA=<sha> pnpm smoke`, com o mesmo SHA do smoke forçado, e
    `pnpm infra:conferir-zona --pos-delegacao`, que desde `7.2.5` confere linha de alias.
@@ -898,8 +901,8 @@ ele reprova com `::error::`. No pessoal elas não existem, de propósito: lá o 
 
 - **`lotus-site-indisponivel`.** Abrir `https://lotusotec.cl/` e ver o que cada checador viu:
   `aws route53 get-health-check-status --health-check-id <IdDoHealthCheck>`. O smoke decide
-  (`SMOKE_URL=https://lotusotec.cl pnpm smoke`): vermelho nos itens 2 a 6 é o gatilho de
-  `rollback-corte.md` §2, até 2026-11-10, ou do rollback de release do `ADR-SITE-004`.
+  (`SMOKE_URL=https://lotusotec.cl pnpm smoke`): vermelho nos itens 2 a 6 é o gatilho do
+  rollback de release do `ADR-SITE-004` (`rollback-corte.md` §2).
 - **`lotus-site-5xx`.** Rodar `lotus-site/5xx-por-caminho` sobre a última hora (§11.4). Em
   `/api/contacto`, é a função:
   `aws logs tail /aws/lambda/lotus-site-contato --region sa-east-1 --since 1h`. Em outro caminho,

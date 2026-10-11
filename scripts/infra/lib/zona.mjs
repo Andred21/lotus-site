@@ -148,10 +148,9 @@ export const INVENTARIO = Object.freeze([
 ])
 
 /**
- * Para onde o rollback do corte volta: os endereços do WordPress na
- * BlueHosting, medidos em 2026-09-09. Literal desde o corte (7.2.5, spec D6),
- * quando apex e `www` viraram alias e o inventário deixou de guardá-los. Sai
- * com o WordPress, em `B7`.
+ * Os endereços antigos do WordPress na BlueHosting, medidos em 2026-09-09.
+ * Desde `B7` (7.2.7) não há WordPress neles; ficam para `respondeComoBorda`
+ * reconhecer um resolvedor que ainda devolve a resposta de antes do corte.
  */
 export const WORDPRESS = Object.freeze({
   A: '185.146.167.195',
@@ -159,16 +158,8 @@ export const WORDPRESS = Object.freeze({
 })
 
 /**
- * TTL de apex e `www`, `A` e `AAAA`, no dia do corte (7.2.5, spec D3). Com
- * 3600 s no registro de antes, a cauda do corte medida em `B4` foi de 30 a
- * 56 min. É também o TTL de `infra/rollback-corte.json`, que precisa ser o do
- * template de antes do corte.
- */
-export const TTL_DO_CORTE = 60
-
-/**
- * Os quatro registros que o corte troca e o rollback devolve: apex e `www`,
- * `A` e `AAAA` (spec §4.3).
+ * Os quatro registros que o corte trocou: apex e `www`, `A` e `AAAA`
+ * (spec §4.3).
  * @param {{ nome: string, tipo: string }} registro
  */
 export function eDoCorte(registro) {
@@ -176,69 +167,6 @@ export function eDoCorte(registro) {
     ['lotusotec.cl.', 'www.lotusotec.cl.'].includes(registro.nome) &&
     ['A', 'AAAA'].includes(registro.tipo)
   )
-}
-
-/**
- * @typedef {{
- *   Action: string,
- *   ResourceRecordSet: {
- *     Name: string,
- *     Type: string,
- *     TTL?: number,
- *     ResourceRecords?: { Value: string }[],
- *   },
- * }} MudancaDeRegistro
- */
-
-/**
- * O change batch de emergência (`infra/rollback-corte.json`) contra o que o
- * caminho B precisa escrever (spec D3 e §4.3): quatro `UPSERT` de apex e
- * `www`, `A` e `AAAA`, para o WordPress, com `TTL_DO_CORTE` — o TTL do
- * template de antes do corte, o único estado em que a reconciliação de
- * `rollback-corte.md` §5 foi provada. Vazio quando confere; senão um
- * problema por campo, com o nome dele.
- * @param {{ Changes?: MudancaDeRegistro[] }} lote
- * @returns {string[]}
- */
-export function conferirLoteDeRollback(lote) {
-  /** @type {string[]} */
-  const problemas = []
-  /** @type {Set<string>} */
-  const vistos = new Set()
-  for (const { Action, ResourceRecordSet: conjunto } of lote.Changes ?? []) {
-    const chave = `${conjunto.Type} ${conjunto.Name}`
-    if (!eDoCorte({ nome: conjunto.Name, tipo: conjunto.Type })) {
-      problemas.push(`Changes: ${chave} fora de apex e www, A e AAAA`)
-      continue
-    }
-    if (vistos.has(chave)) problemas.push(`Changes: ${chave} repetido`)
-    vistos.add(chave)
-    if (Action !== 'UPSERT') {
-      problemas.push(`Action de ${chave}: esperado UPSERT, veio ${Action}`)
-    }
-    if (conjunto.TTL !== TTL_DO_CORTE) {
-      problemas.push(
-        `TTL de ${chave}: esperado ${TTL_DO_CORTE}, veio ${conjunto.TTL ?? 'ausente'}`,
-      )
-    }
-    const esperado = WORDPRESS[/** @type {'A' | 'AAAA'} */ (conjunto.Type)]
-    const valores = (conjunto.ResourceRecords ?? []).map(
-      (registro) => registro.Value,
-    )
-    if (!mesmoConjunto(valores, [esperado])) {
-      problemas.push(
-        `ResourceRecords de ${chave}: esperado ${esperado}, veio ${JSON.stringify(valores)}`,
-      )
-    }
-  }
-  for (const nome of ['lotusotec.cl.', 'www.lotusotec.cl.']) {
-    for (const tipo of ['A', 'AAAA']) {
-      if (!vistos.has(`${tipo} ${nome}`)) {
-        problemas.push(`Changes: falta ${tipo} ${nome}`)
-      }
-    }
-  }
-  return problemas
 }
 
 /**
@@ -544,16 +472,12 @@ export function delegacaoEsperada(nomesDeServidor, posDelegacao) {
  * resolvedor convergiu quando A **e** AAAA já dizem o esperado. Parcial —
  * um tipo trocado e o outro não — não é convergência: o visitante
  * dual-stack ainda pode cair no lado errado.
- * @param {'wordpress' | 'cloudfront' | 'ausente'} esperado
+ * @param {'cloudfront' | 'ausente'} esperado
  * @param {{ A: string[], AAAA: string[] }} respostas vazio = sem resposta
  */
 export function convergiu(esperado, respostas) {
   const { A, AAAA } = respostas
   switch (esperado) {
-    case 'wordpress':
-      return (
-        mesmoConjunto(A, [WORDPRESS.A]) && mesmoConjunto(AAAA, [WORDPRESS.AAAA])
-      )
     case 'cloudfront':
       // Resposta nos dois tipos (IPV6Enabled), nenhuma do WordPress.
       return respondeComoBorda('A', A) && respondeComoBorda('AAAA', AAAA)

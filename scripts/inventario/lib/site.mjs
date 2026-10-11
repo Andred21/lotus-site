@@ -1,31 +1,24 @@
 // Ferramenta de inventário: roda em Node, nunca entra no bundle da aplicação.
 /// <reference lib="dom" />
-import { chromium } from '@playwright/test'
 
 export const SITE_URL = 'https://lotusotec.cl/'
 export const OUT_DIR = 'docs/inventario'
 
 /**
- * Endereço do WordPress de referência. Desde o corte (B5, 2026-10-05) o DNS de
- * lotusotec.cl aponta para a CloudFront e `SITE_URL` entrega o clone; o
- * WordPress só responde neste IP, o mesmo do registro A de
- * `infra/rollback-corte.json`.
- */
-export const WORDPRESS_IP = '185.146.167.195'
-
-/**
- * Chromium que resolve lotusotec.cl e www para o WordPress. URL, Host e SNI
- * continuam lotusotec.cl, então o certificado do WordPress valida sem
- * `ignoreHTTPSErrors`; quando ele vencer, a captura falha por TLS em vez de
- * medir outro alvo. Hosts fora do domínio, como localhost, não mudam.
+ * Até `B7` (7.2.7, 2026-10-11), abria um Chromium que resolvia lotusotec.cl e
+ * www para o WordPress no IP dele. O host foi esvaziado e o IP responde 403
+ * do StackCP, que `exigirWordPress` não distingue de uma referência: recusar
+ * é o que impede medir uma página de erro como se fosse o WordPress (spec D6).
  * @returns {Promise<import('@playwright/test').Browser>}
  */
 export function launchReferencia() {
-  return chromium.launch({
-    args: [
-      `--host-resolver-rules=MAP lotusotec.cl ${WORDPRESS_IP}, MAP www.lotusotec.cl ${WORDPRESS_IP}`,
-    ],
-  })
+  return Promise.reject(
+    new Error(
+      'a referência do WordPress foi desativada em B7 (7.2.7): o host foi esvaziado. ' +
+        'A única referência restante é o backup final restaurado localmente ' +
+        '(scripts/wordpress/ensaio-restauracao.sh; cópias em docs/infra/evidencia-desativacao-wordpress-2026-10-11.md §1)',
+    ),
+  )
 }
 
 /**
