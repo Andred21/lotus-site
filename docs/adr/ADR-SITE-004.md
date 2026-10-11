@@ -241,6 +241,12 @@ empresa. `7.2.1` começa pedindo o export BIND ao suporte.
 > `docs/infra/rollback-corte.md` até 2026-11-10, quando vence o certificado dele (`D-51`, não
 > renovado por decisão de João). Evidência em `docs/infra/evidencia-corte-2026-10-05.md`.
 
+> **Atualização de 2026-10-11 (`B7`, `7.2.7`).** O WordPress e o Moodle foram apagados do host do
+> StackCP, com backup final provado por ensaio
+> (`docs/infra/evidencia-desativacao-wordpress-2026-10-11.md`). A volta ao WordPress por DNS acabou
+> antes de 2026-11-10, por decisão de João; o rollback de release desta ADR continua sendo a
+> primeira resposta (`docs/infra/rollback-corte.md`).
+
 ## Motivo da decisão
 
 Quatro opções foram consideradas.

@@ -106,7 +106,8 @@ prática é que `www` e `sistema` respondem IPv6 hoje, e por isso os dois ganhar
 Nome de host não pode conter `://` nem `/`. São atalhos da interface do StackCP gravados na tabela
 de DNS, não registros que algum resolvedor consulte. O Route 53 só os aceitaria com escape octal, e
 nada os consultaria mesmo assim. **Não migram**, e o descarte está escrito aqui para que a próxima
-conferência não os leia como registro perdido. Morrem junto com o painel, em `B7`.
+conferência não os leia como registro perdido. Ficam no painel enquanto o pacote do StackCP existir: `B7` apagou o site e
+manteve o pacote (spec de `7.2.7`, D2).
 
 ## Ausências medidas
 
@@ -229,7 +230,7 @@ primeira resposta nova com os caches quase vazios e em 30 min com os caches chei
 remoção do nome), com respostas antigas até o TTL do WordPress (3600 s) acabar; volta pelo
 caminho principal em 48 s, pela emergência em 63 s (do `execute` ou do `UPSERT` até a última
 resposta antiga nos públicos); reconciliação do CloudFormation depois do `UPSERT`: passou, sem
-efeito no DNS. O procedimento está em [`rollback-corte.md`](rollback-corte.md). A zona terminou o
+efeito no DNS. O procedimento valeu até `B7`; [`rollback-corte.md`](rollback-corte.md) guarda o ponteiro. A zona terminou o
 ensaio sem o nome.
 
 Desde `7.2.5`, o `pnpm infra:conferir-zona` desta secção confere linha de alias: o IP da borda varia
@@ -249,9 +250,10 @@ e §5:
   `Z2FDTNDATAQYW2`), sem TTL no template.
 
 O inventário de `scripts/infra/lib/zona.mjs` acompanha: apex e `www` com `alias: true`, e o
-endereço do WordPress, alvo do rollback, na constante `WORDPRESS`. Conferência depois do corte em
-[`conferencia-zona-2026-10-05.md`](conferencia-zona-2026-10-05.md); a volta está em
-[`rollback-corte.md`](rollback-corte.md), até 2026-11-10.
+endereço antigo do WordPress na constante `WORDPRESS`, que `respondeComoBorda` usa para reconhecer
+resposta velha. Conferência depois do corte em
+[`conferencia-zona-2026-10-05.md`](conferencia-zona-2026-10-05.md). A volta ao WordPress acabou em
+`B7` (2026-10-11).
 
 ## Certificado
 

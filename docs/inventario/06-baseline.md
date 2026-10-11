@@ -8,7 +8,7 @@
 pnpm inventario:baseline
 ```
 
-O script abre a home nos 4 viewports do inventário e rola a página inteira (dispara o lazy-load do Divi). Desde o corte de `2026-10-05`, `lotusotec.cl` entrega o clone pela CloudFront: o Chromium resolve `lotusotec.cl` para o IP do WordPress (`--host-resolver-rules`), com URL, Host e SNI intactos, e a captura reprova se a resposta vier da CloudFront.
+O script abre a home nos 4 viewports do inventário e rola a página inteira (dispara o lazy-load do Divi). Desde o corte de `2026-10-05`, `lotusotec.cl` entrega o clone pela CloudFront: o Chromium resolve `lotusotec.cl` para o IP do WordPress (`--host-resolver-rules`), com URL, Host e SNI intactos, e a captura reprova se a resposta vier da CloudFront. Desde `B7` (`7.2.7`, 2026-10-11), o WordPress não existe mais: esta é a última captura dele vivo.
 
 A captura de página inteira é composta: o screenshot `fullPage` do Playwright redesenha o cabeçalho desktop do Divi em outro estado (fundo `#f8f8f8`, logo pequeno; `D-30`), então as linhas da altura do viewport vêm de um screenshot de viewport tirado na mesma página, com a rolagem já no topo, e o resto vem do `fullPage`. Em `375px`, depois da captura normal, o script clica no toggle do menu mobile (`.mobile_menu_bar`) e tira uma segunda captura, só do viewport, com o menu aberto.
 
