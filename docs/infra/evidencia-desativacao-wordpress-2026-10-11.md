@@ -202,9 +202,23 @@ StackProtect do host (spec D0), aceito pela tabela da spec §4.2; corpo sem marc
 `aws cloudwatch describe-alarms --region us-east-1` com `lotus-site-5xx` e
 `lotus-site-indisponivel` em `OK` nas duas.
 
-StackMail depois da remoção, declaração de João: mensagem de `contabilidad@lotusotec.cl` para um
-endereço Gmail externo dele, enviada 2026-10-11 18:14 em Santiago (21:14Z), chegou à caixa de
-entrada; Gmail mostra "enviado por: lotusotec.cl" e TLS padrão. O resumo do Gmail não mostra o
-servidor de saída: como o SPF de `lotusotec.cl` aceita Google e StackMail e nenhum dos dois assina
-DKIM, a prova de que a mensagem saiu pela StackMail (e não pelo Google Workspace) é o IP da linha
-`SPF` em "Mostrar original" — `185.151.28.*` é a StackMail —, pedido a João.
+StackMail depois da remoção: mensagem de `contabilidad@lotusotec.cl` para um endereço Gmail
+externo de João, enviada 2026-10-11T21:14:55Z, chegou à caixa de entrada. Cabeçalhos do "Mostrar
+original", colados por João (corpo e assinaturas ARC omitidos):
+
+```text
+Received: from shared-external-lhr1.stackcp.com ([45.8.227.175] helo=www.stackmail.com)
+  by smtp1.lhr.stackcp.net with esmtpa (Exim 4.99.5) ... Sun, 11 Oct 2026 22:14:56 +0100
+Received: from smtp1.mail.stackcp.net ([10.4.12.32] helo=smtp1.lhr.stackcp.net)
+  by relay2.stackmail.com with esmtps (TLS1.3) ... Sun, 11 Oct 2026 22:14:56 +0100
+Received: from relay2.stackmail.com (relay2.stackmail.com. [185.151.28.66])
+  by mx.google.com with ESMTPS ... Sun, 11 Oct 2026 14:14:56 -0700 (PDT)
+Received-SPF: pass (google.com: domain of contabilidad@lotusotec.cl designates 185.151.28.66
+  as permitted sender) client-ip=185.151.28.66;
+Authentication-Results: mx.google.com; spf=pass ... dmarc=pass (p=NONE sp=NONE dis=NONE)
+  header.from=lotusotec.cl
+X-Authenticated-Sender: contabilidad@lotusotec.cl
+```
+
+A mensagem saiu pelo webmail e pelo relay da StackMail (`185.151.28.66`), não pelo Google
+Workspace: a remoção não tocou a StackMail (Review Focus 4).
