@@ -115,3 +115,96 @@ responde na mesma URL: chamada de usuário logado, sem sessão nos dois lados.
 
 **Aceite do estágio 1:** hashes, integridade do ZIP e dos três dumps, comparação com 2026-10-03,
 ensaio `== ensaio passou` com `saida: 0`, e o pendrive declarado por João.
+
+## 3. Remoção no host
+
+"pode apagar" — João, 2026-10-11T20:58:25Z (horário em que a frase chegou), depois do estágio 1
+aceito (spec D8). Pedido junto: medir logo em seguida e prever o risco.
+
+### Antes
+
+Pelo IP, `curl --resolve lotusotec.cl:443:185.146.167.195` (o `aulavirtual` com `-k`), de
+2026-10-11T20:58:25Z a 20:58:36Z:
+
+```text
+/                      200
+/wp-json/              200
+/wp-login.php          401
+/wp-content/uploads/   403
+/aulavirtual/          303
+aulavirtual /          200
+```
+
+O `403` em `/wp-content/uploads/` já existia antes: listagem de diretório desligada no host.
+
+Resolução normal no mesmo minuto (`getent ahostsv4`): `lotusotec.cl` e `www` na CloudFront
+(`13.227.110.*`); `smtp` `185.151.28.68`, `imap` `185.151.28.69/74/84/85`, `pop3` `185.151.28.70`,
+`autodiscover` `45.8.227.100`, `ftp` `185.146.165.203/204`; `aulavirtual` sem resposta. Nenhum
+nome da StackMail nem o `ftp` aponta para `185.146.167.195`: o IP do site é só do site.
+
+Produção antes: `SMOKE_URL=https://lotusotec.cl pnpm smoke` com `10 passed`;
+`lotus-site-5xx` e `lotus-site-indisponivel` em `OK`. As origens da distribuição
+(`infra/lotus-site.yaml`) são o bucket e a Function URL do contato; nenhuma é o host do StackCP.
+
+### Remoção
+
+Feita por João no StackCP, "entre 18:00 e agora" no horário de Santiago (UTC−3), relatada às
+21:09Z — de 2026-10-11T21:00Z a 21:09Z, sem horário por passo. **`DATA_B7` = 2026-10-11.**
+
+1. Gerenciador de arquivos com os ocultos visíveis: todo o conteúdo de `public_html/` apagado — as
+   25 entradas da raiz, `.htaccess` e `.user.ini` inclusos, conferidas contra o print de João e
+   contra a raiz do ZIP de §1.
+2. Os três bancos de §1 apagados, com os usuários deles (o vazio `wordpress-313932c3a0` também; o
+   plano listava só WordPress e Moodle).
+3. Cron do Moodle apagado, se existia.
+4. `public_html/.htaccess` criado com `Require all denied`.
+
+### Depois
+
+Primeira sonda, 2026-10-11T21:09:00Z a 21:09:03Z, `curl -k --resolve <host>:443:185.146.167.195`:
+
+```text
+lotusotec.cl               /                      200 marcas=52
+lotusotec.cl               /wp-json/              403 marcas=0
+lotusotec.cl               /wp-login.php          401 marcas=0
+lotusotec.cl               /wp-content/uploads/   403 marcas=0
+lotusotec.cl               /aulavirtual/          403 marcas=0
+aulavirtual.lotusotec.cl   /                      403 marcas=0
+```
+
+Reprovou na home. O `200` (234.732 B, o mesmo tamanho de antes) vinha do cache de borda da
+StackCDN, não da origem: `x-provided-by: StackCDN`, `x-via: IAD1`,
+`cache-control: public, s-maxage=216000` (60 h). A mesma URL com `?b7=<epoch>`, `/index.php`,
+`/cursos/` e o `www` já davam `403` de 239 B. João rodou "Purgar todo" em "Almacenamiento en caché
+de borde" do StackCP; os interruptores de cache dinâmico e de borda global ficaram como estavam.
+
+Segunda sonda, depois do purge, 2026-10-11T21:12:19Z a 21:12:23Z:
+
+```text
+lotusotec.cl               /                      403 marcas=0
+lotusotec.cl               /wp-json/              403 marcas=0
+lotusotec.cl               /wp-login.php          401 marcas=0
+lotusotec.cl               /wp-content/uploads/   403 marcas=0
+lotusotec.cl               /aulavirtual/          403 marcas=0
+aulavirtual.lotusotec.cl   /                      403 marcas=0
+www.lotusotec.cl           /                      403 marcas=0
+```
+
+Dois assets antigos que a borda guardava por um dia, `/wp-content/uploads/2022/08/feature_img-1-510x382.png`
+e `/wp-includes/css/dist/block-library/style.min.css`: `403`, 239 B. A home responde `403` com
+`x-cdn-cache-status: MISS` e `x-origin-cache-status: MISS`. O `401` de `/wp-login.php` é o
+StackProtect do host (spec D0), aceito pela tabela da spec §4.2; corpo sem marca do WordPress.
+
+## 4. Produção depois
+
+2026-10-11T21:09:21Z, antes do purge, e de novo 2026-10-11T21:12:32Z a 21:12:47Z, depois dele:
+`SMOKE_URL=https://lotusotec.cl pnpm smoke` com `10 passed` nas duas;
+`aws cloudwatch describe-alarms --region us-east-1` com `lotus-site-5xx` e
+`lotus-site-indisponivel` em `OK` nas duas.
+
+StackMail depois da remoção, declaração de João: mensagem de `contabilidad@lotusotec.cl` para um
+endereço Gmail externo dele, enviada 2026-10-11 18:14 em Santiago (21:14Z), chegou à caixa de
+entrada; Gmail mostra "enviado por: lotusotec.cl" e TLS padrão. O resumo do Gmail não mostra o
+servidor de saída: como o SPF de `lotusotec.cl` aceita Google e StackMail e nenhum dos dois assina
+DKIM, a prova de que a mensagem saiu pela StackMail (e não pelo Google Workspace) é o IP da linha
+`SPF` em "Mostrar original" — `185.151.28.*` é a StackMail —, pedido a João.
