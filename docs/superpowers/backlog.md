@@ -38,7 +38,7 @@ sempre explícita.
 de falha do CI e access log lido por quatro consultas; o fechamento do bloco fica registrado em
 `docs/superpowers/historico/progress.md`. `B0` a `B5` estão fechados, cada um com PR integrado em
 `main`. O próximo bloco da fila é `B7 · 7.2.7`, que só fica ativo por seleção explícita (Lei 3).
-Depois do merge de `B6`, `D-68` pede a prova ponta a ponta do job `alerta`.
+Depois do merge de `B6`, a prova ponta a ponta do job `alerta` fechou `D-68` em 2026-10-11.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -756,14 +756,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   **Gatilho:** qualquer sessão a partir de 2026-10-06T14:12:23Z roda
   `SMOKE_URL=https://lotusotec.cl pnpm smoke`; verde fecha, vermelho nos itens 2 a 6 é o gatilho
   de `docs/infra/rollback-corte.md` §2.
-- **D-68 · o job `alerta` não foi provado ponta a ponta** — a trust da role de alerta só aceita a
-  `main` do corporativo, e o `ci.yml` novo só chega lá pelo espelho, depois do merge de `B6` (spec
-  de `7.2.6`, D13). Dentro do bloco, a prova foi a política simulada e as catracas
-  (`docs/infra/evidencia-observabilidade-2026-10-06.md` §5).
-  **Gatilho:** primeiro espelho depois do merge de `B6`: com `AWS_ALERT_ROLE_ARN` e
-  `AWS_ALERT_TOPIC_ARN` definidas no corporativo, um commit vazio sem trailer, empurrado direto na
-  `main` de lá, faz o `procedencia` reprovar, e o e-mail `lotus-site: CI falhou em <sha>` precisa
-  chegar (`docs/infra/runbook-aws.md` §11.5).
 - **D-69 · as actions do `ci.yml` declaram Node 20 e rodam forçadas no Node 24** — o run
   corporativo `37395699354` (2026-10-06) anotou "Node.js 20 is deprecated. The following actions
   target Node.js 20 but are being forced to run on Node.js 24": `actions/cache@v4`,
@@ -783,6 +775,19 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
 
 ## Fechados
 
+- **D-68 · o job `alerta` não foi provado ponta a ponta** — a trust da role de alerta só aceita a
+  `main` do corporativo, e o `ci.yml` novo só chega lá pelo espelho, depois do merge de `B6` (spec
+  de `7.2.6`, D13). Dentro do bloco, a prova foi a política simulada e as catracas
+  (`docs/infra/evidencia-observabilidade-2026-10-06.md` §5).
+  **Gatilho:** primeiro espelho depois do merge de `B6`: com `AWS_ALERT_ROLE_ARN` e
+  `AWS_ALERT_TOPIC_ARN` definidas no corporativo, um commit vazio sem trailer, empurrado direto na
+  `main` de lá, faz o `procedencia` reprovar, e o e-mail `lotus-site: CI falhou em <sha>` precisa
+  chegar (`docs/infra/runbook-aws.md` §11.5).
+  **Fechado em 2026-10-11.** O commit vazio `6081854`, empurrado à mão por João na `main` do
+  corporativo, fez o `procedencia` reprovar no run `38158323370`; o `alerta` assumiu a role por
+  OIDC, publicou no tópico, e o e-mail `lotus-site: CI falhou em 6081854` chegou às 17:10Z com
+  `check: success`, `procedencia: failure` e `deploy: skipped`. O site não mudou. Evidência em
+  `docs/infra/evidencia-observabilidade-2026-10-06.md` §5.1.
 - **D-40 · a distribuição não grava access log** — CloudTrail registra quem mudou o quê e o run do
   GitHub Actions registra o deploy, mas não existe registro de quem acessou o site. Ligar o log hoje
   criaria volume de objetos com custo e nenhum consumidor: não há dashboard, alerta nem consulta que

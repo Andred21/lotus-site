@@ -455,6 +455,52 @@ ganha o job `alerta` no primeiro espelho depois do merge.
 As catracas no último `vitest` (14:01:57Z): `scripts/infra/observabilidade.test.mjs` 47/47,
 `scripts/infra/ci-alerta.test.mjs` 22/22 e `scripts/infra/yaml.test.mjs` 20/20.
 
+### 5.1 A prova ponta a ponta (`D-68`), depois do merge
+
+Registrada em 2026-10-11, depois do merge de `B6` (PR #28, `0d2a890`). O espelho `4e8b3bb` levou o
+`ci.yml` com o job `alerta` ao corporativo; o run dele, `38157634023`, saiu verde, com o `alerta`
+`skipped`, como deve num run sem falha, e sem o aviso de variável ausente no `deploy`. Antes da
+prova: `AWS_ALERT_ROLE_ARN` e `AWS_ALERT_TOPIC_ARN` presentes, a assinatura do tópico confirmada e
+os dois alarmes em `OK`.
+
+O teste de `docs/infra/runbook-aws.md` §11.5: João empurrou à mão, direto na `main` do corporativo,
+o commit vazio `608185462ee2f630f7f3d638c96013bf29043223` (`test: push direto sem trailer, para o
+alerta avisar (D-68)`), pai `4e8b3bb`, mesma árvore. O run
+[`38158323370`](https://github.com/Gatika-CL/lotus-site/actions/runs/38158323370):
+
+| Job           | Resultado | Fim (UTC) |
+| ------------- | --------- | --------- |
+| `procedencia` | `failure` | 17:07:37  |
+| `check`       | `success` | 17:10:24  |
+| `deploy`      | `skipped` | 17:10:24  |
+| `alerta`      | `success` | 17:10:32  |
+
+No log do `alerta`, o OIDC assumiu a `lotus-site-alerta` às 17:10:29Z
+(`Authenticated as assumedRoleId AROA3B7BDINPEGBVKY3SE:GitHubActions`) — a primeira chamada real
+da role, que até ali só tinha a política simulada (§5) — e o `sns publish` devolveu o `MessageId`
+`b2f02c94-bc7d-5f8e-ae30-4fd1793b3244` às 17:10:30Z, sem `##[error]`. No tópico, na janela de
+17:10Z, `NumberOfMessagesPublished` 1 e `NumberOfNotificationsDelivered` 1. O `deploy` pulado: nada
+foi publicado, e o site não mudou.
+
+O e-mail chegou a `jv***@gmail.com`, na caixa de entrada, às 14:10 no relógio de João (17:10Z),
+declarado por ele com o print da mensagem: remetente `lotus-site`, assunto
+`lotus-site: CI falhou em 6081854` e o corpo
+
+```text
+Um push em main de Gatika-CL/lotus-site falhou.
+
+check: success
+procedencia: failure
+deploy: skipped
+
+commit: 608185462ee2f630f7f3d638c96013bf29043223
+run: https://github.com/Gatika-CL/lotus-site/actions/runs/38158323370
+```
+
+seguido do rodapé de descadastro do SNS, que traz o endereço e fica fora daqui (D2). O print não
+entra no repositório pelo mesmo motivo. O commit vazio fica no histórico do corporativo, como o
+`3cd9619`. Fecha `D-68`.
+
 ## 6. Log gravado (spec §7, item 5)
 
 Lido em 2026-10-11T15:15:05Z, 5 dias e 2 h depois do `CREATE_COMPLETE` (plano, Task 4, Step 2). O
@@ -558,7 +604,8 @@ primeira leitura, não `D-66` fechado.
   `get-metric-data` provou a conta sobre 24 h reais (§4; spec D12).
 - O job `alerta` não foi provado ponta a ponta: a trust da role só aceita a `main` do corporativo,
   onde o `ci.yml` novo só chega depois do merge. Dentro do bloco, a prova é a política simulada e
-  as catracas (§5); a ponta a ponta é `D-68` (spec D13).
+  as catracas (§5); a ponta a ponta é `D-68` (spec D13). Provada depois do merge, em 2026-10-11
+  (§5.1).
 - O recebimento dos e-mails é declaração de João.
 - O tempo estourado não foi provado ponta a ponta: o teste executa o roteiro com `deploy: cancelled`,
   e a semântica do `if` vem da documentação do GitHub e dos logs de avaliação de runs públicos
