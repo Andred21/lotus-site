@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: planning
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.7
 active_notion_eap: 7.2.7
@@ -9,20 +9,20 @@ active_title: 'Desativar WordPress somente após estabilização e aceite'
 active_branch: chore/7-2-7-desativar-wordpress
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: approve_plan
+next_owner: claude
+next_action: continue_active_plan
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-11-7.2.7-desativar-wordpress-design.md
-active_plan: null
-executor: null
-reviewer: null
-reviewer_exception: null
+active_plan: docs/superpowers/plans/2026-10-11-7.2.7-desativar-wordpress.md
+executor: claude
+reviewer: claude
+reviewer_exception: 'Autorizado por João em 2026-10-11: plano aprovado com execução e revisão atribuídas ao Claude, contra o reviewer codex do plano. Sem segunda lente independente; débito D-76.'
 blocker: null
 supervised_cycles_completed: 22
 last_completed_work_item: recaptura-baseline
-state_basis_commit: 5ecb4fb
-updated_at: 2026-10-11T19:30:22Z
+state_basis_commit: 63efc2e
+updated_at: 2026-10-11T20:29:02Z
 ---
 
 # Estado operacional — Lotus Site

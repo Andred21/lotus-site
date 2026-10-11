@@ -787,6 +787,12 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   estilo computado, que a rolagem não muda; quem passar a ler posição, ou estado do Divi que
   depende da rolagem, mede no meio da animação.
   **Gatilho:** próxima regeração de `dom.json`, `styles.json` ou das medidas de breakpoint.
+- **D-76 · o bloco `7.2.7` (desativar o WordPress, `B7`) não tem segunda lente** — o plano previa
+  `reviewer: codex`, mas João aprovou o plano em 2026-10-11 atribuindo execução e review ao Claude:
+  Claude executa e também faz a review formal de `/revisar-site`. Desvio declarado em
+  `reviewer_exception`, autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`,
+  `D-65`, `D-70` e `D-73`.
+  **Gatilho:** passada do Codex sobre `main..HEAD` do bloco, ou decisão de João de dispensá-la.
 
 ## Fechados
 
