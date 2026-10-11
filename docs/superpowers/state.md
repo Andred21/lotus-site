@@ -1,16 +1,16 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
+workflow_state: planning
 work_class: null
-active_work_item: null
+active_work_item: recaptura-baseline
 active_notion_eap: null
-active_title: null
-active_branch: null
+active_title: 'Recaptura do baseline — D-30 e a conferência humana de paridade'
+active_branch: fix/recaptura-baseline
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: select_work_item
+next_action: approve_bounded_design
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 21
 last_completed_work_item: 7.2.6
-state_basis_commit: 0ff8604
-updated_at: 2026-10-11T15:55:33Z
+state_basis_commit: 92906d2
+updated_at: 2026-10-11T17:47:57Z
 ---
 
 # Estado operacional — Lotus Site
