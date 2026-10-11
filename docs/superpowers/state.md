@@ -1,28 +1,28 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: planning
-work_class: null
+workflow_state: ready_for_execution
+work_class: bounded
 active_work_item: recaptura-baseline
 active_notion_eap: null
 active_title: 'Recaptura do baseline — D-30 e a conferência humana de paridade'
 active_branch: fix/recaptura-baseline
-bounded_design: null
-authorized_paths: null
-next_owner: joao
-next_action: approve_bounded_design
+bounded_design: 'Capturas de referência voltam ao WordPress por 185.146.167.195 com guarda contra CloudFront; captura de página inteira compõe o topo do viewport sobre o fullPage; recaptura dos cinco PNG do baseline, reamostragem da paleta e rodada referência × produção com folha de contato para a conferência humana de João, cujo veredito entra no fechamento. Desenho e medições em docs/superpowers/bounded-designs/recaptura-baseline.md; src/ não muda.'
+authorized_paths: 'scripts/inventario/lib/site.mjs, scripts/inventario/lib/site.test.mjs, scripts/inventario/capture-baseline.mjs, scripts/inventario/sample-baseline.mjs, scripts/inventario/comparar-png.mjs, scripts/qa/capture-referencia.mjs, scripts/qa/capture-clone.mjs, scripts/qa/lib/paridade.mjs, scripts/qa/medir-espacamento.mjs, scripts/qa/medir-header-cursos.mjs, docs/inventario/baseline/**, docs/inventario/04-tipografia.md, docs/inventario/06-baseline.md, docs/inventario/README.md, docs/qa/paridade/**, docs/superpowers/bounded-designs/recaptura-baseline.md, docs/superpowers/backlog.md, docs/superpowers/state.md, docs/superpowers/historico/progress.md'
+next_owner: claude
+next_action: execute_active_work_item
 resume_state: null
 context_packet: null
 active_spec: null
 active_plan: null
-executor: null
-reviewer: null
+executor: claude
+reviewer: codex
 reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 21
 last_completed_work_item: 7.2.6
-state_basis_commit: 92906d2
-updated_at: 2026-10-11T17:47:57Z
+state_basis_commit: 7dbbdad
+updated_at: 2026-10-11T17:58:15Z
 ---
 
 # Estado operacional — Lotus Site
