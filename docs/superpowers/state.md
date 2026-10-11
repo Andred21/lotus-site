@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 work_class: architectural
 active_work_item: 7.2.7
 active_notion_eap: 7.2.7
@@ -10,7 +10,7 @@ active_branch: chore/7-2-7-desativar-wordpress
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: review_active_work_item
+next_action: close_active_work_item
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-11-7.2.7-desativar-wordpress-design.md
@@ -21,8 +21,8 @@ reviewer_exception: 'Autorizado por João em 2026-10-11: plano aprovado com exec
 blocker: null
 supervised_cycles_completed: 22
 last_completed_work_item: recaptura-baseline
-state_basis_commit: c8300a7
-updated_at: 2026-10-11T21:22:38Z
+state_basis_commit: 4049186
+updated_at: 2026-10-11T21:38:58Z
 ---
 
 # Estado operacional — Lotus Site
