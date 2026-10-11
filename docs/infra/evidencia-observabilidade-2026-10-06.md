@@ -457,6 +457,99 @@ As catracas no último `vitest` (14:01:57Z): `scripts/infra/observabilidade.test
 
 ## 6. Log gravado (spec §7, item 5)
 
+Lido em 2026-10-11T15:15:05Z, 4 dias e 2 h depois do `CREATE_COMPLETE` (plano, Task 4, Step 2). O
+filtro `{ $.c-country = "CL" }` sobre as últimas 24 h não trouxe registro: nenhum visitante do Chile
+na janela (§7). Pelo caminho do plano, o padrão trocado por `"Mozilla"`, às 15:16:46Z:
+
+```json
+{
+  "c-country": "US",
+  "cache-behavior-path-pattern": "*",
+  "cs(User-Agent)": "Mozilla/5.0%20(Macintosh;%20Intel%20Mac%20OS%20X%2010.15)%20Gecko/20100101%20Firefox/118.0.2",
+  "cs-method": "GET",
+  "cs-uri-stem": "/wp-login.php",
+  "date": "2026-10-10",
+  "sc-status": "404",
+  "time": "15:17:26",
+  "time-taken": "0.447",
+  "time-to-first-byte": "0.446",
+  "x-edge-location": "JFK50-P12",
+  "x-edge-result-type": "Error"
+}
+```
+
+Os dois números: `12` campos, os de D8, todos em texto; `0` dos três proibidos (`c-ip`,
+`x-forwarded-for`, `cs(Cookie)`). O pedido é de um scanner atrás de WordPress, não de visitante:
+serve para provar a forma do registro, que é a mesma para todo pedido.
+
+A resource policy da entrega, relida no mesmo bloco, continua no escopo do log group: sem nome,
+`revisionId` `1`, `Sid` `AWSLogDeliveryWrite1` — a mesma da §1, sem revisão nova desde a criação.
+
 ## 7. Log lido e a primeira medição de `D-66` (spec §7, item 6)
+
+Janela das consultas: do `CREATE_COMPLETE` (2026-10-06T12:52:18.578Z) até 2026-10-11T15:17:23Z, 107.680
+registros lidos.
+
+As duas consultas de descoberta (plano, Task 4, Step 3), na janela até 15:17:01Z:
+
+```text
+filter `cs(User-Agent)` like /(?i)route.{0,3}53/
+| stats count(*) as pedidos by `cs(User-Agent)`
+```
+
+```text
+== descoberta-sem-filtro
+Complete
+cs(User-Agent)=Amazon-Route53-Health-Check-Service%20(ref%2028047618-872b-4a39-90d9-3e1ff6d1ed53;%20report%20http://amzn.to/1vsZADi)  pedidos=72098
+== descoberta-com-filtro
+Complete
+```
+
+O user-agent real dos checadores vem com `%20` no lugar do espaço, e cita o ID do health check
+(`28047618-…`, §1). Com a primeira linha das consultas na frente
+(``filter `cs(User-Agent)` not like /Amazon.{0,3}Route.{0,3}53.{0,3}Health/``), nenhuma linha: o
+filtro tira os 72.098 pedidos do health check, dois terços do log.
+
+As quatro consultas salvas, com o texto lido do stack (`describe-query-definitions`), todas
+`Complete`, nenhuma `Failed`:
+
+```text
+== lotus-site/5xx-por-caminho
+Complete
+== lotus-site/latencia-por-borda
+Complete
+x-edge-location=JFK50-P12  pedidos=1  total_p50=0.393  total_p90=0.393  ttfb_p50=0.392  ttfb_p90=0.392
+== lotus-site/cache-do-index
+Complete
+cs-uri-stem=/  x-edge-result-type=Error  pedidos=427
+cs-uri-stem=/  x-edge-result-type=RefreshHit  pedidos=238
+cs-uri-stem=/  x-edge-result-type=Redirect  pedidos=109
+cs-uri-stem=/  x-edge-result-type=Hit  pedidos=81
+cs-uri-stem=/  x-edge-result-type=FunctionGeneratedResponse  pedidos=53
+cs-uri-stem=/  x-edge-result-type=Miss  pedidos=52
+== lotus-site/acessos-a-releases
+Complete
+sc-status=404  cs(User-Agent)=Mozilla/5.0%20(Windows%20NT%2010.0;%20Win64;%20x64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/124.0%20Safari/537.36  pedidos=1
+```
+
+- `5xx-por-caminho`: nenhum 5xx na janela, como o alarme (§4).
+- `latencia-por-borda`: os percentis saem numéricos, em segundos — o `toNumber` vale.
+- `cache-do-index`: o visitante pede `/`, e o log grava o caminho pedido; `/index.html` não aparece
+  na janela. Leitura a mais, para entender o `Error`: em `/`, são 425 `POST` com `403` (a origem S3
+  não aceita `POST`) e 2 `GET` com `000` (cliente que desistiu). `Redirect` é o `http` para `https`.
+- `acessos-a-releases`: um pedido, respondido com `404`.
+
+**Primeira medição de `D-66`:** no Chile, a borda que mais atendeu foi `JFK50-P12`, com um único
+pedido em cinco dias — `time-taken` p50 e p90 de 0,393 s, `time-to-first-byte` p50 e p90 de 0,392
+s —; o `/` saiu 81 `Hit`, 238 `RefreshHit` e 52 `Miss` (fora `Error`, `Redirect` e
+`FunctionGeneratedResponse`). Com um pedido, o número não mede o Chile: o tráfego do site nesta
+janela é quase todo de checador e de fora do Chile. Leitura a mais, fora do health check: Países Baixos
+17.459 pedidos, Coreia 3.822, Austrália 2.539, Índia 2.056, Indonésia 2.033, Estados Unidos 1.860;
+as bordas de Santiago (`SCL*`) atenderam 6 pedidos, todos dos Estados Unidos. As consultas respondem
+à pergunta de D9 — a sintaxe não muda, e não houve change set nesta task —; falta visitante.
+
+Limite: a janela termina na hora da consulta. A AWS avisa que registros de um período podem chegar
+até 24 h depois e que a entrega só fica confiável cerca de 4 h depois de ligada. Os números são a
+primeira leitura, não `D-66` fechado.
 
 ## Limites declarados (spec §7)

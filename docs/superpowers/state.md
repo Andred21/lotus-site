@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
+workflow_state: executing
 work_class: architectural
 active_work_item: 7.2.6
 active_notion_eap: 7.2.6
@@ -9,20 +9,20 @@ active_title: Configurar observabilidade mínima pós-go-live (bloco `B6`)
 active_branch: feat/7-2-6-observabilidade-minima
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: retomar_apos_janela_do_log
-resume_state: executing
+next_owner: claude
+next_action: continue_active_plan
+resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
 active_plan: docs/superpowers/plans/2026-10-06-7.2.6-observabilidade-minima.md
 executor: claude
 reviewer: codex
 reviewer_exception: null
-blocker: 'Portão da janela do access log (Task 4, Step 1). A leitura do log (Task 4, Steps 2 a 4) só roda a partir de 2026-10-07T12:52:18Z (09:52 no relógio de João), 24 h depois do CREATE_COMPLETE do stack lotus-observabilidade (2026-10-06T12:52:18.578Z; spec §5, passo 5); até lá não há o que fazer. Pendência de João antes de retomar: a chave do perfil AWS lotus deixou de valer — aws sts get-caller-identity responde InvalidClientTokenId desde 2026-10-07T00:50Z, com ~/.aws/credentials inalterado desde 2026-09-04, o que aponta para chave desativada ou removida do lado da AWS; a leitura do log precisa de uma credencial válida no perfil lotus, com as mesmas leituras. A Task 3 fechou em 659b9b8: stack implantado, assinatura confirmada, os dois alarmes provados por e-mail e as variáveis AWS_ALERT_ROLE_ARN e AWS_ALERT_TOPIC_ARN criadas por João no corporativo. /executar-site 7.2.6 retoma no Step 2 desta task.'
+blocker: null
 supervised_cycles_completed: 20
 last_completed_work_item: 7.2.5
-state_basis_commit: 659b9b8
-updated_at: 2026-10-07T00:52:42Z
+state_basis_commit: 27e7d2f
+updated_at: 2026-10-11T15:14:47Z
 ---
 
 # Estado operacional — Lotus Site
