@@ -1,8 +1,11 @@
 // O WordPress vivo para o ensaio de restauração (7.2.7, spec D9). Desde o
 // corte (B5), lotusotec.cl resolve para a distribuição, que serve o clone; o
 // WordPress só responde no IP dele, até o estágio 2 de B7 esvaziar o host.
+//
+// Não importa de scripts/inventario/: o espelho não leva aquele diretório
+// (.espelho-exclusoes), e este arquivo atravessa — o import quebraria o
+// `tsc -b` e o Vitest do corporativo (D-62).
 import https from 'node:https'
-import { exigirWordPress } from '../../inventario/lib/site.mjs'
 
 export const WORDPRESS_IP = '185.146.167.195'
 
@@ -31,7 +34,13 @@ export function forcar(ip) {
  * @param {Record<string, string>} headers nomes em minúsculas
  */
 export function exigirVivo(status, headers) {
-  exigirWordPress(headers)
+  // A mesma guarda de `exigirWordPress`, em scripts/inventario/lib/site.mjs.
+  const origem = `${headers['server'] ?? ''} ${headers['via'] ?? ''}`
+  if (/cloudfront/i.test(origem)) {
+    throw new Error(
+      `a referência não é o WordPress: a resposta veio da CloudFront (server: ${headers['server'] ?? '—'})`,
+    )
+  }
   if (status !== 200) {
     throw new Error(
       `o WordPress vivo respondeu ${status} em ${WORDPRESS_IP}: depois de B7 (7.2.7) não há vivo para comparar`,

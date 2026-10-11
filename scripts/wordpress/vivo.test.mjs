@@ -35,6 +35,12 @@ describe('exigirVivo', () => {
     expect(() => exigirVivo(200, { server: 'CloudFront' })).toThrow(
       'a referência não é o WordPress',
     )
+    expect(() =>
+      exigirVivo(200, {
+        server: 'AmazonS3',
+        via: '1.1 abc.cloudfront.net (CloudFront)',
+      }),
+    ).toThrow('a referência não é o WordPress')
   })
 
   it('reprova o host esvaziado com a mensagem de B7', () => {
