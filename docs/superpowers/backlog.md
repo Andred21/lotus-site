@@ -39,6 +39,8 @@ de falha do CI e access log lido por quatro consultas; o fechamento do bloco fic
 `docs/superpowers/historico/progress.md`. `B0` a `B5` estão fechados, cada um com PR integrado em
 `main`. O próximo bloco da fila é `B7 · 7.2.7`, que só fica ativo por seleção explícita (Lei 3).
 Depois do merge de `B6`, a prova ponta a ponta do job `alerta` fechou `D-68` em 2026-10-11.
+`B8 · recaptura-baseline` fechou em 2026-10-11, fora da ordem por seleção de João: `D-30` fechado e
+a conferência humana de paridade feita.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -223,6 +225,11 @@ um por vez, porque o harness admite um `active_work_item` só.
 - **Por que existe:** os cinco PNG reportam o cabeçalho na cor errada, e a conferência humana de
   paridade — pendente desde a Sprint 2 e nunca feita — usa exatamente esse material.
 - **Não bloqueia o go-live.** Bloqueia a conferência humana.
+- **Entregue (bounded design `recaptura-baseline.md`, 2026-10-11):** capturas de referência de
+  volta ao WordPress por `185.146.167.195`, com guarda contra a CloudFront; página inteira composta
+  pelo topo do viewport; cinco PNG recapturados, paleta reamostrada e rodada referência × produção
+  em `docs/qa/paridade/2026-10-11/`. `D-30` fechado; conferência humana feita por João (PENDÊNCIAS
+  item 4).
 
 ## B9 · `revisao-arquitetura-2026-09`
 
@@ -266,11 +273,13 @@ O que não avança por conta nossa.
 3. ~~**Production access do SES.**~~ Não é necessário: sandbox só restringe destinatário a
    identidade verificada, e `contacto@` é do domínio verificado (D3 da spec de `B2`, 2026-09-26).
    Volta a ser necessário se o formulário um dia escrever a outro domínio.
-4. **Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
-   da Sprint 2 e nunca feita. Nenhum gate a substitui. Destravada em 2026-10-11 pelo bloco
-   `recaptura-baseline` (`D-30` fechado): o material é
-   `docs/qa/paridade/2026-10-11/contact-sheet.html`, referência no WordPress pelo IP contra a
-   produção no release `4e8b3bb`. Falta o veredito de João, que entra no fechamento do bloco.
+4. ~~**Conferência humana de paridade** contra os cinco PNG de `docs/inventario/baseline/`, herdada
+   da Sprint 2 e nunca feita.~~ Feita por João em 2026-10-11, no fechamento do bloco
+   `recaptura-baseline`, sobre `docs/qa/paridade/2026-10-11/contact-sheet.html` (referência no
+   WordPress pelo IP contra a produção no release `4e8b3bb`): **aprovada com divergências**, sem
+   débito novo por decisão dele. A mais visível é a altura: o clone sai mais curto nas quatro
+   larguras (`5110` contra `5467` px em `375`, `4364`/`4913` em `768`, `3175`/`3441` em `1440`,
+   `3171`/`3409` em `1920`), aceita como está.
 5. **Autorização de escrita no Notion.** Concedida em 2026-09-09 para registrar as decisões
    daquele bloco. **Não vale para esta rodada**: a EAP `7.2.1` não foi marcada no Notion, e o
    aceite parcial está declarado em `D-47`.
@@ -779,14 +788,16 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   depende da rolagem, mede no meio da animação.
   **Gatilho:** próxima regeração de `dom.json`, `styles.json` ou das medidas de breakpoint.
 
+## Fechados
+
 - **D-73 · o bloco `recaptura-baseline` (`B8`) não tem segunda lente** — o desenho previa
   `reviewer: codex`, mas a cota da conta Codex continuava esgotada em 2026-10-11: Claude executa e
   também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
   autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`, `D-65` e `D-70`.
   **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
   de João de dispensá-la.
-
-## Fechados
+  **Dispensado em 2026-10-11** por decisão de João, no fechamento do bloco: não haverá passada do
+  Codex sobre `main..HEAD`.
 
 - **D-30 · os cinco PNG de `docs/inventario/baseline/` reportam o cabeçalho na cor errada** —
   `scripts/inventario/capture-baseline.mjs:9` captura com `fullPage: true`, e nesse modo o
