@@ -10,7 +10,7 @@ active_branch: chore/7-2-7-desativar-wordpress
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: write_plan
+next_action: approve_plan
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-11-7.2.7-desativar-wordpress-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 22
 last_completed_work_item: recaptura-baseline
-state_basis_commit: 43b1a5d
-updated_at: 2026-10-11T19:23:50Z
+state_basis_commit: 5ecb4fb
+updated_at: 2026-10-11T19:30:22Z
 ---
 
 # Estado operacional — Lotus Site
