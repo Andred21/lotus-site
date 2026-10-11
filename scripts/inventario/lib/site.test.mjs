@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assetFileName, cssColor, rgbToHex } from './site.mjs'
+import { assetFileName, cssColor, exigirWordPress, rgbToHex } from './site.mjs'
 
 describe('assetFileName', () => {
   it('mantém o basename de um asset do domínio principal', () => {
@@ -64,5 +64,25 @@ describe('cssColor', () => {
 
   it('devolve o valor original quando não reconhece o formato', () => {
     expect(cssColor('currentColor')).toBe('currentColor')
+  })
+})
+
+describe('exigirWordPress', () => {
+  it('aceita a resposta do Apache do WordPress', () => {
+    expect(() => exigirWordPress({ server: 'Apache' })).not.toThrow()
+  })
+
+  it('reprova a resposta da CloudFront, que é o clone desde o corte', () => {
+    expect(() => exigirWordPress({ server: 'CloudFront' })).toThrow(
+      'a referência não é o WordPress',
+    )
+  })
+
+  it('reprova quando só o via denuncia a CloudFront', () => {
+    expect(() =>
+      exigirWordPress({
+        via: '1.1 849bfaf02fda8ca91a4f79a63d0e0de4.cloudfront.net (CloudFront)',
+      }),
+    ).toThrow('a referência não é o WordPress')
   })
 })

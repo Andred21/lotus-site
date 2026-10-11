@@ -6,9 +6,13 @@
 // em http://localhost:5184 (`pnpm build && pnpm preview --port 5184`).
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { chromium } from '@playwright/test'
 import { format, resolveConfig } from 'prettier'
-import { SITE_URL, VIEWPORTS } from '../inventario/lib/site.mjs'
+import {
+  SITE_URL,
+  VIEWPORTS,
+  exigirWordPress,
+  launchReferencia,
+} from '../inventario/lib/site.mjs'
 import {
   AMBIGUO,
   CABECALHO,
@@ -80,7 +84,8 @@ function tolerandoAusencia(promessa, contexto) {
   })
 }
 
-const browser = await chromium.launch()
+// SITE_URL resolve para o WordPress pelo IP; o clone em localhost não muda.
+const browser = await launchReferencia()
 /** @type {Array<LinhaMedida<import('./lib/header-cursos.mjs').MedidaCabecalho>>} */
 const medidasCabecalho = []
 /** @type {Array<LinhaMedida<import('./lib/header-cursos.mjs').MedidaCard>>} */
@@ -98,7 +103,14 @@ try {
       const page = await browser.newPage({
         viewport: { width: viewport.width, height: viewport.height },
       })
-      await page.goto(url, { waitUntil: 'load', timeout: 60_000 })
+      const response = await page.goto(url, {
+        waitUntil: 'load',
+        timeout: 60_000,
+      })
+      if (alvo === 'referencia') {
+        if (!response) throw new Error(`sem resposta de ${url}`)
+        exigirWordPress(response.headers())
+      }
       // Fonte carregada antes de medir: `font-display: swap` mede o fallback se
       // a medição chegar primeiro, e o vão até o nome do curso ficaria errado.
       await page.evaluate(() => document.fonts.ready)
