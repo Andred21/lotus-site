@@ -553,3 +553,25 @@ até 24 h depois e que a entrega só fica confiável cerca de 4 h depois de liga
 primeira leitura, não `D-66` fechado.
 
 ## Limites declarados (spec §7)
+
+- O 5xx não foi provocado de verdade: `set-alarm-state` provou o caminho alarme → SNS → e-mail, e
+  `get-metric-data` provou a conta sobre 24 h reais (§4; spec D12).
+- O job `alerta` não foi provado ponta a ponta: a trust da role só aceita a `main` do corporativo,
+  onde o `ci.yml` novo só chega depois do merge. Dentro do bloco, a prova é a política simulada e
+  as catracas (§5); a ponta a ponta é `D-68` (spec D13).
+- O recebimento dos e-mails é declaração de João.
+- O tempo estourado não foi provado ponta a ponta: o teste executa o roteiro com `deploy: cancelled`,
+  e a semântica do `if` vem da documentação do GitHub e dos logs de avaliação de runs públicos
+  (plano de `7.2.6`, adendo 6). `D-68` prova a falha, não o timeout.
+- A classe de preço do health check (spec D7) não foi conferida: o usage type
+  (`Health-Check-AWS` ou `Health-Check-Non-AWS`) aparece no Cost Explorer nos primeiros dias, e a
+  faixa é de US$ 1,00 a US$ 2,75 por mês.
+- Os checadores do Route 53 em três regiões não reproduzem a rede do visitante: o health check
+  responde "o site responde", não "responde rápido no Chile". Quem mede o Chile é a consulta
+  `lotus-site/latencia-por-borda` (§7).
+- A política simulada não é a chamada real: o simulador avalia política de identidade e SCP, e a
+  AWS avisa que o resultado pode diferir do ambiente vivo (§5).
+- O alarme de 5xx avalia o ponto mais recente que a CloudFront já publicou, cerca de cinco minutos
+  antes da avaliação (§4): um 5xx real vira e-mail com esse atraso.
+- A primeira medição de `D-66` tem um único pedido do Chile em cinco dias (§7): a consulta funciona,
+  mas o número não mede o Chile. `D-66` continua aberto, à espera de tráfego chileno.

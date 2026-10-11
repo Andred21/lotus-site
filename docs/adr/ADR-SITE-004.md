@@ -93,13 +93,14 @@ corte de DNS (`D-39`).
 
 ## Operação
 
-| Ação                         | Quem              | Como                                                                                                                                        |
-| ---------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Criar ou alterar o ambiente  | João              | `aws cloudformation deploy` seguindo `docs/infra/runbook-aws.md`. O agente escreve o template e cria o change set; quem executa é a pessoa. |
-| Promover código para release | João              | `scripts/espelhar-corporativo.sh`, que se recusa a espelhar commit sem CI verde                                                             |
-| Publicar                     | CI do corporativo | job `deploy`, sem intervenção                                                                                                               |
-| Rollback                     | João              | um `aws s3 sync` mais uma invalidação — ver abaixo                                                                                          |
-| Aprovar merge                | João              | o agente nunca faz merge                                                                                                                    |
+| Ação                         | Quem              | Como                                                                                                                                                    |
+| ---------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Criar ou alterar o ambiente  | João              | `aws cloudformation deploy` seguindo `docs/infra/runbook-aws.md`. O agente escreve o template e cria o change set; quem executa é a pessoa.             |
+| Promover código para release | João              | `scripts/espelhar-corporativo.sh`, que se recusa a espelhar commit sem CI verde                                                                         |
+| Publicar                     | CI do corporativo | job `deploy`, sem intervenção                                                                                                                           |
+| Rollback                     | João              | um `aws s3 sync` mais uma invalidação — ver abaixo                                                                                                      |
+| Saber que algo quebrou       | João              | e-mail do tópico `lotus-site-alertas` (`us-east-1`): alarmes de indisponibilidade e de 5xx e o job `alerta` do CI — ver `docs/infra/runbook-aws.md` §11 |
+| Aprovar merge                | João              | o agente nunca faz merge                                                                                                                                |
 
 Nada no repositório pessoal `Andred21/lotus-site` — que é público — tem credencial de AWS.
 
@@ -117,6 +118,15 @@ O que existe hoje, de propósito:
 O que **não** existe: access log do CloudFront. Ligá-lo hoje criaria volume de objetos com custo de
 armazenamento e nenhum consumidor — não há dashboard, alerta nem consulta que os leia. Entra em
 `7.2.6` (observabilidade), junto com quem vai lê-los (`D-40`).
+
+> **Atualização de 2026-10-11 (`B6`, `7.2.6`).** O access log existe desde 2026-10-06: standard
+> logging v2 da distribuição, entregue em CloudWatch Logs no log group `lotus-site-acessos`
+> (`us-east-1`), retido 90 dias, com doze campos e sem IP nem cookie — `c-ip`, `x-forwarded-for` e
+> `cs(Cookie)` ficam fora (spec de `7.2.6`, D8). Quatro consultas salvas o leem
+> (`lotus-site/5xx-por-caminho`, `latencia-por-borda`, `cache-do-index` e `acessos-a-releases`),
+> todas sem o tráfego do health check. Mora no stack `lotus-observabilidade`
+> (`infra/lotus-observabilidade.yaml`), com os alarmes; operação em `docs/infra/runbook-aws.md`
+> §11. Fecha `D-40`.
 
 ## Rollback
 

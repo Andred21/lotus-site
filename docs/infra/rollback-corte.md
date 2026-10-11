@@ -64,6 +64,11 @@ qualquer dos itens 2 a 6 (TLS, redirects, home, assets, formulário), ou o site 
 1, 7, 8 e 9 reprovando são regressão que um deploy corrige, não motivo de rollback — desde que o
 CI corporativo publique (nota da §0, `D-62`).
 
+Desde `B6`, o gatilho também chega sozinho, por e-mail: `ALARM: "lotus-site-indisponivel"` é o site
+sem resposta 2xx ou 3xx para os checadores do Route 53 em três regiões, e `ALARM: "lotus-site-5xx"`,
+resposta 5xx da distribuição. Alarme é aviso, não veredito: antes de voltar, o smoke acima decide
+(`runbook-aws.md` §11.3).
+
 ## 3. Caminho A — change set (principal)
 
 Medido no estágio 3 do ensaio (evidência §3.3): 7 s para criar o change set e 66 s do `execute` ao
