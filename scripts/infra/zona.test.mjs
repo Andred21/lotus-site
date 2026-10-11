@@ -4,7 +4,6 @@ import {
   INVENTARIO,
   WORDPRESS,
   conferirAliasesDoCorte,
-  conferirLoteDeRollback,
   convergiu,
   delegacaoEsperada,
   lerParametros,
@@ -33,7 +32,7 @@ describe('leitura textual do template', () => {
     expect(parametros.get('NomeDaZona')).toBe('lotusotec.cl')
     expect(parametros.get('TtlPadrao')).toBe('3600')
     // Desde o corte (7.2.5, spec D6), apex e www são alias da distribuição; o
-    // WordPress, alvo do rollback, mora em WORDPRESS, no zona.mjs.
+    // endereço antigo do WordPress mora em WORDPRESS, no zona.mjs.
     expect(parametros.get('DominioDaDistribuicao')).toBe(
       'dhpoztt69jydz.cloudfront.net',
     )
@@ -424,12 +423,6 @@ describe('convergiu (medir-propagacao, spec §4.4)', () => {
   const wp = { A: [WORDPRESS.A], AAAA: [WORDPRESS.AAAA] }
   const cf = { A: ['3.166.165.48', '3.166.165.9'], AAAA: ['2600:9000:2::1'] }
 
-  it('wordpress exige exatamente o A e o AAAA do apex', () => {
-    expect(convergiu('wordpress', wp)).toBe(true)
-    expect(convergiu('wordpress', cf)).toBe(false)
-    expect(convergiu('wordpress', { A: wp.A, AAAA: [] })).toBe(false)
-  })
-
   it('cloudfront exige resposta nos dois tipos e nenhuma delas do WordPress', () => {
     expect(convergiu('cloudfront', cf)).toBe(true)
     expect(convergiu('cloudfront', { A: cf.A, AAAA: [] })).toBe(false)
@@ -439,12 +432,18 @@ describe('convergiu (medir-propagacao, spec §4.4)', () => {
     // Resolvedor que já trocou o A mas ainda serve o AAAA antigo, ou o
     // contrário: o visitante dual-stack ainda pode cair no lado errado.
     expect(convergiu('cloudfront', { A: cf.A, AAAA: wp.AAAA })).toBe(false)
-    expect(convergiu('wordpress', { A: cf.A, AAAA: wp.AAAA })).toBe(false)
   })
 
   it('ausente exige silêncio nos dois tipos', () => {
     expect(convergiu('ausente', { A: [], AAAA: [] })).toBe(true)
     expect(convergiu('ausente', { A: [], AAAA: wp.AAAA })).toBe(false)
+  })
+
+  it('wordpress deixou de ser esperado em B7: não há mais WordPress', () => {
+    // @ts-expect-error valor fora do tipo, de propósito
+    expect(() => convergiu('wordpress', wp)).toThrow(
+      'esperado desconhecido: wordpress',
+    )
   })
 })
 
@@ -577,76 +576,5 @@ describe('alias no conferir-zona (7.2.5, spec §4.5)', () => {
     expect(() =>
       linhaConfere({ ...ALIAS_AAAA, tipo: 'CNAME' }, [], [], false),
     ).toThrow('alias para o CloudFront só existe em A e AAAA: CNAME')
-  })
-})
-
-describe('infra/rollback-corte.json (caminho B do rollback, spec D3 de 7.2.5)', () => {
-  /** @typedef {import('./lib/zona.mjs').MudancaDeRegistro} Mudanca */
-  /** @type {{ Comment: string, Changes: Mudanca[] }} */
-  const lote = JSON.parse(readFileSync('infra/rollback-corte.json', 'utf8'))
-  /** @param {(mudanca: Mudanca) => Mudanca} mexer */
-  const mexido = (mexer) => ({ ...lote, Changes: lote.Changes.map(mexer) })
-
-  it('devolve apex e www, A e AAAA, ao WordPress por UPSERT, com TTL_DO_CORTE', () => {
-    expect(conferirLoteDeRollback(lote)).toEqual([])
-  })
-
-  it('TTL diferente de TTL_DO_CORTE reprova com o nome do campo', () => {
-    // Com 3600 contra um template de 60, a reconciliação do §5 de
-    // rollback-corte.md seria caso não ensaiado (spec D3).
-    const problemas = conferirLoteDeRollback(
-      mexido((m) => ({
-        ...m,
-        ResourceRecordSet: { ...m.ResourceRecordSet, TTL: 3600 },
-      })),
-    )
-    expect(problemas).toHaveLength(4)
-    expect(problemas).toContain(
-      'TTL de A lotusotec.cl.: esperado 60, veio 3600',
-    )
-  })
-
-  it('outro nome, registro faltando, valor ou ação errados reprovam', () => {
-    const comApp = mexido((m) =>
-      m.ResourceRecordSet.Name === 'www.lotusotec.cl.' &&
-      m.ResourceRecordSet.Type === 'A'
-        ? {
-            ...m,
-            ResourceRecordSet: {
-              ...m.ResourceRecordSet,
-              Name: 'app.lotusotec.cl.',
-            },
-          }
-        : m,
-    )
-    expect(conferirLoteDeRollback(comApp)).toEqual([
-      'Changes: A app.lotusotec.cl. fora de apex e www, A e AAAA',
-      'Changes: falta A www.lotusotec.cl.',
-    ])
-    const outroIp = mexido((m) =>
-      m.ResourceRecordSet.Type === 'A'
-        ? {
-            ...m,
-            ResourceRecordSet: {
-              ...m.ResourceRecordSet,
-              ResourceRecords: [{ Value: '18.230.53.197' }],
-            },
-          }
-        : m,
-    )
-    expect(conferirLoteDeRollback(outroIp)).toContain(
-      'ResourceRecords de A lotusotec.cl.: esperado 185.146.167.195, veio ["18.230.53.197"]',
-    )
-    const apagar = mexido((m) => ({ ...m, Action: 'DELETE' }))
-    expect(conferirLoteDeRollback(apagar)).toContain(
-      'Action de AAAA www.lotusotec.cl.: esperado UPSERT, veio DELETE',
-    )
-    const repetido = {
-      ...lote,
-      Changes: [...lote.Changes, ...lote.Changes.slice(0, 1)],
-    }
-    expect(conferirLoteDeRollback(repetido)).toEqual([
-      'Changes: A lotusotec.cl. repetido',
-    ])
   })
 })
