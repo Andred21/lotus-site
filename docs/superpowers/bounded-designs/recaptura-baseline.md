@@ -148,6 +148,11 @@ Limite declarado: `medir-espacamento.mjs` recebe o mesmo ajuste de lançamento e
 
 O veredito de João sobre a folha de contato entra no fechamento.
 
+Ampliação de escopo autorizada por João em 2026-10-11, durante a execução:
+`scripts/qa/lib/paridade.test.mjs` entra em `authorized_paths`, porque fixa `RUN_DIR` e reprovava
+depois da troca para a rodada nova. A asserção passa a `docs/qa/paridade/2026-10-11`, em commit
+`fix` próprio.
+
 ## Fora do bloco
 
 - `src/`: nenhuma mudança de produto. Divergência que a conferência achar vira débito.
