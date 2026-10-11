@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { assetFileName, cssColor, exigirWordPress, rgbToHex } from './site.mjs'
+import {
+  assetFileName,
+  cssColor,
+  exigirCloneForaDaReferencia,
+  exigirWordPress,
+  rgbToHex,
+} from './site.mjs'
 
 describe('assetFileName', () => {
   it('mantém o basename de um asset do domínio principal', () => {
@@ -85,4 +91,21 @@ describe('exigirWordPress', () => {
       }),
     ).toThrow('a referência não é o WordPress')
   })
+})
+
+describe('exigirCloneForaDaReferencia', () => {
+  it('aceita o build local', () => {
+    expect(() =>
+      exigirCloneForaDaReferencia('http://localhost:5184/'),
+    ).not.toThrow()
+  })
+
+  it.each(['https://lotusotec.cl/', 'https://www.lotusotec.cl/'])(
+    'reprova %s, que a regra de resolução manda para o WordPress',
+    (url) => {
+      expect(() => exigirCloneForaDaReferencia(url)).toThrow(
+        'o clone não pode ser',
+      )
+    },
+  )
 })

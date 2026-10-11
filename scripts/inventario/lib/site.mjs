@@ -42,6 +42,21 @@ export function exigirWordPress(headers) {
   }
 }
 
+/**
+ * Recusa um clone em lotusotec.cl quando ele vai abrir no navegador de
+ * `launchReferencia`: a regra de resolução mandaria esse endereço também para
+ * o WordPress, e a medição compararia a referência com ela mesma.
+ * @param {string} url
+ */
+export function exigirCloneForaDaReferencia(url) {
+  const { hostname } = new URL(url)
+  if (hostname === 'lotusotec.cl' || hostname === 'www.lotusotec.cl') {
+    throw new Error(
+      `o clone não pode ser ${url}: neste navegador lotusotec.cl resolve para o WordPress; meça o build local`,
+    )
+  }
+}
+
 /** @typedef {{ name: string, width: number, height: number }} Viewport */
 
 /** @type {Viewport[]} */

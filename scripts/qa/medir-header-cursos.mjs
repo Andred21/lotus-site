@@ -10,6 +10,7 @@ import { format, resolveConfig } from 'prettier'
 import {
   SITE_URL,
   VIEWPORTS,
+  exigirCloneForaDaReferencia,
   exigirWordPress,
   launchReferencia,
 } from '../inventario/lib/site.mjs'
@@ -25,6 +26,7 @@ import {
 } from './lib/header-cursos.mjs'
 
 const CLONE_URL = process.env.CLONE_URL ?? 'http://localhost:5184/'
+exigirCloneForaDaReferencia(CLONE_URL)
 const OUT_DIR = 'docs/qa/paridade/2026-09-02'
 
 if (CARDS.length === 0) {

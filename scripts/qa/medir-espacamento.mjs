@@ -8,12 +8,14 @@ import { join } from 'node:path'
 import {
   SITE_URL,
   VIEWPORTS,
+  exigirCloneForaDaReferencia,
   exigirWordPress,
   launchReferencia,
 } from '../inventario/lib/site.mjs'
 import { AMBIGUO, NOS, linhasMarkdown, medirNo } from './lib/espacamento.mjs'
 
 const CLONE_URL = process.env.CLONE_URL ?? 'http://localhost:5184/'
+exigirCloneForaDaReferencia(CLONE_URL)
 const OUT_DIR = 'docs/qa/paridade/2026-08-30'
 
 if (NOS.length === 0) {
