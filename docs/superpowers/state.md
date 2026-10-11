@@ -1,16 +1,16 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
+workflow_state: planning
 work_class: null
-active_work_item: null
-active_notion_eap: null
-active_title: null
-active_branch: null
+active_work_item: 7.2.7
+active_notion_eap: 7.2.7
+active_title: 'Desativar WordPress somente após estabilização e aceite'
+active_branch: chore/7-2-7-desativar-wordpress
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: select_work_item
+next_action: approve_design
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 22
 last_completed_work_item: recaptura-baseline
-state_basis_commit: f278eb7
-updated_at: 2026-10-11T18:42:42Z
+state_basis_commit: dcfeb76
+updated_at: 2026-10-11T19:00:10Z
 ---
 
 # Estado operacional — Lotus Site
