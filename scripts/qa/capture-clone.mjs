@@ -1,8 +1,9 @@
 // Captura o clone nas mesmas condições da referência: mesmos viewports, mesmo
 // scroll de página inteira, mesmo estado de menu aberto em 375.
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { chromium } from '@playwright/test'
+import { capturarPaginaInteira } from '../inventario/lib/site.mjs'
 import { RUN_DIR, STATES, writeManifest } from './lib/paridade.mjs'
 
 const CLONE_URL = process.env.CLONE_URL ?? 'http://localhost:5184/'
@@ -35,7 +36,11 @@ for (const state of STATES) {
   }
 
   const name = `home-${state.name}.png`
-  await page.screenshot({ path: join(dir, name), fullPage: state.fullPage })
+  if (state.fullPage) {
+    writeFileSync(join(dir, name), await capturarPaginaInteira(page))
+  } else {
+    await page.screenshot({ path: join(dir, name) })
+  }
   written.push(name)
   console.log(name)
 

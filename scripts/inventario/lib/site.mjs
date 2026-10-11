@@ -128,6 +128,62 @@ export async function openPage(viewport) {
 }
 
 /**
+ * Página inteira com o topo fiel. O `fullPage` do Playwright redesenha o
+ * cabeçalho do Divi em outro estado (fundo `#f8f8f8`, logo pequeno; `D-30`),
+ * e um viewport da altura do documento reenquadra o parallax do hero. A saída
+ * é o `fullPage` com as linhas `[0, altura do viewport)` trocadas pelo
+ * screenshot de viewport, tirado antes na mesma página, depois de a rolagem
+ * chegar ao topo.
+ * @param {import('@playwright/test').Page} page
+ * @returns {Promise<Buffer>}
+ */
+export async function capturarPaginaInteira(page) {
+  // O WordPress declara `scroll-behavior: smooth`: o `scrollTo(0, 0)` de
+  // `openPage` ainda anima depois de 1 s em 375 (`scrollY` 28), e o topo
+  // sairia rolado. O `fullPage` volta ao topo sozinho; o viewport não.
+  await page.waitForFunction(() => window.scrollY === 0)
+  // Folga para a transição do cabeçalho que o último evento de scroll dispara.
+  await page.waitForTimeout(500)
+  const topo = await page.screenshot()
+  const inteira = await page.screenshot({ fullPage: true })
+  // Composição numa aba em branco, em contexto próprio: a CSP do clone
+  // (`img-src 'self'`) recusa imagem por data URI, e a aba não toca o estado
+  // da página capturada.
+  const navegador = page.context().browser()
+  if (!navegador) throw new Error('página sem navegador para compor a captura')
+  const tela = await navegador.newPage()
+  try {
+    const png = await tela.evaluate(
+      async ({ topo, inteira }) => {
+        /** @param {string} base64 */
+        const decodificar = async (base64) => {
+          const imagem = new Image()
+          imagem.src = `data:image/png;base64,${base64}`
+          await imagem.decode()
+          return imagem
+        }
+        const fundo = await decodificar(inteira)
+        const cima = await decodificar(topo)
+        const canvas = document.createElement('canvas')
+        canvas.width = fundo.naturalWidth
+        canvas.height = fundo.naturalHeight
+        const contexto = canvas.getContext('2d')
+        if (!contexto) throw new Error('canvas 2d indisponível')
+        contexto.drawImage(fundo, 0, 0)
+        contexto.drawImage(cima, 0, 0)
+        return canvas
+          .toDataURL('image/png')
+          .slice('data:image/png;base64,'.length)
+      },
+      { topo: topo.toString('base64'), inteira: inteira.toString('base64') },
+    )
+    return Buffer.from(png, 'base64')
+  } finally {
+    await tela.close()
+  }
+}
+
+/**
  * Larguras intermediárias que faltavam ao inventário: os quatro viewports da
  * Sprint 1 só provam que as duas viradas estão entre 768 e 1440.
  * @type {number[]}
