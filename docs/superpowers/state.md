@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: blocked
 work_class: architectural
 active_work_item: 7.2.6
 active_notion_eap: 7.2.6
@@ -9,20 +9,20 @@ active_title: Configurar observabilidade mínima pós-go-live (bloco `B6`)
 active_branch: feat/7-2-6-observabilidade-minima
 bounded_design: null
 authorized_paths: null
-next_owner: codex
-next_action: review_active_work_item
-resume_state: null
+next_owner: joao
+next_action: decidir_gatilho_do_d66
+resume_state: reviewing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-05-7.2.6-observabilidade-minima-design.md
 active_plan: docs/superpowers/plans/2026-10-06-7.2.6-observabilidade-minima.md
 executor: claude
-reviewer: codex
-reviewer_exception: null
-blocker: null
+reviewer: claude
+reviewer_exception: 'Autorizado por João em 2026-10-11: cota da conta Codex esgotada, Claude executa e revisa o bloco. Sem segunda lente independente; débito D-70.'
+blocker: 'Achado R-3 da review (important, exige decisão): a spec de 7.2.6, §10, dá a D-66 o gatilho novo "decisão de João sobre a correção, com a medição na mão". O backlog (D-66) grava outro: "lotus-site/latencia-por-borda com tráfego do Chile que valha medir, e decisão de João sobre a correção, com a medição na mão" — condição acrescentada pelo executor porque a primeira medição tem um único pedido do Chile em cinco dias (evidência §7), sem decisão de João. Decisão de João: (a) aceitar o gatilho do backlog, registrado como desvio aceito por ele; ou (b) voltar ao texto da spec. Blocking R-1 (5 dias, não 4, na §6), R-6 (divisão Hit/RefreshHit/Miss é de todos os países) e o limite do registro de scanner (R-2) já corrigidos em da739cc. Gates: pnpm check exit 0 em f91f0a4 (42 arquivos, 426 testes); check do corporativo na árvore filtrada exit 0 (35 arquivos, 372 testes).'
 supervised_cycles_completed: 20
 last_completed_work_item: 7.2.5
-state_basis_commit: 45201cd
-updated_at: 2026-10-11T15:24:54Z
+state_basis_commit: da739cc
+updated_at: 2026-10-11T15:40:50Z
 ---
 
 # Estado operacional — Lotus Site
