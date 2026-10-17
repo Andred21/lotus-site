@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: blocked
 work_class: architectural
 active_work_item: revisao-arquitetura-2026-09
 active_notion_eap: null
@@ -9,20 +9,20 @@ active_title: 'Revisão de arquitetura de 2026-09 — candidatos de aprofundamen
 active_branch: refactor/revisao-arquitetura
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: review_active_work_item
-resume_state: null
+next_owner: joao
+next_action: decidir_comentario_do_yaml_mjs
+resume_state: reviewing
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-17-revisao-arquitetura-design.md
 active_plan: docs/superpowers/plans/2026-10-17-revisao-arquitetura.md
 executor: claude
 reviewer: claude
 reviewer_exception: 'Autorizado por João em 2026-10-17: Codex sem cota; Claude executa e faz a review formal. Sem segunda lente independente; débito D-77.'
-blocker: null
+blocker: 'Achado R-2 da review (important, exige decisão): o cabeçalho de scripts/infra/lib/yaml.mjs (linhas 3-7) ainda diz que os leitores de zona.mjs, cabecalhos.mjs e distribuicao.mjs "recortam um recurso cada um, por coluna"; desde o candidato 01 eles navegam a árvore do lerYaml por template.mjs. Corrigir exige editar yaml.mjs, que o plano congela ("yaml.mjs não muda", Global Constraints; Task 1 Step 10 confere o arquivo intocado). Decisão de João: (a) autorizar a correção só do comentário, com os dois exports e os testes de hoje intactos (spec D6); ou (b) manter o arquivo como está e registrar o comentário como sugestão no fechamento. Blocking R-1 (comentário de RedirecionarWww em infra/lotus-site.yaml exigindo FunctionCode na última posição) corrigido em 30474d3. Gates na review: pnpm check exit 0 em 6353469 (45 arquivos, 432 testes); pnpm e2e exit 0 (78 testes, nenhum snapshot regravado); check na árvore espelhada exit 0 (38 arquivos, 370 testes); conferir-zona ao vivo exit 0 com --nameservers, porque a credencial AWS local foi recusada; depois do R-1, format:check exit 0 e vitest de scripts/infra exit 0 (197 testes).'
 supervised_cycles_completed: 23
 last_completed_work_item: 7.2.7
-state_basis_commit: cf85916
-updated_at: 2026-10-17T16:39:13Z
+state_basis_commit: 30474d3
+updated_at: 2026-10-17T17:16:02Z
 ---
 
 # Estado operacional — Lotus Site
