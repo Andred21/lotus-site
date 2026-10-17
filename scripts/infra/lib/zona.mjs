@@ -264,6 +264,10 @@ export function lerRegistros(texto) {
         ? 0
         : Number(resolver(item.TTL, defaults, `${caminho}.TTL`))
     if (item.AliasTarget !== undefined) {
+      // A AWS recusa os dois juntos; ler só o alias esconderia o erro.
+      if (item.ResourceRecords !== undefined) {
+        throw new Error(`RecordSet ${nome} com AliasTarget e ResourceRecords`)
+      }
       const alvo = mapa(item.AliasTarget, `${caminho}.AliasTarget`)
       conferirChaves(
         alvo,

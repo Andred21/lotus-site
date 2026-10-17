@@ -186,6 +186,31 @@ describe('leitura do template', () => {
       'AliasTarget de ensaio-corte.exemplo.cl. com campo desconhecido: Weight',
     )
   })
+
+  it('RecordSet com AliasTarget e ResourceRecords juntos quebra', () => {
+    // O leitor por coluna somava os dois em `valores` e a catraca reprovava;
+    // descartar um deles em silêncio esconderia o erro do template.
+    const fixture = [
+      '',
+      'Parameters:',
+      '  NomeDaZona:',
+      '    Default: exemplo.cl',
+      'Resources:',
+      '  Registros:',
+      '    Properties:',
+      '      RecordSets:',
+      "        - Name: !Sub 'ensaio-corte.${NomeDaZona}.'",
+      '          Type: A',
+      '          ResourceRecords:',
+      '            - 1.2.3.4',
+      '          AliasTarget:',
+      '            DNSName: d.cloudfront.net',
+      'Outputs:',
+    ].join('\n')
+    expect(() => lerRegistros(fixture)).toThrow(
+      'RecordSet ensaio-corte.exemplo.cl. com AliasTarget e ResourceRecords',
+    )
+  })
 })
 
 describe('infra/lotus-dns.yaml contra o inventário medido', () => {
