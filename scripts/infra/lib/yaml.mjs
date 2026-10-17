@@ -1,10 +1,11 @@
 // Leitor do subconjunto de YAML que os templates de `infra/` e o `ci.yml`
 // usam, sem parser de terceiro (Lei 7: `yaml` e `js-yaml` não resolvem na
-// árvore, medido em 2026-09-20 por `zona.mjs`). Os leitores de `zona.mjs`,
-// `cabecalhos.mjs` e `distribuicao.mjs` recortam um recurso cada um, por
-// coluna; o stack de observabilidade (`B6`) tem catorze recursos de formas
-// diferentes, e o `ci.yml` tem blocos de shell, então aqui a leitura é
-// genérica e devolve a árvore inteira.
+// árvore, medido em 2026-09-20 por `zona.mjs`). A leitura é genérica e
+// devolve a árvore inteira. A semântica do CloudFormation — parâmetros com
+// `Default`, recursos, saídas e `!Ref`/`!Sub` — mora em `template.mjs`, e é
+// por ele que `zona.mjs`, `distribuicao.mjs` e `politica-de-cabecalhos.mjs`
+// leem os templates; `observabilidade.mjs` e `ci-alerta.mjs` navegam a árvore
+// direto.
 //
 // O subconjunto: mapa e lista em bloco; escalar simples, entre aspas simples
 // ou duplas; lista em fluxo de uma linha (`[a, b]`); tag curta guardada como
