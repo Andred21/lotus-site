@@ -811,6 +811,13 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `reviewer_exception`, autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`,
   `D-65`, `D-70` e `D-73`.
   **Gatilho:** passada do Codex sobre `main..HEAD` do bloco, ou decisão de João de dispensá-la.
+- **D-77 · o bloco `revisao-arquitetura-2026-09` (`B9`) não tem segunda lente** — a conta do Codex
+  está sem cota em 2026-10-17: Claude executa e também faz a review formal de `/revisar-site`
+  (spec D14). Desvio declarado em `reviewer_exception`, autorizado por João em 2026-10-17. Mitigação:
+  execução por subagentes, com revisor de contexto limpo por task. Mesma classe de `D-27`, `D-32`,
+  `D-53`, `D-65`, `D-70`, `D-73` e `D-76`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
 
 ## Fechados
 
