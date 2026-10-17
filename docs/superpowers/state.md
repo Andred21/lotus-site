@@ -2,7 +2,7 @@
 schema_version: 1
 workflow_mode: supervised
 workflow_state: planning
-work_class: null
+work_class: architectural
 active_work_item: revisao-arquitetura-2026-09
 active_notion_eap: null
 active_title: 'Revisão de arquitetura de 2026-09 — candidatos de aprofundamento (bloco B9)'
@@ -10,10 +10,10 @@ active_branch: refactor/revisao-arquitetura
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: approve_design
+next_action: approve_plan
 resume_state: null
 context_packet: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-10-17-revisao-arquitetura-design.md
 active_plan: null
 executor: null
 reviewer: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 23
 last_completed_work_item: 7.2.7
-state_basis_commit: dd5fa31
-updated_at: 2026-10-11T22:09:24Z
+state_basis_commit: f3b4358
+updated_at: 2026-10-17T15:49:03Z
 ---
 
 # Estado operacional — Lotus Site
