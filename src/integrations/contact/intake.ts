@@ -1,4 +1,7 @@
-import { CONTACT_HONEYPOT_FIELD } from '../../lib/contact-fields'
+import {
+  CONTACT_HONEYPOT_FIELD,
+  type ContactFieldName,
+} from '../../lib/contact-fields'
 import {
   parseContactMessage,
   type ContactFormInput,
@@ -44,7 +47,7 @@ export const unavailableContactIntake: ContactIntake = () =>
  * "campo ausente vira vazio" fica provado.
  */
 function readContactFormData(formData: FormData): ContactFormInput {
-  const read = (name: string): string => {
+  const read = (name: ContactFieldName | 'cf-turnstile-response'): string => {
     const value = formData.get(name)
     return typeof value === 'string' ? value : ''
   }

@@ -85,7 +85,7 @@ function readBody(event: FunctionUrlEvent): Buffer {
 function readInput(json: unknown): ContactFormInput {
   const parsed = objetoSolto.safeParse(json)
   const objeto = parsed.success ? parsed.data : {}
-  const read = (name: string): string => {
+  const read = (name: keyof ContactMessage): string => {
     const value = objeto[name]
     return typeof value === 'string' ? value : ''
   }
