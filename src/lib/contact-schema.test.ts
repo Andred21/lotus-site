@@ -14,7 +14,6 @@ const VALID: ContactFormInput = {
   email: 'ANA@Lotusotec.CL',
   empresa: 'Lotus',
   mensaje: 'Necesito información sobre el curso de alta tensión.',
-  botcheck: '',
   captcha: 'token-de-teste',
 }
 
@@ -27,14 +26,13 @@ describe('normalizeContactInput', () => {
       email: 'ana@lotusotec.cl',
       empresa: 'Lotus',
       mensaje: 'Necesito información sobre el curso de alta tensión.',
-      botcheck: '',
       captcha: 'token-de-teste',
     })
   })
 })
 
 describe('parseContactMessage', () => {
-  it('aceita entrada válida e devolve o valor normalizado, sem o honeypot', () => {
+  it('aceita entrada válida e devolve o valor normalizado', () => {
     const result = parseContactMessage({
       ...VALID,
       mensaje: '  Hola, quiero información.  ',
@@ -48,7 +46,6 @@ describe('parseContactMessage', () => {
       mensaje: 'Hola, quiero información.',
       captcha: 'token-de-teste',
     })
-    expect('botcheck' in result.value).toBe(false)
   })
 
   it('exige nombre, email e mensaje; empresa fica opcional', () => {
@@ -107,16 +104,6 @@ describe('parseContactMessage', () => {
     expect(
       parseContactMessage({ ...VALID, mensaje: 'a'.repeat(2000) }).ok,
     ).toBe(true)
-  })
-
-  it('rejeita quando o honeypot vem preenchido', () => {
-    const result = parseContactMessage({
-      ...VALID,
-      botcheck: 'http://spam.example',
-    })
-
-    if (result.ok) throw new Error('esperava rejeição do honeypot')
-    expect(result.fieldErrors.botcheck).toBe('No pudimos validar el envío.')
   })
 
   it('exige o token do captcha, com a mensagem em es-CL', () => {

@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import {
-  CABECALHOS,
-  REMOVIDOS,
-  lerPoliticaDoTemplate,
-} from './lib/cabecalhos.mjs'
+import { CABECALHOS, REMOVIDOS } from './lib/cabecalhos.mjs'
+import { lerPoliticaDoTemplate } from './lib/politica-de-cabecalhos.mjs'
 
 // Fixture com a mesma forma do recurso real. Os testes mutam esta string com
 // `.replace()` para provar que a leitura quebra ruidosamente, com o nome do
 // campo — nunca em silêncio (spec §4.2).
 const MODELO = `
+Resources:
   PoliticaDeCabecalhos:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Properties:
@@ -151,8 +149,12 @@ describe('lerPoliticaDoTemplate sobre fixtures', () => {
   })
 
   it('Properties ausente quebra com o nome do campo', () => {
+    // Tirar só a linha `Properties:` deixaria o YAML com recuo inválido, e o
+    // erro seria do leitor de YAML; o recurso sem o bloco inteiro é o caso.
     expect(() =>
-      lerPoliticaDoTemplate(MODELO.replace('    Properties:\n', '')),
+      lerPoliticaDoTemplate(
+        'Resources:\n  PoliticaDeCabecalhos:\n    Type: AWS::CloudFront::ResponseHeadersPolicy\n',
+      ),
     ).toThrow('PoliticaDeCabecalhos sem Properties')
   })
 
@@ -189,9 +191,11 @@ describe('lerPoliticaDoTemplate sobre fixtures', () => {
   })
 
   it('template sem o recurso quebra', () => {
-    expect(() => lerPoliticaDoTemplate('Resources: {}')).toThrow(
-      'template sem o recurso PoliticaDeCabecalhos',
-    )
+    expect(() =>
+      lerPoliticaDoTemplate(
+        'Resources:\n  Outro:\n    Type: AWS::S3::Bucket\n',
+      ),
+    ).toThrow('template sem o recurso PoliticaDeCabecalhos')
   })
 })
 

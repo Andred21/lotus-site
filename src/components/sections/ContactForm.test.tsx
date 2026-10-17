@@ -7,7 +7,10 @@ import {
 } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { site } from '../../content/site'
-import { CONTACT_LIMITS } from '../../lib/contact-fields'
+import {
+  CONTACT_HONEYPOT_FIELD,
+  CONTACT_LIMITS,
+} from '../../lib/contact-fields'
 import type { CaptchaController } from '../../lib/captcha'
 import type { ContactSubmitResult } from '../../lib/contact-schema'
 import { ContactForm, type ContactSubmitHandler } from './ContactForm'
@@ -94,7 +97,9 @@ describe('ContactForm', () => {
       <ContactForm onSubmit={handlerOf({ status: 'failed' })} />,
     )
 
-    const honeypot = container.querySelector('input[name="botcheck"]')
+    const honeypot = container.querySelector(
+      `input[name="${CONTACT_HONEYPOT_FIELD}"]`,
+    )
     expect(honeypot?.getAttribute('aria-hidden')).toBe('true')
     expect(honeypot?.getAttribute('tabindex')).toBe('-1')
     expect(screen.getAllByRole('textbox')).toHaveLength(4)
@@ -122,7 +127,7 @@ describe('ContactForm', () => {
     expect(formData?.get('mensaje')).toBe(
       'Necesito información sobre el curso.',
     )
-    expect(formData?.get('botcheck')).toBe('')
+    expect(formData?.get(CONTACT_HONEYPOT_FIELD)).toBe('')
   })
 })
 
@@ -245,23 +250,6 @@ describe('ContactForm — estados de envio', () => {
 })
 
 describe('ContactForm — anti-spam', () => {
-  it('não fala em campos marcados quando só o honeypot falha', async () => {
-    const onSubmit = handlerOf({
-      status: 'invalid',
-      fieldErrors: { botcheck: 'No pudimos validar el envío.' },
-    })
-    render(<ContactForm onSubmit={onSubmit} />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
-
-    // O campo da armadilha não é renderizado: apontar "campos marcados" sem
-    // marcar nenhum campo confunde humano e ensina o bot.
-    expect(
-      await screen.findByText(site.contacto.form.feedback.error),
-    ).toBeTruthy()
-    expect(screen.queryByText('No pudimos validar el envío.')).toBeNull()
-  })
-
   it('trava o tamanho de cada campo no limite do schema', () => {
     render(<ContactForm onSubmit={handlerOf({ status: 'failed' })} />)
 

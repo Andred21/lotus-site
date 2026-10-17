@@ -225,8 +225,8 @@ aws route53 list-resource-record-sets --hosted-zone-id "$ZONA" --output json \
   --query 'ResourceRecordSets[].{Nome:Name,Tipo:Type,TTL:TTL,Valores:ResourceRecords[].Value,Alias:AliasTarget.DNSName}'
 ```
 
-Enquanto apex e `www` não forem alias, `pnpm infra:conferir-zona` (`zona-dns-lotusotec.md`) faz a
-mesma conferência nos quatro nameservers, contra o `INVENTARIO`.
+`pnpm infra:conferir-zona` (`zona-dns-lotusotec.md`) compara a zona no ar, perguntando direto aos
+quatro nameservers, com o template.
 
 O template continua sendo a fonte.
 
@@ -268,30 +268,17 @@ for violada no template.
 pnpm infra:conferir-zona
 ```
 
-Pergunta direto aos quatro nameservers da zona nova — no modo padrão, antes da troca, consulta
-comum devolveria o lado antigo, porque a delegação ainda aponta para a StackDNS —, compara com
-esse lado atual por DNS-over-HTTPS, grava `docs/infra/conferencia-zona-<data>.md` e sai 1 na
-primeira divergência não esperada.
-
-No modo padrão, antes da troca, a única divergência esperada é: nome inventado não resolve na AWS
-e resolve na StackDNS. É a prova de que o wildcard não atravessou. Depois da troca, os vereditos se
-invertem — use `--pos-delegacao`, logo abaixo.
+Lê os registros de `infra/lotus-dns.yaml`, pergunta cada um direto aos quatro nameservers da zona
+— a única consulta que ignora cache — e ao DoH público (`dns.google`), compara os três, grava
+`docs/infra/conferencia-zona-<data>.md` e sai 1 na primeira divergência não esperada. A linha `NS`
+espera os nameservers do próprio stack, e os nomes inventados não podem resolver em lado nenhum: é
+a prova de que o wildcard não atravessou.
 
 Se UDP/53 não sair da máquina, o lado AWS cai para `route53 list-resource-record-sets` e o
 relatório **declara a troca no cabeçalho**: configuração escrita não é resposta servida.
 
-Diferença aqui é barata; diferença depois do passo 6.4 é serviço fora do ar para parte do mundo.
-
-Depois da troca, a mesma conferência roda com `--pos-delegacao`:
-
-```bash
-pnpm infra:conferir-zona --pos-delegacao \
-  --saida "docs/infra/conferencia-zona-$(date -u +%F)-pos-delegacao.md"
-```
-
-O modo inverte os dois vereditos que a delegação inverte: a linha `NS` passa a esperar os
-nameservers do próprio stack, e o nome inventado passa a ter de não resolver em lado nenhum — os
-dois lados são a mesma zona agora, e a assimetria de antes deixou de ser possível.
+Até 2026-10-17 o script tinha também um modo de antes da delegação, que era o padrão; ele saiu no
+`B9`, e o modo de depois da delegação passou a ser o único, sem flag.
 
 ### 6.4 Trocar os nameservers
 
@@ -400,8 +387,9 @@ wildcard, que não atravessou.
 > **Nota de 2026-10-05 (`B5`).** `sistema` saiu da zona e `www`, como o apex, é alias da
 > distribuição (§10).
 
-Subdomínio novo é uma entrada a mais em `RecordSets` **e** uma linha a mais no inventário de
-`scripts/infra/lib/zona.mjs`, senão a catraca reprova. Não é `change-resource-record-sets` à mão.
+Subdomínio novo é **uma** entrada a mais em `RecordSets` mais o par nome e tipo em
+`REGISTROS_DA_ZONA`, de `scripts/infra/lib/zona.mjs`, senão a catraca reprova. Não é
+`change-resource-record-sets` à mão.
 
 Criar esse registro é DNS e nada mais. A integração com a API do Lotus (`8.2.1`) está congelada
 por decisão de João em 2026-09-09 e não é aberta por este comando.
@@ -584,9 +572,10 @@ A identidade nasce **pendente**. Os seis outputs `DkimNome1..3`/`DkimValor1..3` 
 
 ### 8.2 DKIM, MAIL FROM e DMARC na zona
 
-Os seis registros entram em `infra/lotus-dns.yaml` **e** no `INVENTARIO` de
-`scripts/infra/lib/zona.mjs`, como a secção 6.7 exige de todo nome novo. Os três tokens DKIM são
-`Default` dos parâmetros `TokenDkim1..3` do template. Depois:
+Cada um dos seis registros é **uma** entrada em `RecordSets` de `infra/lotus-dns.yaml` mais o par
+nome e tipo em `REGISTROS_DA_ZONA`, de `scripts/infra/lib/zona.mjs`, como a secção 6.7 exige de
+todo nome novo. Os três tokens DKIM são `Default` dos parâmetros `TokenDkim1..3` do template.
+Depois:
 
 ```bash
 aws cloudformation deploy --region us-east-1 \
@@ -601,7 +590,7 @@ Execute, espere `stack-update-complete`, e confira:
 
 ```bash
 export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm use
-pnpm infra:conferir-zona --pos-delegacao
+pnpm infra:conferir-zona
 ```
 
 A identidade fica verificada quando os três campos abaixo responderem `true`, `SUCCESS`,
@@ -694,8 +683,8 @@ Rollback (`ADR-SITE-005`, spec §8), do mais leve ao mais pesado:
    `index.js` inline do template.
 2. **Site:** o rollback da `ADR-SITE-004` não muda; um release anterior não chama `/api/contacto`.
 3. **Behavior `/api/*`:** remover do `lotus-site.yaml` e reimplantar. O bucket não é tocado.
-4. **DNS:** remover os seis registros de `lotus-dns.yaml` e do `INVENTARIO`. Nenhum deles é lido
-   pelo e-mail do Google.
+4. **DNS:** remover os seis registros de `lotus-dns.yaml` e de `REGISTROS_DA_ZONA`. Nenhum deles
+   é lido pelo e-mail do Google.
 5. **Identidade:** `delete-stack lotus-contato` só depois de o site parar de chamar a função —
    senão o `Add` das permissões no `lotus-site` fica órfão.
 
@@ -806,7 +795,7 @@ deploy` reusa o valor anterior de parâmetro que o stack já tem — e pelo meno
 3. Change set do `lotus-dns` revisto por `Name` e `Type` (em `B5`, `rollback-corte.md` §3, texto em `dcfeb76`), `--aquecer`,
    `execute` e `medir-propagacao --esperado cloudfront` em apex e `www`, em paralelo.
 4. `SMOKE_URL=https://lotusotec.cl SMOKE_SHA=<sha> pnpm smoke`, com o mesmo SHA do smoke forçado, e
-   `pnpm infra:conferir-zona --pos-delegacao`, que desde `7.2.5` confere linha de alias.
+   `pnpm infra:conferir-zona`, que desde `7.2.5` confere linha de alias.
 5. Smoke de novo pelo menos 24 h depois, sem `SMOKE_VIA`.
 
 ## 11. Observabilidade (`B6`)

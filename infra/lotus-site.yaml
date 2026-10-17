@@ -188,8 +188,7 @@ Resources:
   # http://www faz dois saltos. Qualquer outro host -- o apex e o dominio do
   # CloudFront -- segue intacto. A query volta como veio, chave repetida
   # inclusa; nada e reencodado. A catraca scripts/infra/distribuicao.test.mjs
-  # extrai este codigo e o roda em node:vm; FunctionCode e a ultima
-  # propriedade porque o leitor textual assume isso.
+  # extrai este codigo e o roda em node:vm.
   RedirecionarWww:
     Type: AWS::CloudFront::Function
     Properties:

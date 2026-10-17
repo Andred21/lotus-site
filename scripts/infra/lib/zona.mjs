@@ -1,12 +1,18 @@
 // O que a zona de lotusotec.cl precisa conter, e como ler isso de volta de
-// `infra/lotus-dns.yaml` sem parser YAML.
-//
-// Medido em 2026-09-20: nem `yaml` nem `js-yaml` resolvem na árvore, e
-// instalar um só para esta catraca é dependência sem necessidade do work item
-// (Lei 7). O template é escrito por nós, num formato estável, então a leitura
-// aqui é textual e assumida frágil: ela quebra ruidosamente se o formato
-// mudar, nunca em silêncio. A validação estrutural do YAML fica com
+// `infra/lotus-dns.yaml`. A leitura do template é a de `template.mjs`, sobre o
+// leitor de YAML de `yaml.mjs`: os RecordSets são conferidos como conjunto
+// fechado, e campo desconhecido quebra ruidosamente com o nome dele, nunca em
+// silêncio. A validação estrutural do YAML fica com
 // `aws cloudformation validate-template`, no runbook.
+import {
+  conferirChaves,
+  escalar,
+  lerTemplate,
+  lista,
+  recurso,
+  resolver,
+} from './template.mjs'
+import { mapa } from './yaml.mjs'
 
 /**
  * @typedef {{ nome: string, tipo: string, valores: string[], alias?: boolean }} RegistroEsperado
@@ -14,138 +20,92 @@
  */
 
 /**
- * Inventário fechado da zona, transcrito do painel do StackCP em 2026-09-20
- * e registrado em `docs/infra/zona-dns-lotusotec.md`. Nomes com ponto final,
- * como o Route 53 os guarda.
+ * Os registros que a zona precisa ter: nome e tipo, sem valor. Nomes com
+ * ponto final, como o Route 53 os guarda.
  *
- * A fonte deixou de ser a sondagem por DNS de 2026-09-09, que não podia
- * enxergar nome que ninguém adivinhasse: com wildcard na zona, todo palpite
- * responde. Foi essa cegueira que escondeu `pop3` — `pop` foi sondado,
- * devolveu o IP do apex e foi lido como wildcard falando; `pop3` nunca foi
- * perguntado.
+ * Nasceu como o inventário fechado da zona, medido no painel do StackCP em
+ * 2026-09-20 e registrado em `docs/infra/zona-dns-lotusotec.md`; a sondagem
+ * por DNS de 2026-09-09 não podia enxergar nome que ninguém adivinhasse,
+ * porque com wildcard na zona todo palpite responde — foi assim que `pop3`
+ * ficou escondido. Desde a delegação de 2026-09-26, a fonte dos registros é
+ * `infra/lotus-dns.yaml`. Esta lista guarda só nome e tipo, para reprovar
+ * leitura vazia e registro apagado sem querer; o valor de cada um é o
+ * `conferir-zona` que confere, contra a zona no ar.
  *
- * `www` está aqui por prova, não por precaução: o painel mostrava que ele
- * não era registro do outro lado e só resolvia por causa do wildcard, que
- * não atravessou a delegação. O `AAAA` dele existe pelo mesmo motivo: o
- * wildcard do painel tinha `A` **e** `AAAA`. `sistema` nasceu do mesmo jeito
- * e saiu em `B5` (spec de `7.2.5`, D2): o nome da intranet é `app`.
- *
- * Apex e `www`, `A` e `AAAA`, são alias da distribuição desde o corte
- * (`B5`, spec de `7.2.5`, §4.3): o valor é o domínio dela, e o IP que cada
- * resolvedor recebe varia.
- *
- * Os seis registros do SES foram acrescentados em `B2`, com os tokens lidos
- * dos outputs do stack `lotus-contato`.
- * @type {readonly RegistroEsperado[]}
+ * `www` está aqui por prova: só resolvia por causa do wildcard, que não
+ * atravessou a delegação. Apex e `www`, `A` e `AAAA`, são alias da
+ * distribuição desde o corte (`B5`, spec de `7.2.5`, §4.3). `sistema` saiu em
+ * `B5` (D2): o nome da intranet é `app`, que nasceu no Route 53, sem AAAA
+ * porque o EIP não tem IPv6. Os seis registros do SES entraram em `B2`.
+ * @type {readonly { nome: string, tipo: string }[]}
  */
-export const INVENTARIO = Object.freeze([
-  {
-    nome: 'lotusotec.cl.',
-    tipo: 'A',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
-  },
-  {
-    nome: 'lotusotec.cl.',
-    tipo: 'AAAA',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
-  },
-  {
-    nome: 'lotusotec.cl.',
-    tipo: 'MX',
-    valores: [
-      '1 ASPMX.L.GOOGLE.COM.',
-      '5 ALT1.ASPMX.L.GOOGLE.COM.',
-      '5 ALT2.ASPMX.L.GOOGLE.COM.',
-      '10 ALT3.ASPMX.L.GOOGLE.COM.',
-      '10 ALT4.ASPMX.L.GOOGLE.COM.',
-    ],
-  },
-  {
-    nome: 'lotusotec.cl.',
-    tipo: 'TXT',
-    valores: [
-      '"v=spf1 include:_spf.google.com include:spf.stackmail.com -all"',
-    ],
-  },
-  {
-    nome: 'www.lotusotec.cl.',
-    tipo: 'A',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
-  },
-  {
-    nome: 'www.lotusotec.cl.',
-    tipo: 'AAAA',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
-  },
-  {
-    nome: 'mail.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['ghs.googlehosted.com.'],
-  },
-  {
-    nome: 'smtp.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['smtp.stackmail.com.'],
-  },
-  {
-    nome: 'imap.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['imap.stackmail.com.'],
-  },
-  {
-    nome: 'pop3.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['pop3.stackmail.com.'],
-  },
-  {
-    nome: 'autodiscover.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['autodiscover.stackmail.com.'],
-  },
-  {
-    nome: 'ftp.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['ftp.us.stackcp.com.'],
-  },
+export const REGISTROS_DA_ZONA = Object.freeze([
+  { nome: 'lotusotec.cl.', tipo: 'A' },
+  { nome: 'lotusotec.cl.', tipo: 'AAAA' },
+  { nome: 'lotusotec.cl.', tipo: 'MX' },
+  { nome: 'lotusotec.cl.', tipo: 'TXT' },
+  { nome: 'www.lotusotec.cl.', tipo: 'A' },
+  { nome: 'www.lotusotec.cl.', tipo: 'AAAA' },
+  { nome: 'mail.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'smtp.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'imap.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'pop3.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'autodiscover.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'ftp.lotusotec.cl.', tipo: 'CNAME' },
   // ── SES (bloco B2), publicados em 2026-09-26 ────────────────────────────
   {
     nome: 'whkczrifauntvx6dy3r5uwx4g7w2p4p2._domainkey.lotusotec.cl.',
     tipo: 'CNAME',
-    valores: ['whkczrifauntvx6dy3r5uwx4g7w2p4p2.dkim.amazonses.com.'],
   },
   {
     nome: 'veys5msb7mgj6vstojj4pmsnfs5htq5g._domainkey.lotusotec.cl.',
     tipo: 'CNAME',
-    valores: ['veys5msb7mgj6vstojj4pmsnfs5htq5g.dkim.amazonses.com.'],
   },
   {
     nome: 'ilecjqmzurmfbtcete7ip5sdurjx6irz._domainkey.lotusotec.cl.',
     tipo: 'CNAME',
-    valores: ['ilecjqmzurmfbtcete7ip5sdurjx6irz.dkim.amazonses.com.'],
   },
-  {
-    nome: 'ses.lotusotec.cl.',
-    tipo: 'MX',
-    valores: ['10 feedback-smtp.sa-east-1.amazonses.com.'],
-  },
-  {
-    nome: 'ses.lotusotec.cl.',
-    tipo: 'TXT',
-    valores: ['"v=spf1 include:amazonses.com ~all"'],
-  },
-  {
-    nome: '_dmarc.lotusotec.cl.',
-    tipo: 'TXT',
-    valores: ['"v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl"'],
-  },
+  { nome: 'ses.lotusotec.cl.', tipo: 'MX' },
+  { nome: 'ses.lotusotec.cl.', tipo: 'TXT' },
+  { nome: '_dmarc.lotusotec.cl.', tipo: 'TXT' },
   // ── Intranet do Lotus (item 32 do repo lotus-infra) ─────────────────────
-  // Nasce no Route 53: nunca existiu no painel. Sem AAAA, o EIP não tem IPv6.
-  { nome: 'app.lotusotec.cl.', tipo: 'A', valores: ['18.230.53.197'] },
+  { nome: 'app.lotusotec.cl.', tipo: 'A' },
 ])
+
+/**
+ * O MX do apex, com as cinco prioridades medidas: e-mail no Google Workspace
+ * é invariante da `ADR-SITE-006`, e o único valor que a catraca offline
+ * ainda guarda.
+ * @type {readonly string[]}
+ */
+export const MX_DO_GOOGLE = Object.freeze([
+  '1 ASPMX.L.GOOGLE.COM.',
+  '5 ALT1.ASPMX.L.GOOGLE.COM.',
+  '5 ALT2.ASPMX.L.GOOGLE.COM.',
+  '10 ALT3.ASPMX.L.GOOGLE.COM.',
+  '10 ALT4.ASPMX.L.GOOGLE.COM.',
+])
+
+/**
+ * Confere o conjunto de `tipo nome` lido do template contra
+ * `REGISTROS_DA_ZONA`. Vazio quando bate; senão um problema por divergência.
+ * @param {readonly RegistroLido[]} registros
+ * @returns {string[]}
+ */
+export function conferirRegistrosDaZona(registros) {
+  /** @param {{ nome: string, tipo: string }} registro */
+  const chave = (registro) => `${registro.tipo} ${registro.nome}`
+  const lidos = new Set(registros.map(chave))
+  const esperados = new Set(REGISTROS_DA_ZONA.map(chave))
+  return [
+    ...[...esperados]
+      .filter((par) => !lidos.has(par))
+      .map((par) => `ausente: ${par}`),
+    ...[...lidos]
+      .filter((par) => !esperados.has(par))
+      .map((par) => `fora da lista: ${par}`),
+  ]
+}
 
 /**
  * Os endereços antigos do WordPress na BlueHosting, medidos em 2026-09-09.
@@ -172,8 +132,8 @@ export function eDoCorte(registro) {
 /**
  * A catraca do corte (7.2.5, spec §4.3): exatamente apex e `www`, `A` e
  * `AAAA`, são alias, e alias não declara TTL — a AWS fixa em 60 s. Para onde
- * eles apontam é a conferência por linha do `INVENTARIO`. Vazio quando
- * confere; senão um problema por registro.
+ * eles apontam é o `conferir-zona` que confere, contra a zona no ar. Vazio
+ * quando confere; senão um problema por registro.
  * @param {readonly RegistroLido[]} registros
  * @returns {string[]}
  */
@@ -197,11 +157,8 @@ export function conferirAliasesDoCorte(registros) {
 
 /**
  * Nomes que só respondiam, antes de 2026-09-26, porque o wildcard existia na
- * StackDNS (`D-45`, medido em 2026-09-09). No modo padrão (antes da troca),
- * os dois lados divergirem neles é a prova de que o wildcard não
- * atravessou — a única divergência esperada da conferência. Desde a troca,
- * no modo `--pos-delegacao`, o esperado é não resolver em lado nenhum
- * (`wildcardAusente`).
+ * StackDNS (`D-45`, medido em 2026-09-09). Desde a delegação, o esperado é
+ * não resolverem em lado nenhum (`wildcardAusente`).
  * @type {readonly string[]}
  */
 export const NOMES_INVENTADOS = Object.freeze([
@@ -210,195 +167,79 @@ export const NOMES_INVENTADOS = Object.freeze([
 ])
 
 /**
- * A delegação que o registro `.cl` apontava antes de 2026-09-26, medida em
- * 2026-09-09. Conjunto exato, e não substring: `every` sobre lista vazia
- * devolve `true`, e uma resposta DoH sem `Answer` passaria por delegação
- * intacta. Desde a troca, `delegacaoEsperada` só usa esta lista no modo
- * padrão (o "antes"); no modo `--pos-delegacao` o esperado são os
- * nameservers do próprio stack, não esta constante.
- * @type {readonly string[]}
- */
-export const NS_DA_STACKDNS = Object.freeze([
-  'ns1.stackdns.com.',
-  'ns2.stackdns.com.',
-  'ns3.stackdns.com.',
-  'ns4.stackdns.com.',
-])
-
-const ASPAS_EXTERNAS = /^(['"])([\s\S]*)\1$/
-
-/** @param {string} bruto */
-function semAspas(bruto) {
-  const cru = bruto.trim()
-  return cru.match(ASPAS_EXTERNAS)?.[2] ?? cru
-}
-
-/**
- * @param {Map<string, string>} parametros
- * @param {string} nome
- */
-function exigirParametro(parametros, nome) {
-  const valor = parametros.get(nome)
-  if (valor === undefined) {
-    throw new Error(
-      `template usa o parâmetro ${nome}, que não tem Default declarado`,
-    )
-  }
-  return valor
-}
-
-/**
- * Recorta o trecho entre duas chaves de topo do template.
- * @param {string} texto
- * @param {string} inicio
- * @param {string} fim
- */
-function recortar(texto, inicio, fim) {
-  const de = texto.indexOf(`\n${inicio}`)
-  const ate = texto.indexOf(`\n${fim}`)
-  if (de === -1) throw new Error(`template sem a secção ${inicio}`)
-  if (ate === -1 || ate < de)
-    throw new Error(`template sem ${fim} depois de ${inicio}`)
-  return texto.slice(de, ate)
-}
-
-/**
- * Lê o `Default` de cada parâmetro declarado.
- * @param {string} texto
- * @returns {Map<string, string>}
- */
-export function lerParametros(texto) {
-  /** @type {Map<string, string>} */
-  const parametros = new Map()
-  let atual = ''
-  for (const linha of recortar(texto, 'Parameters:', 'Resources:').split(
-    '\n',
-  )) {
-    const nome = linha.match(/^ {2}(\w+):\s*$/)
-    if (nome) {
-      atual = nome[1] ?? ''
-      continue
-    }
-    const padrao = linha.match(/^ {4}Default:\s*(.+)$/)
-    if (padrao && atual) parametros.set(atual, semAspas(padrao[1] ?? ''))
-  }
-  return parametros
-}
-
-/**
- * Resolve `!Ref X` e `!Sub '...${X}...'` contra os defaults dos parâmetros.
- * Valor sem tag volta apenas sem as aspas do YAML.
- * @param {string} bruto
- * @param {Map<string, string>} parametros
- */
-export function resolver(bruto, parametros) {
-  const cru = bruto.trim()
-  const referencia = cru.match(/^!Ref\s+(\w+)$/)
-  if (referencia) return exigirParametro(parametros, referencia[1] ?? '')
-  const substituicao = cru.match(/^!Sub\s+([\s\S]+)$/)
-  const texto = semAspas(substituicao?.[1] ?? cru)
-  return texto.replace(/\$\{(\w+)\}/g, (_todo, nome) =>
-    exigirParametro(parametros, String(nome)),
-  )
-}
-
-/**
- * Lê os `RecordSet` do template, com `!Ref` e `!Sub` já resolvidos.
+ * Lê os `RecordSet` do template, com `!Ref` e `!Sub` já resolvidos. Cada item
+ * é conjunto fechado: campo fora dele é erro com o nome do campo, nunca
+ * registro lido pela metade. `AliasTarget` é o alias para o CloudFront
+ * (spec §4.4): o `DNSName` vira o valor, e não há TTL — a AWS fixa em 60 s.
  * @param {string} texto
  * @returns {RegistroLido[]}
  */
 export function lerRegistros(texto) {
-  const parametros = lerParametros(texto)
-  const de = texto.indexOf('RecordSets:')
-  if (de === -1) throw new Error('template sem RecordSets:')
-  /** @type {RegistroLido[]} */
-  const registros = []
-  /** @type {RegistroLido | undefined} */
-  let atual
-  for (const linha of texto.slice(de).split('\n').slice(1)) {
-    // A lista acabou: ou uma chave de topo na coluna zero (`Outputs:`), ou o
-    // proximo recurso dentro de `Resources:`, que entra com dois espacos. Os
-    // itens de RecordSets vivem a partir da coluna oito, entao qualquer
-    // conteudo em indentacao menor ja esta fora da lista.
-    if (/^ {0,6}\S/.test(linha)) break
-    const abertura = linha.match(/^\s*- Name:\s*(.+)$/)
-    if (abertura) {
-      atual = {
-        nome: resolver(abertura[1] ?? '', parametros),
-        tipo: '',
-        ttl: 0,
-        valores: [],
-        alias: false,
+  const template = lerTemplate(texto)
+  const { defaults } = template
+  const propriedades = mapa(
+    recurso(template, 'Registros').Properties,
+    'Registros.Properties',
+  )
+  return lista(propriedades.RecordSets, 'RecordSets').map((bruto, i) => {
+    const caminho = `RecordSets.${i}`
+    const item = mapa(bruto, caminho)
+    const nome = resolver(item.Name, defaults, `${caminho}.Name`)
+    conferirChaves(
+      item,
+      ['Name', 'Type', 'TTL', 'ResourceRecords', 'AliasTarget'],
+      `RecordSet ${nome}`,
+    )
+    const tipo =
+      item.Type === undefined
+        ? ''
+        : resolver(item.Type, defaults, `${caminho}.Type`)
+    const ttl =
+      item.TTL === undefined
+        ? 0
+        : Number(resolver(item.TTL, defaults, `${caminho}.TTL`))
+    if (item.AliasTarget !== undefined) {
+      // A AWS recusa os dois juntos; ler só o alias esconderia o erro.
+      if (item.ResourceRecords !== undefined) {
+        throw new Error(`RecordSet ${nome} com AliasTarget e ResourceRecords`)
       }
-      registros.push(atual)
-      continue
+      const alvo = mapa(item.AliasTarget, `${caminho}.AliasTarget`)
+      conferirChaves(
+        alvo,
+        ['DNSName', 'HostedZoneId', 'EvaluateTargetHealth'],
+        `AliasTarget de ${nome}`,
+      )
+      const valor = resolver(alvo.DNSName, defaults, `${caminho}.DNSName`)
+      return { nome, tipo, ttl, valores: [valor], alias: true }
     }
-    if (!atual) continue
-    if (/^\s*(#|$)/.test(linha)) continue
-    const valor = linha.match(/^\s*- (.+)$/)
-    if (valor) {
-      atual.valores.push(resolver(valor[1] ?? '', parametros))
-      continue
-    }
-    const campo = linha.match(/^\s*(\w+):\s*(.*)$/)
-    if (!campo) {
-      throw new Error(`linha não reconhecida em RecordSets: ${linha.trim()}`)
-    }
-    const chave = campo[1] ?? ''
-    const bruto = campo[2] ?? ''
-    // Conjunto fechado: campo fora dele é erro com o nome do campo, nunca
-    // registro lido pela metade. `AliasTarget` é o alias para o CloudFront
-    // (spec §4.4): o DNSName vira o valor, e não há TTL — a AWS fixa em 60 s.
-    switch (chave) {
-      case 'Type':
-        atual.tipo = resolver(bruto, parametros)
-        break
-      case 'TTL':
-        atual.ttl = Number(resolver(bruto, parametros))
-        break
-      case 'ResourceRecords':
-        break
-      case 'AliasTarget':
-        atual.alias = true
-        break
-      case 'DNSName':
-        atual.valores.push(resolver(bruto, parametros))
-        break
-      case 'HostedZoneId':
-      case 'EvaluateTargetHealth':
-        break
-      default:
-        throw new Error(
-          `RecordSet ${atual.nome} com campo desconhecido: ${chave}`,
-        )
-    }
-  }
-  return registros
+    const valores =
+      item.ResourceRecords === undefined
+        ? []
+        : lista(item.ResourceRecords, `${caminho}.ResourceRecords`).map(
+            (valor, j) =>
+              resolver(valor, defaults, `${caminho}.ResourceRecords.${j}`),
+          )
+    return { nome, tipo, ttl, valores, alias: false }
+  })
 }
 
 /**
- * As duas políticas de um recurso de `Resources:`. Para `Zona`, apagar e
- * recriar dá nameservers novos, e são eles que o registrador aponta. Para
- * `Registros`, um delete-stack sem Retain esvazia a zona viva (D-52).
+ * As duas políticas de um recurso de `Resources:`, `''` quando ausentes. Para
+ * `Zona`, apagar e recriar dá nameservers novos, e são eles que o registrador
+ * aponta. Para `Registros`, um delete-stack sem Retain esvazia a zona viva
+ * (D-52).
  * @param {string} texto
- * @param {string} recurso nome lógico, como está no template
+ * @param {string} nome nome lógico, como está no template
  */
-export function lerPoliticasDoRecurso(texto, recurso) {
-  const de = texto.indexOf(`\n  ${recurso}:`)
-  if (de === -1) throw new Error(`template sem o recurso ${recurso}`)
-  const politicas = { deletionPolicy: '', updateReplacePolicy: '' }
-  // `slice(2)`: o corte comeca no `\n` que antecede `  <recurso>:`, entao a
-  // primeira fatia e vazia e a segunda e o proprio cabecalho do recurso --
-  // que o `break` abaixo tomaria pelo recurso seguinte.
-  for (const linha of texto.slice(de).split('\n').slice(2)) {
-    // Próximo recurso de topo dentro de Resources:.
-    if (/^ {2}\w/.test(linha)) break
-    const apagar = linha.match(/^ {4}DeletionPolicy:\s*(\S+)/)
-    if (apagar) politicas.deletionPolicy = apagar[1] ?? ''
-    const substituir = linha.match(/^ {4}UpdateReplacePolicy:\s*(\S+)/)
-    if (substituir) politicas.updateReplacePolicy = substituir[1] ?? ''
+export function lerPoliticasDoRecurso(texto, nome) {
+  const lido = recurso(lerTemplate(texto), nome)
+  /** @param {string} campo */
+  const politica = (campo) =>
+    lido[campo] === undefined ? '' : escalar(lido[campo], `${nome}.${campo}`)
+  return {
+    deletionPolicy: politica('DeletionPolicy'),
+    updateReplacePolicy: politica('UpdateReplacePolicy'),
   }
-  return politicas
 }
 
 /**
@@ -415,7 +256,9 @@ export function lerPoliticasDaZona(texto) {
  * @param {string} valor
  */
 export function normalizar(valor) {
-  return semAspas(valor).trim().toLowerCase().replace(/\s+/g, ' ')
+  const cru = valor.trim()
+  const interno = cru.match(/^(['"])([\s\S]*)\1$/)?.[2] ?? cru
+  return interno.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
 /**
@@ -434,36 +277,26 @@ export function mesmoConjunto(a, b) {
 }
 
 /**
- * Veredito da linha de nome inventado, que a delegação inverte.
- *
- * Antes da troca os dois lados são zonas diferentes, e a prova de que o
- * wildcard não atravessou é a assimetria: vazio na AWS, IP na StackDNS.
- * Depois da troca os dois lados são a MESMA zona lida por caminhos
- * diferentes, e essa assimetria deixa de ser possível — o único desfecho
- * correto passa a ser vazio dos dois lados. Manter a regra antiga daria
- * vermelho justamente quando tudo estivesse certo.
- *
- * Resolver na AWS reprova nos dois casos: é o wildcard tendo atravessado.
+ * Veredito da linha de nome inventado. Desde a delegação os dois lados são a
+ * MESMA zona lida por caminhos diferentes, e o único desfecho correto é vazio
+ * dos dois lados. Resolver na AWS é o wildcard tendo atravessado; resolver só
+ * no lado servido é cache ou resposta de outra zona.
  * @param {string[]} naAws
- * @param {string[]} naStack
- * @param {boolean} posDelegacao
+ * @param {string[]} servido
  */
-export function wildcardAusente(naAws, naStack, posDelegacao) {
-  if (naAws.length > 0) return false
-  return posDelegacao ? naStack.length === 0 : naStack.length > 0
+export function wildcardAusente(naAws, servido) {
+  return naAws.length === 0 && servido.length === 0
 }
 
 /**
- * Qual delegação o relatório espera encontrar. Depois da troca ela é a do
- * próprio stack, e não uma lista fixa: uma hosted zone recriada ganha
- * nameservers novos, e uma constante aqui viraria mentira silenciosa na
- * primeira vez que isso acontecesse.
+ * Qual delegação o relatório espera encontrar: a do próprio stack, e não uma
+ * lista fixa. Uma hosted zone recriada ganha nameservers novos, e uma
+ * constante aqui viraria mentira silenciosa na primeira vez que isso
+ * acontecesse.
  * @param {string[]} nomesDeServidor
- * @param {boolean} posDelegacao
  * @returns {string[]}
  */
-export function delegacaoEsperada(nomesDeServidor, posDelegacao) {
-  if (!posDelegacao) return [...NS_DA_STACKDNS]
+export function delegacaoEsperada(nomesDeServidor) {
   return nomesDeServidor.map((nome) => `${nome.replace(/\.$/, '')}.`)
 }
 
@@ -514,7 +347,7 @@ function tipoDeAlias(tipo) {
 }
 
 /**
- * O lado AWS de uma linha, a partir da resposta de cada nameserver do Route
+ * O lado AWS de uma linha do template, a partir da resposta de cada nameserver do Route
  * 53. Registro comum: os quatro dão o mesmo conjunto, e discordar lança — é
  * a zona servida de dois jeitos. Alias: cada nameserver resolve a borda por
  * conta própria; no estágio 2 do ensaio de `B4` os quatro deram o mesmo
@@ -547,11 +380,11 @@ const semPontoFinal = (valores) =>
   valores.map((valor) => valor.replace(/\.$/, ''))
 
 /**
- * Veredito de uma linha do `INVENTARIO` no `conferir-zona` (spec §4.5).
- * Registro comum: inventário, AWS e servido com o mesmo conjunto. Alias: os
+ * Veredito de uma linha do template no `conferir-zona` (spec §4.5).
+ * Registro comum: template, AWS e servido com o mesmo conjunto. Alias: os
  * dois lados respondendo como borda — exceto quando o lado AWS veio da API
  * (`pelaApi`), em que ele é o `DNSName` da configuração e se compara com o
- * do inventário, com ou sem o ponto final.
+ * do template, com ou sem o ponto final.
  * @param {RegistroEsperado} registro
  * @param {string[]} naAws
  * @param {string[]} servido

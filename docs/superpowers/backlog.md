@@ -41,6 +41,10 @@ de falha do CI e access log lido por quatro consultas; o fechamento do bloco fic
 Depois do merge de `B6`, a prova ponta a ponta do job `alerta` fechou `D-68` em 2026-10-11.
 `B8 · recaptura-baseline` fechou em 2026-10-11, fora da ordem por seleção de João: `D-30` fechado e
 a conferência humana de paridade feita.
+`B9 · revisao-arquitetura-2026-09` fechou em 2026-10-17: um leitor só para os templates de
+`infra/`, a zona DNS declarada só no template, o honeypot fora da interface do Contact intake e um
+teste de contrato entre o adapter e a função do contato, sem mudar um pixel. Os candidatos antigos
+que continuam válidos foram para `B11`, e `D-75` subiu de prioridade.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -71,7 +75,7 @@ e consequências na `ADR-SITE-006`.
 # BLOCOS
 
 Ordem lógica de execução do MVP. `B0` a `B7` são o caminho crítico do go-live e a dependência entre
-eles é real, não preferência. `B8` a `B10` não bloqueiam o go-live e entram quando o João quiser —
+eles é real, não preferência. `B8` a `B11` não bloqueiam o go-live e entram quando o João quiser —
 um por vez, porque o harness admite um `active_work_item` só.
 
 ## B0 · `espelho-8982f50` — promover o release e provar o pipeline
@@ -238,19 +242,45 @@ um por vez, porque o harness admite um `active_work_item` só.
 
 ## B9 · `revisao-arquitetura-2026-09`
 
-Autorizado por João em 2026-09-02, nunca selecionado. Dez candidatos de aprofundamento da revisão de
-arquitetura (`/improve-codebase-architecture`, base `main@30a4c0b`), nenhum contradiz
-`ADR-SITE-001/002/003`. Um commit por candidato; ordem sugerida 1, 2+3, 4, 5, depois os demais. O
-detalhe dos candidatos está no histórico da rodada — o relatório HTML era efêmero e não sobreviveu.
+Autorizado por João em 2026-09-02 com dez candidatos de uma revisão sobre `main@30a4c0b`. Essa
+lista foi substituída pelo relatório de `/improve-codebase-architecture` de 2026-10-11, conferido
+contra o código antes de virar escopo (spec de `B9`, D1 e §4); os candidatos antigos que continuam
+válidos foram para `B11`.
 
-Nota de 2026-09-09: o candidato 5 (defeito de `rgbToHex` descartando alpha) continua válido e é o
-mesmo de `D-31`. A `ADR-SITE-002` passou a `superseded`, o que não invalida nenhum candidato.
+- **Entregue (spec `2026-10-17-revisao-arquitetura-design.md`, 2026-10-17):** `template.mjs` como
+  leitor único dos templates de `infra/` (candidato 01); a zona DNS declarada só no template, com
+  `REGISTROS_DA_ZONA` e `MX_DO_GOOGLE` no lugar do INVENTARIO e o `conferir-zona` num modo só (02);
+  o honeypot lido pelo Contact intake antes do schema, com a Emenda E2 na `ADR-SITE-005` (03); e o
+  teste de contrato `lambda/contato/contrato.test.ts` entre o adapter e a função (04). Evidência:
+  `docs/infra/conferencia-zona-2026-10-17.md`. Resíduos em `D-79` e `D-80`.
+- **Avaliado e não feito:** o candidato 06, respostas dos resolvedores DNS. A diferença de
+  classificação de `REFUSED`/`SERVFAIL` entre `conferir-zona` e `medir-propagacao` é deliberada,
+  porque cada uma é a segura no seu contexto. A quebra que motivou o candidato veio de `537b8dd`,
+  com causa no `D-62`, que um módulo testado não pegaria. E os dois CLIs rodam raramente (spec de
+  `B9`, §4.5). O candidato 07 virou `D-78`. Os candidatos 05, 08 e 09 ficam sob o congelamento do
+  ferramental da referência (spec de `B9`, D3).
 
 ## B10 · `harness-debitos`
 
 - **Escopo:** `D-15` (rule de ícones órfã), `D-18` (Prettier reescreve plano e spec aprovados),
   `D-19` (transição de estado viajando junto de commit de código), `D-27` e `D-32` (segunda lente
   ausente). `D-16` e `D-31` entram se `scripts/inventario/` estiver nos `paths_autorizados`.
+- **Não bloqueia o go-live.**
+
+## B11 · `frontend-testes`
+
+- **Escopo:** os candidatos da revisão de 2026-09-02 que continuam válidos e que o relatório de
+  2026-10-11 não cobre (spec de `B9`, D1). A substância de cada um está em `68542eb`:
+  - **antigo 1 — `data-node`**, só nos cinco nós de `e2e/a11y-exceptions.ts` (três corpos de
+    destaque, `.text-link` e a legenda do rodapé), com nomes no padrão de `NOS`; `NOS` e
+    `espacamento.mjs` ficam intocados, e `Row` não ganha prop (decisão de João);
+  - **antigo 4 — helpers de contato no `e2e/`**, o que sobrou depois da saída do Web3Forms;
+  - **antigo 7 — estado do `ContactForm` como união discriminada**;
+  - **antigo 8 — uma lista só de viewports** para o `e2e/`;
+  - **antigo 9 — testes de string de classe:** apagar os asserts de `className` que só repetem o
+    JSX e cobrir o pixel com `regressao-visual.spec.ts`, que ganha 768 e 1920 (decisão de João);
+  - **antigo 10 — CTA pílula como `@utility`** em `src/index.css`, sem criar `components/ui/`.
+- **Junto:** o antigo 7 toca o `ContactForm`, que é o gatilho de `D-78` e `D-80`.
 - **Não bloqueia o go-live.**
 
 ---
@@ -428,7 +458,10 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   alpha) é real e continua justificando o candidato 5 de `revisao-arquitetura-2026-09`, mas o
   cabeçalho não é a prova dele — o caso genuíno é o rodapé (`#545454` na tabela, `#323232` na
   tela). Resta o defeito de `rgbToHex`.
-  **Gatilho:** bloco `revisao-arquitetura-2026-09` (candidato 5), ou pedido explícito de João.
+  **Gatilho:** a próxima regeração de `styles.json`, junto do `D-16` e do `D-72`. Reapontado por
+  João em 2026-10-17 (spec de `B9`, D4): o antigo gatilho era o bloco `revisao-arquitetura-2026-09`,
+  mas trocar `rgbToHex` por `cssColor` em `extract-styles.mjs` não muda nada observável enquanto o
+  script não roda, e o ferramental da referência está congelado desde `B9` (D3).
 - **D-32 · o incremento final do bloco `paridade-header-cursos` não teve segunda lente** —
   os cinco primeiros commits (`f19ee29..d619f0d`, onde está todo o código) tiveram review
   independente real do Codex, que produziu `R-1` (rebaixado a suggestion após verificação no
@@ -568,10 +601,13 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   João de dispensá-la.
 - **D-54 · sem rate limit dedicado em `/api/contacto`, e o honeypot não cobre o endpoint** —
   decisão de João em 2026-09-26 (D5 da spec de `B2`): CloudFront Function não guarda estado, então
-  a única opção era o WAF, a ~US$ 6/mês fixos. O honeypot `botcheck` só existe no navegador: o
-  adapter (`src/integrations/contact/api-contacto.ts`) não manda o campo, e a função
-  (`lambda/contato/handler.ts`) trata a ausência como `''` — ele defende o formulário contra bot
-  simples, não o endpoint `/api/contacto` contra quem manda POST direto. A defesa real do endpoint
+  a única opção era o WAF, a ~US$ 6/mês fixos. O honeypot `botcheck` só existe no navegador, onde
+  o Contact intake o lê antes do schema: o adapter (`src/integrations/contact/api-contacto.ts`) não
+  manda o campo, e desde `B9` a função (`lambda/contato/handler.ts`) nem o lê (spec de `B9`, D11;
+  Emenda E2 da `ADR-SITE-005`). Ele defende o formulário contra bot simples, não o endpoint
+  `/api/contacto` contra quem manda POST direto: esse POST, com ou sem `botcheck`, passa pelo
+  schema e para no siteverify com `403`, e o log registra `desfecho` `captcha-recusado`, não
+  `schema`. A defesa real do endpoint
   é Turnstile, revalidação pelo schema na função, o teto do SES sandbox (200/dia, 1/s) e o teto de
   concorrência da conta (10). Pior caso não é só spam: esgotar a cota do SES sandbox (200 por 24 h,
   janela móvel) ou a concorrência de 10 da conta **bloqueia mensagens legítimas** — é
@@ -781,7 +817,9 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `recaptura-baseline` corrigiu só o caminho do Chromium (`launchReferencia`/`openPage`); o
   `fetch` precisaria de um `lookup` próprio, como `e2e/smoke/rede.ts`, e da mesma guarda.
   **Gatilho:** regeração de `docs/inventario/assets/` a partir do backup final restaurado
-  localmente: desde `B7` não há referência viva.
+  localmente: desde `B7` não há referência viva. Desde `B9`, só dispara se o ferramental da
+  referência for descongelado: ele fica como registro histórico, nem revivido contra o backup
+  restaurado nem apagado (decisão de João, spec de `B9`, D3).
 - **D-72 · `openPage` devolve a página ainda rolando em `375` e `768`** — o WordPress declara
   `scroll-behavior: smooth`, e o `scrollTo(0, 0)` do fim de `openPage` ainda está animando 1 s
   depois: `scrollY` 28 em `375` e 1 em `768`, medido em 2026-10-11. `capturarPaginaInteira` espera
@@ -790,7 +828,11 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   estilo computado, que a rolagem não muda; quem passar a ler posição, ou estado do Divi que
   depende da rolagem, mede no meio da animação.
   **Gatilho:** próxima regeração de `dom.json`, `styles.json` ou das medidas de breakpoint, que
-  desde `B7` só existe contra o backup final restaurado localmente.
+  desde `B7` só existe contra o backup final restaurado localmente. Desde `B9`, só dispara se o
+  ferramental da referência for descongelado (spec de `B9`, D3). Junto, no mesmo descongelamento: o
+  comentário de `scripts/qa/lib/paridade.mjs:6` ("Regerar cria pasta nova, não sobrescreve esta") é
+  falso, porque `RUN_DIR` é fixo, e rodar `capture-clone` hoje sobrescreve o lado clone da rodada de
+  `B8` (spec de `B9`, §4.7).
 - **D-74 · o pacote do StackCP segue pago sem site** — `B7` apagou o WordPress e o Moodle e manteve
   a hospedagem (spec de `7.2.7`, D2), porque a StackMail ainda envia (`D-50`). Ficam vivos a
   StackMail, a conta FTP (`ftp.lotusotec.cl`), o painel com os três atalhos (`zona-dns-lotusotec.md`)
@@ -804,6 +846,11 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `exigirVivo` reprova a leitura. A última comparação válida é a de
   `docs/infra/evidencia-desativacao-wordpress-2026-10-11.md` §2. Restaurar de novo exige outra
   referência — o título, o `h1` e o texto registrados ali, ou capturas.
+  **Prioridade alta**, por decisão de João em 2026-10-17 (spec de `B9`, D5): o ensaio está quebrado
+  hoje. `verificar-restauracao.mjs` lê o vivo primeiro, o IP responde `403`, `exigirVivo` reprova e
+  o `set -e` de `ensaio-restauracao.sh` aborta antes da checagem de PHP Fatal. É procedimento de
+  desastre, não refatoração, e a fonte do texto de referência é decisão própria (a §2 da evidência
+  de `7.2.7` gravou título e `h1`, não o texto); por isso ficou fora de `B9`.
   **Gatilho:** a próxima restauração do backup final.
 - **D-76 · o bloco `7.2.7` (desativar o WordPress, `B7`) não tem segunda lente** — o plano previa
   `reviewer: codex`, mas João aprovou o plano em 2026-10-11 atribuindo execução e review ao Claude:
@@ -811,6 +858,45 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `reviewer_exception`, autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`,
   `D-65`, `D-70` e `D-73`.
   **Gatilho:** passada do Codex sobre `main..HEAD` do bloco, ou decisão de João de dispensá-la.
+- **D-77 · o bloco `revisao-arquitetura-2026-09` (`B9`) não tem segunda lente** — a conta do Codex
+  está sem cota em 2026-10-17: Claude executa e também faz a review formal de `/revisar-site`
+  (spec D14). Desvio declarado em `reviewer_exception`, autorizado por João em 2026-10-17. Mitigação:
+  execução por subagentes, com revisor de contexto limpo por task. Mesma classe de `D-27`, `D-32`,
+  `D-53`, `D-65`, `D-70`, `D-73` e `D-76`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
+- **D-78 · o ciclo de vida do token do captcha está espalhado, e o reset diverge da spec** —
+  candidato 07 da revisão de arquitetura de 2026-10-11, deixado fora de `B9` porque toca de 10 a 12
+  arquivos e pede spec própria (spec de `B9`, D2 e §4.6). A spec de `B2` (D6,
+  `2026-09-26-4.1.7-7.1.3-7.1.4-contato-ses-lambda-design.md:118-119`) manda resetar o widget
+  depois de qualquer resultado que não seja `sent`; o código reseta sempre, inclusive depois de
+  `sent` e de `invalid` antes da rede (`ContactForm.tsx:111`, `:119`). Junto: o literal
+  `cf-turnstile-response` repetido entre `turnstile.ts`, `intake.ts`, o `e2e/` e o smoke, e o
+  acoplamento de `crypto.subtle` com o captcha em `App.tsx:23`.
+  **Gatilho:** o próximo bloco que tocar o captcha ou o `ContactForm`.
+- **D-79 · resíduos de `B9` na zona e no leitor de template** — achados menores da execução e da
+  review de `B9`, fora do escopo aprovado:
+  - redação de antes da D8: `zona-dns-lotusotec.md:159-160` diz que `zona.test.mjs` impede o
+    template de divergir da medição, mas desde `B9` a catraca confere nome e tipo de cada registro e
+    só algumas regras de valor (MX, DMARC, TTL), não o valor linha a linha;
+    `:274-275` fala em "linhas do inventário"; o título de `runbook-aws.md` §6.3 continua "Conferir
+    antes de trocar"; os nomes de teste `zona.test.mjs:565` e `:619` e os textos de
+    `conferir-zona.mjs:323`, `:328` e `:331` citam inventário e "zona nova";
+  - guardas offline: `conferirRegistrosDaZona` compara conjuntos, então um RecordSet duplicado passa
+    offline (antes, `toHaveLength(INVENTARIO.length)` pegava); o `conferir-zona` não chama
+    `conferirRegistrosDaZona` antes do laço, e uma leitura vazia ao vivo sairia `0` (a catraca de
+    `pnpm check` reprova template vazio); o teste do certificado usa `toContain` sem `lista()` e
+    passaria com string;
+  - `template.mjs`: erro dentro do payload do `!Sub` perde o caminho (sai "linha 1: …"); o
+    pseudo-parâmetro `${AWS::Region}` no `!Sub` fica literal (já era assim antes de `B9`).
+    **Gatilho:** a próxima edição da zona (`D-46`, `D-49`) ou o próximo bloco que tocar
+    `scripts/infra/`.
+- **D-80 · resíduos de `B9` no contato** — `CONTEXT.md` não registra que o Contact intake lê o
+  honeypot antes do schema (a spec só pedia a entrada se o arquivo já citasse o honeypot, e ele não
+  cita). O teste de contrato só cobre a recusa com `403` (um `{ ok: false }` com 2xx nunca é lido,
+  e o handler hoje não produz esse caso), não confere que `sendEmail` foi chamado uma vez só, e o
+  `fetch` falso descarta os cabeçalhos do adapter ao montar o evento.
+  **Gatilho:** junto do `D-78`, o próximo bloco que tocar o captcha ou o `ContactForm`.
 
 ## Fechados
 

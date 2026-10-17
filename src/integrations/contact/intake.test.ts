@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { CONTACT_HONEYPOT_FIELD } from '../../lib/contact-fields'
 import {
   createContactIntake,
   unavailableContactIntake,
@@ -10,7 +11,7 @@ const VALID = {
   email: 'ANA@Lotusotec.CL',
   empresa: 'Lotus',
   mensaje: 'Necesito información sobre el curso de alta tensión.',
-  botcheck: '',
+  [CONTACT_HONEYPOT_FIELD]: '',
   'cf-turnstile-response': 'token-de-teste',
 }
 
@@ -83,17 +84,29 @@ describe('createContactIntake', () => {
     })
   })
 
-  it('rejeita o bot antes da rede: a porta não é chamada', async () => {
+  it('armadilha preenchida é failed antes da rede: a porta não é chamada', async () => {
     const send = fakeSender()
-    const intake = createContactIntake(send)
-
-    const result = await intake(
-      formDataOf({ ...VALID, botcheck: 'http://spam.example' }),
+    const result = await createContactIntake(send)(
+      formDataOf({ ...VALID, [CONTACT_HONEYPOT_FIELD]: 'http://spam.example' }),
     )
-
-    if (result.status !== 'invalid') throw new Error('esperava invalid')
-    expect(result.fieldErrors.botcheck).toBe('No pudimos validar el envío.')
+    expect(result).toEqual({ status: 'failed' })
     expect(send).not.toHaveBeenCalled()
+  })
+
+  it('armadilha preenchida vence campo inválido: failed, não invalid', async () => {
+    const send = fakeSender()
+    const result = await createContactIntake(send)(
+      formDataOf({ ...VALID, nombre: 'A', [CONTACT_HONEYPOT_FIELD]: 'x' }),
+    )
+    expect(result).toEqual({ status: 'failed' })
+  })
+
+  it('armadilha só com espaço conta como vazia', async () => {
+    const send = fakeSender()
+    await createContactIntake(send)(
+      formDataOf({ ...VALID, [CONTACT_HONEYPOT_FIELD]: '   ' }),
+    )
+    expect(send).toHaveBeenCalledOnce()
   })
 
   it('rejeita payload excessivo antes da rede: a porta não é chamada', async () => {

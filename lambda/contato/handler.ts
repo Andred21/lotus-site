@@ -80,13 +80,12 @@ function readBody(event: FunctionUrlEvent): Buffer {
 /**
  * Campo ausente ou não-textual vira string vazia, como em
  * `readContactFormData` do intake: quem decide se isso é erro é o schema.
- * `botcheck` normalmente não viaja no JSON — o honeypot é do formulário — e
- * nasce vazio para o schema não o reprovar por ausência.
+ * O honeypot não é lido: a função não conhece o campo.
  */
 function readInput(json: unknown): ContactFormInput {
   const parsed = objetoSolto.safeParse(json)
   const objeto = parsed.success ? parsed.data : {}
-  const read = (name: string): string => {
+  const read = (name: keyof ContactMessage): string => {
     const value = objeto[name]
     return typeof value === 'string' ? value : ''
   }
@@ -96,7 +95,6 @@ function readInput(json: unknown): ContactFormInput {
     email: read('email'),
     empresa: read('empresa'),
     mensaje: read('mensaje'),
-    botcheck: read('botcheck'),
     captcha: read('captcha'),
   }
 }
