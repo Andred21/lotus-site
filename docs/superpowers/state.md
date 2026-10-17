@@ -1,28 +1,28 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_closure
-work_class: architectural
-active_work_item: revisao-arquitetura-2026-09
+workflow_state: idle
+work_class: null
+active_work_item: null
 active_notion_eap: null
-active_title: 'Revisão de arquitetura de 2026-09 — candidatos de aprofundamento (bloco B9)'
-active_branch: refactor/revisao-arquitetura
+active_title: null
+active_branch: null
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: close_active_work_item
+next_owner: joao
+next_action: select_work_item
 resume_state: null
 context_packet: null
-active_spec: docs/superpowers/specs/2026-10-17-revisao-arquitetura-design.md
-active_plan: docs/superpowers/plans/2026-10-17-revisao-arquitetura.md
-executor: claude
-reviewer: claude
-reviewer_exception: 'Autorizado por João em 2026-10-17: Codex sem cota; Claude executa e faz a review formal. Sem segunda lente independente; débito D-77.'
+active_spec: null
+active_plan: null
+executor: null
+reviewer: null
+reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 23
-last_completed_work_item: 7.2.7
-state_basis_commit: 248162f
-updated_at: 2026-10-17T17:27:08Z
+supervised_cycles_completed: 24
+last_completed_work_item: revisao-arquitetura-2026-09
+state_basis_commit: af4ad43
+updated_at: 2026-10-17T17:40:55Z
 ---
 
 # Estado operacional — Lotus Site
