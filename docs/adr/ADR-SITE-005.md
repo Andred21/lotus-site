@@ -178,3 +178,15 @@ O corpo acima não é reescrito. O que o bloco mediu e decidiu dentro dele, com 
   `ssm:GetParameter` no ARN do parâmetro `/lotus-site/contato/turnstile-secret`; e
   `logs:CreateLogStream`/`logs:PutLogEvents` no ARN explícito do log group `Registros`, sem
   curinga.
+
+## Emenda E2 — 2026-10-17, bloco `revisao-arquitetura-2026-09`
+
+O corpo e a E1 não são reescritos. Detalhe na spec
+[`2026-10-17-revisao-arquitetura-design.md`](../superpowers/specs/2026-10-17-revisao-arquitetura-design.md)
+(D10, D11):
+
+- **O honeypot saiu do schema compartilhado, revogando "O honeypot `botcheck` já existe no schema
+  e continua" (linha 96).** O campo continua no formulário; quem o lê é o Contact intake, antes do
+  schema, e armadilha preenchida vira `failed` sem rede. A tela é a mesma de antes.
+- **A função não conhece o campo.** É o que a E1 D5 já dizia; agora o código também. POST direto
+  com `botcheck` passa pelo schema e para no siteverify, com `403`. `D-54` continua aberto.

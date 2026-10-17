@@ -1,3 +1,4 @@
+import { CONTACT_HONEYPOT_FIELD } from '../../lib/contact-fields'
 import {
   parseContactMessage,
   type ContactFormInput,
@@ -53,7 +54,6 @@ function readContactFormData(formData: FormData): ContactFormInput {
     email: read('email'),
     empresa: read('empresa'),
     mensaje: read('mensaje'),
-    botcheck: read('botcheck'),
     // O widget do Turnstile escreve o token num input oculto com este nome
     // dentro do formulário; o schema o vê como `captcha`.
     captcha: read('cf-turnstile-response'),
@@ -67,9 +67,18 @@ function readContactFormData(formData: FormData): ContactFormInput {
  * `src/lib/`, e só então delega à porta — não conhece o provedor (aceites da
  * 4.1.3 e da 4.1.4). Executa o schema junto da função (`lambda/contato/handler.ts`);
  * `src/lib/contact-schema.ts` documenta os dois executores.
+ *
+ * O honeypot é decidido aqui, antes do schema (Emenda E2 da `ADR-SITE-005`):
+ * armadilha preenchida devolve `failed` sem rede e sem dizer qual campo
+ * denunciou o bot. A função não conhece o campo.
  */
 export function createContactIntake(send: ContactSender): ContactIntake {
   return async (formData) => {
+    const trap = formData.get(CONTACT_HONEYPOT_FIELD)
+    if (typeof trap === 'string' && trap.trim() !== '') {
+      return { status: 'failed' }
+    }
+
     const parsed = parseContactMessage(readContactFormData(formData))
 
     if (!parsed.ok) {

@@ -3,6 +3,7 @@ import { site } from '../../content/site'
 import { cn } from '../../lib/cn'
 import type { CaptchaController } from '../../lib/captcha'
 import {
+  CONTACT_HONEYPOT_FIELD,
   CONTACT_LIMITS,
   isRequiredContactField,
 } from '../../lib/contact-fields'
@@ -131,9 +132,8 @@ export function ContactForm({ onSubmit, captcha }: ContactFormProps) {
 
   // Derivado do estado, nunca guardado: erro de campo e erro geral são a
   // mesma submissão vista de dois ângulos.
-  // Só erro renderizado vira "revise los campos marcados": o honeypot não
-  // aparece na tela, então falha nele cai na mensagem geral e o bot não
-  // descobre qual campo o denunciou. O captcha aparece, então conta.
+  // Só erro renderizado vira "revise los campos marcados". O captcha aparece
+  // na tela, então conta.
   const feedback = site.contacto.form.feedback
   const hasFieldErrors =
     site.contacto.form.fields.some((field) => fieldErrors[field.name]) ||
@@ -219,7 +219,7 @@ export function ContactForm({ onSubmit, captcha }: ContactFormProps) {
           acessibilidade e fora da ordem de tabulação, sem pixel na tela. */}
       <input
         type="text"
-        name="botcheck"
+        name={CONTACT_HONEYPOT_FIELD}
         defaultValue=""
         tabIndex={-1}
         autoComplete="off"

@@ -12,6 +12,14 @@ export const CONTACT_LIMITS = {
 } as const
 
 /**
+ * Nome do campo-armadilha (honeypot) do formulário. Quem o escreve é a view
+ * (`ContactForm`, input oculto); quem o lê é só o intake, antes do schema.
+ * Não é campo de `ContactFormInput` nem de `ContactMessage`: a função não o
+ * conhece (Emenda E2 da `ADR-SITE-005`).
+ */
+export const CONTACT_HONEYPOT_FIELD = 'botcheck'
+
+/**
  * Obrigatórios do clone. O formulário Divi original não marcava nenhum campo
  * como `required`; a divergência é decisão de João em 2026-08-27 (D4 da spec)
  * e está na matriz de paridade.

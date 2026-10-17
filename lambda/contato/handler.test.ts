@@ -182,15 +182,20 @@ describe('createHandler — antes do captcha', () => {
     expect(d.verifyCaptcha).not.toHaveBeenCalled()
   })
 
-  it('honeypot preenchido também é 400', async () => {
+  it('a função não conhece a armadilha: POST com botcheck vai ao captcha', async () => {
     const d = deps()
+    d.verifyCaptcha.mockResolvedValue('rejected')
     const resposta = await createHandler(d)(
       evento({
         body: JSON.stringify({ ...MENSAGEM, botcheck: 'http://spam.example' }),
       }),
     )
-
-    expect(resposta.statusCode).toBe(400)
+    expect(resposta.statusCode).toBe(403)
+    expect(d.verifyCaptcha).toHaveBeenCalledWith('token-de-teste')
+    expect(d.log).toHaveBeenCalledWith({
+      requestId: 'req-1',
+      desfecho: 'captcha-recusado',
+    })
   })
 
   it('token ausente é 400, não 403: nunca chegou à Cloudflare', async () => {
