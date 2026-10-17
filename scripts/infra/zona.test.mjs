@@ -6,27 +6,27 @@ import {
   conferirAliasesDoCorte,
   convergiu,
   delegacaoEsperada,
-  lerParametros,
   lerPoliticasDaZona,
   lerPoliticasDoRecurso,
   lerRegistros,
   linhaConfere,
   mesmoConjunto,
   normalizar,
-  resolver,
   respondeComoBorda,
   respostaDosNameservers,
   valoresDaApi,
   wildcardAusente,
 } from './lib/zona.mjs'
+import { lerTemplate, lista, recurso, resolver } from './lib/template.mjs'
+import { mapa } from './lib/yaml.mjs'
 
 // Caminho a partir da raiz do repositório, como os outros testes de
 // `scripts/` já fazem (`scripts/inventario/fontes.test.mjs`): sob o Vitest,
 // `import.meta.url` não é URL de esquema `file:` e `readFileSync` a recusa.
 const TEMPLATE = readFileSync('infra/lotus-dns.yaml', 'utf8')
 
-describe('leitura textual do template', () => {
-  const parametros = lerParametros(TEMPLATE)
+describe('leitura do template', () => {
+  const parametros = lerTemplate(TEMPLATE).defaults
 
   it('lê o Default de cada parâmetro', () => {
     expect(parametros.get('NomeDaZona')).toBe('lotusotec.cl')
@@ -48,17 +48,22 @@ describe('leitura textual do template', () => {
   })
 
   it('resolve !Ref e !Sub contra os defaults', () => {
-    expect(resolver('!Ref IpDaIntranet', parametros)).toBe('18.230.53.197')
-    expect(resolver("!Sub 'www.${NomeDaZona}.'", parametros)).toBe(
+    expect(resolver('!Ref IpDaIntranet', parametros, 'teste')).toBe(
+      '18.230.53.197',
+    )
+    expect(resolver("!Sub 'www.${NomeDaZona}.'", parametros, 'teste')).toBe(
       'www.lotusotec.cl.',
     )
-    expect(resolver("'1 ASPMX.L.GOOGLE.COM.'", parametros)).toBe(
+    // Valor sem tag chega do `lerYaml` já sem as aspas e volta igual.
+    expect(resolver('1 ASPMX.L.GOOGLE.COM.', parametros, 'teste')).toBe(
       '1 ASPMX.L.GOOGLE.COM.',
     )
   })
 
   it('reprova parâmetro sem Default em vez de resolver para vazio', () => {
-    expect(() => resolver('!Ref NaoExiste', parametros)).toThrow(/NaoExiste/)
+    expect(() => resolver('!Ref NaoExiste', parametros, 'teste')).toThrow(
+      /NaoExiste/,
+    )
   })
 
   it('acha exatamente um RecordSet por linha do inventário', () => {
@@ -159,6 +164,28 @@ describe('leitura textual do template', () => {
       'RecordSet x.exemplo.cl. com campo desconhecido: Weight',
     )
   })
+
+  it('campo desconhecido no AliasTarget quebra com o nome do campo', () => {
+    const fixture = [
+      '',
+      'Parameters:',
+      '  NomeDaZona:',
+      '    Default: exemplo.cl',
+      'Resources:',
+      '  Registros:',
+      '    Properties:',
+      '      RecordSets:',
+      "        - Name: !Sub 'ensaio-corte.${NomeDaZona}.'",
+      '          Type: A',
+      '          AliasTarget:',
+      '            DNSName: d123.cloudfront.net',
+      '            Weight: 10',
+      'Outputs:',
+    ].join('\n')
+    expect(() => lerRegistros(fixture)).toThrow(
+      'AliasTarget de ensaio-corte.exemplo.cl. com campo desconhecido: Weight',
+    )
+  })
 })
 
 describe('infra/lotus-dns.yaml contra o inventário medido', () => {
@@ -253,24 +280,34 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     // pedido pendente do ACM morre em 72h, e com HostedZoneId o stack fica em
     // CREATE_IN_PROGRESS até validar. A delegação convergiu, então o que a
     // catraca precisa travar agora é a forma do certificado.
-    const de = TEMPLATE.indexOf('\n  Certificado:')
-    expect(de, 'template sem o recurso Certificado').toBeGreaterThan(-1)
-    const bloco = TEMPLATE.slice(de, TEMPLATE.indexOf('\nOutputs:'))
-    expect(bloco).toMatch(/Type: AWS::CertificateManager::Certificate/)
-    expect(bloco).toMatch(/ValidationMethod: DNS/)
-    expect(bloco).toMatch(/- !Sub 'www\.\$\{NomeDaZona\}'/)
+    const certificado = recurso(lerTemplate(TEMPLATE), 'Certificado')
+    expect(certificado.Type).toBe('AWS::CertificateManager::Certificate')
+    const propriedades = mapa(certificado.Properties, 'Certificado.Properties')
+    expect(propriedades.ValidationMethod).toBe('DNS')
+    expect(propriedades.SubjectAlternativeNames).toContain(
+      "!Sub 'www.${NomeDaZona}'",
+    )
     // Os dois nomes validam na própria zona: sem isto o ACM não cria o CNAME
     // de validação e alguém teria de criá-lo à mão, fora do stack.
-    expect(bloco.match(/HostedZoneId: !Ref Zona/g)).toHaveLength(2)
+    const validacoes = lista(
+      propriedades.DomainValidationOptions,
+      'DomainValidationOptions',
+    )
+    expect(validacoes).toHaveLength(2)
+    for (const [i, validacao] of validacoes.entries()) {
+      expect(mapa(validacao, `DomainValidationOptions.${i}`).HostedZoneId).toBe(
+        '!Ref Zona',
+      )
+    }
     // Wildcard amplia o raio de uma chave comprometida e esconde o inventário
     // de nomes. Spec §4.
-    expect(bloco).not.toMatch(/\*/)
+    expect(JSON.stringify(certificado)).not.toMatch(/\*/)
   })
 
   it('exporta o ARN do certificado para o bloco do site', () => {
     // B5 consome isto como parâmetro: CloudFormation não importa valor entre
     // regiões, e a distribuição é sa-east-1.
-    expect(TEMPLATE).toMatch(/ArnDoCertificado:/)
+    expect(lerTemplate(TEMPLATE).saidas).toHaveProperty('ArnDoCertificado')
   })
 
   it('protege a zona contra delete-stack', () => {

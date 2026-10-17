@@ -1,13 +1,23 @@
 // A forma que `Distribuicao` e `RedirecionarWww` de `infra/lotus-site.yaml`
 // precisam ter para o domínio próprio (7.2.4, spec §4.2), e como ler isso de
-// volta sem parser YAML — o mesmo trade-off de `zona.mjs` e `cabecalhos.mjs`
-// (Lei 7): leitura textual, assumida frágil, que quebra ruidosamente com o
-// nome do campo. A função do redirect é extraída do template e executada em
+// volta pela árvore de `template.mjs`: campo esperado ausente, ou campo
+// desconhecido numa associação de função, quebra ruidosamente com o nome do
+// campo. A função do redirect é extraída do template e executada em
 // `node:vm`: o que a catraca prova é o código que vai para a borda, não uma
 // cópia dele.
 import vm from 'node:vm'
-import { lerParametros, mesmoConjunto, resolver } from './zona.mjs'
+import {
+  conferirChaves,
+  escalar,
+  lerTemplate,
+  lista,
+  recurso,
+  resolver,
+} from './template.mjs'
+import { mapa } from './yaml.mjs'
+import { mesmoConjunto } from './zona.mjs'
 
+/** @typedef {import('./yaml.mjs').Mapa} Mapa */
 /** @typedef {{ evento: string, arn: string }} Funcao */
 /** @typedef {{ caminho: string, funcoes: Funcao[] }} Comportamento */
 /**
@@ -31,40 +41,34 @@ export const ARN_DA_FUNCAO =
 export const APEX = 'lotusotec.cl'
 export const WWW = 'www.lotusotec.cl'
 
-/** @param {string} bruto */
-function semAspas(bruto) {
-  const cru = bruto.trim()
-  return cru.match(/^(['"])([\s\S]*)\1$/)?.[2] ?? cru
-}
-
 /**
- * Corpo de um recurso de `Resources:`, cru (comentários e vazias inclusos:
- * `lerFuncao` precisa deles dentro do bloco de código), até o próximo
- * recurso na coluna 2.
- * @param {string} texto
- * @param {string} nome
+ * As `FunctionAssociations` de um behavior, cruas como estão no template
+ * (`ARN_DA_FUNCAO`, e não o ARN resolvido). Behavior sem o campo não tem
+ * função.
+ * @param {Mapa} comportamento
+ * @param {string} caminho
+ * @returns {Funcao[]}
  */
-function recortarRecurso(texto, nome) {
-  const de = texto.indexOf(`\n  ${nome}:`)
-  if (de === -1) throw new Error(`template sem o recurso ${nome}`)
-  /** @type {string[]} */
-  const corpo = []
-  for (const linha of texto.slice(de).split('\n').slice(2)) {
-    if (/^ {0,2}\S/.test(linha)) break
-    corpo.push(linha)
-  }
-  return corpo
-}
-
-/**
- * @param {Funcao} funcao
- * @param {string} chave
- * @param {string} valor
- */
-function campoDeFuncao(funcao, chave, valor) {
-  if (chave === 'EventType') return { ...funcao, evento: valor }
-  if (chave === 'FunctionARN') return { ...funcao, arn: valor }
-  throw new Error(`FunctionAssociations com campo desconhecido: ${chave}`)
+function lerAssociacoes(comportamento, caminho) {
+  if (comportamento.FunctionAssociations === undefined) return []
+  const itens = lista(
+    comportamento.FunctionAssociations,
+    `${caminho}.FunctionAssociations`,
+  )
+  return itens.map((bruto, i) => {
+    const onde = `${caminho}.FunctionAssociations.${i}`
+    const item = mapa(bruto, onde)
+    conferirChaves(item, ['EventType', 'FunctionARN'], 'FunctionAssociations')
+    if (item.EventType === undefined || item.FunctionARN === undefined) {
+      throw new Error(
+        `FunctionAssociations com item incompleto: ${JSON.stringify(item)}`,
+      )
+    }
+    return {
+      evento: escalar(item.EventType, `${onde}.EventType`),
+      arn: escalar(item.FunctionARN, `${onde}.FunctionARN`),
+    }
+  })
 }
 
 /**
@@ -74,155 +78,86 @@ function campoDeFuncao(funcao, chave, valor) {
  * @param {string} texto conteúdo de `infra/lotus-site.yaml`
  */
 export function lerDistribuicao(texto) {
-  /** @type {string[]} */
-  const aliases = []
+  const propriedades = mapa(
+    recurso(lerTemplate(texto), 'Distribuicao').Properties,
+    'Distribuicao.Properties',
+  )
+  const config = mapa(propriedades.DistributionConfig, 'DistributionConfig')
+  const aliases =
+    config.Aliases === undefined
+      ? []
+      : lista(config.Aliases, 'Aliases').map((alias, i) =>
+          escalar(alias, `Aliases.${i}`),
+        )
+  const priceClass =
+    config.PriceClass === undefined
+      ? ''
+      : escalar(config.PriceClass, 'PriceClass')
   /** @type {Record<string, string>} */
   const certificado = {}
-  /** @type {Funcao[]} */
-  const funcoesPadrao = []
+  if (config.ViewerCertificate !== undefined) {
+    const lido = mapa(config.ViewerCertificate, 'ViewerCertificate')
+    for (const [campo, valor] of Object.entries(lido)) {
+      certificado[campo] = escalar(valor, `ViewerCertificate.${campo}`)
+    }
+  }
+  const funcoesPadrao =
+    config.DefaultCacheBehavior === undefined
+      ? []
+      : lerAssociacoes(
+          mapa(config.DefaultCacheBehavior, 'DefaultCacheBehavior'),
+          'DefaultCacheBehavior',
+        )
   /** @type {Comportamento[]} */
-  const comportamentos = []
-  let secao = ''
-  let priceClass = ''
-  /** @type {'' | 'padrao' | 'caminho'} */
-  let associando = ''
-  /** @type {Funcao | undefined} */
-  let funcao
-
-  const fecharFuncao = () => {
-    if (!funcao) return
-    if (!funcao.evento || !funcao.arn) {
-      throw new Error(
-        `FunctionAssociations com item incompleto: ${JSON.stringify(funcao)}`,
-      )
-    }
-    if (associando === 'padrao') funcoesPadrao.push(funcao)
-    else comportamentos.at(-1)?.funcoes.push(funcao)
-    funcao = undefined
-  }
-
-  for (const linha of recortarRecurso(texto, 'Distribuicao')) {
-    if (/^\s*(#|$)/.test(linha)) continue
-    let m
-    // Chave direta de DistributionConfig (coluna 8): muda de secção.
-    if ((m = linha.match(/^ {8}(\w+):\s*(.*)$/))) {
-      fecharFuncao()
-      associando = ''
-      secao = m[1] ?? ''
-      if (secao === 'PriceClass') priceClass = semAspas(m[2] ?? '')
-      continue
-    }
-    if (secao === 'Aliases' && (m = linha.match(/^ {10}- (\S+)$/))) {
-      aliases.push(m[1] ?? '')
-      continue
-    }
-    if (
-      secao === 'ViewerCertificate' &&
-      (m = linha.match(/^ {10}(\w+):\s*(.+)$/))
-    ) {
-      certificado[m[1] ?? ''] = semAspas(m[2] ?? '')
-      continue
-    }
-    if (secao === 'DefaultCacheBehavior') {
-      if ((m = linha.match(/^ {10}(\w+):\s*(.*)$/))) {
-        fecharFuncao()
-        associando = m[1] === 'FunctionAssociations' ? 'padrao' : ''
-        continue
-      }
-      if (
-        associando === 'padrao' &&
-        (m = linha.match(/^ {12}- (\w+):\s*(.+)$/))
-      ) {
-        fecharFuncao()
-        funcao = campoDeFuncao({ evento: '', arn: '' }, m[1] ?? '', m[2] ?? '')
-        continue
-      }
-      if (
-        associando === 'padrao' &&
-        funcao &&
-        (m = linha.match(/^ {14}(\w+):\s*(.+)$/))
-      ) {
-        funcao = campoDeFuncao(funcao, m[1] ?? '', m[2] ?? '')
-      }
-      continue
-    }
-    if (secao === 'CacheBehaviors') {
-      if ((m = linha.match(/^ {10}- PathPattern:\s*(\S+)$/))) {
-        fecharFuncao()
-        associando = ''
-        comportamentos.push({ caminho: m[1] ?? '', funcoes: [] })
-        continue
-      }
-      if ((m = linha.match(/^ {12}(\w+):\s*(.*)$/))) {
-        fecharFuncao()
-        associando = m[1] === 'FunctionAssociations' ? 'caminho' : ''
-        continue
-      }
-      if (
-        associando === 'caminho' &&
-        (m = linha.match(/^ {14}- (\w+):\s*(.+)$/))
-      ) {
-        fecharFuncao()
-        funcao = campoDeFuncao({ evento: '', arn: '' }, m[1] ?? '', m[2] ?? '')
-        continue
-      }
-      if (
-        associando === 'caminho' &&
-        funcao &&
-        (m = linha.match(/^ {16}(\w+):\s*(.+)$/))
-      ) {
-        funcao = campoDeFuncao(funcao, m[1] ?? '', m[2] ?? '')
-      }
-    }
-  }
-  fecharFuncao()
+  const comportamentos =
+    config.CacheBehaviors === undefined
+      ? []
+      : lista(config.CacheBehaviors, 'CacheBehaviors').map((bruto, i) => {
+          const caminho = `CacheBehaviors.${i}`
+          const comportamento = mapa(bruto, caminho)
+          return {
+            caminho: escalar(
+              comportamento.PathPattern,
+              `${caminho}.PathPattern`,
+            ),
+            funcoes: lerAssociacoes(comportamento, caminho),
+          }
+        })
   return { aliases, priceClass, certificado, funcoesPadrao, comportamentos }
 }
 
 /**
- * Lê um `AWS::CloudFront::Function`. `FunctionCode: |` precisa ser a última
- * propriedade: tudo depois dela, recuado em 8, é o código.
+ * Lê um `AWS::CloudFront::Function`: tipo, `AutoPublish`, runtime e o código
+ * do bloco `FunctionCode`.
  * @param {string} texto
  * @param {string} nome nome lógico do recurso
  */
 export function lerFuncao(texto, nome) {
-  let tipo = ''
-  let autoPublish = ''
-  let runtime = ''
-  /** @type {string[] | undefined} */
-  let codigo
-  for (const linha of recortarRecurso(texto, nome)) {
-    if (codigo) {
-      if (linha.trim() === '') {
-        codigo.push('')
-        continue
-      }
-      if (!linha.startsWith('        ')) {
-        throw new Error(
-          `${nome}: FunctionCode precisa ser a última propriedade; linha fora do bloco: ${linha.trim()}`,
-        )
-      }
-      codigo.push(linha.slice(8))
-      continue
-    }
-    let m
-    if ((m = linha.match(/^ {4}Type:\s*(\S+)/))) tipo = m[1] ?? ''
-    else if ((m = linha.match(/^ {6}AutoPublish:\s*(\S+)/))) {
-      autoPublish = m[1] ?? ''
-    } else if ((m = linha.match(/^ {8}Runtime:\s*(\S+)/))) runtime = m[1] ?? ''
-    else if (/^ {6}FunctionCode:\s*\|\s*$/.test(linha)) codigo = []
+  const lido = recurso(lerTemplate(texto), nome)
+  if (lido.Type === undefined) throw new Error(`${nome} sem Type`)
+  const propriedades =
+    lido.Properties === undefined
+      ? {}
+      : mapa(lido.Properties, `${nome}.Properties`)
+  if (propriedades.AutoPublish === undefined) {
+    throw new Error(`${nome} sem AutoPublish`)
   }
-  if (!tipo) throw new Error(`${nome} sem Type`)
-  if (!autoPublish) throw new Error(`${nome} sem AutoPublish`)
-  if (!runtime) throw new Error(`${nome} sem Runtime`)
-  if (!codigo || codigo.join('').trim() === '') {
-    throw new Error(`${nome} sem FunctionCode`)
-  }
+  const config =
+    propriedades.FunctionConfig === undefined
+      ? {}
+      : mapa(propriedades.FunctionConfig, `${nome}.FunctionConfig`)
+  if (config.Runtime === undefined) throw new Error(`${nome} sem Runtime`)
+  const codigo =
+    propriedades.FunctionCode === undefined
+      ? ''
+      : escalar(propriedades.FunctionCode, `${nome}.FunctionCode`)
+  if (codigo.trim() === '') throw new Error(`${nome} sem FunctionCode`)
   return {
-    tipo,
-    autoPublish: autoPublish === 'true',
-    runtime,
-    codigo: codigo.join('\n'),
+    tipo: escalar(lido.Type, `${nome}.Type`),
+    autoPublish:
+      escalar(propriedades.AutoPublish, `${nome}.AutoPublish`) === 'true',
+    runtime: escalar(config.Runtime, `${nome}.Runtime`),
+    codigo,
   }
 }
 
@@ -251,49 +186,42 @@ export function executarFuncao(codigo, evento) {
  * @returns {string[]}
  */
 export function nomesDoCertificado(textoDns) {
-  const parametros = lerParametros(textoDns)
-  /** @type {string[]} */
-  const nomes = []
-  let emSans = false
-  for (const linha of recortarRecurso(textoDns, 'Certificado')) {
-    if (/^\s*(#|$)/.test(linha)) continue
-    let m
-    if ((m = linha.match(/^ {6}DomainName:\s*(.+)$/))) {
-      nomes.unshift(resolver(m[1] ?? '', parametros))
-      emSans = false
-      continue
-    }
-    if (/^ {6}SubjectAlternativeNames:\s*$/.test(linha)) {
-      emSans = true
-      continue
-    }
-    if (/^ {6}\S/.test(linha)) {
-      emSans = false
-      continue
-    }
-    if (emSans && (m = linha.match(/^ {8}- (.+)$/))) {
-      nomes.push(resolver(m[1] ?? '', parametros))
-    }
+  const template = lerTemplate(textoDns)
+  const { defaults } = template
+  const propriedades = mapa(
+    recurso(template, 'Certificado').Properties,
+    'Certificado.Properties',
+  )
+  if (propriedades.DomainName === undefined) {
+    throw new Error('Certificado sem DomainName')
   }
-  if (nomes.length === 0) throw new Error('Certificado sem DomainName')
-  return nomes
+  const sans =
+    propriedades.SubjectAlternativeNames === undefined
+      ? []
+      : lista(propriedades.SubjectAlternativeNames, 'SubjectAlternativeNames')
+  return [
+    resolver(propriedades.DomainName, defaults, 'Certificado.DomainName'),
+    ...sans.map((nome, i) =>
+      resolver(nome, defaults, `SubjectAlternativeNames.${i}`),
+    ),
+  ]
 }
 
 /**
- * `AllowedPattern` de um parâmetro, sem as aspas do YAML.
+ * `AllowedPattern` de um parâmetro, já sem as aspas do YAML.
  * @param {string} texto
  * @param {string} nome
  */
 export function lerPadraoDoParametro(texto, nome) {
-  const de = texto.indexOf(`\n  ${nome}:`)
-  const fim = texto.indexOf('\nResources:')
-  if (de === -1 || de > fim) throw new Error(`template sem o parâmetro ${nome}`)
-  for (const linha of texto.slice(de).split('\n').slice(2)) {
-    if (/^ {0,2}\S/.test(linha)) break
-    const m = linha.match(/^ {4}AllowedPattern:\s*(.+)$/)
-    if (m) return semAspas(m[1] ?? '')
+  const { parametros } = lerTemplate(texto)
+  if (!Object.hasOwn(parametros, nome)) {
+    throw new Error(`template sem o parâmetro ${nome}`)
   }
-  throw new Error(`parâmetro ${nome} sem AllowedPattern`)
+  const padrao = mapa(parametros[nome], `Parameters.${nome}`).AllowedPattern
+  if (padrao === undefined) {
+    throw new Error(`parâmetro ${nome} sem AllowedPattern`)
+  }
+  return escalar(padrao, `${nome}.AllowedPattern`)
 }
 
 /**

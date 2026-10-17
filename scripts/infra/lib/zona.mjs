@@ -1,12 +1,18 @@
 // O que a zona de lotusotec.cl precisa conter, e como ler isso de volta de
-// `infra/lotus-dns.yaml` sem parser YAML.
-//
-// Medido em 2026-09-20: nem `yaml` nem `js-yaml` resolvem na árvore, e
-// instalar um só para esta catraca é dependência sem necessidade do work item
-// (Lei 7). O template é escrito por nós, num formato estável, então a leitura
-// aqui é textual e assumida frágil: ela quebra ruidosamente se o formato
-// mudar, nunca em silêncio. A validação estrutural do YAML fica com
+// `infra/lotus-dns.yaml`. A leitura do template é a de `template.mjs`, sobre o
+// leitor de YAML de `yaml.mjs`: os RecordSets são conferidos como conjunto
+// fechado, e campo desconhecido quebra ruidosamente com o nome dele, nunca em
+// silêncio. A validação estrutural do YAML fica com
 // `aws cloudformation validate-template`, no runbook.
+import {
+  conferirChaves,
+  escalar,
+  lerTemplate,
+  lista,
+  recurso,
+  resolver,
+} from './template.mjs'
+import { mapa } from './yaml.mjs'
 
 /**
  * @typedef {{ nome: string, tipo: string, valores: string[], alias?: boolean }} RegistroEsperado
@@ -225,180 +231,76 @@ export const NS_DA_STACKDNS = Object.freeze([
   'ns4.stackdns.com.',
 ])
 
-const ASPAS_EXTERNAS = /^(['"])([\s\S]*)\1$/
-
-/** @param {string} bruto */
-function semAspas(bruto) {
-  const cru = bruto.trim()
-  return cru.match(ASPAS_EXTERNAS)?.[2] ?? cru
-}
-
 /**
- * @param {Map<string, string>} parametros
- * @param {string} nome
- */
-function exigirParametro(parametros, nome) {
-  const valor = parametros.get(nome)
-  if (valor === undefined) {
-    throw new Error(
-      `template usa o parâmetro ${nome}, que não tem Default declarado`,
-    )
-  }
-  return valor
-}
-
-/**
- * Recorta o trecho entre duas chaves de topo do template.
- * @param {string} texto
- * @param {string} inicio
- * @param {string} fim
- */
-function recortar(texto, inicio, fim) {
-  const de = texto.indexOf(`\n${inicio}`)
-  const ate = texto.indexOf(`\n${fim}`)
-  if (de === -1) throw new Error(`template sem a secção ${inicio}`)
-  if (ate === -1 || ate < de)
-    throw new Error(`template sem ${fim} depois de ${inicio}`)
-  return texto.slice(de, ate)
-}
-
-/**
- * Lê o `Default` de cada parâmetro declarado.
- * @param {string} texto
- * @returns {Map<string, string>}
- */
-export function lerParametros(texto) {
-  /** @type {Map<string, string>} */
-  const parametros = new Map()
-  let atual = ''
-  for (const linha of recortar(texto, 'Parameters:', 'Resources:').split(
-    '\n',
-  )) {
-    const nome = linha.match(/^ {2}(\w+):\s*$/)
-    if (nome) {
-      atual = nome[1] ?? ''
-      continue
-    }
-    const padrao = linha.match(/^ {4}Default:\s*(.+)$/)
-    if (padrao && atual) parametros.set(atual, semAspas(padrao[1] ?? ''))
-  }
-  return parametros
-}
-
-/**
- * Resolve `!Ref X` e `!Sub '...${X}...'` contra os defaults dos parâmetros.
- * Valor sem tag volta apenas sem as aspas do YAML.
- * @param {string} bruto
- * @param {Map<string, string>} parametros
- */
-export function resolver(bruto, parametros) {
-  const cru = bruto.trim()
-  const referencia = cru.match(/^!Ref\s+(\w+)$/)
-  if (referencia) return exigirParametro(parametros, referencia[1] ?? '')
-  const substituicao = cru.match(/^!Sub\s+([\s\S]+)$/)
-  const texto = semAspas(substituicao?.[1] ?? cru)
-  return texto.replace(/\$\{(\w+)\}/g, (_todo, nome) =>
-    exigirParametro(parametros, String(nome)),
-  )
-}
-
-/**
- * Lê os `RecordSet` do template, com `!Ref` e `!Sub` já resolvidos.
+ * Lê os `RecordSet` do template, com `!Ref` e `!Sub` já resolvidos. Cada item
+ * é conjunto fechado: campo fora dele é erro com o nome do campo, nunca
+ * registro lido pela metade. `AliasTarget` é o alias para o CloudFront
+ * (spec §4.4): o `DNSName` vira o valor, e não há TTL — a AWS fixa em 60 s.
  * @param {string} texto
  * @returns {RegistroLido[]}
  */
 export function lerRegistros(texto) {
-  const parametros = lerParametros(texto)
-  const de = texto.indexOf('RecordSets:')
-  if (de === -1) throw new Error('template sem RecordSets:')
-  /** @type {RegistroLido[]} */
-  const registros = []
-  /** @type {RegistroLido | undefined} */
-  let atual
-  for (const linha of texto.slice(de).split('\n').slice(1)) {
-    // A lista acabou: ou uma chave de topo na coluna zero (`Outputs:`), ou o
-    // proximo recurso dentro de `Resources:`, que entra com dois espacos. Os
-    // itens de RecordSets vivem a partir da coluna oito, entao qualquer
-    // conteudo em indentacao menor ja esta fora da lista.
-    if (/^ {0,6}\S/.test(linha)) break
-    const abertura = linha.match(/^\s*- Name:\s*(.+)$/)
-    if (abertura) {
-      atual = {
-        nome: resolver(abertura[1] ?? '', parametros),
-        tipo: '',
-        ttl: 0,
-        valores: [],
-        alias: false,
-      }
-      registros.push(atual)
-      continue
+  const template = lerTemplate(texto)
+  const { defaults } = template
+  const propriedades = mapa(
+    recurso(template, 'Registros').Properties,
+    'Registros.Properties',
+  )
+  return lista(propriedades.RecordSets, 'RecordSets').map((bruto, i) => {
+    const caminho = `RecordSets.${i}`
+    const item = mapa(bruto, caminho)
+    const nome = resolver(item.Name, defaults, `${caminho}.Name`)
+    conferirChaves(
+      item,
+      ['Name', 'Type', 'TTL', 'ResourceRecords', 'AliasTarget'],
+      `RecordSet ${nome}`,
+    )
+    const tipo =
+      item.Type === undefined
+        ? ''
+        : resolver(item.Type, defaults, `${caminho}.Type`)
+    const ttl =
+      item.TTL === undefined
+        ? 0
+        : Number(resolver(item.TTL, defaults, `${caminho}.TTL`))
+    if (item.AliasTarget !== undefined) {
+      const alvo = mapa(item.AliasTarget, `${caminho}.AliasTarget`)
+      conferirChaves(
+        alvo,
+        ['DNSName', 'HostedZoneId', 'EvaluateTargetHealth'],
+        `AliasTarget de ${nome}`,
+      )
+      const valor = resolver(alvo.DNSName, defaults, `${caminho}.DNSName`)
+      return { nome, tipo, ttl, valores: [valor], alias: true }
     }
-    if (!atual) continue
-    if (/^\s*(#|$)/.test(linha)) continue
-    const valor = linha.match(/^\s*- (.+)$/)
-    if (valor) {
-      atual.valores.push(resolver(valor[1] ?? '', parametros))
-      continue
-    }
-    const campo = linha.match(/^\s*(\w+):\s*(.*)$/)
-    if (!campo) {
-      throw new Error(`linha não reconhecida em RecordSets: ${linha.trim()}`)
-    }
-    const chave = campo[1] ?? ''
-    const bruto = campo[2] ?? ''
-    // Conjunto fechado: campo fora dele é erro com o nome do campo, nunca
-    // registro lido pela metade. `AliasTarget` é o alias para o CloudFront
-    // (spec §4.4): o DNSName vira o valor, e não há TTL — a AWS fixa em 60 s.
-    switch (chave) {
-      case 'Type':
-        atual.tipo = resolver(bruto, parametros)
-        break
-      case 'TTL':
-        atual.ttl = Number(resolver(bruto, parametros))
-        break
-      case 'ResourceRecords':
-        break
-      case 'AliasTarget':
-        atual.alias = true
-        break
-      case 'DNSName':
-        atual.valores.push(resolver(bruto, parametros))
-        break
-      case 'HostedZoneId':
-      case 'EvaluateTargetHealth':
-        break
-      default:
-        throw new Error(
-          `RecordSet ${atual.nome} com campo desconhecido: ${chave}`,
-        )
-    }
-  }
-  return registros
+    const valores =
+      item.ResourceRecords === undefined
+        ? []
+        : lista(item.ResourceRecords, `${caminho}.ResourceRecords`).map(
+            (valor, j) =>
+              resolver(valor, defaults, `${caminho}.ResourceRecords.${j}`),
+          )
+    return { nome, tipo, ttl, valores, alias: false }
+  })
 }
 
 /**
- * As duas políticas de um recurso de `Resources:`. Para `Zona`, apagar e
- * recriar dá nameservers novos, e são eles que o registrador aponta. Para
- * `Registros`, um delete-stack sem Retain esvazia a zona viva (D-52).
+ * As duas políticas de um recurso de `Resources:`, `''` quando ausentes. Para
+ * `Zona`, apagar e recriar dá nameservers novos, e são eles que o registrador
+ * aponta. Para `Registros`, um delete-stack sem Retain esvazia a zona viva
+ * (D-52).
  * @param {string} texto
- * @param {string} recurso nome lógico, como está no template
+ * @param {string} nome nome lógico, como está no template
  */
-export function lerPoliticasDoRecurso(texto, recurso) {
-  const de = texto.indexOf(`\n  ${recurso}:`)
-  if (de === -1) throw new Error(`template sem o recurso ${recurso}`)
-  const politicas = { deletionPolicy: '', updateReplacePolicy: '' }
-  // `slice(2)`: o corte comeca no `\n` que antecede `  <recurso>:`, entao a
-  // primeira fatia e vazia e a segunda e o proprio cabecalho do recurso --
-  // que o `break` abaixo tomaria pelo recurso seguinte.
-  for (const linha of texto.slice(de).split('\n').slice(2)) {
-    // Próximo recurso de topo dentro de Resources:.
-    if (/^ {2}\w/.test(linha)) break
-    const apagar = linha.match(/^ {4}DeletionPolicy:\s*(\S+)/)
-    if (apagar) politicas.deletionPolicy = apagar[1] ?? ''
-    const substituir = linha.match(/^ {4}UpdateReplacePolicy:\s*(\S+)/)
-    if (substituir) politicas.updateReplacePolicy = substituir[1] ?? ''
+export function lerPoliticasDoRecurso(texto, nome) {
+  const lido = recurso(lerTemplate(texto), nome)
+  /** @param {string} campo */
+  const politica = (campo) =>
+    lido[campo] === undefined ? '' : escalar(lido[campo], `${nome}.${campo}`)
+  return {
+    deletionPolicy: politica('DeletionPolicy'),
+    updateReplacePolicy: politica('UpdateReplacePolicy'),
   }
-  return politicas
 }
 
 /**
@@ -415,7 +317,9 @@ export function lerPoliticasDaZona(texto) {
  * @param {string} valor
  */
 export function normalizar(valor) {
-  return semAspas(valor).trim().toLowerCase().replace(/\s+/g, ' ')
+  const cru = valor.trim()
+  const interno = cru.match(/^(['"])([\s\S]*)\1$/)?.[2] ?? cru
+  return interno.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
 /**

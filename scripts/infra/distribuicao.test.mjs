@@ -115,9 +115,9 @@ describe('leitura da Distribuicao', () => {
   })
 
   it('template sem Distribuicao quebra', () => {
-    expect(() => lerDistribuicao('Resources: {}')).toThrow(
-      'template sem o recurso Distribuicao',
-    )
+    expect(() =>
+      lerDistribuicao('Resources:\n  Outro:\n    Type: AWS::S3::Bucket\n'),
+    ).toThrow('template sem o recurso Distribuicao')
   })
 })
 
