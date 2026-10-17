@@ -20,138 +20,92 @@ import { mapa } from './yaml.mjs'
  */
 
 /**
- * Inventário fechado da zona, transcrito do painel do StackCP em 2026-09-20
- * e registrado em `docs/infra/zona-dns-lotusotec.md`. Nomes com ponto final,
- * como o Route 53 os guarda.
+ * Os registros que a zona precisa ter: nome e tipo, sem valor. Nomes com
+ * ponto final, como o Route 53 os guarda.
  *
- * A fonte deixou de ser a sondagem por DNS de 2026-09-09, que não podia
- * enxergar nome que ninguém adivinhasse: com wildcard na zona, todo palpite
- * responde. Foi essa cegueira que escondeu `pop3` — `pop` foi sondado,
- * devolveu o IP do apex e foi lido como wildcard falando; `pop3` nunca foi
- * perguntado.
+ * Nasceu como o inventário fechado da zona, medido no painel do StackCP em
+ * 2026-09-20 e registrado em `docs/infra/zona-dns-lotusotec.md`; a sondagem
+ * por DNS de 2026-09-09 não podia enxergar nome que ninguém adivinhasse,
+ * porque com wildcard na zona todo palpite responde — foi assim que `pop3`
+ * ficou escondido. Desde a delegação de 2026-09-26, a fonte dos registros é
+ * `infra/lotus-dns.yaml`. Esta lista guarda só nome e tipo, para reprovar
+ * leitura vazia e registro apagado sem querer; o valor de cada um é o
+ * `conferir-zona` que confere, contra a zona no ar.
  *
- * `www` está aqui por prova, não por precaução: o painel mostrava que ele
- * não era registro do outro lado e só resolvia por causa do wildcard, que
- * não atravessou a delegação. O `AAAA` dele existe pelo mesmo motivo: o
- * wildcard do painel tinha `A` **e** `AAAA`. `sistema` nasceu do mesmo jeito
- * e saiu em `B5` (spec de `7.2.5`, D2): o nome da intranet é `app`.
- *
- * Apex e `www`, `A` e `AAAA`, são alias da distribuição desde o corte
- * (`B5`, spec de `7.2.5`, §4.3): o valor é o domínio dela, e o IP que cada
- * resolvedor recebe varia.
- *
- * Os seis registros do SES foram acrescentados em `B2`, com os tokens lidos
- * dos outputs do stack `lotus-contato`.
- * @type {readonly RegistroEsperado[]}
+ * `www` está aqui por prova: só resolvia por causa do wildcard, que não
+ * atravessou a delegação. Apex e `www`, `A` e `AAAA`, são alias da
+ * distribuição desde o corte (`B5`, spec de `7.2.5`, §4.3). `sistema` saiu em
+ * `B5` (D2): o nome da intranet é `app`, que nasceu no Route 53, sem AAAA
+ * porque o EIP não tem IPv6. Os seis registros do SES entraram em `B2`.
+ * @type {readonly { nome: string, tipo: string }[]}
  */
-export const INVENTARIO = Object.freeze([
-  {
-    nome: 'lotusotec.cl.',
-    tipo: 'A',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
-  },
-  {
-    nome: 'lotusotec.cl.',
-    tipo: 'AAAA',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
-  },
-  {
-    nome: 'lotusotec.cl.',
-    tipo: 'MX',
-    valores: [
-      '1 ASPMX.L.GOOGLE.COM.',
-      '5 ALT1.ASPMX.L.GOOGLE.COM.',
-      '5 ALT2.ASPMX.L.GOOGLE.COM.',
-      '10 ALT3.ASPMX.L.GOOGLE.COM.',
-      '10 ALT4.ASPMX.L.GOOGLE.COM.',
-    ],
-  },
-  {
-    nome: 'lotusotec.cl.',
-    tipo: 'TXT',
-    valores: [
-      '"v=spf1 include:_spf.google.com include:spf.stackmail.com -all"',
-    ],
-  },
-  {
-    nome: 'www.lotusotec.cl.',
-    tipo: 'A',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
-  },
-  {
-    nome: 'www.lotusotec.cl.',
-    tipo: 'AAAA',
-    valores: ['dhpoztt69jydz.cloudfront.net'],
-    alias: true,
-  },
-  {
-    nome: 'mail.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['ghs.googlehosted.com.'],
-  },
-  {
-    nome: 'smtp.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['smtp.stackmail.com.'],
-  },
-  {
-    nome: 'imap.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['imap.stackmail.com.'],
-  },
-  {
-    nome: 'pop3.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['pop3.stackmail.com.'],
-  },
-  {
-    nome: 'autodiscover.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['autodiscover.stackmail.com.'],
-  },
-  {
-    nome: 'ftp.lotusotec.cl.',
-    tipo: 'CNAME',
-    valores: ['ftp.us.stackcp.com.'],
-  },
+export const REGISTROS_DA_ZONA = Object.freeze([
+  { nome: 'lotusotec.cl.', tipo: 'A' },
+  { nome: 'lotusotec.cl.', tipo: 'AAAA' },
+  { nome: 'lotusotec.cl.', tipo: 'MX' },
+  { nome: 'lotusotec.cl.', tipo: 'TXT' },
+  { nome: 'www.lotusotec.cl.', tipo: 'A' },
+  { nome: 'www.lotusotec.cl.', tipo: 'AAAA' },
+  { nome: 'mail.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'smtp.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'imap.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'pop3.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'autodiscover.lotusotec.cl.', tipo: 'CNAME' },
+  { nome: 'ftp.lotusotec.cl.', tipo: 'CNAME' },
   // ── SES (bloco B2), publicados em 2026-09-26 ────────────────────────────
   {
     nome: 'whkczrifauntvx6dy3r5uwx4g7w2p4p2._domainkey.lotusotec.cl.',
     tipo: 'CNAME',
-    valores: ['whkczrifauntvx6dy3r5uwx4g7w2p4p2.dkim.amazonses.com.'],
   },
   {
     nome: 'veys5msb7mgj6vstojj4pmsnfs5htq5g._domainkey.lotusotec.cl.',
     tipo: 'CNAME',
-    valores: ['veys5msb7mgj6vstojj4pmsnfs5htq5g.dkim.amazonses.com.'],
   },
   {
     nome: 'ilecjqmzurmfbtcete7ip5sdurjx6irz._domainkey.lotusotec.cl.',
     tipo: 'CNAME',
-    valores: ['ilecjqmzurmfbtcete7ip5sdurjx6irz.dkim.amazonses.com.'],
   },
-  {
-    nome: 'ses.lotusotec.cl.',
-    tipo: 'MX',
-    valores: ['10 feedback-smtp.sa-east-1.amazonses.com.'],
-  },
-  {
-    nome: 'ses.lotusotec.cl.',
-    tipo: 'TXT',
-    valores: ['"v=spf1 include:amazonses.com ~all"'],
-  },
-  {
-    nome: '_dmarc.lotusotec.cl.',
-    tipo: 'TXT',
-    valores: ['"v=DMARC1; p=none; rua=mailto:contacto@lotusotec.cl"'],
-  },
+  { nome: 'ses.lotusotec.cl.', tipo: 'MX' },
+  { nome: 'ses.lotusotec.cl.', tipo: 'TXT' },
+  { nome: '_dmarc.lotusotec.cl.', tipo: 'TXT' },
   // ── Intranet do Lotus (item 32 do repo lotus-infra) ─────────────────────
-  // Nasce no Route 53: nunca existiu no painel. Sem AAAA, o EIP não tem IPv6.
-  { nome: 'app.lotusotec.cl.', tipo: 'A', valores: ['18.230.53.197'] },
+  { nome: 'app.lotusotec.cl.', tipo: 'A' },
 ])
+
+/**
+ * O MX do apex, com as cinco prioridades medidas: e-mail no Google Workspace
+ * é invariante da `ADR-SITE-006`, e o único valor que a catraca offline
+ * ainda guarda.
+ * @type {readonly string[]}
+ */
+export const MX_DO_GOOGLE = Object.freeze([
+  '1 ASPMX.L.GOOGLE.COM.',
+  '5 ALT1.ASPMX.L.GOOGLE.COM.',
+  '5 ALT2.ASPMX.L.GOOGLE.COM.',
+  '10 ALT3.ASPMX.L.GOOGLE.COM.',
+  '10 ALT4.ASPMX.L.GOOGLE.COM.',
+])
+
+/**
+ * Confere o conjunto de `tipo nome` lido do template contra
+ * `REGISTROS_DA_ZONA`. Vazio quando bate; senão um problema por divergência.
+ * @param {readonly RegistroLido[]} registros
+ * @returns {string[]}
+ */
+export function conferirRegistrosDaZona(registros) {
+  /** @param {{ nome: string, tipo: string }} registro */
+  const chave = (registro) => `${registro.tipo} ${registro.nome}`
+  const lidos = new Set(registros.map(chave))
+  const esperados = new Set(REGISTROS_DA_ZONA.map(chave))
+  return [
+    ...[...esperados]
+      .filter((par) => !lidos.has(par))
+      .map((par) => `ausente: ${par}`),
+    ...[...lidos]
+      .filter((par) => !esperados.has(par))
+      .map((par) => `fora da lista: ${par}`),
+  ]
+}
 
 /**
  * Os endereços antigos do WordPress na BlueHosting, medidos em 2026-09-09.
@@ -178,8 +132,8 @@ export function eDoCorte(registro) {
 /**
  * A catraca do corte (7.2.5, spec §4.3): exatamente apex e `www`, `A` e
  * `AAAA`, são alias, e alias não declara TTL — a AWS fixa em 60 s. Para onde
- * eles apontam é a conferência por linha do `INVENTARIO`. Vazio quando
- * confere; senão um problema por registro.
+ * eles apontam é o `conferir-zona` que confere, contra a zona no ar. Vazio
+ * quando confere; senão um problema por registro.
  * @param {readonly RegistroLido[]} registros
  * @returns {string[]}
  */
@@ -203,32 +157,13 @@ export function conferirAliasesDoCorte(registros) {
 
 /**
  * Nomes que só respondiam, antes de 2026-09-26, porque o wildcard existia na
- * StackDNS (`D-45`, medido em 2026-09-09). No modo padrão (antes da troca),
- * os dois lados divergirem neles é a prova de que o wildcard não
- * atravessou — a única divergência esperada da conferência. Desde a troca,
- * no modo `--pos-delegacao`, o esperado é não resolver em lado nenhum
- * (`wildcardAusente`).
+ * StackDNS (`D-45`, medido em 2026-09-09). Desde a delegação, o esperado é
+ * não resolverem em lado nenhum (`wildcardAusente`).
  * @type {readonly string[]}
  */
 export const NOMES_INVENTADOS = Object.freeze([
   'zzz-nao-existe-19283.lotusotec.cl.',
   'outro-teste-aleatorio-77.lotusotec.cl.',
-])
-
-/**
- * A delegação que o registro `.cl` apontava antes de 2026-09-26, medida em
- * 2026-09-09. Conjunto exato, e não substring: `every` sobre lista vazia
- * devolve `true`, e uma resposta DoH sem `Answer` passaria por delegação
- * intacta. Desde a troca, `delegacaoEsperada` só usa esta lista no modo
- * padrão (o "antes"); no modo `--pos-delegacao` o esperado são os
- * nameservers do próprio stack, não esta constante.
- * @type {readonly string[]}
- */
-export const NS_DA_STACKDNS = Object.freeze([
-  'ns1.stackdns.com.',
-  'ns2.stackdns.com.',
-  'ns3.stackdns.com.',
-  'ns4.stackdns.com.',
 ])
 
 /**
@@ -342,36 +277,26 @@ export function mesmoConjunto(a, b) {
 }
 
 /**
- * Veredito da linha de nome inventado, que a delegação inverte.
- *
- * Antes da troca os dois lados são zonas diferentes, e a prova de que o
- * wildcard não atravessou é a assimetria: vazio na AWS, IP na StackDNS.
- * Depois da troca os dois lados são a MESMA zona lida por caminhos
- * diferentes, e essa assimetria deixa de ser possível — o único desfecho
- * correto passa a ser vazio dos dois lados. Manter a regra antiga daria
- * vermelho justamente quando tudo estivesse certo.
- *
- * Resolver na AWS reprova nos dois casos: é o wildcard tendo atravessado.
+ * Veredito da linha de nome inventado. Desde a delegação os dois lados são a
+ * MESMA zona lida por caminhos diferentes, e o único desfecho correto é vazio
+ * dos dois lados. Resolver na AWS é o wildcard tendo atravessado; resolver só
+ * no lado servido é cache ou resposta de outra zona.
  * @param {string[]} naAws
- * @param {string[]} naStack
- * @param {boolean} posDelegacao
+ * @param {string[]} servido
  */
-export function wildcardAusente(naAws, naStack, posDelegacao) {
-  if (naAws.length > 0) return false
-  return posDelegacao ? naStack.length === 0 : naStack.length > 0
+export function wildcardAusente(naAws, servido) {
+  return naAws.length === 0 && servido.length === 0
 }
 
 /**
- * Qual delegação o relatório espera encontrar. Depois da troca ela é a do
- * próprio stack, e não uma lista fixa: uma hosted zone recriada ganha
- * nameservers novos, e uma constante aqui viraria mentira silenciosa na
- * primeira vez que isso acontecesse.
+ * Qual delegação o relatório espera encontrar: a do próprio stack, e não uma
+ * lista fixa. Uma hosted zone recriada ganha nameservers novos, e uma
+ * constante aqui viraria mentira silenciosa na primeira vez que isso
+ * acontecesse.
  * @param {string[]} nomesDeServidor
- * @param {boolean} posDelegacao
  * @returns {string[]}
  */
-export function delegacaoEsperada(nomesDeServidor, posDelegacao) {
-  if (!posDelegacao) return [...NS_DA_STACKDNS]
+export function delegacaoEsperada(nomesDeServidor) {
   return nomesDeServidor.map((nome) => `${nome.replace(/\.$/, '')}.`)
 }
 
@@ -422,7 +347,7 @@ function tipoDeAlias(tipo) {
 }
 
 /**
- * O lado AWS de uma linha, a partir da resposta de cada nameserver do Route
+ * O lado AWS de uma linha do template, a partir da resposta de cada nameserver do Route
  * 53. Registro comum: os quatro dão o mesmo conjunto, e discordar lança — é
  * a zona servida de dois jeitos. Alias: cada nameserver resolve a borda por
  * conta própria; no estágio 2 do ensaio de `B4` os quatro deram o mesmo
@@ -455,11 +380,11 @@ const semPontoFinal = (valores) =>
   valores.map((valor) => valor.replace(/\.$/, ''))
 
 /**
- * Veredito de uma linha do `INVENTARIO` no `conferir-zona` (spec §4.5).
- * Registro comum: inventário, AWS e servido com o mesmo conjunto. Alias: os
+ * Veredito de uma linha do template no `conferir-zona` (spec §4.5).
+ * Registro comum: template, AWS e servido com o mesmo conjunto. Alias: os
  * dois lados respondendo como borda — exceto quando o lado AWS veio da API
  * (`pelaApi`), em que ele é o `DNSName` da configuração e se compara com o
- * do inventário, com ou sem o ponto final.
+ * do template, com ou sem o ponto final.
  * @param {RegistroEsperado} registro
  * @param {string[]} naAws
  * @param {string[]} servido

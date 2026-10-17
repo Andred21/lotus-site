@@ -1,16 +1,17 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
-  INVENTARIO,
+  MX_DO_GOOGLE,
+  REGISTROS_DA_ZONA,
   WORDPRESS,
   conferirAliasesDoCorte,
+  conferirRegistrosDaZona,
   convergiu,
   delegacaoEsperada,
   lerPoliticasDaZona,
   lerPoliticasDoRecurso,
   lerRegistros,
   linhaConfere,
-  mesmoConjunto,
   normalizar,
   respondeComoBorda,
   respostaDosNameservers,
@@ -64,12 +65,6 @@ describe('leitura do template', () => {
     expect(() => resolver('!Ref NaoExiste', parametros, 'teste')).toThrow(
       /NaoExiste/,
     )
-  })
-
-  it('acha exatamente um RecordSet por linha do inventário', () => {
-    // Guarda contra o leitor deixar de achar qualquer coisa e o resto do
-    // arquivo ficar verde por vacuidade.
-    expect(lerRegistros(TEMPLATE)).toHaveLength(INVENTARIO.length)
   })
 
   it('para a lista de RecordSets no próximo recurso de topo', () => {
@@ -213,34 +208,46 @@ describe('leitura do template', () => {
   })
 })
 
-describe('infra/lotus-dns.yaml contra o inventário medido', () => {
+describe('infra/lotus-dns.yaml contra as regras da zona', () => {
   const registros = lerRegistros(TEMPLATE)
 
-  for (const esperado of INVENTARIO) {
-    it(`declara ${esperado.tipo} ${esperado.nome}`, () => {
-      const achado = registros.find(
-        (registro) =>
-          registro.nome === esperado.nome && registro.tipo === esperado.tipo,
-      )
-      expect(
-        achado,
-        `${esperado.tipo} ${esperado.nome} não está no template`,
-      ).toBeDefined()
-      expect(mesmoConjunto(achado?.valores ?? [], esperado.valores)).toBe(true)
-      expect(Boolean(achado?.alias)).toBe(Boolean(esperado.alias))
-    })
-  }
+  it('o template declara exatamente os registros da lista', () => {
+    // Guarda contra o leitor deixar de achar qualquer coisa e o resto do
+    // arquivo ficar verde por vacuidade. O valor de cada registro é o
+    // `conferir-zona` que confere, contra a zona no ar.
+    expect(REGISTROS_DA_ZONA).toHaveLength(19)
+    expect(conferirRegistrosDaZona(registros)).toEqual([])
+  })
+
+  it('leitura vazia e registro sumido reprovam', () => {
+    expect(conferirRegistrosDaZona([])).toHaveLength(19)
+    const semFtp = registros.filter((r) => r.nome !== 'ftp.lotusotec.cl.')
+    expect(conferirRegistrosDaZona(semFtp)).toEqual([
+      'ausente: CNAME ftp.lotusotec.cl.',
+    ])
+    const comExtra = [
+      ...registros,
+      {
+        nome: 'x.lotusotec.cl.',
+        tipo: 'A',
+        ttl: 3600,
+        valores: [],
+        alias: false,
+      },
+    ]
+    expect(conferirRegistrosDaZona(comExtra)).toEqual([
+      'fora da lista: A x.lotusotec.cl.',
+    ])
+  })
 
   it('mantém os cinco MX do Google, com as prioridades medidas', () => {
+    // E-mail no Google Workspace é invariante da ADR-SITE-006.
     const mx = registros.find(
       (registro) => registro.tipo === 'MX' && registro.nome === 'lotusotec.cl.',
     )
-    const doInventario = INVENTARIO.find(
-      (registro) => registro.tipo === 'MX' && registro.nome === 'lotusotec.cl.',
-    )
     expect(mx?.valores).toHaveLength(5)
-    expect((mx?.valores ?? []).map(normalizar).sort()).toEqual(
-      (doInventario?.valores ?? []).map(normalizar).sort(),
+    expect(mx?.valores.map(normalizar).sort()).toEqual(
+      MX_DO_GOOGLE.map(normalizar).sort(),
     )
   })
 
@@ -261,7 +268,7 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
   })
 
   it('exatamente apex e www, A e AAAA, são alias (7.2.5, spec §4.3)', () => {
-    // Para onde apontam é o teste por linha do INVENTARIO, acima.
+    // Para onde apontam é o `conferir-zona` que confere, contra a zona no ar.
     expect(conferirAliasesDoCorte(registros)).toEqual([])
   })
 
@@ -363,14 +370,13 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
     )
   })
 
-  it('sistema saiu da zona e do inventário (7.2.5, spec D2)', () => {
+  it('sistema saiu da zona (7.2.5, spec D2)', () => {
     // O nome da intranet é app desde 2026-09-27; sistema só apontava para o
     // WordPress. Ele sai antes do corte, para o rollback mexer só em apex e
     // www, como no ensaio de B4.
     /** @param {{ nome: string }} registro */
     const sistema = (registro) => registro.nome === 'sistema.lotusotec.cl.'
     expect(registros.filter(sistema)).toEqual([])
-    expect(INVENTARIO.filter(sistema)).toEqual([])
   })
 
   it('app tem A para o EIP da intranet e NÃO tem AAAA — o EIP não tem IPv6', () => {
@@ -382,19 +388,15 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
   })
 
   it('usa 3600 em todo registro que não é alias; apex e www são alias desde o corte', () => {
-    // Comparado contra o INVENTARIO, e nao contra o proprio `registros`: com
-    // os dois lados derivados da mesma lista, uma leitura vazia passaria.
-    // Alias não tem TTL: a AWS fixa em 60 s (spec D12 de B4).
-    const comuns = INVENTARIO.filter((registro) => !registro.alias)
-    expect(registros.filter((registro) => !registro.alias)).toHaveLength(
-      comuns.length,
-    )
-    for (const esperado of comuns) {
-      const achado = registros.find(
-        (registro) =>
-          registro.nome === esperado.nome && registro.tipo === esperado.tipo,
+    // A contagem fixa é o que impede uma leitura vazia de passar: 19
+    // registros menos os 4 do corte. Alias não tem TTL: a AWS fixa em 60 s
+    // (spec D12 de B4).
+    const comuns = registros.filter((registro) => registro.alias === false)
+    expect(comuns).toHaveLength(15)
+    for (const registro of comuns) {
+      expect(registro.ttl, `TTL de ${registro.tipo} ${registro.nome}`).toBe(
+        3600,
       )
-      expect(achado?.ttl, `TTL de ${esperado.tipo} ${esperado.nome}`).toBe(3600)
     }
   })
 
@@ -443,40 +445,20 @@ describe('infra/lotus-dns.yaml contra o inventário medido', () => {
   })
 })
 
-describe('vereditos que a delegação inverte', () => {
-  it('antes da troca, nome inventado só pode resolver do lado da StackDNS', () => {
-    expect(wildcardAusente([], ['185.146.167.195'], false)).toBe(true)
-    // Resolveu na AWS: o wildcard atravessou.
-    expect(
-      wildcardAusente(['185.146.167.195'], ['185.146.167.195'], false),
-    ).toBe(false)
-    // Não resolveu em lado nenhum: ou a StackDNS mudou, ou a pergunta não
-    // chegou. Nos dois casos o relatório não pode dar verde.
-    expect(wildcardAusente([], [], false)).toBe(false)
+describe('vereditos depois da delegação', () => {
+  it('nome inventado não pode resolver em lado nenhum', () => {
+    // Os dois lados são a mesma zona, lida por caminhos diferentes.
+    // Resolver na AWS é o wildcard tendo atravessado.
+    expect(wildcardAusente([], [])).toBe(true)
+    expect(wildcardAusente([], ['185.146.167.195'])).toBe(false)
+    expect(wildcardAusente(['185.146.167.195'], [])).toBe(false)
   })
 
-  it('depois da troca, nome inventado não pode resolver em lado nenhum', () => {
-    // Os dois lados passaram a ser a mesma zona; a assimetria de antes
-    // deixaria de ser possível mesmo que tudo estivesse certo.
-    expect(wildcardAusente([], [], true)).toBe(true)
-    expect(wildcardAusente([], ['185.146.167.195'], true)).toBe(false)
-    expect(wildcardAusente(['185.146.167.195'], [], true)).toBe(false)
-  })
-
-  it('antes da troca, a delegação esperada é a da StackDNS', () => {
-    expect(delegacaoEsperada(['ns-31.awsdns-03.com'], false)).toEqual([
-      'ns1.stackdns.com.',
-      'ns2.stackdns.com.',
-      'ns3.stackdns.com.',
-      'ns4.stackdns.com.',
-    ])
-  })
-
-  it('depois da troca, a delegação esperada são os nameservers do stack', () => {
+  it('a delegação esperada são os nameservers do stack', () => {
     // Com ponto final, que é como a resposta DoH chega. Hardcodar os quatro
     // nomes aqui seria mentira a partir da primeira zona recriada.
     expect(
-      delegacaoEsperada(['ns-31.awsdns-03.com', 'ns-904.awsdns-49.net.'], true),
+      delegacaoEsperada(['ns-31.awsdns-03.com', 'ns-904.awsdns-49.net.']),
     ).toEqual(['ns-31.awsdns-03.com.', 'ns-904.awsdns-49.net.'])
   })
 })

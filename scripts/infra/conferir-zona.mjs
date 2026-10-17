@@ -1,32 +1,24 @@
-// Confere a zona nova do Route 53 contra a zona que, antes de 2026-09-26, a
-// StackDNS servia, registro a registro, e grava a evidencia.
-//
-// Perguntar "ao DNS" nao basta no modo padrao (antes da troca): enquanto a
-// delegacao de lotusotec.cl apontava para ns1..ns4.stackdns.com, qualquer
-// consulta normal devolvia o lado antigo -- estivesse a zona nova certa ou
-// errada. Este script pergunta DIRETO aos nameservers da zona nova e compara
-// com o lado servido, lido por DNS-over-HTTPS porque nao ha `dig` nesta
-// maquina.
-//
-// Depois da troca a premissa muda, e e por isso que existe `--pos-delegacao`:
-// os dois lados passam a ser a MESMA zona lida por caminhos diferentes, entao
-// as colunas baterem prova convergencia, nao paridade. A consulta direta
-// continua valendo nos dois modos, porque ela e a unica que ignora cache.
+// Confere os registros de `infra/lotus-dns.yaml` contra a zona no ar, e
+// grava a evidencia. Cada registro do template e perguntado DIRETO aos
+// nameservers da AWS -- a unica consulta que ignora cache -- e ao DoH publico
+// (`dns.google`), porque nao ha `dig` nesta maquina. Desde a delegacao de
+// 2026-09-26 os dois lados sao a MESMA zona lida por caminhos diferentes:
+// as colunas baterem prova convergencia, e a coluna AWS bater com o template
+// prova que o que esta escrito e o que esta no ar.
 //
 // Uso: `pnpm infra:conferir-zona`
 //   --nameservers ns-1.awsdns-01.org,ns-2.awsdns-02.com  pula a leitura do stack
 //   --saida docs/infra/conferencia-zona-2026-09-21.md    muda o destino
-//   --pos-delegacao                                      inverte os vereditos
 //
 // Sai com codigo 1 quando ha divergencia fora das esperadas.
 import { execFileSync } from 'node:child_process'
 import { Resolver, resolve4 } from 'node:dns/promises'
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { format, resolveConfig } from 'prettier'
 import {
-  INVENTARIO,
   NOMES_INVENTADOS,
   delegacaoEsperada,
+  lerRegistros,
   linhaConfere,
   mesmoConjunto,
   respostaDosNameservers,
@@ -40,7 +32,7 @@ const HOJE = new Date().toISOString().slice(0, 10)
 const CODIGO_DOH = { A: 1, AAAA: 28, CNAME: 5, MX: 15, TXT: 16, NS: 2 }
 
 // Linha de alias (7.2.5, spec §4.5): o IP muda de resolvedor para resolvedor,
-// e a coluna AWS e a StackDNS nao batem entre si mesmo com tudo certo.
+// e a coluna AWS e a do DoH nao batem entre si mesmo com tudo certo.
 const NOTA_DO_ALIAS =
   'alias: o IP da borda varia por resolvedor; a linha confere que ele responde e não é o WordPress'
 
@@ -48,7 +40,7 @@ const NOTA_DO_ALIAS =
  * @typedef {{
  *   nome: string,
  *   tipo: string,
- *   inventario: string[],
+ *   template: string[],
  *   aws: string[],
  *   atual: string[],
  *   igual: boolean,
@@ -62,9 +54,6 @@ function argumento(nome) {
   const posicao = process.argv.indexOf(`--${nome}`)
   return posicao === -1 ? undefined : process.argv[posicao + 1]
 }
-
-// Flag sem valor: `argumento()` leria o proximo argv como se fosse o dela.
-const posDelegacao = process.argv.includes('--pos-delegacao')
 
 /** @param {string[]} args */
 function aws(args) {
@@ -118,7 +107,7 @@ const FALHAS_DE_REDE = new Set([
  * NXDOMAIN, "o nome existe mas nao tem esse tipo" e REFUSED/SERVFAIL sao
  * resposta, nao falha: viram lista vazia, e a comparacao reprova sozinha. Um
  * nameserver que recusa a zona precisa aparecer como coluna AWS vazia contra
- * uma coluna StackDNS cheia -- foi assim que o caso "apontei para a zona
+ * uma coluna DoH cheia -- foi assim que o caso "apontei para a zona
  * errada" foi provado. Erro de rede continua subindo, porque ele muda a
  * natureza do relatorio.
  * @param {() => Promise<string[]>} consulta
@@ -269,16 +258,18 @@ async function ladoAws(registro) {
 /** @type {Linha[]} */
 const linhas = []
 
-for (const registro of INVENTARIO) {
+for (const registro of lerRegistros(
+  readFileSync('infra/lotus-dns.yaml', 'utf8'),
+)) {
   const naAws = await ladoAws(registro)
-  const naStack = await perguntarDoh(registro.nome, registro.tipo)
+  const servido = await perguntarDoh(registro.nome, registro.tipo)
   linhas.push({
     nome: registro.nome,
     tipo: registro.tipo,
-    inventario: [...registro.valores],
+    template: [...registro.valores],
     aws: naAws,
-    atual: naStack,
-    igual: linhaConfere(registro, naAws, naStack, porApi !== undefined),
+    atual: servido,
+    igual: linhaConfere(registro, naAws, servido, porApi !== undefined),
     esperado: false,
     nota: registro.alias ? NOTA_DO_ALIAS : '',
   })
@@ -286,28 +277,26 @@ for (const registro of INVENTARIO) {
 
 for (const inventado of NOMES_INVENTADOS) {
   const naAws = await ladoAws({ nome: inventado, tipo: 'A', valores: [] })
-  const naStack = await perguntarDoh(inventado, 'A')
+  const servido = await perguntarDoh(inventado, 'A')
   linhas.push({
     nome: inventado,
     tipo: 'A',
-    inventario: [],
+    template: [],
     aws: naAws,
-    atual: naStack,
+    atual: servido,
     // Nunca `igual`: para nome inventado nao existe lado certo a bater.
     igual: false,
-    esperado: wildcardAusente(naAws, naStack, posDelegacao),
-    nota: posDelegacao
-      ? 'wildcard removido; os dois lados ja leem a zona nova'
-      : 'wildcard removido de proposito',
+    esperado: wildcardAusente(naAws, servido),
+    nota: 'wildcard removido; os dois lados ja leem a zona nova',
   })
 }
 
 const delegacao = await perguntarDoh('lotusotec.cl.', 'NS')
-const esperadaNs = delegacaoEsperada(nomesDeServidor, posDelegacao)
+const esperadaNs = delegacaoEsperada(nomesDeServidor)
 linhas.push({
   nome: 'lotusotec.cl.',
   tipo: 'NS',
-  inventario: esperadaNs,
+  template: esperadaNs,
   aws: [],
   atual: delegacao,
   // A coluna AWS fica vazia porque nada foi perguntado a ela: o que esta
@@ -315,9 +304,7 @@ linhas.push({
   // nunca e `igual`.
   igual: false,
   esperado: mesmoConjunto(delegacao, esperadaNs),
-  nota: posDelegacao
-    ? 'a linha afirma que a delegacao ja e a da AWS; AWS nao consultada'
-    : 'a linha afirma a delegacao, nao a zona nova; AWS nao consultada',
+  nota: 'a linha afirma que a delegacao ja e a da AWS; AWS nao consultada',
 })
 
 const problemas = linhas.filter((linha) => !linha.igual && !linha.esperado)
@@ -332,15 +319,11 @@ const relatorio = [
       ' **configuração** (`aws route53 list-resource-record-sets`), e não da resposta servida.' +
       ' São afirmações diferentes: esta prova que a zona está escrita assim, não que ela' +
       ' responde assim.'
-    : posDelegacao
-      ? '> Lado AWS lido da **resposta servida**, perguntando direto aos quatro nameservers da' +
-        ' zona nova. A delegação já aponta para eles, então a coluna StackDNS deixou de ser um' +
-        ' segundo lado: é a mesma zona, lida pelo caminho comum. As duas colunas baterem prova' +
-        ' **convergência**, não paridade — e uma delas ainda pode carregar cache de antes da' +
-        ' troca.'
-      : '> Lado AWS lido da **resposta servida**, perguntando direto aos quatro nameservers da' +
-        ' zona nova — a delegação ainda aponta para a StackDNS, então nenhuma consulta comum' +
-        ' enxergaria esta zona.',
+    : '> Lado AWS lido da **resposta servida**, perguntando direto aos quatro nameservers da' +
+      ' zona nova. A delegação já aponta para eles, então a coluna do DoH não é um segundo' +
+      ' lado: é a mesma zona, lida pelo caminho comum. As duas colunas baterem prova' +
+      ' **convergência**, não paridade — e uma delas ainda pode carregar cache de antes da' +
+      ' troca.',
   '>',
   '> Lado atual lido por DNS-over-HTTPS contra `dns.google`, mesmo método do inventário de' +
     ' 2026-09-09.',
@@ -349,8 +332,8 @@ const relatorio = [
     .map((servidor) => `\`${servidor.hostname}\` (${servidor.ip})`)
     .join(', ')}`,
   '',
-  '| Nome | Tipo | Inventário | AWS | StackDNS | Confere? |',
-  '| ---- | ---- | ---------- | --- | -------- | -------- |',
+  '| Nome | Tipo | Template | AWS | DoH (`dns.google`) | Confere? |',
+  '| ---- | ---- | -------- | --- | ------------------ | -------- |',
   ...linhas.map((linha) => {
     const veredito = linha.igual
       ? linha.nota
@@ -359,24 +342,18 @@ const relatorio = [
       : linha.esperado
         ? `divergência esperada — ${linha.nota}`
         : '**NÃO**'
-    return `| \`${linha.nome}\` | \`${linha.tipo}\` | ${celula(linha.inventario)} | ${celula(
+    return `| \`${linha.nome}\` | \`${linha.tipo}\` | ${celula(linha.template)} | ${celula(
       linha.aws,
     )} | ${celula(linha.atual)} | ${veredito} |`
   }),
   '',
   problemas.length === 0
     ? 'Nenhuma divergência fora das esperadas.'
-    : posDelegacao
-      ? `**${problemas.length} divergência(s) não esperada(s).** Depois da troca, divergência é` +
-        ' resposta errada para parte do mundo: investigar antes de qualquer outra mudança na zona.'
-      : `**${problemas.length} divergência(s) não esperada(s).** A troca de nameservers não pode` +
-        ' acontecer enquanto elas existirem.',
+    : `**${problemas.length} divergência(s) não esperada(s).** Depois da troca, divergência é` +
+      ' resposta errada para parte do mundo: investigar antes de qualquer outra mudança na zona.',
   '',
-  posDelegacao
-    ? 'Resolução correta não prova entrega de e-mail. A prova do MX é mensagem recebida, e ela fica' +
-      ' em `docs/infra/delegacao-<data>.md`.'
-    : 'Resolução correta não prova entrega de e-mail. A prova do MX é mensagem recebida, e ela só é' +
-      ' possível depois da delegação.',
+  'Resolução correta não prova entrega de e-mail. A prova do MX é mensagem recebida, e ela fica' +
+    ' em `docs/infra/delegacao-<data>.md`.',
   '',
 ].join('\n')
 

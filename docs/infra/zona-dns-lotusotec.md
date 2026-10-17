@@ -209,7 +209,7 @@ propagação parte do mundo pergunta a um lado e parte ao outro. O apontamento p
 entra aqui — é `B5`.
 
 ```bash
-# antes da troca: perguntar direto aos nameservers da AWS, sem depender da delegação
+# conferir o template contra a zona no ar: direto nos nameservers da AWS e no DoH público
 pnpm infra:conferir-zona
 
 # depois da troca: recebimento real, não só resolução
@@ -249,9 +249,9 @@ e §5:
 - em 2026-10-05T14:12:23Z, viraram alias de `dhpoztt69jydz.cloudfront.net` (hosted zone
   `Z2FDTNDATAQYW2`), sem TTL no template.
 
-O inventário de `scripts/infra/lib/zona.mjs` acompanha: apex e `www` com `alias: true`, e o
-endereço antigo do WordPress na constante `WORDPRESS`, que `respondeComoBorda` usa para reconhecer
-resposta velha. Conferência depois do corte em
+A lista de `scripts/infra/lib/zona.mjs` acompanha, com apex e `www` declarados com `AliasTarget`
+no template, e o endereço antigo do WordPress na constante `WORDPRESS`, que `respondeComoBorda`
+usa para reconhecer resposta velha. Conferência depois do corte em
 [`conferencia-zona-2026-10-05.md`](conferencia-zona-2026-10-05.md). A volta ao WordPress acabou em
 `B7` (2026-10-11).
 
