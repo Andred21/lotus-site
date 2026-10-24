@@ -6,7 +6,7 @@ description: Independently review a lotus-site work item executed by Claude agai
 # Site Review Task
 
 Input: work item, base commit, head commit, and the context packet when one exists.
-Require `reviewer: codex` in `docs/superpowers/state.md`.
+Require `reviewer: codex` or `reviewer: claude-isolado` in `docs/superpowers/state.md`.
 
 Review source depends on `work_class`:
 
@@ -51,6 +51,10 @@ personal preference with no written rule behind it is not a finding.
 
 The review edits no file, fixes nothing, runs no command that changes the working tree, and does not
 touch `docs/superpowers/state.md`, `.claude/**` or `.agents/**`.
+
+Writes that land only in git-ignored output (such as `dist/` or `test-results/`) or outside the
+repository (such as `/tmp`) do not count: running `pnpm check`, `pnpm test` or the mirror-tree gate
+to observe acceptance evidence is allowed. Anything that `git status --short` shows does count.
 
 ## Output
 

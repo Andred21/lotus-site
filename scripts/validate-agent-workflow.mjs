@@ -94,6 +94,17 @@ const parseFrontmatter = (text) => {
 const isNull = (value) =>
   value === undefined || value === '' || value === 'null'
 
+// `claude-isolado` é um agente Claude novo, sem nada da sessão; só revisa.
+const AGENTES = ['claude', 'codex', 'claude-isolado']
+
+/**
+ * Tira um par de aspas que envolva o valor inteiro. `parseFrontmatter` não
+ * tira, e `'claude'` passaria por agente diferente de `claude`.
+ * @param {string | undefined} value
+ * @returns {string | undefined}
+ */
+const agente = (value) => value?.match(/^(['"])(.*)\1$/)?.[2] ?? value
+
 const checkState = () => {
   const state = read('docs/superpowers/state.md')
   const front = parseFrontmatter(state)
@@ -157,6 +168,22 @@ const checkState = () => {
     }
   }
 
+  const executor = agente(front.executor)
+  const reviewer = agente(front.reviewer)
+  for (const [papel, nome] of /** @type {const} */ ([
+    ['executor', executor],
+    ['reviewer', reviewer],
+  ])) {
+    if (nome !== undefined && !isNull(nome) && !AGENTES.includes(nome)) {
+      errors.push(`state: ${papel} desconhecido: ${nome}`)
+    }
+  }
+  if (executor === 'claude-isolado') {
+    errors.push(
+      'state: claude-isolado só revisa; executor precisa ser claude ou codex',
+    )
+  }
+
   if (fromExecution) {
     const workClass = front.work_class
     if (
@@ -167,14 +194,16 @@ const checkState = () => {
         `state: ${current} (fase ${effective}) exige work_class bounded ou architectural`,
       )
     }
-    if (isNull(front.executor) || isNull(front.reviewer)) {
+    if (isNull(executor) || isNull(reviewer)) {
       errors.push(
         `state: ${current} (fase ${effective}) exige executor e reviewer preenchidos`,
       )
-    } else if (front.executor === front.reviewer) {
-      // Segunda lente é a regra; agente indisponível é a exceção. Ela passa só
-      // declarada: `reviewer_exception` carrega motivo, data e quem autorizou,
-      // e o débito correspondente fica no backlog.
+    } else if (executor === reviewer) {
+      // Segunda lente é a regra. Codex indisponível leva o reviewer a
+      // `claude-isolado`, sem exceção; a exceção ficou para quem executou
+      // revisar a própria execução. Ela passa só declarada:
+      // `reviewer_exception` carrega motivo, data e quem autorizou, e o débito
+      // correspondente fica no backlog.
       if (isNull(front.reviewer_exception)) {
         errors.push(
           'state: executor e reviewer devem ser diferentes; desvio exige reviewer_exception declarada',
