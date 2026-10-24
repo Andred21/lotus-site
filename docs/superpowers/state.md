@@ -1,16 +1,16 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: idle
+workflow_state: planning
 work_class: null
-active_work_item: null
+active_work_item: harness-debitos
 active_notion_eap: null
-active_title: null
-active_branch: null
+active_title: 'Débitos do harness e segunda lente sem Codex (bloco B10)'
+active_branch: chore/harness-debitos
 bounded_design: null
 authorized_paths: null
 next_owner: joao
-next_action: select_work_item
+next_action: approve_design
 resume_state: null
 context_packet: null
 active_spec: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 24
 last_completed_work_item: revisao-arquitetura-2026-09
-state_basis_commit: af4ad43
-updated_at: 2026-10-17T17:40:55Z
+state_basis_commit: cb9654a
+updated_at: 2026-10-24T16:11:28Z
 ---
 
 # Estado operacional — Lotus Site
