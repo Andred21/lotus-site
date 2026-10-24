@@ -10,7 +10,7 @@ paths:
 - Não adicionar router enquanto a navegação continuar sendo uma única página por âncoras.
 - Não adicionar estado global quando estado local/derivado for suficiente.
 - Assets importados por componente ficam em `src/assets/`; arquivos que precisam de URL estável ficam em `public/`.
-- `public/icons.svg` é um sprite; ícone novo entra como `<symbol id>` dentro dele, não como arquivo separado.
+- Ícone vem de `lucide-react`, importado pelo componente que o usa; não criar sprite nem arquivo SVG de ícone sem consumidor.
 
 ## Estrutura alvo
 
