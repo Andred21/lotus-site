@@ -45,6 +45,9 @@ a conferência humana de paridade feita.
 `infra/`, a zona DNS declarada só no template, o honeypot fora da interface do Contact intake e um
 teste de contrato entre o adapter e a função do contato, sem mudar um pixel. Os candidatos antigos
 que continuam válidos foram para `B11`, e `D-75` subiu de prioridade.
+`B10 · harness-debitos` fechou em 2026-10-24: com o Codex fora (`D-84`), a segunda lente passa a ser
+`claude-isolado`, sem `reviewer_exception`, e a passada retroativa fechou os sete débitos de segunda
+lente ausente.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -262,10 +265,15 @@ válidos foram para `B11`.
 
 ## B10 · `harness-debitos`
 
-- **Escopo:** `D-15` (rule de ícones órfã), `D-18` (Prettier reescreve plano e spec aprovados),
-  `D-19` (transição de estado viajando junto de commit de código), `D-27` e `D-32` (segunda lente
-  ausente). `D-16` e `D-31` entram se `scripts/inventario/` estiver nos `paths_autorizados`.
-- **Não bloqueia o go-live.**
+- **Entregue (spec `2026-10-24-harness-debitos-design.md`, 2026-10-24):** `claude-isolado` como
+  segunda lente quando o Codex não responde: o validador aceita só `claude`, `codex` e
+  `claude-isolado`, este só como reviewer, e `/planejar-site` e `/revisar-site` testam o Codex e
+  caem para `claude-isolado` sozinhos. A passada retroativa de `claude-isolado` sobre os 39
+  arquivos tocados pelos blocos sem segunda lente fechou `D-27`, `D-32`, `D-53`, `D-65`, `D-70`,
+  `D-76` e `D-77` e abriu `D-81` (`docs/superpowers/historico/revisao-retroativa-2026-10.md`).
+  `D-15`, `D-18` e `D-19` fechados. A review do próprio bloco foi de `claude-isolado`, sem
+  `reviewer_exception`. Resíduos em `D-82`, `D-83` e `D-84`.
+- **Fora:** `D-16` e `D-31`, pelo congelamento do ferramental da referência (spec de `B10`, D8).
 
 ## B11 · `frontend-testes`
 
@@ -379,12 +387,6 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   introduzir estado/interatividade sem necessidade". Terceira instância do mesmo problema de `D-01`,
   agora dentro do Sprint 2.
   **Gatilho:** junto de `D-01`, antes de planejar o Sprint 3.
-- **D-15 · rule de ícones ficou órfã** — `.claude/rules/architecture.md:13` manda ícone novo entrar
-  como `<symbol id>` em `public/icons.svg`; o sprite era do scaffold Vite, morreu no commit
-  `feat(3.1.1)` junto do `App.tsx` que o consumia, e os ícones deste bloco vêm de `lucide-react`.
-  `public/` hoje só tem os quatro `cropped-Logo-*.png`. `.claude/rules/**` não está em
-  `paths_autorizados` do bloco, então a rule não foi corrigida aqui.
-  **Gatilho:** task própria de manutenção das rules, antes de planejar o Sprint 3.
 - **D-16 · `extract-styles.mjs` ainda mede o nó-eco escondido do Divi** — `extract-styles.mjs:68` usa
   `section.querySelector(selector)`, que pega o primeiro nó do seletor na seção e alcança o eco
   duplicado pelo Divi (`hero.title_subtitle_echo`). O commit `chore(3.1.2)` corrigiu a **cor**
@@ -396,23 +398,9 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   evitou o defeito por construção (par de seletor explícito referência/clone, `medirNo` reprova
   seletor que casa com zero ou mais de um nó) sem corrigir `extract-styles.mjs`. `D-16` continua
   aberto.
-- **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
-  `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
-  markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
-  review de 2026-08-28: o commit `2663763` levou junto o plano do bloco
-  (`docs/superpowers/plans/2026-08-27-4.1.1-4.1.10-formulario-integracoes.md:1463`), fora dos
-  `paths_autorizados`, sem replanejamento nenhum — só reordenação de classe num snippet. Reverter o
-  trecho sozinho deixa `pnpm format:check` vermelho; a correção é excluir plano e spec do Prettier
-  em `.prettierignore`, que é ferramenta do repositório e não estava autorizada neste bloco.
-  **Decisão de João em 2026-08-28:** a mutação do plano fica aceita e o bloco `4.1.1-4.1.10` fecha
-  com este débito aberto; a correção não entra na branch do bloco.
-  **Gatilho:** task própria de harness, junto de `D-15`.
-- **D-19 · transição de estado viaja junto de commit de código** — achado `L-7` da review de
-  2026-08-28: `fbb3e7e` (`feat(4.1.1)`) carrega `docs/superpowers/state.md` no mesmo commit do
-  schema, enquanto o fim do bloco usa `chore` próprio para a mesma coisa. Sem regra escrita, cada
-  bloco decide de novo. Não é corrigível aqui: reescrever histórico da branch em review custa mais
-  do que o defeito.
-  **Gatilho:** task própria de harness, junto de `D-15` e `D-18`.
+  **Deixado fora de `B10`** (spec de `B10`, D8, 2026-10-24): o congelamento do ferramental da
+  referência (D3 de `B9`) vale, e corrigir script que não roda não muda nada observável. O gatilho
+  continua o de cima.
 - **D-20 · imagem social é o logo 500×500** — `og:image`/`twitter:image` usam
   `public/LOTUS-G2_TRANSP_Fondo-Blanco.png` com `twitter:card summary` (D4 do bloco `5.1.1-5.3.2`).
   Card grande (1200×630) exige arte nova, fora do clone.
@@ -452,6 +440,8 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   João em 2026-10-17 (spec de `B9`, D4): o antigo gatilho era o bloco `revisao-arquitetura-2026-09`,
   mas trocar `rgbToHex` por `cssColor` em `extract-styles.mjs` não muda nada observável enquanto o
   script não roda, e o ferramental da referência está congelado desde `B9` (D3).
+  **Deixado fora de `B10`** (spec de `B10`, D8, 2026-10-24), pelo mesmo motivo. O gatilho continua
+  o de cima.
 - **D-34 · o campo `ADR ref` das doze EAP das Sprints 6 e 7 aponta `ADR-SITE-003`, que é outro
   assunto** — `docs/adr/ADR-SITE-003.md` é "O intake do contato é um módulo, não quatro". A decisão
   de hospedagem é a `ADR-SITE-004`. A Descrição e o Critério de `7.1.1` também estão stale: falam de
@@ -855,8 +845,61 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   exposição: o template não tem o recurso. Caminho provável: reprovar todo recurso `AWS::IAM::*`
   do template além do próprio `PapelDeAlerta`.
   **Gatilho:** o próximo bloco que tocar `infra/lotus-observabilidade.yaml` ou `scripts/infra/`.
+- **D-82 · `site-review-task` ainda condiciona a evidência visual a Playwright existir** —
+  `.agents/skills/site-review-task/SKILL.md:33` diz "required only when Playwright exists in the
+  project". Playwright existe desde o bloco `1.2.4-1.3.9`, e `.claude/rules/testing.md` exige prova
+  E2E por `pnpm e2e` em work item visual. Visto e deixado pela spec de `B10` (§4.4).
+  **Gatilho:** a próxima manutenção do harness.
+- **D-83 · `/fechar-site` lista gates de antes de `pnpm check`** —
+  `.claude/commands/fechar-site.md:24-27` manda rodar `agent:check`, `lint`, `tsc -b` e `build`, e
+  a linha 32 trata Vitest e Playwright como futuros. O gate atual é `pnpm check` (`CLAUDE.md` §6),
+  que inclui também `format:check` e `test`, mais a árvore espelhada quando o validador muda. O
+  fechamento de `B10` rodou `pnpm check`. Visto e deixado pela spec de `B10` (§4.4).
+  **Gatilho:** a próxima manutenção do harness.
+- **D-84 · o Codex não roda com a config do João** — `codex exec` com `~/.codex/config.toml` sai `1`
+  com `The 'gpt-5.5' model is not supported when using Codex with a ChatGPT account.`
+  (`model_not_found`), reconfirmado no fechamento de `B10` em 2026-10-24; `gpt-5.4` também é
+  recusado (spec de `B10`, §4.1). Não é cota nem o erro de sandbox de `D-32`. Enquanto isso, o
+  teste do Codex de `/planejar-site` e `/revisar-site` leva o reviewer a `claude-isolado` sozinho.
+  A config é do João, fora do repositório.
+  **Gatilho:** nenhum bloco; depende de João ajustar a config. Quando o teste do Codex der
+  `disponível`, `/revisar-site` volta a gravar `reviewer: codex` e este débito fecha.
 
 ## Fechados
+
+- **D-15 · rule de ícones ficou órfã** — `.claude/rules/architecture.md:13` manda ícone novo entrar
+  como `<symbol id>` em `public/icons.svg`; o sprite era do scaffold Vite, morreu no commit
+  `feat(3.1.1)` junto do `App.tsx` que o consumia, e os ícones deste bloco vêm de `lucide-react`.
+  `public/` hoje só tem os quatro `cropped-Logo-*.png`. `.claude/rules/**` não está em
+  `paths_autorizados` do bloco, então a rule não foi corrigida aqui.
+  **Gatilho:** task própria de manutenção das rules, antes de planejar o Sprint 3.
+  **Fechado em 2026-10-24** por `B10` (`0934c33`): a rule diz que ícone vem de `lucide-react`, e a
+  linha `public/icons.svg` saiu também do `.prettierignore`.
+- **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
+  `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
+  markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
+  review de 2026-08-28: o commit `2663763` levou junto o plano do bloco
+  (`docs/superpowers/plans/2026-08-27-4.1.1-4.1.10-formulario-integracoes.md:1463`), fora dos
+  `paths_autorizados`, sem replanejamento nenhum — só reordenação de classe num snippet. Reverter o
+  trecho sozinho deixa `pnpm format:check` vermelho; a correção é excluir plano e spec do Prettier
+  em `.prettierignore`, que é ferramenta do repositório e não estava autorizada neste bloco.
+  **Decisão de João em 2026-08-28:** a mutação do plano fica aceita e o bloco `4.1.1-4.1.10` fecha
+  com este débito aberto; a correção não entra na branch do bloco.
+  **Gatilho:** task própria de harness, junto de `D-15`.
+  **Fechado em 2026-10-24** por `B10` (`20ab319`): `docs/superpowers/specs/`, `plans/`,
+  `bounded-designs/` e `context-packets/` estão no `.prettierignore`; `state.md`, `backlog.md` e
+  `historico/` continuam formatados.
+- **D-19 · transição de estado viaja junto de commit de código** — achado `L-7` da review de
+  2026-08-28: `fbb3e7e` (`feat(4.1.1)`) carrega `docs/superpowers/state.md` no mesmo commit do
+  schema, enquanto o fim do bloco usa `chore` próprio para a mesma coisa. Sem regra escrita, cada
+  bloco decide de novo. Não é corrigível aqui: reescrever histórico da branch em review custa mais
+  do que o defeito.
+  **Gatilho:** task própria de harness, junto de `D-15` e `D-18`.
+  **Correção (spec de `B10`, §4.3):** havia regra escrita para metade do caso.
+  `.claude/commands/executar-site.md:42` manda, desde `999aa0c` (2026-08-24), `state.md` no commit
+  da task que ele descreve; a lacuna real era a transição sem task.
+  **Fechado em 2026-10-24** por `B10` (`bc4dbe9`): a regra de commit de transição está em
+  `CLAUDE.md` §4, e `/executar-site` e `/revisar-site` apontam para ela.
 
 - **D-27 · a review do bloco `refactor-contato-intake` não teve segunda lente** — o invariante do
   harness exige `executor` e `reviewer` diferentes, e `scripts/validate-agent-workflow.mjs:160`
