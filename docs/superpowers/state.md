@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_execution
+workflow_state: executing
 work_class: architectural
 active_work_item: harness-debitos
 active_notion_eap: null
@@ -10,7 +10,7 @@ active_branch: chore/harness-debitos
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: execute_active_work_item
+next_action: continue_active_plan
 resume_state: null
 context_packet: null
 active_spec: docs/superpowers/specs/2026-10-24-harness-debitos-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 24
 last_completed_work_item: revisao-arquitetura-2026-09
-state_basis_commit: f19e8a9
-updated_at: 2026-10-24T17:12:27Z
+state_basis_commit: 6b02305
+updated_at: 2026-10-24T17:20:44Z
 ---
 
 # Estado operacional — Lotus Site
