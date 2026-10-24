@@ -1,5 +1,13 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -87,3 +95,133 @@ describe('validate-agent-workflow contra uma árvore de espelho', () => {
     expect(code).toBe(1)
   })
 })
+
+// Os arquivos do harness não atravessam para o espelho: lá não há o que
+// copiar, e o próprio validador já pula a checagem de estado. Os testes de
+// espelho acima continuam rodando nas duas árvores.
+describe.skipIf(!existsSync('CLAUDE.md'))(
+  'validate-agent-workflow: nomes de executor e reviewer',
+  () => {
+    const HARNESS = [
+      'CLAUDE.md',
+      'AGENTS.md',
+      '.claude',
+      '.agents',
+      'docs/superpowers/state.md',
+      'docs/superpowers/backlog.md',
+      'docs/superpowers/historico/progress.md',
+    ]
+
+    /** @type {Record<string, string>} */
+    const BASE = {
+      workflow_state: 'ready_for_execution',
+      work_class: 'architectural',
+      active_work_item: 'teste',
+      active_branch: 'chore/teste',
+      bounded_design: 'null',
+      authorized_paths: 'null',
+      active_spec: 'docs/superpowers/specs/teste.md',
+      active_plan: 'docs/superpowers/plans/teste.md',
+      executor: 'claude',
+      reviewer: 'claude-isolado',
+      reviewer_exception: 'null',
+      resume_state: 'null',
+      blocker: 'null',
+    }
+
+    /**
+     * Cópia do harness real com o frontmatter do `state.md` reescrito.
+     * @param {Record<string, string>} campos
+     * @returns {string}
+     */
+    const harnessCom = (campos) => {
+      const raiz = arvore()
+      for (const rel of HARNESS) {
+        cpSync(rel, join(raiz, rel), { recursive: true })
+      }
+      const estado = join(raiz, 'docs/superpowers/state.md')
+      let texto = readFileSync(estado, 'utf8')
+      for (const [chave, valor] of Object.entries({ ...BASE, ...campos })) {
+        texto = texto.replace(
+          new RegExp(`^${chave}: .*$`, 'm'),
+          `${chave}: ${valor}`,
+        )
+      }
+      writeFileSync(estado, texto)
+      return raiz
+    }
+
+    it('aceita claude executando e claude-isolado revisando', () => {
+      const { code, texto } = validar(harnessCom({}))
+
+      expect(texto).toContain('Agent workflow contract OK')
+      expect(code).toBe(0)
+    })
+
+    it('reprova claude-isolado como executor', () => {
+      const { code, texto } = validar(
+        harnessCom({ executor: 'claude-isolado', reviewer: 'codex' }),
+      )
+
+      expect(texto).toContain('claude-isolado só revisa')
+      expect(code).toBe(1)
+    })
+
+    it('reprova nome fora do conjunto', () => {
+      const { code, texto } = validar(harnessCom({ reviewer: 'gemini' }))
+
+      expect(texto).toContain('reviewer desconhecido: gemini')
+      expect(code).toBe(1)
+    })
+
+    it('aceita o mesmo agente nos dois papéis com reviewer_exception', () => {
+      const { code } = validar(
+        harnessCom({
+          reviewer: 'claude',
+          reviewer_exception: "'teste 2026-10-24'",
+        }),
+      )
+
+      expect(code).toBe(0)
+    })
+
+    it('reprova reviewer_exception com claude-isolado revisando', () => {
+      const { code, texto } = validar(
+        harnessCom({ reviewer_exception: "'teste 2026-10-24'" }),
+      )
+
+      expect(texto).toContain(
+        'reviewer_exception só vale com executor e reviewer iguais',
+      )
+      expect(code).toBe(1)
+    })
+
+    it("compara sem aspas: 'claude' contra claude reprova", () => {
+      // `parseFrontmatter` não tira aspas: sem normalizar, o nome entre aspas
+      // passaria como agente diferente do executor.
+      const { code, texto } = validar(harnessCom({ reviewer: "'claude'" }))
+
+      expect(texto).toContain('executor e reviewer devem ser diferentes')
+      expect(code).toBe(1)
+    })
+
+    it('aceita reviewer entre aspas', () => {
+      const { code } = validar(harnessCom({ reviewer: "'claude-isolado'" }))
+
+      expect(code).toBe(0)
+    })
+
+    it('não confere nome nulo antes da execução', () => {
+      const { code } = validar(
+        harnessCom({
+          workflow_state: 'planning',
+          work_class: 'null',
+          executor: 'null',
+          reviewer: 'null',
+        }),
+      )
+
+      expect(code).toBe(0)
+    })
+  },
+)

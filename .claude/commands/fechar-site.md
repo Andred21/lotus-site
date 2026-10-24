@@ -62,7 +62,7 @@ Não faça merge, não aprove o próprio PR, não apague a branch.
 
 ## Histórico
 
-Acrescente uma linha a `docs/superpowers/historico/progress.md` com data, work item, executor, reviewer, resultado, paths da spec/plano/packet, branch e URL do PR.
+Acrescente uma linha a `docs/superpowers/historico/progress.md` com data, work item, executor, reviewer, resultado, paths da spec/plano/packet, branch e URL do PR. Reviewer `claude-isolado` por queda do Codex entra como `claude-isolado (Codex indisponível: <motivo curto>)`.
 
 ## Estado final
 

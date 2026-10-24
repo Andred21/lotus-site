@@ -19,10 +19,10 @@ executor: null
 reviewer: null
 reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 24
-last_completed_work_item: revisao-arquitetura-2026-09
-state_basis_commit: af4ad43
-updated_at: 2026-10-17T17:40:55Z
+supervised_cycles_completed: 25
+last_completed_work_item: harness-debitos
+state_basis_commit: 5a8de78
+updated_at: 2026-10-24T19:38:55Z
 ---
 
 # Estado operacional — Lotus Site
@@ -52,10 +52,12 @@ updated_at: 2026-10-17T17:40:55Z
 - `work_class` é `bounded` ou `architectural` a partir de `ready_for_execution`; em `planning` ainda pode ser `null`.
 - `architectural` exige `active_spec` e `active_plan` antes de `ready_for_execution`.
 - `bounded` mantém `active_spec` e `active_plan` nulos e persiste apenas `bounded_design` curto + `authorized_paths`.
-- `executor` e `reviewer` devem ser diferentes a partir de `ready_for_execution`. Agente
-  indisponível é exceção declarada, não silenciosa: `reviewer_exception` carrega motivo, data e
-  quem autorizou, e o desvio vira débito no backlog. Sem ela, agente igual nos dois papéis é erro
-  de `pnpm agent:check`; com executor e reviewer diferentes, o campo precisa estar limpo.
+- `executor` e `reviewer` aceitam só `claude`, `codex` e `claude-isolado`, e `claude-isolado` só
+  como reviewer. A partir de `ready_for_execution` os dois devem ser diferentes. Codex indisponível
+  leva o reviewer a `claude-isolado`, sem exceção. Quem executou revisar a própria execução é
+  exceção declarada, não silenciosa: `reviewer_exception` carrega motivo, data e quem autorizou, e
+  o desvio vira débito no backlog. Sem ela, agente igual nos dois papéis é erro de
+  `pnpm agent:check`; com executor e reviewer diferentes, o campo precisa estar limpo.
 - `context_packet` é obrigatório quando o trabalho depende de fonte externa.
 - Work item, Context Packet, spec e plano devem apontar para o mesmo escopo.
 - Claude é o único escritor deste arquivo pelo contrato do harness.

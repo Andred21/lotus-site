@@ -36,7 +36,7 @@ Superpowers conduz a técnica; os comandos do site apenas impõem gates.
 
 - `/planejar-site <work-item>` — cria a branch do bloco, contexto → brainstorming/spec/plano; não implementa.
 - `/executar-site <work-item>` — executa somente plano aprovado e commita cada task provada.
-- `/revisar-site <work-item>` — revisão independente pelo agente diferente do executor, sobre os commits da branch.
+- `/revisar-site <work-item>` — revisão independente sobre os commits da branch, por agente diferente do executor: Codex, ou `claude-isolado` quando o Codex não responde.
 - `/fechar-site <work-item>` — prova aceite, gates, histórico, publica a branch, abre o PR e volta a `idle`.
 
 Um bloco é uma branch e vira um PR. Um work item pode reunir várias EAP quando João autorizar o
@@ -50,7 +50,13 @@ por EAP. `main` não recebe commit direto.
 /fechar-site    finishing-a-development-branch, push da branch, PR aberto, estado volta a idle
 ```
 
-Delegação ao Codex usa o contrato em `.agents/skills/<nome>/SKILL.md`; Claude repassa esse conteúdo ao Codex na íntegra, sem paráfrase.
+Regra de commit de transição: a transição de `state.md` que acompanha a entrega de uma task entra
+no commit dessa task (a ida para `executing` vai no commit da primeira task). Toda outra transição
+— abrir o planejamento, registrar spec aprovada, abrir a execução, `ready_for_review`, `reviewing`,
+`blocked`, `ready_for_closure`, volta a `idle` — é commit `chore(<item>)` próprio, com `state.md` e
+só os documentos do harness que a própria transição exige (`backlog.md`, `progress.md`).
+
+Delegação ao Codex ou a `claude-isolado` usa o contrato em `.agents/skills/<nome>/SKILL.md`; Claude repassa esse conteúdo na íntegra, sem paráfrase. `claude-isolado` é um agente Claude novo, no mesmo modelo, aberto sem nada da sessão: só o contrato e a entrada que ele define.
 
 Modo inicial: `supervised`. `/desenvolver-site` não existe até decisão arquitetural posterior.
 

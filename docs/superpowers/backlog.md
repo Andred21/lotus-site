@@ -45,6 +45,9 @@ a conferência humana de paridade feita.
 `infra/`, a zona DNS declarada só no template, o honeypot fora da interface do Contact intake e um
 teste de contrato entre o adapter e a função do contato, sem mudar um pixel. Os candidatos antigos
 que continuam válidos foram para `B11`, e `D-75` subiu de prioridade.
+`B10 · harness-debitos` fechou em 2026-10-24: com o Codex fora (`D-84`), a segunda lente passa a ser
+`claude-isolado`, sem `reviewer_exception`, e a passada retroativa fechou os sete débitos de segunda
+lente ausente.
 
 ## Decisões de 2026-09-09 (João)
 
@@ -262,10 +265,15 @@ válidos foram para `B11`.
 
 ## B10 · `harness-debitos`
 
-- **Escopo:** `D-15` (rule de ícones órfã), `D-18` (Prettier reescreve plano e spec aprovados),
-  `D-19` (transição de estado viajando junto de commit de código), `D-27` e `D-32` (segunda lente
-  ausente). `D-16` e `D-31` entram se `scripts/inventario/` estiver nos `paths_autorizados`.
-- **Não bloqueia o go-live.**
+- **Entregue (spec `2026-10-24-harness-debitos-design.md`, 2026-10-24):** `claude-isolado` como
+  segunda lente quando o Codex não responde: o validador aceita só `claude`, `codex` e
+  `claude-isolado`, este só como reviewer, e `/planejar-site` e `/revisar-site` testam o Codex e
+  caem para `claude-isolado` sozinhos. A passada retroativa de `claude-isolado` sobre os 39
+  arquivos tocados pelos blocos sem segunda lente fechou `D-27`, `D-32`, `D-53`, `D-65`, `D-70`,
+  `D-76` e `D-77` e abriu `D-81` (`docs/superpowers/historico/revisao-retroativa-2026-10.md`).
+  `D-15`, `D-18` e `D-19` fechados. A review do próprio bloco foi de `claude-isolado`, sem
+  `reviewer_exception`. Resíduos em `D-82`, `D-83` e `D-84`.
+- **Fora:** `D-16` e `D-31`, pelo congelamento do ferramental da referência (spec de `B10`, D8).
 
 ## B11 · `frontend-testes`
 
@@ -379,12 +387,6 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   introduzir estado/interatividade sem necessidade". Terceira instância do mesmo problema de `D-01`,
   agora dentro do Sprint 2.
   **Gatilho:** junto de `D-01`, antes de planejar o Sprint 3.
-- **D-15 · rule de ícones ficou órfã** — `.claude/rules/architecture.md:13` manda ícone novo entrar
-  como `<symbol id>` em `public/icons.svg`; o sprite era do scaffold Vite, morreu no commit
-  `feat(3.1.1)` junto do `App.tsx` que o consumia, e os ícones deste bloco vêm de `lucide-react`.
-  `public/` hoje só tem os quatro `cropped-Logo-*.png`. `.claude/rules/**` não está em
-  `paths_autorizados` do bloco, então a rule não foi corrigida aqui.
-  **Gatilho:** task própria de manutenção das rules, antes de planejar o Sprint 3.
 - **D-16 · `extract-styles.mjs` ainda mede o nó-eco escondido do Divi** — `extract-styles.mjs:68` usa
   `section.querySelector(selector)`, que pega o primeiro nó do seletor na seção e alcança o eco
   duplicado pelo Divi (`hero.title_subtitle_echo`). O commit `chore(3.1.2)` corrigiu a **cor**
@@ -396,23 +398,9 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   evitou o defeito por construção (par de seletor explícito referência/clone, `medirNo` reprova
   seletor que casa com zero ou mais de um nó) sem corrigir `extract-styles.mjs`. `D-16` continua
   aberto.
-- **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
-  `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
-  markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
-  review de 2026-08-28: o commit `2663763` levou junto o plano do bloco
-  (`docs/superpowers/plans/2026-08-27-4.1.1-4.1.10-formulario-integracoes.md:1463`), fora dos
-  `paths_autorizados`, sem replanejamento nenhum — só reordenação de classe num snippet. Reverter o
-  trecho sozinho deixa `pnpm format:check` vermelho; a correção é excluir plano e spec do Prettier
-  em `.prettierignore`, que é ferramenta do repositório e não estava autorizada neste bloco.
-  **Decisão de João em 2026-08-28:** a mutação do plano fica aceita e o bloco `4.1.1-4.1.10` fecha
-  com este débito aberto; a correção não entra na branch do bloco.
-  **Gatilho:** task própria de harness, junto de `D-15`.
-- **D-19 · transição de estado viaja junto de commit de código** — achado `L-7` da review de
-  2026-08-28: `fbb3e7e` (`feat(4.1.1)`) carrega `docs/superpowers/state.md` no mesmo commit do
-  schema, enquanto o fim do bloco usa `chore` próprio para a mesma coisa. Sem regra escrita, cada
-  bloco decide de novo. Não é corrigível aqui: reescrever histórico da branch em review custa mais
-  do que o defeito.
-  **Gatilho:** task própria de harness, junto de `D-15` e `D-18`.
+  **Deixado fora de `B10`** (spec de `B10`, D8, 2026-10-24): o congelamento do ferramental da
+  referência (D3 de `B9`) vale, e corrigir script que não roda não muda nada observável. O gatilho
+  continua o de cima.
 - **D-20 · imagem social é o logo 500×500** — `og:image`/`twitter:image` usam
   `public/LOTUS-G2_TRANSP_Fondo-Blanco.png` com `twitter:card summary` (D4 do bloco `5.1.1-5.3.2`).
   Card grande (1200×630) exige arte nova, fora do clone.
@@ -439,16 +427,6 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   reportar os nós e as quatro exceções saíram de `e2e/a11y-exceptions.ts` — exceção órfã reprova
   o gate. Nenhuma cor foi trocada por escolha estética: a paridade fechou o defeito de contraste.
   **Gatilho:** redesign, quando a paleta deixar de ser paridade.
-- **D-27 · a review do bloco `refactor-contato-intake` não teve segunda lente** — o invariante do
-  harness exige `executor` e `reviewer` diferentes, e `scripts/validate-agent-workflow.mjs:160`
-  transforma isso em erro de `pnpm agent:check`. A cota da conta Codex estava esgotada, e João
-  autorizou explicitamente em 2026-08-29 que Claude fosse executor e reviewer do bloco, com o
-  desvio declarado. A review existiu — diff de `main..HEAD` lido linha a linha, referências
-  pendentes e afirmações do `CONTEXT.md` e do `ADR-SITE-003` conferidas contra o repositório — mas
-  quem revisou escreveu o código, então ela não vale como lente independente. Consequência
-  mecânica: com `reviewer: claude` no estado, `pnpm agent:check` reprova e `pnpm check` junto.
-  **Gatilho:** cota do Codex de volta para uma segunda passada sobre estes dois commits, ou decisão
-  de João sobre representar o desvio no validador em task própria do harness.
 - **D-31 · a afirmação `rgba(0, 0, 0, 0.03)` do cabeçalho não reproduz** —
   `docs/inventario/04-tipografia.md` (corrigido em 2026-09-02) e o docstring de `cssColor` em
   `scripts/inventario/lib/site.mjs` (corrigido em 2026-10-11 pelo bloco `recaptura-baseline`)
@@ -462,18 +440,8 @@ Dívida declarada. Aberto tem gatilho; fechado fica para quem for reabrir a disc
   João em 2026-10-17 (spec de `B9`, D4): o antigo gatilho era o bloco `revisao-arquitetura-2026-09`,
   mas trocar `rgbToHex` por `cssColor` em `extract-styles.mjs` não muda nada observável enquanto o
   script não roda, e o ferramental da referência está congelado desde `B9` (D3).
-- **D-32 · o incremento final do bloco `paridade-header-cursos` não teve segunda lente** —
-  os cinco primeiros commits (`f19ee29..d619f0d`, onde está todo o código) tiveram review
-  independente real do Codex, que produziu `R-1` (rebaixado a suggestion após verificação no
-  código) e `R-2` (blocking, corrigido em `b9ac09a`). Os dois commits seguintes — `b9ac09a`, uma
-  linha em `docs/inventario/04-tipografia.md`, e `68542eb`, só `docs/superpowers/backlog.md` — não
-  puderam ser revisados: o Codex CLI encerra antes de iniciar, em 0.147.0 e 0.146.0, com
-  `Error: failed to initialize in-process app-server client: Read-only file system (os error 30)`.
-  Quem revisou esses dois commits escreveu ambos, então não valem como lente independente; nenhum
-  toca código de produção. Desvio declarado em `reviewer_exception`, autorizado por João em
-  2026-09-03. Mesma classe de `D-27`.
-  **Gatilho:** Codex CLI funcional para uma segunda passada sobre `d619f0d..68542eb`, ou decisão de
-  João de dispensar a passada por serem commits só de documentação.
+  **Deixado fora de `B10`** (spec de `B10`, D8, 2026-10-24), pelo mesmo motivo. O gatilho continua
+  o de cima.
 - **D-34 · o campo `ADR ref` das doze EAP das Sprints 6 e 7 aponta `ADR-SITE-003`, que é outro
   assunto** — `docs/adr/ADR-SITE-003.md` é "O intake do contato é um módulo, não quatro". A decisão
   de hospedagem é a `ADR-SITE-004`. A Descrição e o Critério de `7.1.1` também estão stale: falam de
@@ -592,13 +560,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   **Gatilho:** cancelamento do pacote (`D-74`); o dado de teste, no próximo bloco que tocar esses
   testes.
 
-- **D-53 · o bloco `7.2.1` (delegação e certificado) não teve segunda lente** — Claude executou
-  `b64bb94..cb06414` e também fez a review formal de `/revisar-site`: a cota da conta Codex estava
-  esgotada em 2026-09-26. As reviews por task durante a execução foram de subagentes Claude, a
-  mesma família do executor. Desvio declarado em `reviewer_exception`, autorizado por João em
-  2026-09-26. Mesma classe de `D-27` e `D-32`.
-  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..cb06414`, ou decisão de
-  João de dispensá-la.
 - **D-54 · sem rate limit dedicado em `/api/contacto`, e o honeypot não cobre o endpoint** —
   decisão de João em 2026-09-26 (D5 da spec de `B2`): CloudFront Function não guarda estado, então
   a única opção era o WAF, a ~US$ 6/mês fixos. O honeypot `botcheck` só existe no navegador, onde
@@ -774,12 +735,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   (`docs/infra/evidencia-observabilidade-2026-10-06.md` §7).
   **Gatilho:** a consulta mostrar acesso de terceiro a /releases/\*, ou o próximo bloco que tocar
   a distribuição.
-- **D-65 · o bloco `7.2.5` (cutover de `lotusotec.cl`) não tem segunda lente** — o plano previa
-  `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-05: Claude executa e
-  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
-  autorizado por João em 2026-10-05. Mesma classe de `D-27`, `D-32` e `D-53`.
-  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
-  de João de dispensá-la.
 
 - **D-66 · `lotusotec.cl` responde mais devagar que o WordPress a partir do Chile** — medido em
   2026-10-05 com as sondas da linha de base (`docs/infra/evidencia-corte-2026-10-05.md` §1 e §6):
@@ -805,12 +760,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   migram juntas, num bloco próprio.
   **Gatilho:** aviso do GitHub de fim do modo forçado, ou o próximo bloco que tocar a versão de uma
   action do `ci.yml`.
-- **D-70 · o bloco `7.2.6` (observabilidade mínima) não tem segunda lente** — o plano previa
-  `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-11: Claude executa e
-  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
-  autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53` e `D-65`.
-  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
-  de João de dispensá-la.
 - **D-71 · `inventario:assets` não passa pela regra de IP do WordPress** —
   `scripts/inventario/fetch-assets.mjs` baixa com `fetch` do Node as URLs de `dom.json`, 13 das 20
   em `lotusotec.cl` (as outras no host de staging). Desde o corte, isso pede essas 13 à CloudFront, que serve o clone. O bloco
@@ -852,19 +801,6 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   desastre, não refatoração, e a fonte do texto de referência é decisão própria (a §2 da evidência
   de `7.2.7` gravou título e `h1`, não o texto); por isso ficou fora de `B9`.
   **Gatilho:** a próxima restauração do backup final.
-- **D-76 · o bloco `7.2.7` (desativar o WordPress, `B7`) não tem segunda lente** — o plano previa
-  `reviewer: codex`, mas João aprovou o plano em 2026-10-11 atribuindo execução e review ao Claude:
-  Claude executa e também faz a review formal de `/revisar-site`. Desvio declarado em
-  `reviewer_exception`, autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`,
-  `D-65`, `D-70` e `D-73`.
-  **Gatilho:** passada do Codex sobre `main..HEAD` do bloco, ou decisão de João de dispensá-la.
-- **D-77 · o bloco `revisao-arquitetura-2026-09` (`B9`) não tem segunda lente** — a conta do Codex
-  está sem cota em 2026-10-17: Claude executa e também faz a review formal de `/revisar-site`
-  (spec D14). Desvio declarado em `reviewer_exception`, autorizado por João em 2026-10-17. Mitigação:
-  execução por subagentes, com revisor de contexto limpo por task. Mesma classe de `D-27`, `D-32`,
-  `D-53`, `D-65`, `D-70`, `D-73` e `D-76`.
-  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
-  de João de dispensá-la.
 - **D-78 · o ciclo de vida do token do captcha está espalhado, e o reset diverge da spec** —
   candidato 07 da revisão de arquitetura de 2026-10-11, deixado fora de `B9` porque toca de 10 a 12
   arquivos e pede spec própria (spec de `B9`, D2 e §4.6). A spec de `B2` (D6,
@@ -897,8 +833,145 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   e o handler hoje não produz esse caso), não confere que `sendEmail` foi chamado uma vez só, e o
   `fetch` falso descarta os cabeçalhos do adapter ao montar o evento.
   **Gatilho:** junto do `D-78`, o próximo bloco que tocar o captcha ou o `ContactForm`.
+- **D-81 · a catraca da role de alerta não vê policy IAM em recurso separado** — achado R-1 da
+  área Observabilidade e CI da passada retroativa de `B10`
+  (`docs/superpowers/historico/revisao-retroativa-2026-10.md`). `conferirPapelDeAlerta`
+  (`scripts/infra/lib/observabilidade.mjs:392-435`) só lê `PapelDeAlerta.Properties.Policies` e
+  proíbe `ManagedPolicyArns` e `PermissionsBoundary`. Um `AWS::IAM::RolePolicy` com
+  `RoleName: !Ref PapelDeAlerta`, `Action: '*'` e `Resource: '*'`, acrescentado ao template,
+  passa: `conferirObservabilidade` devolve `[]` (sonda de 2026-10-24, fora do repositório). A spec
+  de `7.2.6` (D10) diz que a role `lotus-site-alerta`, assumida por OIDC, só tem `sns:Publish` no
+  tópico, e a catraca é o que impede `pnpm test` de aceitar uma regressão disso. Hoje sem
+  exposição: o template não tem o recurso. Caminho provável: reprovar todo recurso `AWS::IAM::*`
+  do template além do próprio `PapelDeAlerta`.
+  **Gatilho:** o próximo bloco que tocar `infra/lotus-observabilidade.yaml` ou `scripts/infra/`.
+- **D-82 · `site-review-task` ainda condiciona a evidência visual a Playwright existir** —
+  `.agents/skills/site-review-task/SKILL.md:33` diz "required only when Playwright exists in the
+  project". Playwright existe desde o bloco `1.2.4-1.3.9`, e `.claude/rules/testing.md` exige prova
+  E2E por `pnpm e2e` em work item visual. Visto e deixado pela spec de `B10` (§4.4).
+  **Gatilho:** a próxima manutenção do harness.
+- **D-83 · `/fechar-site` lista gates de antes de `pnpm check`** —
+  `.claude/commands/fechar-site.md:24-27` manda rodar `agent:check`, `lint`, `tsc -b` e `build`, e
+  a linha 32 trata Vitest e Playwright como futuros. O gate atual é `pnpm check` (`CLAUDE.md` §6),
+  que inclui também `format:check` e `test`, mais a árvore espelhada quando o validador muda. O
+  fechamento de `B10` rodou `pnpm check`. Visto e deixado pela spec de `B10` (§4.4).
+  **Gatilho:** a próxima manutenção do harness.
+- **D-84 · o Codex não roda com a config do João** — `codex exec` com `~/.codex/config.toml` sai `1`
+  com `The 'gpt-5.5' model is not supported when using Codex with a ChatGPT account.`
+  (`model_not_found`), reconfirmado no fechamento de `B10` em 2026-10-24; `gpt-5.4` também é
+  recusado (spec de `B10`, §4.1). Não é cota nem o erro de sandbox de `D-32`. Enquanto isso, o
+  teste do Codex de `/planejar-site` e `/revisar-site` leva o reviewer a `claude-isolado` sozinho.
+  A config é do João, fora do repositório.
+  **Gatilho:** nenhum bloco; depende de João ajustar a config. Quando o teste do Codex der
+  `disponível`, `/revisar-site` volta a gravar `reviewer: codex` e este débito fecha.
 
 ## Fechados
+
+- **D-15 · rule de ícones ficou órfã** — `.claude/rules/architecture.md:13` manda ícone novo entrar
+  como `<symbol id>` em `public/icons.svg`; o sprite era do scaffold Vite, morreu no commit
+  `feat(3.1.1)` junto do `App.tsx` que o consumia, e os ícones deste bloco vêm de `lucide-react`.
+  `public/` hoje só tem os quatro `cropped-Logo-*.png`. `.claude/rules/**` não está em
+  `paths_autorizados` do bloco, então a rule não foi corrigida aqui.
+  **Gatilho:** task própria de manutenção das rules, antes de planejar o Sprint 3.
+  **Fechado em 2026-10-24** por `B10` (`0934c33`): a rule diz que ícone vem de `lucide-react`, e a
+  linha `public/icons.svg` saiu também do `.prettierignore`.
+- **D-18 · Prettier reescreve plano e spec aprovados** — `format:check` faz parte de `pnpm check` e
+  `prettier-plugin-tailwindcss` reordena classe Tailwind dentro de bloco de código de qualquer
+  markdown, inclusive `docs/superpowers/plans/**` e `docs/superpowers/specs/**`. É o achado `R-2` da
+  review de 2026-08-28: o commit `2663763` levou junto o plano do bloco
+  (`docs/superpowers/plans/2026-08-27-4.1.1-4.1.10-formulario-integracoes.md:1463`), fora dos
+  `paths_autorizados`, sem replanejamento nenhum — só reordenação de classe num snippet. Reverter o
+  trecho sozinho deixa `pnpm format:check` vermelho; a correção é excluir plano e spec do Prettier
+  em `.prettierignore`, que é ferramenta do repositório e não estava autorizada neste bloco.
+  **Decisão de João em 2026-08-28:** a mutação do plano fica aceita e o bloco `4.1.1-4.1.10` fecha
+  com este débito aberto; a correção não entra na branch do bloco.
+  **Gatilho:** task própria de harness, junto de `D-15`.
+  **Fechado em 2026-10-24** por `B10` (`20ab319`): `docs/superpowers/specs/`, `plans/`,
+  `bounded-designs/` e `context-packets/` estão no `.prettierignore`; `state.md`, `backlog.md` e
+  `historico/` continuam formatados.
+- **D-19 · transição de estado viaja junto de commit de código** — achado `L-7` da review de
+  2026-08-28: `fbb3e7e` (`feat(4.1.1)`) carrega `docs/superpowers/state.md` no mesmo commit do
+  schema, enquanto o fim do bloco usa `chore` próprio para a mesma coisa. Sem regra escrita, cada
+  bloco decide de novo. Não é corrigível aqui: reescrever histórico da branch em review custa mais
+  do que o defeito.
+  **Gatilho:** task própria de harness, junto de `D-15` e `D-18`.
+  **Correção (spec de `B10`, §4.3):** havia regra escrita para metade do caso.
+  `.claude/commands/executar-site.md:42` manda, desde `999aa0c` (2026-08-24), `state.md` no commit
+  da task que ele descreve; a lacuna real era a transição sem task.
+  **Fechado em 2026-10-24** por `B10` (`bc4dbe9`): a regra de commit de transição está em
+  `CLAUDE.md` §4, e `/executar-site` e `/revisar-site` apontam para ela.
+
+- **D-27 · a review do bloco `refactor-contato-intake` não teve segunda lente** — o invariante do
+  harness exige `executor` e `reviewer` diferentes, e `scripts/validate-agent-workflow.mjs:160`
+  transforma isso em erro de `pnpm agent:check`. A cota da conta Codex estava esgotada, e João
+  autorizou explicitamente em 2026-08-29 que Claude fosse executor e reviewer do bloco, com o
+  desvio declarado. A review existiu — diff de `main..HEAD` lido linha a linha, referências
+  pendentes e afirmações do `CONTEXT.md` e do `ADR-SITE-003` conferidas contra o repositório — mas
+  quem revisou escreveu o código, então ela não vale como lente independente. Consequência
+  mecânica: com `reviewer: claude` no estado, `pnpm agent:check` reprova e `pnpm check` junto.
+  **Gatilho:** cota do Codex de volta para uma segunda passada sobre estes dois commits, ou decisão
+  de João sobre representar o desvio no validador em task própria do harness.
+  **Fechado em 2026-10-24** pela passada retroativa de `B10`
+  (`docs/superpowers/historico/revisao-retroativa-2026-10.md`, área Contato).
+- **D-32 · o incremento final do bloco `paridade-header-cursos` não teve segunda lente** —
+  os cinco primeiros commits (`f19ee29..d619f0d`, onde está todo o código) tiveram review
+  independente real do Codex, que produziu `R-1` (rebaixado a suggestion após verificação no
+  código) e `R-2` (blocking, corrigido em `b9ac09a`). Os dois commits seguintes — `b9ac09a`, uma
+  linha em `docs/inventario/04-tipografia.md`, e `68542eb`, só `docs/superpowers/backlog.md` — não
+  puderam ser revisados: o Codex CLI encerra antes de iniciar, em 0.147.0 e 0.146.0, com
+  `Error: failed to initialize in-process app-server client: Read-only file system (os error 30)`.
+  Quem revisou esses dois commits escreveu ambos, então não valem como lente independente; nenhum
+  toca código de produção. Desvio declarado em `reviewer_exception`, autorizado por João em
+  2026-09-03. Mesma classe de `D-27`.
+  **Gatilho:** Codex CLI funcional para uma segunda passada sobre `d619f0d..68542eb`, ou decisão de
+  João de dispensar a passada por serem commits só de documentação.
+  **Fechado em 2026-10-24** pela passada retroativa de `B10`
+  (`docs/superpowers/historico/revisao-retroativa-2026-10.md`,
+  área Observabilidade e CI, revisado como diff).
+- **D-53 · o bloco `7.2.1` (delegação e certificado) não teve segunda lente** — Claude executou
+  `b64bb94..cb06414` e também fez a review formal de `/revisar-site`: a cota da conta Codex estava
+  esgotada em 2026-09-26. As reviews por task durante a execução foram de subagentes Claude, a
+  mesma família do executor. Desvio declarado em `reviewer_exception`, autorizado por João em
+  2026-09-26. Mesma classe de `D-27` e `D-32`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..cb06414`, ou decisão de
+  João de dispensá-la.
+  **Fechado em 2026-10-24** pela passada retroativa de `B10`
+  (`docs/superpowers/historico/revisao-retroativa-2026-10.md`, área Infra e zona).
+- **D-65 · o bloco `7.2.5` (cutover de `lotusotec.cl`) não tem segunda lente** — o plano previa
+  `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-05: Claude executa e
+  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
+  autorizado por João em 2026-10-05. Mesma classe de `D-27`, `D-32` e `D-53`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
+  **Fechado em 2026-10-24** pela passada retroativa de `B10`
+  (`docs/superpowers/historico/revisao-retroativa-2026-10.md`,
+  áreas Infra e zona e Observabilidade e CI).
+- **D-70 · o bloco `7.2.6` (observabilidade mínima) não tem segunda lente** — o plano previa
+  `reviewer: codex`, mas a cota da conta Codex estava esgotada em 2026-10-11: Claude executa e
+  também faz a review formal de `/revisar-site`. Desvio declarado em `reviewer_exception`,
+  autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53` e `D-65`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
+  **Fechado em 2026-10-24** pela passada retroativa de `B10`
+  (`docs/superpowers/historico/revisao-retroativa-2026-10.md`,
+  áreas Observabilidade e CI e Infra e zona).
+- **D-76 · o bloco `7.2.7` (desativar o WordPress, `B7`) não tem segunda lente** — o plano previa
+  `reviewer: codex`, mas João aprovou o plano em 2026-10-11 atribuindo execução e review ao Claude:
+  Claude executa e também faz a review formal de `/revisar-site`. Desvio declarado em
+  `reviewer_exception`, autorizado por João em 2026-10-11. Mesma classe de `D-27`, `D-32`, `D-53`,
+  `D-65`, `D-70` e `D-73`.
+  **Gatilho:** passada do Codex sobre `main..HEAD` do bloco, ou decisão de João de dispensá-la.
+  **Fechado em 2026-10-24** pela passada retroativa de `B10`
+  (`docs/superpowers/historico/revisao-retroativa-2026-10.md`, área Infra e zona).
+- **D-77 · o bloco `revisao-arquitetura-2026-09` (`B9`) não tem segunda lente** — a conta do Codex
+  está sem cota em 2026-10-17: Claude executa e também faz a review formal de `/revisar-site`
+  (spec D14). Desvio declarado em `reviewer_exception`, autorizado por João em 2026-10-17. Mitigação:
+  execução por subagentes, com revisor de contexto limpo por task. Mesma classe de `D-27`, `D-32`,
+  `D-53`, `D-65`, `D-70`, `D-73` e `D-76`.
+  **Gatilho:** cota do Codex restabelecida para uma passada sobre `main..HEAD` do bloco, ou decisão
+  de João de dispensá-la.
+  **Fechado em 2026-10-24** pela passada retroativa de `B10`
+  (`docs/superpowers/historico/revisao-retroativa-2026-10.md`, áreas Infra e zona e Contato).
 
 - **D-67 · a estabilização de `B5` durou 8 h 35 min, não 24 h** — a spec de `7.2.5` (D11) pede o
   smoke de estabilização pelo menos 24 h depois do corte; por decisão de João em 2026-10-05, ele

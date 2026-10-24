@@ -39,7 +39,7 @@ Commite cada task do bloco assim que o critério de aceite dela estiver provado 
 para o fim:
 
 - um commit por EAP, Conventional Commits com o EAP no escopo: `feat(1.2.2): fixar Node 24.19.0 e engines`;
-- `docs/superpowers/state.md` entra no commit da task que ele descreve;
+- `docs/superpowers/state.md` segue a regra de commit de transição de `CLAUDE.md` §4: entra no commit da task que ele descreve, e transição sem task ganha `chore(<item>)` próprio;
 - correção vinda da review vira commit próprio (`fix(<EAP>): …`); não reescreva histórico já revisado;
 - commit só depois da prova real do critério; não commite gate reprovando;
 - não faça push aqui. Publicação e PR são exclusivos de `/fechar-site`.

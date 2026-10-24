@@ -60,12 +60,16 @@ Todo plano arquitetural executável termina com:
 ## Handoff de execução
 
 executor: claude|codex
-reviewer: codex|claude
+reviewer: codex|claude|claude-isolado
 paths_autorizados:
 
 - <paths fechados quando executor=codex>
 
 Executor e reviewer devem ser diferentes.
+
+Com executor `claude`, rode o "Teste do Codex" de `/revisar-site` antes de gravar o reviewer:
+disponível => `reviewer: codex`; indisponível => `reviewer: claude-isolado`, com a linha decisiva
+do erro no handoff. `claude-isolado` nunca é executor.
 
 Ao concluir, atualize `state.md` para `ready_for_execution`.
 
