@@ -24,6 +24,9 @@ A base da review é a branch do bloco: `git log --oneline main..HEAD` e `git dif
 Confirme um commit por EAP, mensagem no padrão Conventional Commits e ausência de commit em `main`.
 Commit faltando para uma EAP entregue é achado `blocking`.
 
+Confirme também que cada transição de `state.md` segue a regra de commit de transição de
+`CLAUDE.md` §4. Violação é `suggestion`: histórico revisado não é reescrito.
+
 Classifique achados como `blocking`, `important` ou `suggestion`.
 
 - blocking: deve ser corrigido no mesmo work item;

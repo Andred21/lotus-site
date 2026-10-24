@@ -50,6 +50,12 @@ por EAP. `main` não recebe commit direto.
 /fechar-site    finishing-a-development-branch, push da branch, PR aberto, estado volta a idle
 ```
 
+Regra de commit de transição: a transição de `state.md` que acompanha a entrega de uma task entra
+no commit dessa task (a ida para `executing` vai no commit da primeira task). Toda outra transição
+— abrir o planejamento, registrar spec aprovada, abrir a execução, `ready_for_review`, `reviewing`,
+`blocked`, `ready_for_closure`, volta a `idle` — é commit `chore(<item>)` próprio, com `state.md` e
+só os documentos do harness que a própria transição exige (`backlog.md`, `progress.md`).
+
 Delegação ao Codex usa o contrato em `.agents/skills/<nome>/SKILL.md`; Claude repassa esse conteúdo ao Codex na íntegra, sem paráfrase.
 
 Modo inicial: `supervised`. `/desenvolver-site` não existe até decisão arquitetural posterior.
