@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: blocked
+workflow_state: executing
 work_class: architectural
 active_work_item: validacao-certificado
 active_notion_eap: null
@@ -9,20 +9,20 @@ active_title: 'Página de validação de certificado no site (entrega 2 do bloco
 active_branch: feat/validacao-certificado
 bounded_design: null
 authorized_paths: null
-next_owner: joao
-next_action: resolve_blocker
-resume_state: executing
+next_owner: claude
+next_action: continue_active_plan
+resume_state: null
 context_packet: docs/superpowers/context-packets/validacao-certificado.md
 active_spec: docs/superpowers/specs/2026-11-24-validacao-certificado-design.md
 active_plan: docs/superpowers/plans/2026-11-24-validacao-certificado.md
 executor: claude
 reviewer: claude-isolado
 reviewer_exception: null
-blocker: 'A7 aguarda o stack local do Lotus: Tasks 1-10 do plano commitadas (9feab35..706ce44); a Task 11 precisa de João com CORS_PUBLIC_ORIGINS=http://localhost:5190 no backend/.env do Lotus, backend reiniciado e um certificado de demonstração vigente (código, RUT e uuid informados no chat), e um revogado se houver.'
+blocker: null
 supervised_cycles_completed: 25
 last_completed_work_item: harness-debitos
-state_basis_commit: 706ce44
-updated_at: 2026-11-24T21:46:01Z
+state_basis_commit: ba753ac
+updated_at: 2026-11-24T22:46:47Z
 ---
 
 # Estado operacional — Lotus Site
