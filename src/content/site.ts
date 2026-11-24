@@ -13,9 +13,10 @@ export const site = {
 
   nav: [
     { label: 'Inicio', href: '/' },
-    { label: 'Quienes Somos', href: '#Somos' },
-    { label: 'Cursos', href: '#Cursos' },
-    { label: 'Contacto', href: '#Contacto' },
+    { label: 'Quienes Somos', href: '/#Somos' },
+    { label: 'Cursos', href: '/#Cursos' },
+    { label: 'Contacto', href: '/#Contacto' },
+    { label: 'Validar Certificado', href: '/validar' },
   ],
 
   hero: {

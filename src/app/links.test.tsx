@@ -45,14 +45,18 @@ function anchors() {
 }
 
 describe('links da home (5.3.1)', () => {
-  it('toda âncora #id resolve para um elemento renderizado', () => {
+  it('toda âncora #id ou /#id resolve para um elemento renderizado na home', () => {
     const internal = anchors()
       .map((anchor) => anchor.getAttribute('href') ?? '')
-      .filter((href) => href.startsWith('#') && href.length > 1)
+      .filter(
+        (href) =>
+          (href.startsWith('#') && href.length > 1) || href.startsWith('/#'),
+      )
 
     expect(internal.length).toBeGreaterThan(0)
     for (const href of internal) {
-      expect(document.getElementById(href.slice(1)), href).toBeTruthy()
+      const id = href.slice(href.indexOf('#') + 1)
+      expect(document.getElementById(id), href).toBeTruthy()
     }
   })
 

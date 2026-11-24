@@ -48,6 +48,7 @@ const EXPECTED_ORDER = [
   'a:Quienes Somos',
   'a:Cursos',
   'a:Contacto',
+  'a:Validar Certificado',
   'a:Learn More',
   'a:See More',
   'a:contacto@lotusotec.cl',

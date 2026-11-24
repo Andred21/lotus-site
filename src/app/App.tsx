@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Footer } from '../components/layout/Footer'
 import { Header } from '../components/layout/Header'
 import { Hero } from '../components/sections/Hero'
@@ -27,7 +28,17 @@ const submitContact = captcha
   ? createContactIntake(createApiContactoSender())
   : unavailableContactIntake
 
+// Quem chega de /validar por `/#Cursos` carrega a página já com o fragmento:
+// o navegador tenta rolar antes de o React montar as seções e fica no topo.
+// Sincroniza com o DOM depois da montagem (D7).
+function rolarAteFragmento() {
+  const id = decodeURIComponent(location.hash.slice(1))
+  if (id) document.getElementById(id)?.scrollIntoView()
+}
+
 export function App() {
+  useEffect(rolarAteFragmento, [])
+
   return (
     <>
       <Header />

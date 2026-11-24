@@ -17,7 +17,7 @@ test('menu mobile abre, fecha e não prende o scroll', async ({ page }) => {
 
   const nav = page.getByRole('navigation', { name: 'Mobile' })
   await expect(nav).toBeVisible()
-  await expect(nav.getByRole('link')).toHaveCount(4)
+  await expect(nav.getByRole('link')).toHaveCount(5)
 
   const overflow = await page.evaluate(
     () => getComputedStyle(document.body).overflow,

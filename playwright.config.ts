@@ -19,6 +19,7 @@ const FLUXO_PRINCIPAL = [
   '**/home.spec.ts',
   '**/menu.spec.ts',
   '**/contacto.spec.ts',
+  '**/navegacao.spec.ts',
 ]
 
 export default defineConfig({
