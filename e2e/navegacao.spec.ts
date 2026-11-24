@@ -84,9 +84,6 @@ test.describe('desktop', () => {
       expect(Math.abs(caixa.y - primeiro.y)).toBeLessThanOrEqual(1)
     }
     const folga = primeiro.x - (logo.x + logo.width)
-    console.info(
-      `[1000px] y=${caixas.map((c) => c.y).join(',')} logoDireita=${logo.x + logo.width} primeiroX=${primeiro.x} folga=${folga}`,
-    )
     expect(folga).toBeGreaterThan(0)
   })
 })

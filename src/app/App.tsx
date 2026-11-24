@@ -32,7 +32,13 @@ const submitContact = captcha
 // o navegador tenta rolar antes de o React montar as seções e fica no topo.
 // Sincroniza com o DOM depois da montagem (D7).
 function rolarAteFragmento() {
-  const id = decodeURIComponent(location.hash.slice(1))
+  const bruto = location.hash.slice(1)
+  let id = bruto
+  try {
+    id = decodeURIComponent(bruto)
+  } catch {
+    // Fragmento malformado (`#%`): usa o texto cru, que não casa com id algum.
+  }
   if (id) document.getElementById(id)?.scrollIntoView()
 }
 
