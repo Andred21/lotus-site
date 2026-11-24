@@ -62,5 +62,8 @@ export const A11Y_EXCEPTIONS: readonly A11yException[] = [
   // reportar o mesmo nó por um seletor de classes só, igual nos cinco estados
   // — as duas entradas anteriores descreviam esse mesmo nó sob as duas ordens
   // de classe que a heurística do axe escolhia antes.
-  contrast('.text-caption.text-brand.font-medium'),
+  // Seletor trocado em 2026-11-24 (`validacao-certificado`): o seletor por
+  // classes mudava entre páginas (a heurística do axe pesa a raridade das
+  // classes na página toda), e o `id` do original o torna estável.
+  contrast('#footer-info'),
 ]
