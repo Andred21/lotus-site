@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_review
+workflow_state: reviewing
 work_class: architectural
 active_work_item: validacao-certificado
 active_notion_eap: null
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 25
 last_completed_work_item: harness-debitos
-state_basis_commit: ad9ee9b
-updated_at: 2026-11-24T22:56:20Z
+state_basis_commit: 50813a7
+updated_at: 2026-11-24T23:00:57Z
 ---
 
 # Estado operacional — Lotus Site
