@@ -45,7 +45,9 @@ export const REVOGADO = {
 /** A consulta por código devolve também o `uuid`, para o PDF (K3). */
 export const CONSULTA_VIGENTE = { ...VIGENTE, uuid: UUID }
 
-export const NOME_DO_PDF = 'certificado-LOT-2026-144.pdf'
+// Diferente do nome padrão do adapter (`certificado-${codigo}.pdf`): o teste
+// do download só passa se a página leu o `Content-Disposition` (A3).
+export const NOME_DO_PDF = 'certificado-LOT-2026-144-emitido.pdf'
 
 export type RespostaFalsa = {
   status: number

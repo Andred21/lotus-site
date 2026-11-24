@@ -231,6 +231,7 @@ test.describe('pelo formulário', () => {
       page.getByText('Intente de nuevo en 2 segundos.'),
     ).toBeVisible()
     await expect(validar(page)).toBeDisabled()
+    await expect(page.getByText('Intente de nuevo en 1 segundo.')).toBeVisible()
     await expect(validar(page)).toBeEnabled({ timeout: 5_000 })
   })
 
@@ -289,20 +290,30 @@ test('o RUT não aparece em URL nenhuma, nenhum pedido leva cookie e nada fica g
   await fingirApiCertificados(
     page,
     {
+      uuid: { status: 200, corpo: VIGENTE },
       consulta: { status: 200, corpo: CONSULTA_VIGENTE },
       pdf: { status: 200 },
     },
     capturados,
   )
 
+  // Os três pedidos da API: consulta e PDF pelo formulário, e o `GET` do
+  // `uuid` pela abertura do QR.
   await page.goto('/validar')
   await consultar(page)
   await expect(titulo(page, 'Certificado válido')).toBeVisible()
   const download = page.waitForEvent('download')
   await botaoDoPdf(page).click()
   await download
+  await page.goto(`/validar/${UUID}`)
+  await expect(titulo(page, 'Certificado válido')).toBeVisible()
 
-  expect(capturados.map((pedido) => pedido.tipo)).toEqual(['consulta', 'pdf'])
+  // No dev o `StrictMode` abre o QR com dois `GET` (ver a espera pelo QR):
+  // depois de consulta e PDF vem um ou mais pedidos do `uuid`, só eles.
+  const tipos = capturados.map((pedido) => pedido.tipo)
+  expect(tipos.slice(0, 2)).toEqual(['consulta', 'pdf'])
+  expect(tipos.length).toBeGreaterThan(2)
+  expect(tipos.slice(2).every((tipo) => tipo === 'uuid')).toBe(true)
   for (const url of [...urls, page.url()]) {
     for (const rut of ['12.345.678', '12345678', '123456785']) {
       expect(url, `${url} contém o RUT`).not.toContain(rut)

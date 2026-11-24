@@ -87,6 +87,7 @@ test('a página servida carrega o JSON-LD da Organization', async ({ page }) => 
 // entra no sitemap (o teste do sitemap acima continua exigindo só a home).
 test('/validar publica noindex sem canonical e fica fora do sitemap', async ({
   page,
+  request,
 }) => {
   await page.goto('/validar')
 
@@ -95,4 +96,8 @@ test('/validar publica noindex sem canonical e fica fora do sitemap', async ({
     /noindex/,
   )
   await expect(page.locator('link[rel="canonical"]')).toHaveCount(0)
+
+  const sitemap = await (await request.get('/sitemap.xml')).text()
+  expect(sitemap).toContain('<urlset')
+  expect(sitemap).not.toContain('/validar')
 })
