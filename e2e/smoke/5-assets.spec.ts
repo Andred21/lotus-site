@@ -2,14 +2,19 @@ import { ALVO, expect, test } from './alvo'
 import { pedir } from './rede'
 
 const IMUTAVEL = 'public, max-age=31536000, immutable'
-const FIXOS = ['/index.html', '/robots.txt', '/sitemap.xml']
+const FIXOS = [
+  '/index.html',
+  '/validar/index.html',
+  '/robots.txt',
+  '/sitemap.xml',
+]
 // Imagens e fontes que o bundle JS importa (`import x from './a.png'` vira a
 // string `/assets/a-<hash>.png`): o HTML e o CSS não as citam.
 const ESTATICOS =
   /["'`](\/assets\/[A-Za-z0-9_.-]+\.(?:jpe?g|png|webp|avif|svg|gif|ico|woff2?))["'`]/g
 
 // O deploy grava `immutable` em tudo que tem nome fixo por hash (e nos
-// arquivos de public/, que só mudam com deploy) e `no-cache` nos três de
+// arquivos de public/, que só mudam com deploy) e `no-cache` nos quatro de
 // nome fixo (.github/workflows/ci.yml, job deploy). Referências, de três
 // origens: o HTML, o `url()` do CSS e as importações do JS. Fontes: @font-face
 // de src/index.css, provadas carregadas pelo document.fonts do Chromium.

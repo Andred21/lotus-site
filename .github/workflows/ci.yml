@@ -261,16 +261,20 @@ jobs:
 
       # Todo asset do Vite tem hash no nome: URL nova a cada conteúdo novo,
       # então pode ser cacheado para sempre e nunca precisa de invalidação.
+      # Os padrões do `aws s3 sync` casam com o caminho relativo inteiro, por
+      # isso `validar/index.html` é nomeado: `--exclude "index.html"` não o pega
+      # (spec §5.6 de validacao-certificado).
       - name: Publicar o release deste SHA (assets com hash)
         env:
           BALDE: ${{ vars.AWS_BUCKET }}
           SHA: ${{ github.sha }}
         run: |
           aws s3 sync dist/ "s3://$BALDE/releases/$SHA/" --delete \
-            --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
+            --exclude "index.html" --exclude "validar/index.html" \
+            --exclude "robots.txt" --exclude "sitemap.xml" \
             --cache-control "public, max-age=31536000, immutable"
 
-      # Estes três têm nome fixo, então o navegador precisa revalidar sempre --
+      # Estes quatro têm nome fixo, então o navegador precisa revalidar sempre --
       # senão a invalidação do CloudFront não chega a quem já visitou.
       - name: Publicar o release deste SHA (arquivos de nome fixo)
         env:
@@ -279,7 +283,8 @@ jobs:
         run: |
           aws s3 sync dist/ "s3://$BALDE/releases/$SHA/" \
             --exclude "*" \
-            --include "index.html" --include "robots.txt" --include "sitemap.xml" \
+            --include "index.html" --include "validar/index.html" \
+            --include "robots.txt" --include "sitemap.xml" \
             --cache-control "no-cache"
 
       # A raiz só é tocada depois de o release inteiro estar no bucket: upload
@@ -308,7 +313,7 @@ jobs:
       # cópia servidor-a-servidor não há metadado para preservar. Mesma divisão
       # por tipo de arquivo do upload do release, pela mesma razão.
       # A promoção tem TRÊS passos, nesta ordem: assets novos SEM `--delete`,
-      # os três de nome fixo, a invalidação, e só então a limpeza com
+      # os quatro de nome fixo, a invalidação, e só então a limpeza com
       # `--delete`. Com `--delete` já no primeiro passo existiria uma janela --
       # entre ele e o passo seguinte -- em que o `index.html` antigo, ainda no
       # ar e revalidado a cada visita, apontaria assets já apagados: 404 de
@@ -319,7 +324,8 @@ jobs:
           BALDE: ${{ vars.AWS_BUCKET }}
         run: |
           aws s3 sync dist/ "s3://$BALDE/" \
-            --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
+            --exclude "index.html" --exclude "validar/index.html" \
+            --exclude "robots.txt" --exclude "sitemap.xml" \
             --cache-control "public, max-age=31536000, immutable"
 
       - name: Promover para a raiz (arquivos de nome fixo)
@@ -328,10 +334,11 @@ jobs:
         run: |
           aws s3 sync dist/ "s3://$BALDE/" \
             --exclude "*" \
-            --include "index.html" --include "robots.txt" --include "sitemap.xml" \
+            --include "index.html" --include "validar/index.html" \
+            --include "robots.txt" --include "sitemap.xml" \
             --cache-control "no-cache"
 
-      # Três caminhos e não `/*`: o resto tem hash no nome. Invalidar `/*` a
+      # Quatro caminhos e não `/*`: o resto tem hash no nome. Invalidar `/*` a
       # cada deploy é o que faz a conta de CloudFront crescer sem motivo.
       #
       # O `wait` não é zelo: `create-invalidation` volta com `Status:
@@ -346,7 +353,7 @@ jobs:
         run: |
           INVALIDACAO=$(aws cloudfront create-invalidation \
             --distribution-id "$ID" \
-            --paths /index.html /robots.txt /sitemap.xml \
+            --paths /index.html /validar/index.html /robots.txt /sitemap.xml \
             --query Invalidation.Id --output text)
           echo "invalidação $INVALIDACAO criada; esperando concluir"
           aws cloudfront wait invalidation-completed \
