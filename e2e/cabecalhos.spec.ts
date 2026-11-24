@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
+  NOME_DO_PDF,
+  UUID,
+  VIGENTE,
+  fingirApiCertificados,
+} from './certificados-falsos'
+import {
   fingirApiContacto,
   fingirTurnstile,
   preencherContato,
@@ -105,6 +111,37 @@ test('a jornada completa e o envio do formulário passam sob a CSP', async ({
   // Só a sonda do zod, exatamente uma vez — nunca zero (some, precisa
   // revisitar), nunca mais de uma (outro eval, ou mais de uma carga de
   // página nesta jornada).
+  expect(await violacoes(page)).toEqual([SONDA_DO_ZOD])
+  expect(errosDeConsole).toEqual([])
+})
+
+// A2: a página de validação fala com `https://app.lotusotec.cl` sob o
+// `connect-src` real do preview. O `certificadoSchema` também é um
+// `z.object`, então a mesma sonda do zod dispara uma vez nesta carga, como na
+// home; qualquer outra violação (o `connect-src` recusando a API, por
+// exemplo) apareceria na lista.
+test('a validação pelo QR e o PDF passam sob a CSP', async ({ page }) => {
+  const errosDeConsole: string[] = []
+  page.on('console', (mensagem) => {
+    if (mensagem.type() === 'error') errosDeConsole.push(mensagem.text())
+  })
+  page.on('pageerror', (erro) => errosDeConsole.push(erro.message))
+
+  await vigiarViolacoes(page)
+  await fingirApiCertificados(page, {
+    uuid: { status: 200, corpo: VIGENTE },
+    pdf: { status: 200 },
+  })
+
+  await page.goto(`/validar/${UUID}`)
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Certificado válido' }),
+  ).toBeVisible()
+
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'DESCARGAR PDF' }).click()
+  expect((await download).suggestedFilename()).toBe(NOME_DO_PDF)
+
   expect(await violacoes(page)).toEqual([SONDA_DO_ZOD])
   expect(errosDeConsole).toEqual([])
 })

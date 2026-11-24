@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { A11Y_EXCEPTIONS } from './a11y-exceptions'
+import { UUID, VIGENTE, fingirApiCertificados } from './certificados-falsos'
 import {
   API_CONTACTO,
   fingirApiContacto,
@@ -16,6 +17,7 @@ type Viewport = { width: number; height: number }
 type State = {
   name: string
   viewport: Viewport
+  url?: string
   prepare?: (page: Page) => Promise<void>
 }
 
@@ -48,11 +50,27 @@ async function submitValid(page: Page) {
   await page.unroute(API_CONTACTO)
 }
 
+async function fillInvalidValidacao(page: Page) {
+  await page.getByLabel('N° de registro').fill('LOT-26-1')
+  await page.getByLabel('RUT del alumno').fill('12.345.678-4')
+  await page.getByRole('button', { name: 'VALIDAR' }).click()
+  await expect(page.getByText('Formato: LOT-2026-123')).toBeVisible()
+  await expect(page.getByText('RUT inválido')).toBeVisible()
+}
+
+async function waitForCertificado(page: Page) {
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Certificado válido' }),
+  ).toBeVisible()
+}
+
 test.beforeEach(async ({ page }) => {
   await fingirTurnstile(page)
+  await fingirApiCertificados(page, { uuid: { status: 200, corpo: VIGENTE } })
 })
 
-// D9: os cinco estados auditados. Cada um parte de uma navegação nova.
+// D9: os cinco estados da home, mais os quatro de `/validar` (A6, formulário
+// e cartão). Cada um parte de uma navegação nova.
 const STATES: readonly State[] = [
   { name: 'home-1440', viewport: DESKTOP },
   { name: 'home-375', viewport: MOBILE },
@@ -68,6 +86,20 @@ const STATES: readonly State[] = [
   },
   { name: 'formulario-erros-1440', viewport: DESKTOP, prepare: fillInvalid },
   { name: 'formulario-sucesso-1440', viewport: DESKTOP, prepare: submitValid },
+  { name: 'validar-1440', viewport: DESKTOP, url: '/validar' },
+  { name: 'validar-375', viewport: MOBILE, url: '/validar' },
+  {
+    name: 'validar-erros-1440',
+    viewport: DESKTOP,
+    url: '/validar',
+    prepare: fillInvalidValidacao,
+  },
+  {
+    name: 'validar-cartao-375',
+    viewport: MOBILE,
+    url: `/validar/${UUID}`,
+    prepare: waitForCertificado,
+  },
 ]
 
 async function audit(page: Page, state: State): Promise<Finding[]> {
@@ -96,7 +128,7 @@ function isExcepted(finding: Finding): boolean {
 test('gate axe: nenhuma violação critical/serious sem exceção nominal, e nenhuma exceção órfã', async ({
   page,
 }, testInfo) => {
-  // Cinco navegações + duas submissões + cinco auditorias.
+  // Nove navegações + três submissões + nove auditorias.
   test.setTimeout(90_000)
 
   const unjustified: Finding[] = []
@@ -104,7 +136,7 @@ test('gate axe: nenhuma violação critical/serious sem exceção nominal, e nen
 
   for (const state of STATES) {
     await page.setViewportSize(state.viewport)
-    await page.goto('/')
+    await page.goto(state.url ?? '/')
     await state.prepare?.(page)
 
     const findings = await audit(page, state)

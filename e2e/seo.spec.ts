@@ -82,3 +82,17 @@ test('a página servida carrega o JSON-LD da Organization', async ({ page }) => 
   expect(data.url).toBe(CANONICAL)
   expect(data.name).toBe('LOTUS OTEC')
 })
+
+// A6: `/validar/<uuid>` mostra o nome do aluno; a página não é indexável nem
+// entra no sitemap (o teste do sitemap acima continua exigindo só a home).
+test('/validar publica noindex sem canonical e fica fora do sitemap', async ({
+  page,
+}) => {
+  await page.goto('/validar')
+
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    'content',
+    /noindex/,
+  )
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0)
+})
