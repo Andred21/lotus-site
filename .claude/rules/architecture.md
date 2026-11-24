@@ -7,7 +7,7 @@ paths:
 # Architecture — Lotus Site
 
 - O site começa como aplicação institucional de baixa complexidade; abstrações precisam pagar o custo de manutenção.
-- Não adicionar router enquanto a navegação continuar sendo uma única página por âncoras.
+- Não adicionar router: cada página é um HTML próprio, servido por reescrita explícita na borda (`ADR-SITE-007`). Router ou pré-renderização só entram por decisão de bloco.
 - Não adicionar estado global quando estado local/derivado for suficiente.
 - Assets importados por componente ficam em `src/assets/`; arquivos que precisam de URL estável ficam em `public/`.
 - Ícone vem de `lucide-react`, importado pelo componente que o usa; não criar sprite nem arquivo SVG de ícone sem consumidor.
@@ -20,6 +20,7 @@ src/
 ├── components/
 │   ├── layout/     shell, Header, Footer, containers estruturais
 │   ├── sections/   seções completas da landing page
+│   ├── validacao/  página de validação de certificado (/validar)
 │   └── ui/         primitivas realmente reutilizadas
 ├── content/        conteúdo institucional e dados estáticos
 ├── integrations/   APIs, formulário, analytics, serviços externos

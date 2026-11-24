@@ -283,6 +283,11 @@ nofollow`, aplicado pela distribuição: cobria o que o `robots.txt` não cobre 
   `/releases/<sha>/` também são indexáveis; o `canonical` aponta para o apex (`D-64`).
 - Caminho inexistente devolve **404**, não `index.html` com 200. Não há rota de cliente para
   salvar: `#Somos` e `#Cursos` são fragmentos, que nunca chegam ao CloudFront.
+
+  > **Atualização de 2026-11-24 (`validacao-certificado`).** `/validar`, `/validar/` e
+  > `/validar/<uuid>` são servidos por reescrita explícita na função `viewer-request`
+  > ([`ADR-SITE-007`](ADR-SITE-007.md)). Caminho fora dessas formas continua 404.
+
 - A role de deploy está presa a `repo:Gatika-CL/lotus-site:ref:refs/heads/main` com `StringEquals`.
   Publicar a partir de outra branch ou de uma tag exige editar o stack, de propósito (`D-38`).
 - O bucket nasce com versionamento e `DeletionPolicy: Retain`. `delete-stack` derruba distribuição,
