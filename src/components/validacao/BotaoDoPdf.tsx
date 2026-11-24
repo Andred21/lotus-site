@@ -41,7 +41,7 @@ function EsperaDoPdf({
   )
   const { espera } = validacao
   return (
-    <p className="mt-1.5 text-[11px]">
+    <p className="mt-2 text-caption">
       {`${espera.titulo}. `}
       {segundos === null ? (
         espera.semNumero
@@ -94,7 +94,7 @@ export function BotaoDoPdf({
         type="button"
         onClick={clicar}
         disabled={ocupado}
-        className="rounded-pill border-2 border-solid border-title-light px-3 font-display text-[11px] font-bold tracking-[2px] text-title-light uppercase disabled:opacity-60"
+        className="rounded-pill border-2 border-solid border-title-light px-button-x py-1 font-display text-caption font-bold tracking-[2px] text-title-light uppercase disabled:opacity-60"
       >
         {validacao.pdf.botao}
       </button>
@@ -106,7 +106,7 @@ export function BotaoDoPdf({
         />
       ) : null}
       {estado.tipo === 'falha' ? (
-        <p className="mt-1.5 text-[11px]">{validacao.pdf.falha}</p>
+        <p className="mt-2 text-caption">{validacao.pdf.falha}</p>
       ) : null}
     </div>
   )

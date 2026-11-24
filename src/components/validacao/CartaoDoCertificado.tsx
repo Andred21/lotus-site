@@ -9,12 +9,20 @@ const { linhas } = validacao
 function Linha({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
     <>
-      <dt className="text-muted-ink">{rotulo}</dt>
+      {/* `body-ink` sobre `surface` dá 6,65:1; o `muted-ink` do mockup dava
+          3,66:1, abaixo do AA. */}
+      <dt className="text-body-ink">{rotulo}</dt>
       <dd className="m-0 text-title-light">{valor}</dd>
     </>
   )
 }
 
+// Escala do site (D3): os mockups são miniaturas (abertura em 12px, que na
+// página é `text-body`, 16px). Cada tamanho do mockup é levado pela mesma
+// proporção ao token mais próximo: título 15→20 (`highlight`), linhas
+// 11,5→15 (`body`), notas 11→15 (`caption`). Abaixo de `desktop` o `h1` da
+// página desce a `highlight`, e o cartão desce um passo junto: título
+// `body`, linhas `caption`.
 // A página não calcula estado (D4): só o display_status da API escolhe o cartão.
 export function CartaoDoCertificado({
   certificado,
@@ -39,16 +47,16 @@ export function CartaoDoCertificado({
   const termino = certificado.turma.end_date
 
   return (
-    <div className="bg-surface p-4 text-body-ink">
+    <div className="bg-surface p-6 text-body-ink">
       <Selo tom={textos.tom}>{textos.selo}</Selo>
       <h2
         ref={tituloRef}
         tabIndex={-1}
-        className="mt-2 mb-1.5 font-display text-[15px] font-bold text-title-light outline-none"
+        className="mt-3 mb-2 font-display text-body font-bold text-title-light outline-none desktop:text-highlight"
       >
         {textos.titulo}
       </h2>
-      <dl className="mb-2.5 grid grid-cols-[92px_1fr] gap-x-2 gap-y-px text-[11.5px]">
+      <dl className="mb-3 grid grid-cols-[auto_1fr] gap-x-4 font-sans text-caption desktop:text-body">
         <Linha rotulo={linhas.codigo} valor={certificado.codigo} />
         {revogado ? (
           revogadoEm ? (
@@ -80,16 +88,16 @@ export function CartaoDoCertificado({
         )}
       </dl>
       {estado === 'por_vencer' ? (
-        <p className="mb-2 text-[11px] font-bold">
+        <p className="mb-3 text-caption font-bold">
           {validacao.vigente.porVencer}
         </p>
       ) : null}
       {revogado ? null : pdf}
       {vencido ? (
-        <p className="mt-1.5 text-[11px]">{validacao.vencido.nota}</p>
+        <p className="mt-2 text-caption">{validacao.vencido.nota}</p>
       ) : null}
       {revogado ? (
-        <p className="text-[11px]">{validacao.revogado.nota}</p>
+        <p className="text-caption">{validacao.revogado.nota}</p>
       ) : null}
     </div>
   )

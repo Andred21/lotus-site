@@ -391,4 +391,42 @@ describe('ValidacaoCertificado, PDF', () => {
     expect(await screen.findByText('Certificado revocado')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'DESCARGAR PDF' })).toBeNull()
   })
+
+  it('410 atrasado do certificado anterior não revoga o atual', async () => {
+    const OUTRO_UUID = '7c9e6679-7425-40de-944b-e07fc1f90ae7'
+    const pdfDeA = adiada<ResultadoDoPdf>()
+    const respostas: ResultadoDaConsulta[] = [
+      VIGENTE_200,
+      {
+        tipo: 'certificado',
+        certificado: { ...VIGENTE, codigo: 'LOT-2026-145' },
+        uuid: OUTRO_UUID,
+      },
+    ]
+    const { baixarPdf } = montar({
+      porCodigo: () => Promise.resolve(respostas.shift() ?? { tipo: 'falha' }),
+      pdf: (uuid) =>
+        uuid === UUID
+          ? pdfDeA.promessa
+          : new Promise<ResultadoDoPdf>(() => undefined),
+    })
+
+    enviar()
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'DESCARGAR PDF' }),
+    )
+    expect(baixarPdf).toHaveBeenCalledWith(UUID, 'LOT-2026-144')
+
+    enviar('LOT-2026-145')
+    expect(await screen.findByText('LOT-2026-145')).toBeTruthy()
+    const pdfDeB = screen.getByRole('button', { name: 'DESCARGAR PDF' })
+    pdfDeB.focus()
+
+    await act(async () => pdfDeA.resolver({ tipo: 'revogado' }))
+
+    expect(screen.getByText('Certificado válido')).toBeTruthy()
+    expect(screen.queryByText('Certificado revocado')).toBeNull()
+    expect(screen.getByText('LOT-2026-145')).toBeTruthy()
+    expect(document.activeElement).toBe(pdfDeB)
+  })
 })

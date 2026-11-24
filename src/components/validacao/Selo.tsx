@@ -18,7 +18,7 @@ export function Selo({
 }) {
   return (
     <span
-      className={`inline-block rounded-pill px-2.5 py-0.5 font-display text-[10px] font-bold tracking-[2px] text-white ${FUNDO[tom]}`}
+      className={`inline-block rounded-pill px-3 py-0.5 font-display text-caption font-bold tracking-[2px] text-white ${FUNDO[tom]}`}
     >
       {children}
     </span>

@@ -13,12 +13,12 @@ export function CartaoDeAviso({
   tituloRef?: Ref<HTMLHeadingElement>
 }) {
   return (
-    <div className="bg-surface p-4 text-body-ink">
+    <div className="bg-surface p-6 text-body-ink">
       {selo ? <Selo tom="neutro">{selo}</Selo> : null}
       <h2
         ref={tituloRef}
         tabIndex={-1}
-        className="mt-2 mb-1.5 font-display text-[15px] font-bold text-title-light outline-none"
+        className="mt-3 mb-2 font-display text-body font-bold text-title-light outline-none desktop:text-highlight"
       >
         {titulo}
       </h2>

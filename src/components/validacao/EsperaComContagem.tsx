@@ -32,7 +32,7 @@ export function EsperaComContagem({
       titulo={espera.titulo}
       tituloRef={tituloRef}
     >
-      <p className="text-[11px]">
+      <p className="text-caption">
         {segundos === null ? (
           espera.semNumero
         ) : (

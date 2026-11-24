@@ -20,7 +20,7 @@ import {
 type EstadoDaPagina =
   { tipo: 'vazio' } | { tipo: 'validando' } | ResultadoDaConsulta
 
-const CLASSE_DA_NOTA = 'text-[11px]'
+const CLASSE_DA_NOTA = 'text-caption'
 
 /**
  * Página de validação (spec §5.4, D3, D8). Modo formulário: o resultado
@@ -50,6 +50,11 @@ export function ValidacaoCertificado({
   const focarNoResultado = useRef(false)
   // Dois envios no mesmo tique (Enter + clique) não pedem duas vezes.
   const consultando = useRef(false)
+  // O estado já pintado, para quem responde depois de um `await` (o PDF).
+  const estadoAtual = useRef(estado)
+  useEffect(() => {
+    estadoAtual.current = estado
+  }, [estado])
 
   // Sincroniza com a rede no modo QR. O StrictMode monta duas vezes no dev:
   // a limpeza descarta a resposta da primeira montagem.
@@ -95,17 +100,17 @@ export function ValidacaoCertificado({
   }
 
   // P6: o mesmo certificado, agora revogado; `revoked_at` continua o que era
-  // (nulo num válido), e a linha "Revocado el" é omitida.
-  function revogar() {
+  // (nulo num válido), e a linha "Revocado el" é omitida. O PDF pode levar
+  // 30 s e o formulário segue usável: um 410 atrasado de um certificado que
+  // já saiu da tela não toca no que está nela, nem no foco.
+  function revogar(uuid: string) {
+    const atual = estadoAtual.current
+    if (atual.tipo !== 'certificado' || atual.uuid !== uuid) return
     focarNoResultado.current = true
-    setEstado((atual) =>
-      atual.tipo === 'certificado'
-        ? {
-            ...atual,
-            certificado: { ...atual.certificado, display_status: 'revocado' },
-          }
-        : atual,
-    )
+    setEstado({
+      ...atual,
+      certificado: { ...atual.certificado, display_status: 'revocado' },
+    })
   }
 
   let resultado: ReactNode = null
@@ -128,7 +133,7 @@ export function ValidacaoCertificado({
           pdf={
             <BotaoDoPdf
               baixar={() => baixarPdf(uuid, certificado.codigo)}
-              aoRevogar={revogar}
+              aoRevogar={() => revogar(uuid)}
             />
           }
         />
