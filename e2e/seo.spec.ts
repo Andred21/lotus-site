@@ -9,8 +9,8 @@ test.beforeEach(async ({ page }) => {
   await fingirTurnstile(page)
 })
 
-// O dev server devolve index.html (200) para qualquer path desconhecido, então
-// status sozinho não prova nada: o corpo é o que se compara.
+// Com `appType: 'mpa'` o dev server responde 404 a path desconhecido, como a
+// borda (D11); mesmo assim o corpo é o que se compara, não só o status.
 test('robots.txt é servido, indexável e aponta para o sitemap (D6)', async ({
   request,
 }) => {
