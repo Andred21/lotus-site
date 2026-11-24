@@ -14,6 +14,7 @@ import {
   recurso,
   resolver,
 } from './template.mjs'
+import { CASOS_DA_VALIDACAO, UUID_DE_EXEMPLO } from './validar.mjs'
 import { mapa } from './yaml.mjs'
 import { mesmoConjunto } from './zona.mjs'
 
@@ -268,6 +269,12 @@ export const CASOS_DO_REDIRECT = Object.freeze([
     evento: evento(WWW, '/x', { vazio: { value: '' } }),
     location: `https://${APEX}/x?vazio=`,
   },
+  {
+    // o www vem antes da reescrita (D12)
+    nome: 'www com /validar/<uuid>',
+    evento: evento(WWW, `/validar/${UUID_DE_EXEMPLO}`),
+    location: `https://${APEX}/validar/${UUID_DE_EXEMPLO}`,
+  },
 ])
 
 /** Hosts que a função não pode tocar. */
@@ -357,6 +364,15 @@ export function conferirDistribuicao(textoSite, textoDns) {
     const pedido = evento(host, '/qualquer?z=1')
     if (executarFuncao(funcao.codigo, pedido) !== pedido.request) {
       problemas.push(`host ${host ?? 'ausente'}: pedido deveria seguir intacto`)
+    }
+  }
+  for (const caso of CASOS_DA_VALIDACAO) {
+    const pedido = evento(APEX, caso.uri)
+    const resposta = executarFuncao(funcao.codigo, pedido)
+    if (resposta !== pedido.request || resposta.uri !== caso.vira) {
+      problemas.push(
+        `reescrita para ${caso.nome}: esperado ${caso.vira}, veio ${resposta?.uri}`,
+      )
     }
   }
   return problemas

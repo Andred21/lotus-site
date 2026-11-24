@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
+  APEX,
   ARN_DA_FUNCAO,
   conferirDistribuicao,
   evento,
@@ -10,6 +11,7 @@ import {
   lerPadraoDoParametro,
   nomesDoCertificado,
 } from './lib/distribuicao.mjs'
+import { CASOS_DA_VALIDACAO } from './lib/validar.mjs'
 
 // Fixture com a forma dos dois recursos; os testes de leitura usam ela. A
 // catraca de verdade roda sobre os templates reais, mutados com `.replace()`
@@ -236,6 +238,29 @@ describe('catraca: infra/lotus-site.yaml ≡ spec §4.2', () => {
     )
   })
 
+  it('destino errado da reescrita reprova com o nome do caso', () => {
+    const errado = SITE.replace(
+      "request.uri = '/validar/index.html'",
+      "request.uri = '/index.html'",
+    )
+    expect(errado).not.toBe(SITE)
+    expect(
+      conferirDistribuicao(errado, DNS).some((p) =>
+        p.startsWith('reescrita para QR:'),
+      ),
+    ).toBe(true)
+  })
+
+  it('expressão sem âncora final reprova com o caso abaixo do uuid', () => {
+    const solta = SITE.replace('{12}$/i', '{12}/i')
+    expect(solta).not.toBe(SITE)
+    expect(
+      conferirDistribuicao(solta, DNS).some((p) =>
+        p.startsWith('reescrita para abaixo do uuid:'),
+      ),
+    ).toBe(true)
+  })
+
   it('AllowedPattern do certificado solto de us-east-1 reprova', () => {
     const solto = SITE.replace(
       "'^arn:aws:acm:us-east-1:",
@@ -283,6 +308,14 @@ describe('a função do template, em node:vm', () => {
       const pedido = evento(host, '/qualquer?z=1')
       expect(executarFuncao(codigo, pedido)).toBe(pedido.request)
     }
+  })
+
+  it.each(CASOS_DA_VALIDACAO)('apex · $nome', ({ uri, vira }) => {
+    const pedido = evento(APEX, uri, { a: { value: '1' } })
+    const resposta = executarFuncao(codigo, pedido)
+    expect(resposta).toBe(pedido.request)
+    expect(resposta.uri).toBe(vira)
+    expect(resposta.querystring).toEqual({ a: { value: '1' } })
   })
 
   it('cabe no limite de 10 KB do cloudfront-js-2.0 e não importa módulo', () => {

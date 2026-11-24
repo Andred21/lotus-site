@@ -45,6 +45,12 @@ Resources:
             - Header: x-amz-version-id
 `
 
+it('connect-src abre só a própria origem e a API de certificados (spec §5.2)', () => {
+  expect(CABECALHOS['Content-Security-Policy']).toContain(
+    "connect-src 'self' https://app.lotusotec.cl;",
+  )
+})
+
 describe('o módulo canônico', () => {
   it('declara os seis cabeçalhos e os três removidos; o X-Robots-Tag saiu em 7.2.5', () => {
     expect(Object.keys(CABECALHOS)).toEqual([
