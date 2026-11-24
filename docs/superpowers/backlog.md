@@ -864,6 +864,14 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   A config é do João, fora do repositório.
   **Gatilho:** nenhum bloco; depende de João ajustar a config. Quando o teste do Codex der
   `disponível`, `/revisar-site` volta a gravar `reviewer: codex` e este débito fecha.
+- **D-85 · o Context Packet não tem saída quando o Codex não responde** — `/planejar-site` manda
+  delegar `site-context-packet` ao Codex e não diz o que fazer quando ele está fora (`D-84`). `B10`
+  deu fallback só ao reviewer. Em 2026-11-24, no bloco `validacao-certificado`, o teste do Codex
+  saiu `1` com `model_not_found`, e João decidiu que o packet seria gerado por `claude-isolado`,
+  um agente Claude novo que recebe o contrato na íntegra. É desvio declarado: o harness só prevê
+  `claude-isolado` como reviewer. Caminho provável: escrever esse fallback em `/planejar-site` e
+  no validador, do mesmo jeito que `B10` fez para a review.
+  **Gatilho:** a próxima manutenção do harness, ou o próximo packet com o Codex fora.
 
 ## Fechados
 
