@@ -48,9 +48,9 @@ que continuam válidos foram para `B11`, e `D-75` subiu de prioridade.
 `B10 · harness-debitos` fechou em 2026-10-24: com o Codex fora (`D-84`), a segunda lente passa a ser
 `claude-isolado`, sem `reviewer_exception`, e a passada retroativa fechou os sete débitos de segunda
 lente ausente.
-`B12 · validacao-certificado` fechou em 2026-11-25 com o PR #34 aberto, que só é mesclado depois de
-D13 passo 1 da spec: a API do bloco 61 do Lotus respondendo em produção. A prova em produção é a
-PENDÊNCIA 8.
+`B12 · validacao-certificado` fechou em 2026-11-25 e está no ar desde o mesmo dia: PR #34 mesclado
+depois de D13 passo 1, release `5fb34c9` no corporativo, A8 provado com um certificado real
+([`evidencia-validacao-certificado-2026-11-25.md`](../infra/evidencia-validacao-certificado-2026-11-25.md)).
 
 ## Decisões de 2026-09-09 (João)
 
@@ -299,11 +299,11 @@ válidos foram para `B11`.
 - **Entregue (spec `2026-11-24-validacao-certificado-design.md`, 2026-11-25):** a página
   `/validar` e `/validar/<uuid>` (entrega 2 do bloco 61 do Lotus), uma segunda página HTML sem
   router (`ADR-SITE-007`) servida por reescrita na borda; formulário de código + RUT, abertura
-  pelo QR, PDF e "Validar Certificado" no menu. Aceite A1–A7 provado; A8 é a PENDÊNCIA 8.
-- **PR #34 aberto e não mesclado** até D13 passo 1: `GET /consulta` → 405 em produção **e** o
-  preflight com `Origin: https://lotusotec.cl` devolvendo esse `Allow-Origin` sem
-  `Allow-Credentials`. O change set de `infra/lotus-site.yaml` (D13 passo 2) é de João e pode vir
-  antes do merge.
+  pelo QR, PDF e "Validar Certificado" no menu. Aceite A1–A8 provado.
+- **Em produção desde 2026-11-25:** D13 cumprida na ordem. A API do Lotus foi medida no ar, o
+  change set de `infra/lotus-site.yaml` aplicado às 14:43Z, o PR #34 mesclado (`c531c1a`) e o
+  release `5fb34c9` publicado pelo CI do corporativo. A8 está provado em
+  `docs/infra/evidencia-validacao-certificado-2026-11-25.md`, e a PENDÊNCIA 8 está fechada.
 - **Resíduos:** `D-85`, `D-86` e `D-87`; R-2, R-3 e R-4 da review ficaram como `suggestion`.
 
 ---
@@ -346,7 +346,11 @@ O que não avança por conta nossa.
    `docs/infra/delegacao-2026-09-26.md`, secção "Entrada", em commit próprio. Contexto em `D-50`.
 7. ~~**Decidir a renovação do certificado do WordPress** antes de 2026-10-11.~~ Decidido por João
    em 2026-10-04: não renovar (spec de `7.2.5`, D1). Ver `D-51`, fechado.
-8. **Prova em produção da validação de certificado** (A8 da spec de `B12`). Gatilho: D13 passo 1,
+8. ~~**Prova em produção da validação de certificado** (A8 da spec de `B12`).~~ Provada em
+   2026-11-25: smoke 14/14 no release `5fb34c9` e um certificado real validado pelo formulário,
+   pelo `/validar/<uuid>` e pelo PDF
+   ([`evidencia-validacao-certificado-2026-11-25.md`](../infra/evidencia-validacao-certificado-2026-11-25.md)).
+   Falta só o aviso à sessão do Lotus. Texto original: Gatilho: D13 passo 1,
    a API do bloco 61 do Lotus em produção (`GET /consulta` → 405 e preflight com
    `Origin: https://lotusotec.cl` sem `Allow-Credentials`). Depois disso: merge do PR #34, deploy,
    `/validar/<uuid>` com um uuid real, `/validar/abc` → 404 e o smoke dos itens 5, 8, 9 e 10. Com
