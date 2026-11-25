@@ -1,7 +1,7 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: reviewing
+workflow_state: ready_for_closure
 work_class: architectural
 active_work_item: validacao-certificado
 active_notion_eap: null
@@ -10,7 +10,7 @@ active_branch: feat/validacao-certificado
 bounded_design: null
 authorized_paths: null
 next_owner: claude
-next_action: fix_review_findings
+next_action: close_active_work_item
 resume_state: null
 context_packet: docs/superpowers/context-packets/validacao-certificado.md
 active_spec: docs/superpowers/specs/2026-11-24-validacao-certificado-design.md
@@ -21,8 +21,8 @@ reviewer_exception: null
 blocker: null
 supervised_cycles_completed: 25
 last_completed_work_item: harness-debitos
-state_basis_commit: b0f8c00
-updated_at: 2026-11-24T23:35:50Z
+state_basis_commit: 68d112f
+updated_at: 2026-11-25T00:14:31Z
 ---
 
 # Estado operacional — Lotus Site

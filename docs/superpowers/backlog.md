@@ -872,6 +872,26 @@ invalidation-completed` antes de apagar da raiz o que saiu do build, então nenh
   `claude-isolado` como reviewer. Caminho provável: escrever esse fallback em `/planejar-site` e
   no validador, do mesmo jeito que `B10` fez para a review.
   **Gatilho:** a próxima manutenção do harness, ou o próximo packet com o Codex fora.
+- **D-86 · `navegacao.spec.ts` falha sob a suíte inteira, sem causa achada** — R-1 da review de
+  `validacao-certificado`. Os dois `toBeInViewport` (`e2e/navegacao.spec.ts:35` e `:48`) falharam 3
+  vezes em 2026-11-24: `#Somos` ausente por 5 s e `#Cursos` com "viewport ratio 0" no Chromium, na
+  review; `#Cursos` com "viewport ratio 0" no WebKit, na 1ª rodada do fechamento, com o elemento
+  presente nas 9 consultas. Nas 13 rodadas completas seguintes de `pnpm e2e`, 9 delas
+  instrumentadas com `scrollIntoView`, `scroll`, `load` e a posição do alvo, o arquivo não falhou.
+  Rodando só ele, passou 15/15. Refutados: a recarga do Vite por dependência descoberta (nenhum
+  "page reload" no log do servidor) e o cache frio (`node_modules/.vite/deps` removido, 176/176).
+  A mitigação sugerida pelo revisor, timeout explícito ou `reducedMotion: 'reduce'` no `describe`,
+  não foi aplicada por falta de causa. O CI tem `retries: 2`.
+  **Gatilho:** a próxima falha dele, local ou no CI, com o trace (`trace: 'on-first-retry'`).
+- **D-87 · `contacto.spec.ts:22` estoura 30 s em `networkidle` no Firefox** — anterior ao bloco
+  `validacao-certificado` (`82596ce`, `4.1.7`), mas instável desde que o bloco dobrou a suíte: em
+  2026-11-24 falhou 3 vezes em 13 rodadas completas na branch (176 testes) e nenhuma em 3 rodadas
+  de `main` (78 testes), sempre em `page.waitForLoadState('networkidle')`. A Playwright desaconselha
+  `networkidle`. O teste só precisa provar que o script do Turnstile não sai antes de `#Contacto` se
+  aproximar; uma espera por condição o faria. Não foi tocado porque está fora do mapa de arquivos do
+  plano do bloco.
+  **Gatilho:** `B11 · frontend-testes`, que já mexe nos helpers de contato do `e2e/`, ou a próxima
+  falha dele no CI.
 
 ## Fechados
 
