@@ -221,18 +221,26 @@ test.describe('pelo formulário', () => {
   test('espera de até 60 s desativa VALIDAR e conta até voltar', async ({
     page,
   }) => {
+    // Relógio da página parado: "1 segundo" dura 1 s de relógio real, e sob
+    // a suíte inteira a asserção podia consultar antes e depois dele.
+    // Avançar à mão prova cada passo da contagem sem corrida.
+    await page.clock.install({ time: new Date('2026-11-24T12:00:00-03:00') })
     await fingirApiCertificados(page, {
       consulta: { status: 429, headers: { 'Retry-After': '2' } },
     })
     await page.goto('/validar')
+    await page.clock.pauseAt(new Date('2026-11-24T12:01:00-03:00'))
     await consultar(page)
 
     await expect(
       page.getByText('Intente de nuevo en 2 segundos.'),
     ).toBeVisible()
     await expect(validar(page)).toBeDisabled()
+    await page.clock.runFor(1000)
     await expect(page.getByText('Intente de nuevo en 1 segundo.')).toBeVisible()
-    await expect(validar(page)).toBeEnabled({ timeout: 5_000 })
+    await expect(validar(page)).toBeDisabled()
+    await page.clock.runFor(1000)
+    await expect(validar(page)).toBeEnabled()
   })
 
   test('bloqueio acima de 60 s orienta para o QR e não trava o formulário', async ({
