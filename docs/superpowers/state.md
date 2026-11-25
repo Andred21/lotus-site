@@ -1,28 +1,28 @@
 ---
 schema_version: 1
 workflow_mode: supervised
-workflow_state: ready_for_closure
-work_class: architectural
-active_work_item: validacao-certificado
+workflow_state: idle
+work_class: null
+active_work_item: null
 active_notion_eap: null
-active_title: 'Página de validação de certificado no site (entrega 2 do bloco 61 do Lotus)'
-active_branch: feat/validacao-certificado
+active_title: null
+active_branch: null
 bounded_design: null
 authorized_paths: null
-next_owner: claude
-next_action: close_active_work_item
+next_owner: joao
+next_action: select_work_item
 resume_state: null
-context_packet: docs/superpowers/context-packets/validacao-certificado.md
-active_spec: docs/superpowers/specs/2026-11-24-validacao-certificado-design.md
-active_plan: docs/superpowers/plans/2026-11-24-validacao-certificado.md
-executor: claude
-reviewer: claude-isolado
+context_packet: null
+active_spec: null
+active_plan: null
+executor: null
+reviewer: null
 reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 25
-last_completed_work_item: harness-debitos
-state_basis_commit: 68d112f
-updated_at: 2026-11-25T00:14:31Z
+supervised_cycles_completed: 26
+last_completed_work_item: validacao-certificado
+state_basis_commit: 2cc3cab
+updated_at: 2026-11-25T00:17:21Z
 ---
 
 # Estado operacional — Lotus Site
