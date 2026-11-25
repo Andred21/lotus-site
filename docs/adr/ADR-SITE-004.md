@@ -130,6 +130,9 @@ armazenamento e nenhum consumidor — não há dashboard, alerta nem consulta qu
 
 ## Rollback
 
+> **Atualização de 2026-11-24 (validacao-certificado).** validar/index.html entrou como quarto
+> arquivo de nome fixo (ADR-SITE-007).
+
 Cada deploy escreve `releases/<sha>/` **antes** de tocar a raiz do bucket. Voltar é pôr um release
 antigo de volta na raiz — sem rebuild, sem CI, sem tocar em CloudFormation:
 
@@ -153,16 +156,18 @@ aws s3 sync "s3://$BALDE/releases/$SHA_ANTERIOR/" "$VOLTA/"
 find "$VOLTA" -type f -exec touch {} +
 
 aws s3 sync "$VOLTA/" "s3://$BALDE/" \
-  --exclude "index.html" --exclude "robots.txt" --exclude "sitemap.xml" \
+  --exclude "index.html" --exclude "validar/index.html" \
+  --exclude "robots.txt" --exclude "sitemap.xml" \
   --cache-control "public, max-age=31536000, immutable"
 
 aws s3 sync "$VOLTA/" "s3://$BALDE/" \
   --exclude "*" \
-  --include "index.html" --include "robots.txt" --include "sitemap.xml" \
+  --include "index.html" --include "validar/index.html" \
+  --include "robots.txt" --include "sitemap.xml" \
   --cache-control "no-cache"
 
 INVALIDACAO=$(aws cloudfront create-invalidation --distribution-id "$ID" \
-  --paths /index.html /robots.txt /sitemap.xml \
+  --paths /index.html /validar/index.html /robots.txt /sitemap.xml \
   --query Invalidation.Id --output text)
 
 # `create-invalidation` volta com Status InProgress: esperar é obrigatório
@@ -198,7 +203,7 @@ não há metadado de origem para preservar. É a mesma divisão por tipo de arqu
 usa, e a mesma ordem: assets sem `--delete`, arquivos de nome fixo, invalidação **concluída**,
 limpeza. Apagar antes disso deixaria o index que ainda está no ar apontando asset já removido.
 
-A invalidação lista três caminhos e não `/*` porque todo o resto sai do Vite com hash no nome —
+A invalidação lista quatro caminhos e não `/*` porque todo o resto sai do Vite com hash no nome —
 asset novo tem URL nova e não precisa ser invalidado. Invalidar `/*` a cada deploy é o que faz a
 conta de CloudFront crescer sem motivo.
 
@@ -283,6 +288,11 @@ nofollow`, aplicado pela distribuição: cobria o que o `robots.txt` não cobre 
   `/releases/<sha>/` também são indexáveis; o `canonical` aponta para o apex (`D-64`).
 - Caminho inexistente devolve **404**, não `index.html` com 200. Não há rota de cliente para
   salvar: `#Somos` e `#Cursos` são fragmentos, que nunca chegam ao CloudFront.
+
+  > **Atualização de 2026-11-24 (`validacao-certificado`).** `/validar`, `/validar/` e
+  > `/validar/<uuid>` são servidos por reescrita explícita na função `viewer-request`
+  > ([`ADR-SITE-007`](ADR-SITE-007.md)). Caminho fora dessas formas continua 404.
+
 - A role de deploy está presa a `repo:Gatika-CL/lotus-site:ref:refs/heads/main` com `StringEquals`.
   Publicar a partir de outra branch ou de uma tag exige editar o stack, de propósito (`D-38`).
 - O bucket nasce com versionamento e `DeletionPolicy: Retain`. `delete-stack` derruba distribuição,

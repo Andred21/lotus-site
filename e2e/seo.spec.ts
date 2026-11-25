@@ -9,8 +9,8 @@ test.beforeEach(async ({ page }) => {
   await fingirTurnstile(page)
 })
 
-// O dev server devolve index.html (200) para qualquer path desconhecido, então
-// status sozinho não prova nada: o corpo é o que se compara.
+// Com `appType: 'mpa'` o dev server responde 404 a path desconhecido, como a
+// borda (D11); mesmo assim o corpo é o que se compara, não só o status.
 test('robots.txt é servido, indexável e aponta para o sitemap (D6)', async ({
   request,
 }) => {
@@ -81,4 +81,23 @@ test('a página servida carrega o JSON-LD da Organization', async ({ page }) => 
   expect(data['@type']).toBe('Organization')
   expect(data.url).toBe(CANONICAL)
   expect(data.name).toBe('LOTUS OTEC')
+})
+
+// A6: `/validar/<uuid>` mostra o nome do aluno; a página não é indexável nem
+// entra no sitemap (o teste do sitemap acima continua exigindo só a home).
+test('/validar publica noindex sem canonical e fica fora do sitemap', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/validar')
+
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    'content',
+    /noindex/,
+  )
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0)
+
+  const sitemap = await (await request.get('/sitemap.xml')).text()
+  expect(sitemap).toContain('<urlset')
+  expect(sitemap).not.toContain('/validar')
 })

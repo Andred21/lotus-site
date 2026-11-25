@@ -8,4 +8,6 @@ interface ImportMetaEnv {
    * envio cai no caminho de D7 do bloco 4.1.1-4.1.10.
    */
   readonly VITE_TURNSTILE_SITE_KEY?: string
+  /** Origem da API pública de certificados do Lotus; ausente, vale `https://app.lotusotec.cl` (D10). */
+  readonly VITE_CERTIFICADOS_API_URL?: string
 }

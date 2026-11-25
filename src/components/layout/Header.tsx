@@ -14,7 +14,7 @@ import { Row } from './Row'
  * cor medida. `docs/qa/paridade/2026-09-02/header-cursos.md` mede
  * `rgb(0, 0, 0)` opaco nas duas larguras desktop.
  */
-export function Header() {
+export function Header({ atual }: { atual?: string }) {
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-header bg-header-mobile shadow-header desktop:h-header-desktop desktop:bg-header">
       <Row className="flex h-full items-center justify-between">
@@ -33,7 +33,12 @@ export function Header() {
               <li key={item.href}>
                 <a
                   href={item.href}
-                  className="font-sans text-menu font-semibold text-brand"
+                  aria-current={item.href === atual ? 'page' : undefined}
+                  className={
+                    item.href === atual
+                      ? 'font-sans text-menu font-semibold text-white underline decoration-brand decoration-2 underline-offset-4'
+                      : 'font-sans text-menu font-semibold text-brand'
+                  }
                 >
                   {item.label}
                 </a>
@@ -41,7 +46,7 @@ export function Header() {
             ))}
           </ul>
         </nav>
-        <MobileMenu />
+        <MobileMenu atual={atual} />
       </Row>
     </header>
   )

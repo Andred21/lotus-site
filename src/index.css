@@ -20,6 +20,10 @@
   /* Cor de erro do formulário. Não vem do inventário: o original não tem
      estado de erro medido. Escolhida por contraste AA sobre --color-surface. */
   --color-danger: #b3261e;
+  /* Cores de estado do selo de validação (mockup aprovado de D4). Contraste
+     medido com texto branco (P13): status-ok 5,38:1, status-warn 5,93:1. */
+  --color-status-ok: #1e7a3c;
+  --color-status-warn: #8a5a00;
 
   /* Família — stacks de fallback como medidas, não como preferência. */
   --font-sans: 'Open Sans', Arial, sans-serif;

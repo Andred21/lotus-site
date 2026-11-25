@@ -17,7 +17,12 @@ export function Footer() {
         cima que nenhuma linha de medição sustenta (achado C-1 da review).
       */}
       <Row className="pb-2.5">
-        <p className="font-sans text-caption font-medium text-brand">
+        {/* `id` do original (`#footer-info` em https://lotusotec.cl/): dá ao
+            gate axe um seletor estável em `/` e em `/validar`. */}
+        <p
+          id="footer-info"
+          className="font-sans text-caption font-medium text-brand"
+        >
           {site.footer.copyright}
         </p>
       </Row>

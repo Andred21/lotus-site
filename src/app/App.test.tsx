@@ -104,4 +104,19 @@ describe('App — fiação do contato', () => {
     expect(screen.queryByText('Confirme que no es un robot.')).toBeNull()
     expect(fetchSpy).not.toHaveBeenCalled()
   })
+
+  it.each(['#%', '#%E0%A4%A'])(
+    'não derruba a home com o fragmento malformado %s',
+    (hash) => {
+      window.history.replaceState(null, '', `/${hash}`)
+      try {
+        render(<App />)
+        expect(
+          screen.getByRole('heading', { level: 1, name: site.hero.title }),
+        ).toBeTruthy()
+      } finally {
+        window.history.replaceState(null, '', '/')
+      }
+    },
+  )
 })

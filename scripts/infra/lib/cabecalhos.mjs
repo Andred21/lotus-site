@@ -21,7 +21,7 @@ const DIRETIVAS_CSP = Object.freeze([
   "default-src 'none'",
   "script-src 'self' https://challenges.cloudflare.com",
   'frame-src https://challenges.cloudflare.com',
-  "connect-src 'self'",
+  "connect-src 'self' https://app.lotusotec.cl",
   "style-src 'self'",
   "img-src 'self'",
   "font-src 'self'",
@@ -36,7 +36,8 @@ const DIRETIVAS_CSP = Object.freeze([
  * do template juntos no dia do corte (7.2.5, spec D5): com o domínio do
  * cliente apontando para a distribuição, o site precisa ser indexável.
  * HSTS de um ano sem `includeSubDomains` e sem `preload`: `mail.lotusotec.cl`
- * falha verificação TLS e `app.lotusotec.cl` não responde em 443 (spec D1).
+ * falha a verificação TLS (spec D1, D18). `app.lotusotec.cl` responde HTTPS
+ * (K7) e entra em `connect-src` para a página de validação (spec §5.2).
  * @type {Readonly<Record<string, string>>}
  */
 export const CABECALHOS = Object.freeze({

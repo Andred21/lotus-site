@@ -16,13 +16,13 @@ describe('MobileMenu', () => {
     expect(screen.queryByRole('navigation', { name: 'Mobile' })).toBeNull()
   })
 
-  it('abre por clique e mostra os quatro itens', () => {
+  it('abre por clique e mostra os cinco itens', () => {
     render(<MobileMenu />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }))
 
     const nav = screen.getByRole('navigation', { name: 'Mobile' })
-    expect(nav.querySelectorAll('a')).toHaveLength(4)
+    expect(nav.querySelectorAll('a')).toHaveLength(5)
     expect(
       screen
         .getByRole('button', { name: 'Cerrar menú' })
@@ -52,5 +52,18 @@ describe('MobileMenu', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Cursos' }))
 
     expect(screen.queryByRole('navigation', { name: 'Mobile' })).toBeNull()
+  })
+
+  it('marca o item da página corrente sem trocar a cor do texto (D2)', () => {
+    render(<MobileMenu atual="/validar" />)
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }))
+
+    const link = screen.getByRole('link', { name: 'Validar Certificado' })
+    expect(link.getAttribute('aria-current')).toBe('page')
+    expect(link.className).toContain('text-neutral-ink')
+    expect(link.className).toContain('decoration-brand')
+    expect(
+      screen.getByRole('link', { name: 'Inicio' }).getAttribute('aria-current'),
+    ).toBeNull()
   })
 })

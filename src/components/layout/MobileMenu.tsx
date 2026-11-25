@@ -7,7 +7,7 @@ import { site } from '../../content/site'
  * O painel não prende o scroll da página — o original também não prende, e
  * travar `overflow` seria comportamento novo, não paridade.
  */
-export function MobileMenu() {
+export function MobileMenu({ atual }: { atual?: string }) {
   const [open, setOpen] = useState(false)
   const toggleRef = useRef<HTMLButtonElement>(null)
 
@@ -47,7 +47,12 @@ export function MobileMenu() {
                 <a
                   href={item.href}
                   onClick={close}
-                  className="block px-6 py-3 font-sans text-body text-neutral-ink"
+                  aria-current={item.href === atual ? 'page' : undefined}
+                  className={
+                    item.href === atual
+                      ? 'block px-6 py-3 font-sans text-body text-neutral-ink underline decoration-brand decoration-2 underline-offset-4'
+                      : 'block px-6 py-3 font-sans text-body text-neutral-ink'
+                  }
                 >
                   {item.label}
                 </a>

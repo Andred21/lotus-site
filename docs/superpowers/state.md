@@ -19,10 +19,10 @@ executor: null
 reviewer: null
 reviewer_exception: null
 blocker: null
-supervised_cycles_completed: 25
-last_completed_work_item: harness-debitos
-state_basis_commit: 5a8de78
-updated_at: 2026-10-24T19:38:55Z
+supervised_cycles_completed: 26
+last_completed_work_item: validacao-certificado
+state_basis_commit: 2cc3cab
+updated_at: 2026-11-25T00:17:21Z
 ---
 
 # Estado operacional — Lotus Site

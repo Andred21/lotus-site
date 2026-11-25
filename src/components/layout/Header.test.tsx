@@ -21,13 +21,29 @@ describe('Header', () => {
     expect(cabecalho?.className).toContain('desktop:bg-header')
   })
 
-  it('publica os quatro itens de navegação com os destinos medidos', () => {
+  it('publica os cinco itens de navegação com os destinos medidos', () => {
     render(<Header />)
     const nav = screen.getByRole('navigation', { name: 'Principal' })
 
     expect(
       screen.getByRole('link', { name: 'Quienes Somos' }).getAttribute('href'),
-    ).toBe('#Somos')
-    expect(nav.querySelectorAll('a')).toHaveLength(4)
+    ).toBe('/#Somos')
+    expect(nav.querySelectorAll('a')).toHaveLength(5)
+  })
+
+  it('sem `atual`, nenhum item é a página corrente', () => {
+    const { container } = render(<Header />)
+    expect(container.querySelectorAll('[aria-current]')).toHaveLength(0)
+  })
+
+  it('com `atual`, só o item da página corrente é marcado e sublinhado', () => {
+    const { container } = render(<Header atual="/validar" />)
+    const marcados = container.querySelectorAll('[aria-current]')
+    const link = screen.getByRole('link', { name: 'Validar Certificado' })
+
+    expect(marcados).toHaveLength(1)
+    expect(link.getAttribute('aria-current')).toBe('page')
+    expect(link.className).toContain('text-white')
+    expect(link.className).toContain('decoration-brand')
   })
 })

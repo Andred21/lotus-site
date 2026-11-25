@@ -19,6 +19,8 @@ const FLUXO_PRINCIPAL = [
   '**/home.spec.ts',
   '**/menu.spec.ts',
   '**/contacto.spec.ts',
+  '**/navegacao.spec.ts',
+  '**/validar.spec.ts',
 ]
 
 export default defineConfig({
@@ -44,6 +46,7 @@ export default defineConfig({
         '**/producao.spec.ts',
         '**/regressao-visual.spec.ts',
         '**/cabecalhos.spec.ts',
+        '**/validar-caminhos.spec.ts',
         '**/smoke/**',
       ],
     },
@@ -69,6 +72,7 @@ export default defineConfig({
         '**/producao.spec.ts',
         '**/regressao-visual.spec.ts',
         '**/cabecalhos.spec.ts',
+        '**/validar-caminhos.spec.ts',
       ],
     },
   ],

@@ -153,7 +153,7 @@ Resources:
         Comment: Cabecalhos de seguranca de 7.2.2. Valores canonicos em scripts/infra/lib/cabecalhos.mjs.
         SecurityHeadersConfig:
           ContentSecurityPolicy:
-            ContentSecurityPolicy: "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
+            ContentSecurityPolicy: "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self' https://app.lotusotec.cl; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
             Override: true
           StrictTransportSecurity:
             AccessControlMaxAgeSec: 31536000
@@ -189,41 +189,53 @@ Resources:
   # CloudFront -- segue intacto. A query volta como veio, chave repetida
   # inclusa; nada e reencodado. A catraca scripts/infra/distribuicao.test.mjs
   # extrai este codigo e o roda em node:vm.
+  # Segundo papel (ADR-SITE-007): a unica pagina alem da home, /validar, e
+  # servida por reescrita explicita de /validar, /validar/ e /validar/<uuid>
+  # para /validar/index.html. O www vem primeiro: www.lotusotec.cl/validar/<uuid>
+  # ainda e 301 para o apex. Qualquer outro caminho segue intacto e o S3
+  # responde 404. A tabela de casos mora em scripts/infra/lib/validar.mjs.
   RedirecionarWww:
     Type: AWS::CloudFront::Function
     Properties:
       Name: !Sub '${AWS::StackName}-redirecionar-www'
       AutoPublish: true
       FunctionConfig:
-        Comment: www.lotusotec.cl -> https://lotusotec.cl, 301, caminho e query preservados.
+        Comment: www -> apex (301); /validar e /validar/<uuid> -> /validar/index.html.
         Runtime: cloudfront-js-2.0
       FunctionCode: |
         function handler(event) {
           var request = event.request;
           var host = request.headers.host ? request.headers.host.value : '';
-          if (host !== 'www.lotusotec.cl') {
-            return request;
-          }
-          var partes = [];
-          for (var chave in request.querystring) {
-            var parametro = request.querystring[chave];
-            var valores = parametro.multiValue
-              ? parametro.multiValue.map(function (item) {
-                  return item.value;
-                })
-              : [parametro.value];
-            for (var i = 0; i < valores.length; i++) {
-              partes.push(chave + '=' + valores[i]);
+          if (host === 'www.lotusotec.cl') {
+            var partes = [];
+            for (var chave in request.querystring) {
+              var parametro = request.querystring[chave];
+              var valores = parametro.multiValue
+                ? parametro.multiValue.map(function (item) {
+                    return item.value;
+                  })
+                : [parametro.value];
+              for (var i = 0; i < valores.length; i++) {
+                partes.push(chave + '=' + valores[i]);
+              }
             }
+            var query = partes.length ? '?' + partes.join('&') : '';
+            return {
+              statusCode: 301,
+              statusDescription: 'Moved Permanently',
+              headers: {
+                location: { value: 'https://lotusotec.cl' + request.uri + query },
+              },
+            };
           }
-          var query = partes.length ? '?' + partes.join('&') : '';
-          return {
-            statusCode: 301,
-            statusDescription: 'Moved Permanently',
-            headers: {
-              location: { value: 'https://lotusotec.cl' + request.uri + query },
-            },
-          };
+          if (
+            request.uri === '/validar' ||
+            request.uri === '/validar/' ||
+            /^\/validar\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(request.uri)
+          ) {
+            request.uri = '/validar/index.html';
+          }
+          return request;
         }
 
   # Aliases e certificado entram AQUI, em B4, e nao no corte (spec D5): com
@@ -303,10 +315,11 @@ Resources:
             # Managed-AllViewerExceptHostHeader
             OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
             ResponseHeadersPolicyId: !Ref PoliticaDeCabecalhos
-        # Sem CustomErrorResponses de proposito: nao existe rota de cliente
-        # para salvar (#Somos e #Cursos sao fragmentos, resolvidos no
-        # navegador, que nunca chegam ate aqui). Mapear 404 para index.html com
-        # status 200 devolveria 200 a qualquer caminho inventado.
+        # Sem CustomErrorResponses de proposito: a unica pagina alem da home e
+        # servida por reescrita explicita na RedirecionarWww (ADR-SITE-007);
+        # #Somos e #Cursos sao fragmentos, resolvidos no navegador. Mapear 404
+        # para index.html com status 200 (fallback) devolveria 200 a qualquer
+        # caminho inventado.
       Tags:
         - Key: Projeto
           Value: lotus-site

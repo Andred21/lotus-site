@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { site } from './site'
 
 describe('conteúdo institucional', () => {
-  it('mantém os quatro itens de menu com os destinos medidos', () => {
+  it('mantém os cinco itens de menu com os destinos medidos', () => {
     expect(site.nav.map((item) => [item.label, item.href])).toEqual([
       ['Inicio', '/'],
-      ['Quienes Somos', '#Somos'],
-      ['Cursos', '#Cursos'],
-      ['Contacto', '#Contacto'],
+      ['Quienes Somos', '/#Somos'],
+      ['Cursos', '/#Cursos'],
+      ['Contacto', '/#Contacto'],
+      ['Validar Certificado', '/validar'],
     ])
   })
 
